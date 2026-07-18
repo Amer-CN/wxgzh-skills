@@ -16,6 +16,7 @@ T = {
  "zen-whitespace": dict(n="留白禅意",p="#4A5D52",pd="#2B2B2B",lb="#FFFFFF",bg="#FFFFFF",bd="#E8E8E8",tc="#2B2B2B",tx="#525252",st="#A3A3A3",dv="#E8E8E8",wb="#FFFFFF",wt="#525252",wbd="#E8E8E8",r="0px",sh="none",style="zen",pad="24px 20px"),
  "moyu-ticket": dict(n="摸鱼票据",p="#059669",pd="#1a1a1a",lb="#fffef8",bg="#fffef8",bd="#1a1a1a",tc="#1a1a1a",tx="#555",st="#888",dv="#A7F3D0",wb="#fffef8",wt="#92400E",wbd="#1a1a1a",r="0px",sh="3px 3px 0 #1a1a1a",style="ticket",pad="14px 18px"),
  "olive-journal": dict(n="橄榄手记",p="#ed7b2f",pd="#1e1f23",lb="#eeefe9",bg="#fdfdf8",bd="#bfc1b7",tc="#23251d",tx="#4d4f46",st="#9ea096",dv="#bfc1b7",wb="#fffdf5",wt="#92400E",wbd="#ed7b2f",r="6px",sh="none",style="journal",pad="14px 18px"),
+ "hammer": dict(n="锤子风格",p="#B3593B",pd="#8A4530",lb="#FAF9F5",bg="#F7F7F7",bd="#DAB1A1",tc="#555555",tx="#555555",st="#737373",dv="rgba(202,202,199,0.35)",wb="#FAF9F5",wt="#B3593B",wbd="#E3C6B9",r="12px",sh="0 4px 16px -4px rgba(179,89,59,0.10)",style="card",pad="16px 20px"),
 }
 ORDER = list(T.keys())
 
@@ -171,6 +172,10 @@ DIALOGUE_COLORS = {
      u_bg="#ed7b2f",u_tx="#FFFFFF",u_av="#1e1f23",u_avtx="#FFFFFF",
      a_bg="#eeefe9",a_tx="#4d4f46",a_av="#9ea096",a_avtx="#FFFFFF",
      u_bdr="",a_bdr="",r="6px"),
+ "hammer": dict(
+     u_bg="#EAD6CC",u_tx="#555555",u_av="#B3593B",u_avtx="#FFFFFF",
+     a_bg="#FAF9F5",a_tx="#555555",a_av="#B3593B",a_avtx="#FFFFFF",
+     u_bdr="border:1px solid #DAB1A1;",a_bdr="border:1px solid rgba(202,202,199,0.35);",r="12px"),
 }
 
 def dialogue(tid, title="排障问答", turns=None):

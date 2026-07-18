@@ -6,7 +6,7 @@ SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOTFIX = os.path.join(SKILL, "tests", "advanced-components", "dialogue-hotfix")
 OUT_PNG = os.path.join(HOTFIX, "dialogue-mobile-contact-sheet.png")
 
-THEMES = ["moyu-green", "red-white", "graphite-minimal", "zen-whitespace", "moyu-ticket", "olive-journal"]
+THEMES = ["moyu-green", "red-white", "graphite-minimal", "zen-whitespace", "moyu-ticket", "olive-journal", "hammer"]
 
 from playwright.sync_api import sync_playwright
 

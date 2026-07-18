@@ -19,7 +19,7 @@ os.makedirs(OUT, exist_ok=True)
 sys.path.insert(0, os.path.join(SKILL, "scripts"))
 from generate_advanced_html import *
 
-THEME_ORDER = ["moyu-green", "red-white", "graphite-minimal", "zen-whitespace", "moyu-ticket", "olive-journal"]
+THEME_ORDER = ["moyu-green", "red-white", "graphite-minimal", "zen-whitespace", "moyu-ticket", "olive-journal", "hammer"]
 
 # 全局容器
 def container(theme_id, inner_html):

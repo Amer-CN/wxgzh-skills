@@ -112,7 +112,7 @@ if missing:
 print("✅ 自检通过：所有 HTML 图片 src 均有对应文件")
 
 # ---- 打包 ----
-z = 'gzh-design-stage-b-review.zip'  # 输出到当前工作目录
+z = 'f:/AIXM/wxgzh/gzh-design-stage-b-review.zip'
 actual = []
 with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
     for f in files:
