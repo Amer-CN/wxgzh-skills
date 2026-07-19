@@ -345,7 +345,7 @@
 <span style="background:linear-gradient(120deg,#E3C6B9 0%,rgba(255,255,255,0) 100%);padding:0 4px;border-radius:2px;font-weight:600;color:#555555;"><span leaf="">文字</span></span>
 ```
 
-### 6d. 黄色底部高亮（下划线效果）
+### 6d. 陶土底部高亮（下划线效果）
 
 ```html
 <span style="color:#555555;font-weight:bold;border-bottom:3px solid #E3C6B9;"><span leaf="">文字</span></span>
@@ -925,7 +925,7 @@
 
 | 层级 | 样式 | 用途 | 频率 |
 |------|------|------|------|
-| **锚点层** | 砖红加粗 6a / 黄底下划线 6d / oneliner-card 9b | 核心概念、产品名、关键结论 | 全文 ≤5 处 |
+| **锚点层** | 砖红加粗 6a / 陶土底下划线 6d / oneliner-card 9b | 核心概念、产品名、关键结论 | 全文 ≤5 处 |
 | **标记层** | 砖红下划线 6e（默认）/ 陶土渐变高亮 6c | 正文关键词强调 | 每段 1~3 处 |
 | **容器层** | quote-box 9a / 提示 10x / 胶囊 11a / 卡片 11x | 引用、旁注、提示、结构化信息 | 按需 |
 
