@@ -21,22 +21,25 @@
 ```
 主色调：       #B3593B（hammer-brick（暖砖红））
 辅色：         #C86442（hammer-light（浅砖红））
-浅陶土装饰：     #DAB1A1 / #E3C6B9 / #EAD6CC
-浅陶土边框：     #DAB1A1
-浅砖红背景：     #FAF9F5 / #F7F7F7
+深砖红文字：   #9F452C（用于 #FFFFFF / #FAF9F5 / #F7F7F7 上的小号砖红文字）
+固定品牌句深砖红：#8A4530（用于 #EAD6CC 浅底上的 14px/600 品牌句，对比度 5.0:1）
+浅陶土装饰：   #DAB1A1 / #E3C6B9 / #EAD6CC（仅用于边框/分割线/背景装饰/阴影，不得用于可读文字）
+浅陶土边框：   #DAB1A1
+浅砖红背景：   #FAF9F5 / #F7F7F7
 陶土高亮：     #E3C6B9
 暖陶土背景（警告）：#FAF9F5
-砖红文字（警告）：#B3593B
 红色下划线：   #FECACA（对比/否定专用）
 警告橙色：     rgb(255,76,0)
 警告灰色：     rgb(136,136,136)
 标题色：       #555555
 正文色：       #555555
-次要文字：     #555555
+次要文字：     #737373（日期/PART/LAST/导航辅助标签/图片说明/脚注说明/删除线文字）
 注释/标签：    #737373
 辅助文字：     #737373
-分隔线：       rgba(202,202,199,0.35)
-浅边框：       rgba(202,202,199,0.18)
+删除线文字色： #737373
+删除线颜色：   #B3593B（text-decoration-color）
+分隔线：       rgba(202,202,199,0.35)（仅用于分隔线/装饰，不得用于可读文字）
+浅边框：       rgba(202,202,199,0.18)（仅用于边框，不得用于可读文字）
 浅灰背景：     #F7F7F7
 极浅灰：       #FAF9F5
 正文字号：     14px（不可改）
@@ -46,6 +49,56 @@
 最大宽度：     677px
 内容区边距：   0 20px（模块左右各 20px）
 ```
+
+### 语义色使用规则（对比度铁律）
+
+| 语义 | 色值 | 使用场景 | 对比度 |
+|------|------|----------|--------|
+| 正文文字 | `#555555` | 正文段落（`#FFFFFF` 底） | 7.46:1 ✅ |
+| 次要文字 | `#737373` | 日期/PART/LAST/导航辅助/图片说明/脚注/删除线文字（`#FFFFFF` 底） | 4.74:1 ✅ |
+| 深砖红文字 | `#9F452C` | `#FFFFFF`/`#FAF9F5`/`#F7F7F7` 上的小号砖红文字（11px 标签、14px body strong） | 6.25:1 ✅ |
+| 固定品牌句深砖红 | `#8A4530` | `#EAD6CC` 浅底上的 14px/600 品牌句 | 5.00:1 ✅ |
+| 主砖红 | `#B3593B` | 背景/色块/边框/大号粗体（24px+ 标题、28px 章节编号）/装饰 | — |
+| 删除线颜色 | `#B3593B` | `text-decoration-color`（删除线本身的颜色，不是文字色） | — |
+
+> **对比度判定规则**：
+> - 14px/600 属于普通文字，必须满足 4.5:1（不可按大号文字 3:1 判定）
+> - 只有 24px+/900 或 18px+/700 才按大号文字 3:1 判定
+> - `#737373` 在 `#FFFFFF` 上 4.74:1 ✅，但在 `#F7F7F7` 上仅 4.45:1 ❌（若放在 `#F7F7F7` 上需改用 `#6B6B6B`）
+> - 对比度必须使用未四舍五入的原始值判定，禁止先显示为小数再用显示值比较
+
+**禁止用于可读文字的颜色**（仅限边框/分割线/背景/阴影）：
+- `rgba(202,202,199,0.35)` / `rgba(202,202,199,0.18)` — 对比度不足
+- `#DAB1A1` / `#E3C6B9` — 对比度不足
+- `#999` — 已废弃，统一用 `#737373`
+
+**删除线文字标准写法**：
+```html
+<span style="color:#737373;text-decoration-line:line-through;text-decoration-color:#B3593B;text-decoration-thickness:1px;">
+  <span leaf="">被划掉的旧认知</span>
+</span>
+```
+
+**小号砖红文字标准写法**（11px 标签 / 14px body strong）：
+```html
+<!-- 11px 标签 -->
+<span style="font-size:11px;color:#9F452C;font-weight:700;letter-spacing:1px;">
+  <span leaf="">标签文字</span>
+</span>
+<!-- 14px body strong -->
+<strong style="color:#9F452C;"><span leaf="">关键概念</span></strong>
+```
+
+**保留 `#B3593B` 的场景**：
+- 24px+ 大标题（`font-size:24px;font-weight:900;color:#B3593B`，白底 4.76:1 ✅）
+- 28px 章节编号（`font-size:28px;font-weight:900;color:#B3593B`，白底 4.76:1 ✅）
+- 背景色、边框色（左竖条 border）、渐变、圆点装饰
+- `#B3593B` 背景上的白字（如胶囊标签 `background:#B3593B;color:#fff`）
+- 固定结尾署名组件的左竖条 border（`border-left:3px solid #B3593B`）
+
+**不使用 `#B3593B` 的场景**：
+- 固定结尾署名组件的品牌句文字（14px/600 在 `#EAD6CC` 底上 `#B3593B` 仅 3.40:1 ❌，改用 `#8A4530` 达 5.00:1 ✅）
+- 11px 标签和 14px body strong（改用 `#9F452C`）
 
 字体栈：`-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif`
 
@@ -74,12 +127,12 @@
 **有右侧图片版**：
 
 ```html
-<section style="margin:0 0 32px;background:#fff;border:1.5px solid rgba(5,150,105,0.15);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);width:100%;">
+<section style="margin:0 0 32px;background:#fff;border:1.5px solid rgba(179,89,59,0.15);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);width:100%;">
   <section style="padding:32px 28px 28px;">
     <section style="display:flex;align-items:center;gap:8px;margin-bottom:28px;">
       <span style="width:6px;height:6px;background:#B3593B;border-radius:50%;"><span leaf=""><br></span></span>
       <span style="font-size:11px;font-weight:700;letter-spacing:3px;color:#B3593B;"><span leaf="">{{顶部标签}}</span></span>
-      <section style="flex:1;height:1px;overflow:hidden;background:linear-gradient(to right,rgba(5,150,105,0.12),transparent);"><span leaf=""><br></span></section>
+      <section style="flex:1;height:1px;overflow:hidden;background:linear-gradient(to right,rgba(179,89,59,0.10),transparent);"><span leaf=""><br></span></section>
       <span style="font-size:10px;color:rgba(202,202,199,0.35);font-weight:600;"><span leaf="">{{日期}}</span></span>
     </section>
     <section style="display:flex;align-items:center;gap:20px;">
@@ -101,7 +154,7 @@
           <span leaf="">{{副标题关键词}}</span>
         </p>
       </section>
-      <section style="flex-shrink:0;width:110px;height:110px;border-radius:16px;overflow:hidden;border:1px solid rgba(5,150,105,0.1);box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+      <section style="flex-shrink:0;width:110px;height:110px;border-radius:16px;overflow:hidden;border:1px solid rgba(179,89,59,0.10);box-shadow:0 4px 12px rgba(0,0,0,0.06);">
         <!-- 封面右侧图片，保留原图代码 -->
       </section>
     </section>
@@ -121,12 +174,12 @@
 **无右侧图片版**（文章没有封面头像图时用这个，标题区满宽）：
 
 ```html
-<section style="margin:0 0 32px;background:#fff;border:1.5px solid rgba(5,150,105,0.15);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);width:100%;">
+<section style="margin:0 0 32px;background:#fff;border:1.5px solid rgba(179,89,59,0.15);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);width:100%;">
   <section style="padding:32px 28px 28px;">
     <section style="display:flex;align-items:center;gap:8px;margin-bottom:28px;">
       <span style="width:6px;height:6px;background:#B3593B;border-radius:50%;"><span leaf=""><br></span></span>
       <span style="font-size:11px;font-weight:700;letter-spacing:3px;color:#B3593B;"><span leaf="">{{顶部标签}}</span></span>
-      <section style="flex:1;height:1px;overflow:hidden;background:linear-gradient(to right,rgba(5,150,105,0.12),transparent);"><span leaf=""><br></span></section>
+      <section style="flex:1;height:1px;overflow:hidden;background:linear-gradient(to right,rgba(179,89,59,0.10),transparent);"><span leaf=""><br></span></section>
       <span style="font-size:10px;color:rgba(202,202,199,0.35);font-weight:600;"><span leaf="">{{日期}}</span></span>
     </section>
     <section>
@@ -283,7 +336,7 @@
 ### 6b. 砖红背景标签
 
 ```html
-<strong style="color:#B3593B;background:rgba(5,150,105,0.1);padding:0 4px;border-radius:2px;"><span leaf="">文字</span></strong>
+<strong style="color:#B3593B;background:rgba(179,89,59,0.10);padding:0 4px;border-radius:2px;"><span leaf="">文字</span></strong>
 ```
 
 ### 6c. 陶土渐变高亮（一段话中最想让读者注意的短语，每段不超过 1-2 处）
@@ -548,7 +601,7 @@
 ```html
 <section style="margin-bottom:14px;">
   <p style="margin:0 0 6px;">
-    <span style="display:inline-block;font-size:13px;font-weight:700;color:#B3593B;background:rgba(5,150,105,0.08);padding:3px 10px;border-radius:999px;"><span style="display:inline-block;width:6px;height:6px;background:#B3593B;border-radius:50%;margin-right:5px;vertical-align:middle;"><span leaf=""><br></span></span><span leaf="">{{列表项文字}}</span></span>
+    <span style="display:inline-block;font-size:13px;font-weight:700;color:#B3593B;background:rgba(179,89,59,0.08);padding:3px 10px;border-radius:999px;"><span style="display:inline-block;width:6px;height:6px;background:#B3593B;border-radius:50%;margin-right:5px;vertical-align:middle;"><span leaf=""><br></span></span><span leaf="">{{列表项文字}}</span></span>
   </p>
 </section>
 ```
@@ -558,7 +611,7 @@
 ```html
 <section style="margin-bottom:14px;">
   <p style="margin:0 0 6px;">
-    <span style="display:inline-block;font-size:13px;font-weight:700;color:#B3593B;background:rgba(5,150,105,0.08);padding:3px 10px;border-radius:999px;"><span style="display:inline-block;width:6px;height:6px;background:#B3593B;border-radius:50%;margin-right:5px;vertical-align:middle;"><span leaf=""><br></span></span><span leaf="">{{标题}}</span></span>
+    <span style="display:inline-block;font-size:13px;font-weight:700;color:#B3593B;background:rgba(179,89,59,0.08);padding:3px 10px;border-radius:999px;"><span style="display:inline-block;width:6px;height:6px;background:#B3593B;border-radius:50%;margin-right:5px;vertical-align:middle;"><span leaf=""><br></span></span><span leaf="">{{标题}}</span></span>
   </p>
   <p style="font-size:13px;color:#555555;margin:0;line-height:1.7;text-align:justify;">
     <span leaf="">{{描述内容}}</span>
@@ -679,7 +732,7 @@
 基本版：
 
 ```html
-<section style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 4px 16px rgba(5,150,105,0.12);margin-bottom:24px;">
+<section style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 4px 16px rgba(179,89,59,0.10);margin-bottom:24px;">
   <p style="font-size:13px;color:#555555;margin:0;line-height:1.8;">
     {{说明内容}}
   </p>
@@ -689,7 +742,7 @@
 居中高亮版（同 oneliner-card 规则：拆多个 `<p>`，不要 `<strong>` 带 font-size/border-bottom）：
 
 ```html
-<section style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 4px 16px rgba(5,150,105,0.12);margin-bottom:24px;text-align:center;">
+<section style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 4px 16px rgba(179,89,59,0.10);margin-bottom:24px;text-align:center;">
   <p style="font-size:13px;color:#737373;margin:0 0 6px;line-height:1.5;">
     <span leaf="">{{小字}}</span>
   </p>
@@ -771,11 +824,11 @@
 ### 12b. video-card（视频容器卡片）
 
 ```html
-<section style="background:#fff;border-radius:16px;padding:12px;margin-bottom:32px;border:2px solid #B3593B;box-shadow:0 4px 12px rgba(5,150,105,0.1);">
+<section style="background:#fff;border-radius:16px;padding:12px;margin-bottom:32px;border:2px solid #B3593B;box-shadow:0 4px 12px rgba(179,89,59,0.10);">
   <section style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
     <span style="width:8px;height:8px;background:#B3593B;border-radius:50%;"><span leaf=""><br></span></span>
     <span style="font-size:11px;color:#B3593B;font-weight:700;letter-spacing:1px;"><span leaf="">VIDEO 01</span></span>
-    <span style="flex:1;height:1px;background:linear-gradient(to right,rgba(5,150,105,0.2),transparent);"><span leaf=""><br></span></span>
+    <span style="flex:1;height:1px;background:linear-gradient(to right,rgba(179,89,59,0.18),transparent);"><span leaf=""><br></span></span>
     <span style="font-size:11px;color:#737373;"><span leaf="">{{视频描述}}</span></span>
   </section>
   <section style="border-radius:10px;overflow:hidden;">
@@ -811,7 +864,7 @@
       <span style="font-size:10px;font-weight:600;"><span leaf="">在看</span></span>
     </section>
     <section style="text-align:center;cursor:pointer;color:#B3593B;">
-      <section style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:#FAF9F5;border-radius:12px;box-shadow:0 2px 4px rgba(5,150,105,0.15);border:1px solid #EAD6CC;">
+      <section style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:#FAF9F5;border-radius:12px;box-shadow:0 2px 4px rgba(179,89,59,0.15);border:1px solid #EAD6CC;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18v-4a8 8 0 0 1 8-8h8"></path><polyline points="16 2 20 6 16 10"></polyline></svg>
       </section>
       <span style="font-size:10px;font-weight:600;"><span leaf="">转发</span></span>
@@ -823,7 +876,7 @@
 </section>
 ```
 
-**签名文案适配**：SKILL.md 的作者签名（"我是 {{作者名}}…"两段，默认占位、由用户替换）以正文段落（组件 5）形式放在 footer-cta **之前**；footer-cta 内部文案保持上面的固定句式，两者不重复出现"三连"字样时可将签名第二段并入 footer-cta 顶部文字。
+**固定结尾署名组件**：footer-cta **之前**放 `common-components.md` 第四部分的固定结尾署名组件（本主题换色：主色 `#B3593B`（左竖条 border）、品牌句文字色 `#8A4530`（14px/600 在 `#EAD6CC` 底上 5.0:1）、浅底 `#EAD6CC`、正文色 `#555555`、次要文字 `#737373`）。文案逐字固定，不再生成 `{{作者名}}` / `{{一句话简介}}` 占位符。footer-cta 内部文案保持上面的固定句式。
 
 ### 13b. brand-card（品牌尾图）
 
@@ -857,7 +910,7 @@
 
   <!-- 7. 结语章（组件4 变体：编号 ///，PART 改 LAST，章名"写在最后"） -->
 
-  <!-- 8. 互动三连（组件13a footer-cta，前面放固定签名段落） -->
+  <!-- 8. 互动三连（组件13a footer-cta，前面放固定结尾署名组件） -->
 
   <!-- 9. 品牌尾图（组件13b，有素材才加） -->
 
@@ -933,4 +986,4 @@
 | 亮点提示 | 组件 10b green-tip / 10d green-info | |
 | `![](图片)` | 组件 12a image | 原图代码保留 |
 | 视频 | 组件 12b video-card | 原视频代码保留 |
-| 文末 | 组件 13a footer-cta（+ 13b brand-card） | 签名段落放 footer-cta 前 |
+| 文末 | 组件 13a footer-cta（+ 13b brand-card） | 固定结尾署名组件放 footer-cta 前 |

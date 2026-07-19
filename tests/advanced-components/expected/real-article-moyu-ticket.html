@@ -1,0 +1,48 @@
+<section style="max-width:677px;margin:0 auto;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#555;line-height:1.75;letter-spacing:0.5px;overflow-x:hidden;">
+<section style="margin:0 0 32px;background:#fffef8;border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a;padding:24px 20px;">
+  <p style="font-size:16px;font-weight:800;color:#1a1a1a;margin:0;line-height:1.7;"><span leaf="">「AI 工具的效率提升只在特定任务类型中显著，多数用户总产出并未增加。」</span></p>
+  <p style="margin:8px 0 0;font-size:12px;color:#888;text-align:right;"><span leaf="">—— 甲木</span></p>
+</section>
+<section style="margin:32px 0 16px;padding:10px 16px;background:#1a1a1a;box-shadow:3px 3px 0 #1a1a1a;">
+  <p style="margin:0;font-size:11px;color:#fffef8;letter-spacing:2px;font-weight:600;"><span leaf="">01</span></p>
+  <p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#fffef8;line-height:1.3;"><span leaf="">效率提升的真相</span></p>
+</section>
+<p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.9;"><span leaf="">我们对 200 位用户进行了为期 3 个月的跟踪测试。结果显示，使用 AI 工具后，代码生成任务的效率提升了 </span><span style="border-bottom:2px solid #059669;font-weight:600;"><span leaf="">30%</span></span><span leaf="">，但文档撰写和设计任务的提升不到 <span style="border-bottom:2px solid #059669;font-weight:600;"><span leaf="">5%</span></span><span leaf="">。</span></span></p>
+<section style="margin:0 0 24px;background:#fffef8;border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a;padding:14px 18px;">
+  <p style="margin:0 0 8px;"><span style="display:inline-block;background:#1a1a1a;color:#fffef8;font-size:11px;font-weight:700;padding:2px 10px;letter-spacing:1px;"><span leaf="">WARNING</span></span></p>
+  <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.5;"><span leaf="">数据局限</span></p>
+  <p style="margin:0;font-size:14px;color:#555;line-height:1.8;"><span leaf="">样本量为 200 人，均为技术岗位，不代表全行业水平。</span></p>
+</section>
+<section style="margin:32px 0 16px;padding:10px 16px;background:#1a1a1a;box-shadow:3px 3px 0 #1a1a1a;">
+  <p style="margin:0;font-size:11px;color:#fffef8;letter-spacing:2px;font-weight:600;"><span leaf="">02</span></p>
+  <p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#fffef8;line-height:1.3;"><span leaf="">核心发现</span></p>
+</section>
+<section style="margin:0 0 24px;background:#fffef8;border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a;padding:14px 18px;text-align:center;"><p style="margin:0;font-size:16px;font-weight:800;color:#1a1a1a;line-height:1.7;"><span leaf="">「AI 工具不是万能加速器，而是特定场景的杠杆。」</span></p></section>
+<p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.9;"><span leaf="">效率提升集中在</span><span style="border-bottom:2px solid #059669;font-weight:600;"><span leaf="">模板化</span></span><span leaf="">、重复性高的任务上。需要<span style="border-bottom:2px solid #059669;font-weight:600;"><span leaf="">创造性判断</span></span><span leaf="">的任务几乎不受影响。</span></span></p>
+<section style="margin:32px 0 16px;padding:10px 16px;background:#1a1a1a;box-shadow:3px 3px 0 #1a1a1a;">
+  <p style="margin:0;font-size:11px;color:#fffef8;letter-spacing:2px;font-weight:600;"><span leaf="">03</span></p>
+  <p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#fffef8;line-height:1.3;"><span leaf="">改进建议</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.5;"><span leaf="">提示词优化对照</span></p>
+  <section style="margin:0 0 12px;border-radius:0px;overflow:hidden;background:#1E293B;">
+    <section style="padding:7px 14px;background:#0F172A;"><span style="font-size:11px;color:#64748B;letter-spacing:1px;"><span leaf="">改前</span></span></section>
+    <section style="padding:11px 14px;"><p style="margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;"><span leaf="">result = llm.generate(prompt)</span></p></section>
+  </section>
+  <section style="margin:0 0 12px;border-radius:0px;overflow:hidden;background:#1a3a2a;">
+    <section style="padding:7px 14px;background:#0a2a1a;"><span style="font-size:11px;color:#6BCB77;letter-spacing:1px;"><span leaf="">改后</span></span></section>
+    <section style="padding:11px 14px;"><p style="margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;"><span leaf="">result = llm.generate(prompt, context=True, retry=2)</span></p></section>
+  </section>
+</section>
+<section style="margin:0 0 24px;"><p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.5;"><span leaf="">参考资料</span></p>
+  <section style="margin:0 0 8px;padding:10px 14px;background:#fffef8;border-radius:0px;border-left:3px solid #059669;"><p style="margin:0;font-size:14px;color:#1a1a1a;font-weight:600;line-height:1.6;"><span leaf="">效率测试方法论</span></p><p style="margin:2px 0 0;font-size:12px;color:#888;"><span leaf="">https://example.com/method</span></p></section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#fffef8;border-radius:0px;border-left:3px solid #059669;"><p style="margin:0;font-size:14px;color:#1a1a1a;font-weight:600;line-height:1.6;"><span leaf="">完整数据集</span></p><p style="margin:2px 0 0;font-size:12px;color:#888;"><span leaf="">https://github.com/example/ai-efficiency</span></p></section>
+</section>
+<section style="margin:24px 0 0;padding-top:16px;border-top:1px solid #A7F3D0;">
+  <p style="margin:0 0 6px;font-size:12px;color:#888;line-height:1.7;"><span style="font-weight:700;color:#059669;margin-right:4px;"><span leaf="">[1]</span></span><span leaf="">调查样本：200 名开发者，来自 5 家公司，2026 年 6-8 月</span></p>
+</section>
+<section style="margin:32px 0 0;background:#fffef8;border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a;padding:20px;text-align:center;">
+  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#1a1a1a;line-height:1.7;"><span leaf="">我是甲木，热衷于分享 AI 观察与干货</span></p>
+  <p style="margin:0;font-size:13px;color:#555;line-height:1.7;"><span leaf="">如果你觉得今天这篇有收获，欢迎点赞、在看、转发三连，我们下篇见</span></p>
+</section>
+</section>

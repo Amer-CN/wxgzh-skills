@@ -189,3 +189,140 @@
 | 想给一段起小标题 / 强调 | 3a 左竖条（首选）/ 3b 药丸 / 3c 序号 |
 | `> 金句` | 3d 金句左竖条块 |
 | 提示 / 注意 / 旁注 | 3e 提示左竖条块（**不要用虚线框**） |
+| 文章结尾固定署名 | 4 固定结尾署名组件（**所有主题必用**） |
+
+---
+
+## 四、固定结尾署名组件（全局文章尾部组件，所有主题通用）
+
+> **语义**：这是全局文章尾部组件，**不是任何主题的专属组件**。所有 7 个主题（moyu-green / red-white / graphite-minimal / zen-whitespace / moyu-ticket / olive-journal / hammer）都使用本组件作为文章最终署名，不再生成 `{{作者名}}` / `{{一句话简介}}` 等动态占位符。
+>
+> **文案铁律（逐字一致，不得改写、扩写、润色）**：
+> - "AI"保持大写
+> - 邮箱 `cd.hyxc.jz@foxmail.com` 保持半角原样，不得修改任何字符
+> - `/` 保持半角
+> - 不得改成"我是……"
+> - 不得生成其他作者名
+> - 不得出现 `{{作者名}}` 或 `{{一句话简介}}`
+>
+> **固定作者**：给自己造把锤子
+>
+> **固定投稿邮箱**：cd.hyxc.jz@foxmail.com
+>
+> **插入位置**（文章最终顺序）：
+> 1. 文章正文
+> 2. 文章自身的总结/结语
+> 3. **固定结尾署名组件**（本组件，只出现一次）
+> 4. 点赞/在看/转发视觉区域（主题存在时）
+> 5. THANKS FOR READING（主题存在时）
+>
+> **去重规则**：
+> - 源稿已完整包含这段固定结尾 → 不重复追加，保留已有一份，统一转换为当前主题的结尾组件样式
+> - 源稿只有普通作者署名 → 不把旧署名与固定署名同时输出
+> - 原文明确要求保留其他作者署名时，**停止并提示存在署名冲突**，不得静默篡改真正的外部投稿作者
+>
+> **视觉结构（三层，文案固定，视觉随主题适配）**：
+>
+> | 层 | 文案 | 视觉 |
+> |----|------|------|
+> | 1 收尾句 | 好了，今天就先聊到这儿。 | 正文色、正常字号，不做大标题 |
+> | 2 固定品牌句 | 热闹是 AI 的，淡定可以是我们的。不用马上跟上，知道一点，就不算掉队。 | 当前主题品牌句文字色做轻强调（左竖线 / 浅底 / 下划线），不要做成大型 CTA；14px/600 属于普通文字，对比度必须 ≥4.5:1 |
+> | 3 作者与联系方式 | / 作者 给自己造把锤子 / 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com | 次要文字色，字号 12～13px；邮箱纯文本，不自动构造外部链接 |
+>
+> **邮箱链接限制**：邮箱使用纯文本；如果要使用链接，**只允许** `mailto:cd.hyxc.jz@foxmail.com`，不得修改邮箱字符。
+>
+> **公众号兼容**：ASCII 属性双引号、中文文字 `<span leaf="">` 包裹、样式全内联、不用 class/id/div、不用 position、不产生 `\uXXXX`、不产生作者占位符、不产生编辑锚点。邮箱和 `/` 属于允许的半角内容。
+
+### 4a. 通用模板（换色规则见下方各主题映射）
+
+```html
+<section style="padding:0 10px 24px;">
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.8;color:{正文色};">
+    <span leaf="">好了，今天就先聊到这儿。</span>
+  </p>
+  <section style="margin:0 0 16px;padding:10px 14px;border-left:3px solid {主色};background:{浅底};border-radius:0 6px 6px 0;">
+    <p style="margin:0;font-size:14px;line-height:1.8;color:{品牌句文字色};font-weight:600;">
+      <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
+    </p>
+    <p style="margin:8px 0 0;font-size:14px;line-height:1.8;color:{品牌句文字色};font-weight:600;">
+      <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+    </p>
+  </section>
+  <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:{次要文字};">
+    <span leaf="">/ 作者 给自己造把锤子</span>
+  </p>
+  <p style="margin:0;font-size:12px;line-height:1.7;color:{次要文字};">
+    <span leaf="">/ 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com</span>
+  </p>
+</section>
+```
+
+### 4b. 各主题换色映射（单一来源，主题适配器同步）
+
+> 换色换五个变量：`{主色}` `{浅底}` `{正文色}` `{次要文字}` `{品牌句文字色}`。极简主题（石墨极简 / 留白禅意）去 `background`，只保留左竖条；票据主题保留硬阴影气质时，外层加 `border:2px solid {边框};box-shadow:3px 3px 0 {边框}`。
+>
+> **品牌句文字色**：14px/600 属于普通文字，对比度必须 ≥ 4.5:1。若主色在浅底上对比度不足，使用更深的变体（如 hammer 主色 `#B3593B` 在 `#EAD6CC` 底上仅 3.40:1，品牌句文字色改用 `#8A4530` 达到 5.0:1）。`{主色}` 仍用于左竖条 border、背景色块、大号粗体标题。
+
+| 主题 | 主色 | 品牌句文字色 | 浅底 | 正文色 | 次要文字 | 视觉调整 |
+|------|------|--------------|------|--------|----------|----------|
+| moyu-green | `#059669` | `#059669` | `#ECFDF5` | `#374151` | `#6B7280` | 卡片式，保留浅底 + 左竖条 |
+| red-white | `#DC2626` | `#DC2626` | `#FEF2F2` | `#374151` | `#9CA3AF` | 左竖条 + 浅底，红色克制 |
+| graphite-minimal | `#52525B` | `#52525B` | `transparent` | `#52525B` | `#A1A1AA` | 去 `background`，左竖条 `2px`，大留白 |
+| zen-whitespace | `#4A5D52` | `#4A5D52` | `transparent` | `#525252` | `#A3A3A3` | 去 `background`，左竖条 `2px`，居中可选 |
+| moyu-ticket | `#059669` | `#059669` | `#fffef8` | `#555` | `#888` | 外层加 `border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a` |
+| olive-journal | `#ed7b2f` | `#ed7b2f` | `#eeefe9` | `#4d4f46` | `#9ea096` | 左竖条 + 米白底，字号 13px |
+| hammer | `#B3593B` | `#8A4530` | `#EAD6CC` | `#555555` | `#737373` | 左竖条 + 浅陶土底，温暖收尾；品牌句文字色 `#8A4530`（5.0:1） |
+
+### 4c. 极简主题变体（graphite-minimal / zen-whitespace）
+
+去 `background`，左竖条细化为 `2px`，`padding` 加大，贴合留白气质：
+
+```html
+<section style="padding:0 10px 32px;">
+  <p style="margin:0 0 20px;font-size:15px;line-height:1.9;color:{正文色};">
+    <span leaf="">好了，今天就先聊到这儿。</span>
+  </p>
+  <section style="margin:0 0 20px;padding:8px 16px;border-left:2px solid {主色};">
+    <p style="margin:0;font-size:14px;line-height:1.9;color:{品牌句文字色};font-weight:500;">
+      <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
+    </p>
+    <p style="margin:8px 0 0;font-size:14px;line-height:1.9;color:{品牌句文字色};font-weight:500;">
+      <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+    </p>
+  </section>
+  <p style="margin:0 0 4px;font-size:12px;line-height:1.8;color:{次要文字};">
+    <span leaf="">/ 作者 给自己造把锤子</span>
+  </p>
+  <p style="margin:0;font-size:12px;line-height:1.8;color:{次要文字};">
+    <span leaf="">/ 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com</span>
+  </p>
+</section>
+```
+
+### 4d. 票据主题变体（moyu-ticket）
+
+外层加黑描边 + 硬阴影，保留票据气质：
+
+```html
+<section style="padding:0 0 24px;">
+  <section style="background:#fffef8;border:2px solid #1a1a1a;box-shadow:3px 3px 0 #1a1a1a;padding:20px 18px;">
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#555;">
+      <span leaf="">好了，今天就先聊到这儿。</span>
+    </p>
+    <section style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #059669;background:#fffef8;">
+      <p style="margin:0;font-size:14px;line-height:1.8;color:#059669;font-weight:700;">
+        <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
+      </p>
+      <p style="margin:8px 0 0;font-size:14px;line-height:1.8;color:#059669;font-weight:700;">
+        <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+      </p>
+    </section>
+    <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:#888;">
+      <span leaf="">/ 作者 给自己造把锤子</span>
+    </p>
+    <p style="margin:0;font-size:12px;line-height:1.7;color:#888;">
+      <span leaf="">/ 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com</span>
+    </p>
+  </section>
+</section>
+```

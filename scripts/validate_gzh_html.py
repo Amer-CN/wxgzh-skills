@@ -37,6 +37,59 @@ FORBIDDEN = [
      "ERROR", "外部字体不被支持"),
 ]
 
+# HTML 属性使用了中文引号（「」「」“”‘’）——必须用 ASCII 双引号
+# 使用 \u 转义避免字符在文件写入时被转换
+#
+# 关键设计：不使用固定属性白名单（style/leaf/src/...），而是扫描所有 HTML 标签内的
+# 所有属性。否则遇到 cx/cy/r/stroke-linecap/stroke-linejoin/aria-*/data-* 等会漏检。
+# 只在 <...> 标签文本内检测，避免把正文中的 `x=「概念」` 误判为 HTML 属性。
+TAG_RE = re.compile(r"<[^>]+>", re.S)
+ANY_CN_QUOTED_ATTR = re.compile(
+    r"""(?ix)
+    ([A-Za-z_:][-A-Za-z0-9_:.]*)   # 属性名
+    \s*=\s*
+    ([\u300c\u300d\u201c\u201d\u2018\u2019])  # 中文开引号
+    """
+)
+
+# 中文引号配对映射（开引号 → 闭引号）
+CN_QUOTE_PAIRS = {
+    '\u300c': '\u300d',  # 「 → 」
+    '\u300d': '\u300c',  # 」 → 「
+    '\u201c': '\u201d',  # “ → ”
+    '\u201d': '\u201c',  # ” → “
+    '\u2018': '\u2019',  # ‘ → ’
+    '\u2019': '\u2018',  # ’ → ‘
+}
+
+# 向后兼容：保留旧名称，但内部指向全属性扫描
+INVALID_ATTRIBUTE_QUOTE = ANY_CN_QUOTED_ATTR
+
+
+def find_cn_quoted_attrs(html):
+    """检测 HTML 中所有使用中文引号的属性。
+
+    只扫描 <...> 标签文本内部，不扫描正文——因此正文里的 `x=「概念」`
+    不会被误判为 HTML 属性引号错误。
+
+    返回 [(attr_name, quote_char), ...]，列表长度即为命中数。
+    """
+    hits = []
+    for tag_m in TAG_RE.finditer(html):
+        tag_text = tag_m.group(0)
+        for m in ANY_CN_QUOTED_ATTR.finditer(tag_text):
+            hits.append((m.group(1), m.group(2)))
+    return hits
+
+# 发布前必须清除的占位符和编辑锚点
+PLACEHOLDER_PATTERNS = [
+    (re.compile(r'\{\{[^}]+\}\}'), "模板占位符 {{...}} 残留，发布前必须替换或删除"),
+    (re.compile(r'\[编辑锚点'), "编辑锚点 [编辑锚点...] 残留，发布前必须完成事实核对"),
+    (re.compile(r'\bTODO\b'), "TODO 标记残留，发布前必须补完"),
+    (re.compile(r'待补'), "待补标记残留，发布前必须补完"),
+    (re.compile(r'需要补充'), "需要补充标记残留，发布前必须补完"),
+]
+
 CJK = re.compile(r"[一-鿿㐀-䶿]")
 SKIP_TAGS = {"head", "title", "style", "script"}  # 不参与公众号正文粘贴的区域
 # 中文字后紧跟半角逗号/分号/叹号/问号（应改全角）；只查"中文在前"避免中英混排误伤
@@ -105,6 +158,22 @@ def validate(html, name="<input>"):
             (errors if level == "ERROR" else warnings).append(
                 f"{msg}（命中 {hits} 处）")
 
+    # 检查 HTML 属性中文引号 —— 扫描所有标签内所有属性，不限于固定白名单
+    quote_hits = find_cn_quoted_attrs(html)
+    if quote_hits:
+        # 列出前 5 个命中的属性名，方便定位
+        sample = ", ".join(f"{name}={q}" for name, q in quote_hits[:5])
+        errors.append(
+            f"E_INVALID_ATTRIBUTE_QUOTE: HTML 属性使用了中文引号，"
+            f"必须使用 ASCII 双引号（命中 {len(quote_hits)} 处）"
+            f"{('，例：' + sample) if sample else ''}")
+
+    # 检查占位符和编辑锚点
+    for rx, msg in PLACEHOLDER_PATTERNS:
+        hits = len(rx.findall(html))
+        if hits:
+            errors.append(f"{msg}（命中 {hits} 处）")
+
     checker = LeafChecker()
     try:
         checker.feed(html)
@@ -123,10 +192,22 @@ def validate(html, name="<input>"):
             f"样式可能丢失。例：{sample}")
 
     if checker.half_punct:
-        sample = "；".join(f"「{s}」" for s in checker.half_punct[:5])
-        warnings.append(
-            f"{len(checker.half_punct)} 处正文疑似半角标点/英文引号，应改中文全角"
-            f"（代码块内不计）。例：{sample}")
+        # 剔除固定结尾署名组件内部的半角内容（邮箱 @ . /），
+        # 这些是允许的半角内容，不应触发 WARNING。
+        filtered = []
+        for snippet in checker.half_punct:
+            if "cd.hyxc.jz@foxmail.com" in snippet:
+                continue
+            if "/ 作者 给自己造把锤子" in snippet:
+                continue
+            if "/ 投稿或反馈" in snippet:
+                continue
+            filtered.append(snippet)
+        if filtered:
+            sample = "；".join(f"「{s}」" for s in filtered[:5])
+            warnings.append(
+                f"{len(filtered)} 处正文疑似半角标点/英文引号，应改中文全角"
+                f"（代码块内不计；固定结尾署名组件内的邮箱和 / 已豁免）。例：{sample}")
 
     return errors, warnings, checker.span_leaf_count
 
