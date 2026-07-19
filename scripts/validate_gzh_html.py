@@ -24,7 +24,6 @@ FORBIDDEN = [
     (re.compile(r"</?div[\s>]", re.I), "ERROR", "<div> 会被改写，请用 <section>"),
     (re.compile(r"<link[\s>]", re.I), "ERROR", "外部 <link>（CSS/字体）会被过滤"),
     (re.compile(r"\sclass\s*=", re.I), "ERROR", "class 属性会被剥离，请用内联 style"),
-    (re.compile(r"\sid\s*=", re.I), "ERROR", "id 属性会被剥离"),
     (re.compile(r"position\s*:\s*(fixed|absolute|sticky)", re.I), "ERROR",
      "position fixed/absolute/sticky 不被支持"),
     (re.compile(r"float\s*:", re.I), "ERROR", "float 不被支持"),
@@ -157,6 +156,39 @@ def validate(html, name="<input>"):
         if hits:
             (errors if level == "ERROR" else warnings).append(
                 f"{msg}（命中 {hits} 处）")
+
+    # 检查 id 属性 —— 允许脚注专用 id（fnN / fnrefN），其余 id 仍会被剥离。
+    # 用 \s 前缀确保只匹配独立 id 属性，不误伤 data-mpa-action-id 等。
+    id_re = re.compile(r"""\s+id\s*=\s*["']([^"']*)["']""", re.I)
+    bad_ids = []
+    for m in id_re.finditer(html):
+        val = m.group(1).strip()
+        if re.fullmatch(r"fn\d+", val) or re.fullmatch(r"fnref\d+", val):
+            continue  # 脚注 id 允许
+        bad_ids.append(val)
+    if bad_ids:
+        sample = ", ".join(bad_ids[:5])
+        errors.append(
+            f"id 属性会被剥离（命中 {len(bad_ids)} 处）；"
+            f"仅允许脚注专用 id（fnN/fnrefN）。例：{sample}")
+
+    # 检查内部片段链接 href="#..." —— 微信 draft/add 不接受，返回 45166
+    fragment_href_re = re.compile(r'''href\s*=\s*["']\s*#''', re.I)
+    fragment_hits = fragment_href_re.findall(html)
+    if fragment_hits:
+        examples = []
+        for m in re.finditer(r'''href\s*=\s*["']([^"']*)["']''', html, re.I):
+            val = m.group(1)
+            if val.startswith("#"):
+                examples.append(val)
+        sample = ", ".join(examples[:5]) if examples else ""
+        errors.append(
+            f"微信 draft/add 不接受内部片段链接 href=\"#...\"，"
+            f"会返回 errcode 45166 invalid content（命中 {len(fragment_hits)} 处）；"
+            f"请移除 href 属性，保留可见文字。例：{sample}" if sample else
+            f"微信 draft/add 不接受内部片段链接 href=\"#...\"，"
+            f"会返回 errcode 45166 invalid content（命中 {len(fragment_hits)} 处）；"
+            f"请移除 href 属性，保留可见文字。")
 
     # 检查 HTML 属性中文引号 —— 扫描所有标签内所有属性，不限于固定白名单
     quote_hits = find_cn_quoted_attrs(html)

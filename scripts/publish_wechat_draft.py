@@ -103,6 +103,10 @@ RENDERED_TAG_RE = re.compile(r"<(?:section|p|span|img|h[1-6])\b", re.I)
 # 原始 Markdown 标题检测（行首 1-6 个 # 后跟空格和文本）
 RAW_MARKDOWN_RE = re.compile(r"(?m)^\s{0,3}#{1,6}\s+\S+")
 
+# 内部片段链接检测（发布层专用阻断）
+# 微信 draft/add 不接受 href="#..."，会返回 errcode 45166 invalid content
+FRAGMENT_HREF_RE = re.compile(r'''href\s*=\s*["']\s*#''', re.I)
+
 
 def api_error(msg, data=None):
     """简洁错误输出，不输出 Python traceback"""
@@ -338,6 +342,14 @@ def preflight_html(html_content, html_path, raw_file_sha256=""):
     unicode_hits = len(LITERAL_UNICODE.findall(html_content))
     if unicode_hits > 0:
         errors.append(f"E_LITERAL_UNICODE: 字面量 \\uXXXX 残留 {unicode_hits} 处")
+
+    # 内部片段链接检查（发布层阻断，防止微信 45166）
+    fragment_href_hits = len(FRAGMENT_HREF_RE.findall(html_content))
+    if fragment_href_hits > 0:
+        errors.append(
+            f"E_FRAGMENT_HREF: 内部片段链接 href=\"#...\" 会触发微信 45166 "
+            f"invalid content（命中 {fragment_href_hits} 处）；"
+            f"请移除 href 属性，保留可见文字。应由 renderer 从源头生成正确 HTML。")
 
     # ---- 调用完整 HTML 校验器 ----
     # validate() 检查：禁用标签/属性/样式、全属性中文引号、占位符、编辑锚点、

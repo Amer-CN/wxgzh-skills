@@ -48,3 +48,5 @@
 
 > 完整 6 主题 HTML 见 `tests/advanced-components/expected/footnotes-*.html`（验收产物，非生产依赖）。
 > **生产排版时从本文件的 HTML 模板取代码**，按 `theme-adapters.md` 替换色值。
+
+> **⚠️ 微信兼容铁律（v5.2 修复）**：禁止在正文 HTML 中生成 `href="#..."` 内部片段链接。微信 `draft/add` API 不接受内部锚点链接，会返回 `errcode 45166 invalid content`。脚注引用标记和返回标记必须保留可见文字（`[1]`、`[2]`、`↩︎`）但不生成 `href` 属性。外部 HTTPS 链接（`href="https://..."`）不受此限制。
