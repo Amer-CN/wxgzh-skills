@@ -1,0 +1,108 @@
+material_ledger:
+  total_count: 192
+  source: "AI HOT · q=Kimi+K3&mode=all&take=100 (翻2页，id去重)"
+  retrieved_at: "2026-07-21"
+  
+  categories:
+    - name: 模型发布与规格
+      count: 15
+      score_range: "80-40"
+      key_items:
+        - "Kimi K3：智能的新前沿 | 月之暗面官方博客 (score:80)"
+        - "Kimi 最强模型 K3 发布，Frontend Code Arena 跑分登顶 | IT之家 (score:79)"
+        - "Kimi K3 发布：2.8T 参数开源模型追平 Opus | Oran Ge (score:78)"
+        - "Kimi 迄今最强旗舰模型 K3 上线，支持最高 1M 上下文 | IT之家 (score:68)"
+        - "Introducing Kimi K3：2.8T Parameters, 1M Context, Native Vision | Kimi.ai 官方"
+        - "Moonshot AI Releases Kimi K3：2.8T MoE with Delta Attention | MarkTechPost"
+        
+    - name: 基准测试与评测
+      count: 28
+      score_range: "76-35"
+      key_items:
+        - "Kimi K3 登顶前端编码榜，1679分力压Claude Fable 5与GPT-5.6 Sol (score:76)"
+        - "Kimi K3 前端盲测登顶，非对称竞争挑战 Fable 5 (score:68)"
+        - "Kimi K3 登顶 SpreadsheetBench 2，超越 Claude Fable 5 (score:40)"
+        - "Kimi K3 登顶 DesignArena 前端基准 (score:39)"
+        - "Kimi K3 在 DeepSWE 排名第三，与 Fable/GPT-5.6 Sol 并列前沿 (score:42)"
+        - "Kimi K3 在智能指数中得分57，计划开源2.8T权重 (score:57)"
+        - "Kimi K3 复杂数学仍大幅落后 Claude Fable 5 (score:42)"
+        - "K3 在编程智能体指数中排名第5，得分57 (score:48)"
+        
+    - name: 定价与商业模式
+      count: 12
+      score_range: "57-30"
+      key_items:
+        - "Kimi K3 定价公布：输入$3/输出$15每百万token (score:57)"
+        - "Kimi K3 定价高于 DeepSeek 原因解析 | Emad Mostaque (score:47)"
+        - "K3 价格约为 Claude Fable 5 的三分之一 (score:43)"
+        - "Kimi K3 与 Claude 对比：质量相当但价格更低 (score:55)"
+        - "GPT-5.6 Sol 输出速度是 Kimi K3 的 12 倍，源于硬件架构差异 (score:41)"
+        
+    - name: 开源与生态影响
+      count: 20
+      score_range: "75-35"
+      key_items:
+        - "Kimi K3 2.8万亿参数模型发布，7月27日开源 | 卡兹克 (score:75)"
+        - "Kimi 正式发布 2.8 万亿参数大模型 K3，将于 7 月 27 日全面开源 (score:75)"
+        - "Kimi K3 开源在即，综合评测超越 Gemini (score:68)"
+        - "Kimi K3：开源权重模型的升级 | Nathan Lambert (score:67)"
+        - "Kimi K3 开源权重发布，全面超越 Opus 4.8 (score:58)"
+        - "Kimi K3、Qwen 3.8 发布，性能接近 Fable 5，将开源 (score:58)"
+        - "Kimi K3 前端编码超越所有美国模型 (score:54)"
+        - "Kimi K3 开源，性能仅次于两大模型 (score:54)"
+        
+    - name: 市场反应与政策
+      count: 25
+      score_range: "70-35"
+      key_items:
+        - "Kimi K3 发布冲击美股，启动港股IPO (score:68)"
+        - "月之暗面提交港股上市申请，K3推动ARR三倍增长 (score:69)"
+        - "特朗普政府考虑禁止中国开源AI模型 (score:63)"
+        - "美国应否封禁中国开源大模型？Kimi K3 引发争议 | TechCrunch (score:61)"
+        - "中国AI几乎追平美国，K3开源模型引发市场震荡 | Gary Marcus (score:61)"
+        - "OpenAI 战略未来主管批 Kimi K3 开源是'减速主义' (score:56)"
+        - "Kimi K3 需求超预期，月之暗面暂停新订阅申请 (score:62)"
+        - "Moonshot 因 GPU 需求 48 小时达上限暂停 K3 新订阅 (score:54)"
+        
+    - name: 技术深度分析
+      count: 15
+      score_range: "67-28"
+      key_items:
+        - "Moonshot AI 发布 PerceptionBench 视觉感知诊断基准 (score:70)"
+        - "月之暗面 GTC 2026 披露 K2.5 技术路线：MuonClip、线性注意力、Agent Swarm (score:81)"
+        - "SemiAnalysis：Kimi K3 线性注意力利好英伟达 (score:65)"
+        - "Kimi K3 修复 15 个 GPT-5.6 拒绝处理的漏洞 (score:36)"
+        - "Kimi K3 展示 AI 为 AI 设计芯片能力：2 天完成构建优化验证 (score:41)"
+        - "Kimi K3 写 H100 CUDA 内核速度比优化 PyTorch 快 14.82 倍 (score:34)"
+        
+    - name: 实测与体验
+      count: 30
+      score_range: "74-15"
+      key_items:
+        - "Kimi K3实测：国产模型直逼顶级水平 | Vista (score:74)"
+        - "Kimi K3上线2天成OpenRouter第10大模型，基础设施已不堪重负 (score:73)"
+        - "Kimi K3 首测：与 Opus 4.8 前端对决，有来有回 (score:67)"
+        - "Kimi K3 一句话生成在线视频编辑器 (score:70)"
+        - "Kimi K3 思维链 95.5% 为英文引发关注 (score:55)"
+        - "Ethan Mollick：Kimi K3 统计审计出错 (score:52)"
+        - "Kimi K3 存在循环问题 (score:59)"
+        
+    - name: 行业对比与格局
+      count: 22
+      score_range: "55-20"
+      key_items:
+        - "八天四款前沿模型发布，Kimi K3 跻身第三 (score:76)"
+        - "谁怕中国模型？Kimi K3 逼近 SOTA，开源模型成本优势引热议 (score:69)"
+        - "Kimi K3 发布，或成下一个 DeepSeek 时刻 (score:57)"
+        - "Kimi K3 迫使 Anthropic 和 OpenAI 加速发布新模型 (score:43)"
+        - "Kimi K3、DeepSeek V4 Pro 与 GLM-5.2 三款开源万亿参数 MoE 对比 (score:45)"
+        - "Kimi K3 可能成为 AI 行业转折点，但 token 效率不足 (score:28)"
+
+material_readiness:
+  topic: kimi_k3_release
+  audience: "中文科技读者，关注 AI 行业动态"
+  core_opinion: "可提炼（素材充分）"
+  evidence: "充足（192条，覆盖全维度）"
+  personal_experience: "无"
+  voice_context: "第三人称分析视角"
+  decision: ready_to_write

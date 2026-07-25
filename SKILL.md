@@ -49,6 +49,215 @@ description: >-
 
 用户可以指定跳转：重新调研、换角度、改结构、重写、内容审稿、学习修改。
 
+## 输入模式路由（v0.3.2 新增）
+
+在进入写作流程之前，先确定 `INPUT_MODE`：
+
+| INPUT_MODE | 适用场景 | 行为 |
+|---|---|---|
+| `direct` | 少量、结构清晰的素材 | 直接进入 Phase 1 写作简报，不强制生成中间编辑层文件 |
+| `material_heavy` | AI HOT 完整抓取、大量素材、长篇文章、多来源事件 | 先执行 Phase 0–4.5 中间编辑层，再进入 Phase 5 写作 |
+| `auto` | 默认 | 按以下规则自动判断 |
+
+### auto 模式判断规则
+
+满足任意一项即进入 `material_heavy`：
+
+- 输入明确来自 AI HOT 完整抓取（含原始 JSON）；
+- 原始素材条数 >= 20；
+- 目标文章模式为 long/deep，且独立来源条数 >= 10；
+- 多条素材明显描述同一事件；
+- 素材中存在数字、主体、时间或事件定性冲突。
+
+其他情况进入 `direct`。
+
+如果用户明确指定 `direct` 或 `material_heavy`，以用户指定为准。
+
+### 向后兼容
+
+`direct` 模式完全保持 v0.3.1 的行为，不增加额外处理成本。不指定 `INPUT_MODE` 时默认 `auto`，少量素材场景自动走 `direct`，行为与 v0.3.1 一致。
+
+## Material-Heavy Editorial Mode（v0.3.2 新增）
+
+当 `INPUT_MODE=material_heavy` 时，加载 `references/material-heavy-editorial.md`，在现有写作阶段之前执行以下中间编辑层流程：
+
+### Phase 0：Input Census
+
+- 统计素材数量；
+- 识别输入类型（JSON / Markdown / 混合）；
+- 记录原始素材 SHA256 Hash；
+- 分配稳定 `material_id`（M-01, M-02, ...）；
+- 禁止修改原始素材。
+
+**门禁：** 原始素材完整保存，Hash 已记录，每个素材有唯一 material_id。
+
+### Phase 1：Three-Layer Deduplication
+
+按三层去重：
+
+1. **URL 去重**：检查原始来源 URL 是否相同；
+2. **事件去重**：检查是否描述同一事件，多个来源描述同一事件时合并为一个 `event_id`；
+3. **论点去重**：检查是否转述同一核心事实。
+
+要求：
+- 多个来源描述同一事件时合并为一个 event_id；
+- 不得因为来源数量多就把同一事件当成多项独立证据；
+- 必须保留各来源之间的差异和冲突。
+
+**门禁：** 去重后事件清单完整，每个事件有唯一 event_id，来源合并关系已记录。
+
+### Phase 1.5：Topic Clustering
+
+- 将事件按文章论证需要聚类；
+- 不能只按关键词聚类；
+- 聚类结果必须服务于文章结构；
+- 每个事件只能有明确的主归属，必要时允许注明辅助归属。
+
+**门禁：** 聚类结果服务于文章结构，每个事件有主归属。
+
+### Phase 2：Claim–Evidence Binding
+
+对准备写入文章的事实性 Claim 建立绑定：
+
+| 字段 | 说明 |
+|---|---|
+| claim_id | C-01, C-02, ... |
+| claim 文本 | 原子化的事实陈述 |
+| material_id | 支撑该 claim 的素材 ID |
+| event_id | 所属事件 ID |
+| source URL | 原始来源 URL |
+| source excerpt | 素材中支撑该 claim 的逐字摘录 |
+| 数字/单位/主体/时间 | 如有，必须精确记录 |
+| 支持强度 | strong / moderate / weak |
+| 限定词 | 必须保留的限定表述 |
+| 冲突状态 | none / conflict / dual_characterization |
+
+禁止：
+- 只有 material_id，没有证据摘录；
+- 只做关键词重合；
+- 用一个素材支持素材中不存在的数字；
+- 把分析判断伪装成来源事实。
+
+**门禁：** 每个 claim 有完整的证据绑定，摘录逐字可追溯。
+
+### Phase 2.5：Conflicts and Boundaries
+
+必须识别：
+- 数字冲突；
+- 主体冲突；
+- 时间冲突；
+- 同一事件的不同定性；
+- 二手来源与当事方来源差异；
+- 推测、指控、测试结果和已确认事实的区别。
+
+为每项生成表达边界：
+
+| 边界级别 | 含义 |
+|---|---|
+| can_assert | 可以确定地写 |
+| must_attribute | 必须带归因 |
+| must_qualify | 必须带限定词 |
+| analysis_only | 只能作为分析 |
+| do_not_write | 不得写入正文 |
+
+**门禁：** 所有冲突和不确定性已识别，每项有表达边界级别。
+
+### Phase 3：Thesis and Article Blueprint
+
+生成：
+- 中心论点；
+- 文章读者收益；
+- 开场方式；
+- 章节顺序；
+- 每章独有信息目标；
+- 每章使用的 event_id 和 claim_id；
+- 章节间禁止重复的信息；
+- 结尾应得出的结论及其证据边界。
+
+**门禁：** 每章有唯一信息目标，证据已分配到章节，章节间无重复信息。
+
+### Phase 4：Section Evidence Packs
+
+每章生成独立证据包：
+- 本章作用；
+- 本章核心 Claim；
+- 证据摘录；
+- 数字与主体；
+- 可用限定词；
+- 禁止扩大的结论；
+- 与其他章节的去重约束。
+
+**门禁：** 每章证据包完整，禁止扩大的结论已标注。
+
+### Phase 4.5：Super Writer Input Brief
+
+将前述结果转换为现有 Super Writer 能够直接执行的写作 Brief。Brief 必须包含：
+
+- article_mode；
+- target_visible_chars；
+- acceptable_min / acceptable_max；
+- 目标读者；
+- 中心论点；
+- 文章结构；
+- 章节证据包；
+- 表达边界；
+- 禁止虚构；
+- 禁止补齐素材中不存在的事实；
+- 不确定性保留要求；
+- 重复控制要求。
+
+**门禁：** Brief 完整，包含所有写作所需信息。之后进入 Super Writer 原有 Phase 5（初稿）和 Phase 6（审稿）。
+
+## Material-Heavy 模式产物
+
+当 `INPUT_MODE=material_heavy` 且 `audit_output=true` 时，输出以下中间编辑层文件：
+
+```
+middle_editorial_layer/
+  01_raw_material_inventory.md
+  02_deduplicated_materials.md
+  03_topic_clusters.md
+  04_claim_evidence_map.md
+  05_conflicts_and_uncertainties.md
+  06_article_thesis.md
+  07_article_outline.md
+  08_section_evidence_packs.md
+  09_expression_boundaries.md
+  10_super_writer_input_brief.md
+```
+
+正常用户模式可以不把十个文件全部展示给用户，但内部处理逻辑不能跳过。
+
+同时输出：
+```
+article/
+  article.md
+  outline.md
+  writing-brief.md
+  evidence-map.md
+  validator_stdout.txt
+  validator_stderr.txt
+  validator_exit_code.txt
+source_traceability.md
+metrics.json
+issues_and_uncertainties.md
+```
+
+## Validator 边界（v0.3.2 明确）
+
+继续使用现有文章长度和重复 Validator。必须如实区分：
+
+| Validator 类型 | 说明 |
+|---|---|
+| `ARTICLE_LENGTH_VALIDATOR` | 普通文章长度和重复检测，使用 `scripts/validate_article_length.py` |
+| `FULL_MODE_VALIDATOR` | Full Mode 完整性检查，需显式传入 `--full-mode` 参数 |
+
+如果没有真正执行 `--full-mode`，必须记录 `FULL_MODE_VALIDATOR=NOT_RUN`，不得把普通长度 Validator 写成 Full Mode PASS。
+
+确定性 Validator 只负责：文件存在性、格式、ID 完整性、引用是否存在、长度、重复、Hash、Schema 一致性。
+
+确定性 Validator 不得自行宣布：语义事实正确、来源一定支持 Claim、人工语义审核通过。
+
 ## 完整流程
 
 ### Phase 1：写作简报

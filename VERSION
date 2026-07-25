@@ -1,16 +1,17 @@
-version: 0.3.1-rc1-hotfix5
-previous_version: 0.3.1-rc1-hotfix4
-baseline_commit: 3dddc49
+version: 0.3.2-rc1
+previous_version: 0.3.1-rc1-hotfix5
+baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
 smoke_test: passed
 formal_phase4: skipped_for_personal_use
 evaluation_method: continuous_dogfooding
-iteration_strategy: fix_repeated_real_world_issues
+iteration_strategy: integrate_proven_editorial_flow
 test_count: 230
 writing_core_freeze_date: 2026-07-14
-release_date: 2026-07-20
+release_date: 2026-07-24
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-07-20
-release_notes: "v0.3.1-rc1-hotfix5: CLI runtime policy consistency check against file artifacts"
+hotfix_date: 2026-07-24
+hotfix_name: hotfix1
+release_notes: "v0.3.2-rc1-hotfix1: Material-Heavy Editorial Mode with complete test assets, fixed _verify_fixtures.py, regenerated MANIFEST.sha256, actual regression evidence for direct and material_heavy modes, 230 baseline tests passed."

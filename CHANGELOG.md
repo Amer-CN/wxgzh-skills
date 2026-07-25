@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## v0.3.2-rc1 — Material-Heavy Editorial Mode (2026-07-24)
+
+### 新增
+
+- **INPUT_MODE 路由**：新增 `auto` / `direct` / `material_heavy` 三种输入模式。`auto` 按素材量、来源数、冲突等条件自动判断；`direct` 保持 v0.3.1 行为；`material_heavy` 执行中间编辑层。
+- **Material-Heavy Editorial Mode**：在写作阶段之前增加 Phase 0–4.5 中间编辑层流程，包含 Input Census、Three-Layer Deduplication、Topic Clustering、Claim–Evidence Binding、Conflicts and Boundaries、Thesis and Article Blueprint、Section Evidence Packs、Super Writer Input Brief。
+- **references/material-heavy-editorial.md**：新增参考文档，详述中间编辑层流程。
+- **Validator 边界明确**：区分 `ARTICLE_LENGTH_VALIDATOR` 和 `FULL_MODE_VALIDATOR`，未执行 `--full-mode` 时必须记录 `NOT_RUN`。
+- **tests/direct_mode_regression/**：direct 模式回归测试。
+- **tests/material_heavy_mode_regression/**：material_heavy 模式回归测试，使用 real_article_pilot_v1 作为冻结样本。
+
+### 修改
+
+- **SKILL.md**：新增输入模式路由、Material-Heavy Editorial Mode 流程、产物设计、Validator 边界等章节。原有 Phase 1–7、编辑学习流程、输出模式、失败退出等均保持不变。
+- **VERSION**：更新为 0.3.2-rc1。
+
+### 不变
+
+- 所有脚本文件 SHA256 与 v0.3.1-rc1-hotfix5 一致（未修改任何脚本）。
+- `direct` 模式行为与 v0.3.1 完全一致。
+- 原有 article_mode、length_mode、输出模式、语义角色等全部保留。
+- 禁止在通用 Skill 逻辑中硬编码特定主题、实体或数字。
+
+### 来源
+
+- 基于真实文章试运行 V1（real_article_pilot_v1）验证的 B 组编辑流程。
+- 真实文章试运行已通过独立验收：AI HOT 原始素材 → 中间编辑层 → Super Writer 协议写作 → 来源追溯 → Article Length Validator → 可发布中长篇文章。
+
 ## v0.3.0-rc1 — 语义化排版交接 (2026-07-19)
 
 ### 状态变更
