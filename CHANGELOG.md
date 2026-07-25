@@ -8,8 +8,7 @@
 - **Material-Heavy Editorial Mode**：在写作阶段之前增加 Phase 0–4.5 中间编辑层流程，包含 Input Census、Three-Layer Deduplication、Topic Clustering、Claim–Evidence Binding、Conflicts and Boundaries、Thesis and Article Blueprint、Section Evidence Packs、Super Writer Input Brief。
 - **references/material-heavy-editorial.md**：新增参考文档，详述中间编辑层流程。
 - **Validator 边界明确**：区分 `ARTICLE_LENGTH_VALIDATOR` 和 `FULL_MODE_VALIDATOR`，未执行 `--full-mode` 时必须记录 `NOT_RUN`。
-- **tests/direct_mode_regression/**：direct 模式回归测试。
-- **tests/material_heavy_mode_regression/**：material_heavy 模式回归测试，使用 real_article_pilot_v1 作为冻结样本。
+- direct 模式与 material-heavy 模式已在独立候选包的 package-level 回归资产中完成验证；这些外层回归目录不属于 Git 仓库中的 Skill 发布文件；Git 仓库保留现有 230 项基线测试与内部 Fixture。
 
 ### 修改
 
