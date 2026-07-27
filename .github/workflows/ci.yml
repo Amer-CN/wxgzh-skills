@@ -13,5 +13,9 @@ jobs:
           python-version: "3.11"
       - name: Byte-compile all Python sources
         run: python -m compileall -q .
+      - name: Install test deps
+        run: pip install pytest pyyaml
+      - name: Run wxgzh-pipeline CLI contract test
+        run: python -m pytest tests/test_wxgzh_cli_contract.py -q
       - name: wxgzh-pipeline integration lock present
         run: test -f WXGZH_PIPELINE_INTEGRATION.md
