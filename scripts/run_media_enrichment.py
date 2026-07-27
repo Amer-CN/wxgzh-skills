@@ -342,7 +342,16 @@ def main():
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2, sort_keys=True)
 
+    # dev7-hotfix1: emit article_image_bindings.json — the FINAL binding of body
+    # images to their uploaded WeChat-host URLs (pure projection of the manifest;
+    # never mutates the article, never uploads). Downstream gzh-design consumes it
+    # and validate_media_manifest.py --bindings checks it per asset.
+    from media_enrichment.article_bindings import write_bindings
+    bindings_path = output_dir / "article_image_bindings.json"
+    write_bindings(manifest, bindings_path)
+
     print(f"\n[media-enrichment] Manifest: {manifest_path}")
+    print(f"[media-enrichment] Bindings: {bindings_path}")
     print(f"  Assets: {len(builder.assets)}")
     print(f"  Eligible: {sum(1 for a in builder.assets if a.decision == 'eligible')}")
     print(f"  Review: {sum(1 for a in builder.assets if a.decision == 'review_required')}")

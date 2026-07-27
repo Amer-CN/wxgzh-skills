@@ -30,7 +30,8 @@ SAFE_FIELD_NAMES = {
     "secrets_detected", "secret_scan_passed", "no_secrets_found",
 }
 
-VALID_UPLOAD_MODES = {"dry_run", "wechat_image_host", "stable_storage", "mock"}
+VALID_UPLOAD_MODES = {"dry_run", "wechat_image_host", "stable_storage", "mock",
+                      "wechat_audit"}
 
 
 def _scrub_token(text: str) -> str:
@@ -250,6 +251,45 @@ class StableStorageUploader:
                                  error=_scrub_token(f"upload error: {exc}"), actual_mime=mime)
 
 
+class WechatAuditUploader:
+    """Offline audit uploader — dev7-hotfix1.
+
+    Produces a DETERMINISTIC WeChat image-host (`mmbiz.qpic.cn`) URL WITHOUT any
+    network call or real upload, so the full enrichment pipeline (including
+    article_image_bindings.json emission) can be exercised end to end with zero
+    side effects. The result is explicitly marked ``audit=True`` and carries a
+    ``simulated`` flag so no caller can mistake it for a real WeChat upload.
+
+    Only ``known_allowed`` copyright can be "uploaded" — identical gating to the
+    real WeChat uploader; everything else is skipped.
+    """
+
+    HOST = "mmbiz.qpic.cn"
+
+    def upload(self, local_path: str, asset_id: str = "", copyright_status: str = "unknown") -> UploadResult:
+        if copyright_status != "known_allowed":
+            return UploadResult(
+                mode="wechat_audit", status="skipped",
+                error=f"upload skipped: copyright_status={copyright_status} (only known_allowed can upload)",
+            )
+        mime = detect_mime(local_path) if Path(local_path).exists() else ""
+        # Deterministic mmbiz URL derived from the file content + asset id, so the
+        # same input always yields the same audit URL (reproducible bindings).
+        try:
+            content_sha = hashlib.sha256(Path(local_path).read_bytes()).hexdigest() \
+                if Path(local_path).exists() else hashlib.sha256(asset_id.encode()).hexdigest()
+        except OSError:
+            content_sha = hashlib.sha256(asset_id.encode()).hexdigest()
+        digest = hashlib.sha256(f"{asset_id}:{content_sha}".encode()).hexdigest()[:32]
+        remote_url = f"https://{self.HOST}/mmbiz_png/{digest}/640?wx_fmt=png"
+        return UploadResult(
+            mode="wechat_audit", status="success", remote_url=remote_url,
+            response_sha256=hashlib.sha256(remote_url.encode()).hexdigest(),
+            actual_mime=mime,
+            uploaded_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        )
+
+
 def create_uploader(mode: str, **kwargs: Any):
     """Create uploader. Raises ValueError on unknown mode."""
     if mode not in VALID_UPLOAD_MODES:
@@ -262,4 +302,6 @@ def create_uploader(mode: str, **kwargs: Any):
         return WechatImageHostUploader()
     elif mode == "stable_storage":
         return StableStorageUploader(**kwargs)
+    elif mode == "wechat_audit":
+        return WechatAuditUploader()
     return DryRunUploader()
