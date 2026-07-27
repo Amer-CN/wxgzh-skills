@@ -1,0 +1,69 @@
+{
+  "lock_version": 1,
+  "skills": {
+    "super-writer": {
+      "skill_name": "super-writer",
+      "skill_version": "0.3.2-rc1",
+      "skill_root_sha256": "b822c24a6027c462e04936924f43b0bdee9e7170b11b471e53817ae1c29ce8f0",
+      "required_files": [
+        "scripts/material_ingestion.py",
+        "scripts/validate_article_length.py",
+        "scripts/validate_semantic_map.py"
+      ],
+      "documented_entrypoint": "scripts/material_ingestion.py",
+      "validator_entrypoint": "scripts/validate_article_length.py",
+      "input_contract_version": "SKILL.md",
+      "output_contract_version": "SKILL.md"
+    },
+    "zh-human-writing": {
+      "skill_name": "zh-human-writing",
+      "skill_version": "0.1.0",
+      "skill_root_sha256": "ecd1db3e8eddc8ad943469ef1a73fe1b730eef5f7725450ba24eb5ffdaf57af8",
+      "required_files": [
+        "scripts/change_report.py",
+        "scripts/fidelity_guard.py",
+        "scripts/pattern_audit.py"
+      ],
+      "documented_entrypoint": "scripts/fidelity_guard.py",
+      "validator_entrypoint": "scripts/fidelity_guard.py",
+      "input_contract_version": "SKILL.md",
+      "output_contract_version": "SKILL.md"
+    },
+    "media-enrichment": {
+      "skill_name": "media-enrichment",
+      "skill_version": "0.1.0-dev7-hotfix1",
+      "skill_root_sha256": "30035b03d66ffe2a9bd0211767c607b59f3db847ed3cdcaa80d9002414add436",
+      "required_files": [
+        "scripts/run_media_enrichment.py",
+        "scripts/validate_media_manifest.py",
+        "src/media_enrichment/uploader.py"
+      ],
+      "documented_entrypoint": "scripts/run_media_enrichment.py",
+      "validator_entrypoint": "scripts/validate_media_manifest.py",
+      "input_contract_version": "schemas/media_enrichment_request.schema.json",
+      "output_contract_version": "schemas/media_enrichment_request.schema.json"
+    },
+    "gzh-design": {
+      "skill_name": "gzh-design",
+      "skill_version": "v2026.07.18-hammer.1",
+      "skill_root_sha256": "127601fa033d6bac7150e7b98e3f46667bd0184ad1a43fe330e48f400c8e2636",
+      "required_files": [
+        "scripts/generate_advanced_html.py",
+        "scripts/generate_hammer_upgrade_samples.py",
+        "scripts/publish_wechat_draft.py",
+        "scripts/validate_gzh_html.py"
+      ],
+      "documented_entrypoint": "scripts/generate_hammer_upgrade_samples.py",
+      "validator_entrypoint": "scripts/validate_gzh_html.py",
+      "input_contract_version": "SKILL.md",
+      "output_contract_version": "SKILL.md"
+    },
+    "aihot": {
+      "skill_name": "aihot",
+      "kind": "agent_invoked_skill",
+      "skill_version": null,
+      "skill_root_sha256": null,
+      "note": "agent-invoked; output-hash locked at run time, not root-hash locked"
+    }
+  }
+}

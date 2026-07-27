@@ -1,0 +1,25 @@
+stage: super_writer
+order: 2
+skill: super-writer
+responsibility: Material-Heavy Full Mode 完整写作；篇幅按事实密度自动决定（禁止默认 medium=3000）
+inputs:
+  required: [deduplicated_items.json]
+outputs:
+  required:
+    - generation-profile
+    - writing-brief
+    - material-readiness
+    - material-ingestion-report
+    - material-ledger
+    - evidence-map
+    - canonical_claim_registry
+    - core-card
+    - outline
+    - semantic-map
+    - article
+    - editor-report
+    - full_article_fact_inventory
+    - full_mode_validator_report
+gates:
+  full_mode_validator_exit: 0
+forbidden: [fixed_medium_3000]

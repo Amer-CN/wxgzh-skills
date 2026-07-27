@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunRequest",
+  "type": "object",
+  "required": [
+    "command",
+    "profile"
+  ],
+  "properties": {
+    "command": {
+      "enum": [
+        "fabu",
+        "resume",
+        "progress",
+        "release_audit"
+      ]
+    },
+    "topic": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "profile": {
+      "enum": [
+        "fast_publish",
+        "release_audit"
+      ]
+    },
+    "create_wechat_draft": {
+      "type": "boolean"
+    },
+    "formal_publish": {
+      "const": false
+    },
+    "theme": {
+      "const": "smartisan"
+    },
+    "theme_fallback": {
+      "const": false
+    }
+  }
+}

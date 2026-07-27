@@ -1,0 +1,32 @@
+stage: gzh_design
+order: 5
+skill: gzh-design
+responsibility: 真实调用正式锤子主题入口 + 正式组件库，产出微信 HTML
+theme:
+  GZH_THEME: smartisan
+  THEME_NAME: 锤子风格
+  THEME_FALLBACK_ALLOWED: false
+required_components:
+  cover_breaking: 1
+  toc_scroll: 1
+  chapter_title: equals_article_chapter_count
+  fixed_signature: 1
+  footer_cta: 1
+  official_image_component_types: [2, 4]
+strikethrough:
+  color: "#737373"
+  text_decoration_color: "#B3593B"
+  text_decoration_thickness: "1.5px"
+  forbidden: "rgba(202,202,199,0.35)"
+forbidden:
+  - self_written_gray_html
+  - color_mimicry_only
+  - image_border_only
+  - hand_written_component_report
+  - generic_html_validator_as_theme_validator
+  - silent_fallback_on_entry_failure
+theme_identity_validator:
+  reverse_parse_from_final_html: true
+  emits: theme_identity_report.json
+  component_usage_report_program_generated: true
+  gate: THEME_IDENTITY == PASS

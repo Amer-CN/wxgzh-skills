@@ -1,0 +1,61 @@
+# wxgzh-pipeline 固定流水线定义（单一有效流程，顺序不可变，不允许回退/跳阶段）
+pipeline:
+  name: wxgzh-pipeline
+  version: 0.1.0-dev1
+  single_main_agent: true
+  subagent_count: 0
+  stages_sequential: true
+  fail_closed: true
+  forbidden_recovery: [second_smoke, kappa, semantic_evaluator_phase_b, semantic_evaluator_phase_c, semantic_evaluator_phase_d, historical_provenance]
+
+# 六阶段固定顺序；每阶段绑定一个已安装子 Skill + 一个阶段 Validator
+stages:
+  - id: aihot
+    order: 1
+    skill: aihot
+    kind: agent_invoked_skill
+    contract: contracts/01_aihot.yaml
+    outputs: [raw_items.json, deduplicated_items.json, fetch_log.json]
+    validator: validators/validate_stage_receipt.py
+  - id: super_writer
+    order: 2
+    skill: super-writer
+    contract: contracts/02_super_writer.yaml
+    entrypoint: scripts/validate_article_length.py
+    gate: {full_mode_validator_exit: 0}
+    validator: validators/validate_stage_receipt.py
+  - id: zh_human_writing
+    order: 3
+    skill: zh-human-writing
+    contract: contracts/03_zh_human_writing.yaml
+    freezes: [final_article.md, final_article_sha256]
+    validator: validators/validate_article_freeze.py
+  - id: media_enrichment
+    order: 4
+    skill: media-enrichment
+    contract: contracts/04_media_enrichment.yaml
+    entrypoint: scripts/run_media_enrichment.py
+    validator: validators/validate_media_bindings.py
+    depends_on_freeze: final_article_sha256
+  - id: gzh_design
+    order: 5
+    skill: gzh-design
+    contract: contracts/05_gzh_design.yaml
+    theme: smartisan
+    theme_fallback_allowed: false
+    validator: validators/validate_theme_identity.py
+    gate: {theme_identity: PASS}
+  - id: wechat_draft
+    order: 6
+    skill: wechat_draft
+    contract: contracts/06_wechat_draft.yaml
+    reuse: "gzh-design/scripts/publish_wechat_draft.py + media-enrichment uploader"
+    validator: validators/validate_draft_delta.py
+    requires_all_prior_receipts_valid: true
+
+# 代码层面绝不存在的能力
+prohibited_capabilities: [publish, freepublish, mass_send, schedule, delete_draft]
+
+plugins:
+  daily-topic-radar: {enabled: false, status: disabled}
+  headline-optimizer: {enabled: false, status: disabled}

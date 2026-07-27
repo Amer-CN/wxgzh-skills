@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StageRequest",
+  "type": "object",
+  "required": [
+    "run_id",
+    "stage",
+    "skill_name",
+    "inputs",
+    "network_mode"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "skill_name": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "network_mode": {
+      "enum": [
+        "live",
+        "offline_fixture"
+      ]
+    },
+    "config": {
+      "type": "object"
+    }
+  }
+}

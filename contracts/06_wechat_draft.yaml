@@ -1,0 +1,20 @@
+stage: wechat_draft
+order: 6
+skill: wechat_draft
+responsibility: 复用现有成功微信实现，只创建草稿
+reuse:
+  draft_module: gzh-design/scripts/publish_wechat_draft.py
+  image_upload: media-enrichment uploader (wechat_image_host)
+  batchget: thin wrapper (reuses same token/endpoint conventions)
+authorization: "发文：<选题> 即创建草稿的明确授权，不再二次询问"
+preconditions:
+  all_prior_five_receipts_valid: true
+  all_prior_validators_pass: true
+before_create: [batchget_desensitized_fingerprint, count_old_drafts]
+create: [cover_add_material, draft_add_single]
+after_create: [batchget_desensitized_fingerprint]
+gates:
+  AFTER: BEFORE_plus_1
+  OLD_DRAFTS_PRESERVED: true
+  NEW_DRAFT_UNIQUE: true
+absolutely_not_implemented: [publish, freepublish, mass_send, schedule, delete_draft]

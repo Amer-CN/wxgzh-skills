@@ -1,0 +1,8 @@
+{
+  "queries": [
+    "示例选题"
+  ],
+  "raw": 3,
+  "deduplicated": 2,
+  "window": "7d"
+}

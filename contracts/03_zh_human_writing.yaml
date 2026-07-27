@@ -1,0 +1,17 @@
+stage: zh_human_writing
+order: 3
+skill: zh-human-writing
+responsibility: 只去 AI 味；不新增事实/不改数字归因/不删限定词
+inputs:
+  required: [super_writer_article]
+outputs:
+  required: [final_article.md, fidelity_report]
+  freezes: [final_article.md, final_article_sha256]
+gates:
+  NEW_UNREGISTERED_FACTS: 0
+  NUMBER_CHANGES: 0
+  ATTRIBUTION_LOSS: 0
+  QUALIFIER_LOSS: 0
+  CLAIM_SEMANTIC_CHANGE: 0
+  HARD_RESIDUE: 0
+reader_forbidden_terms: [本次抓取, 这次检索, 输入材料, 素材库, Material, Claim, Validator, Agent, 流水线, 系统没有找到, 根据提供的材料]

@@ -1,0 +1,24 @@
+{
+  "label": "after",
+  "total_count": 3,
+  "drafts": [
+    {
+      "media_id_redacted": "AAAAAAAA[REDACTED]",
+      "title": "历史草稿一",
+      "update_time": "1",
+      "fingerprint": "8460b0126e210370f7166cf2ea84e59246493fa83dee8fe366b5e0b330660c94"
+    },
+    {
+      "media_id_redacted": "BBBBBBBB[REDACTED]",
+      "title": "历史草稿二",
+      "update_time": "2",
+      "fingerprint": "4b909a8e57ecd8f2c643950af8ab6a9174b64820370980377aa3ff59ca174485"
+    },
+    {
+      "media_id_redacted": "CCCCCCCC[REDACTED]",
+      "title": "示例选题【新】",
+      "update_time": "3",
+      "fingerprint": "161b03da3dd73bbc873cee3cb0da98ab02c569f54bbb648d0c6c0e4a0d320b8a"
+    }
+  ]
+}

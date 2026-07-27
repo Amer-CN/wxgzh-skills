@@ -1,0 +1,13 @@
+stage: aihot
+order: 1
+skill: aihot
+kind: agent_invoked_skill
+responsibility: 获取/聚合/去重信息；不写文章；不负责最终图片盘点
+inputs:
+  required: [topic]
+outputs:
+  required: [raw_items.json, deduplicated_items.json, fetch_log.json]
+  hashed: true
+gates:
+  - deduplicated_count >= 1
+forbidden: [write_article, final_image_inventory]

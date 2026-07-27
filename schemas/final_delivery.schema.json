@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FinalDelivery",
+  "type": "object",
+  "required": [
+    "run_id",
+    "topic",
+    "stages",
+    "draft_created",
+    "formally_published",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "array"
+    },
+    "draft_created": {
+      "type": "boolean"
+    },
+    "formally_published": {
+      "const": false
+    },
+    "manifest_sha256": {
+      "type": "string"
+    },
+    "stage_timing": {
+      "type": "object"
+    }
+  }
+}

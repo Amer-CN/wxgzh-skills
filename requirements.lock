@@ -1,0 +1,4 @@
+# wxgzh-pipeline locked runtime deps (orchestrator only; sub-skills bring their own)
+PyYAML==6.0.2
+jsonschema==4.23.0
+requests==2.32.3
