@@ -631,6 +631,212 @@ def generate_article(theme_key):
     return "\n".join(html_parts)
 
 
+# ── Reusable article-level official component builders (dev2-hotfix1) ─────────
+# These expose the SAME official hammer components used by generate_article()
+# above, parameterized so scripts/render_article.py can typeset an ARBITRARY
+# article with the OFFICIAL components — no hand-written hammer HTML anywhere
+# downstream. generate_article() is intentionally left untouched (its sample
+# output stays byte-identical); these builders are the single reusable surface.
+
+def hammer_container(theme_key, inner):
+    t = PALETTES[theme_key]
+    return (f'<section style="max-width:677px;margin:0 auto;background:#ffffff;'
+            f"font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB',"
+            f"'Microsoft YaHei',sans-serif;color:{t['body_color']};"
+            f'line-height:1.75;letter-spacing:0.5px;overflow-x:hidden;">\n'
+            + inner + '\n</section>')
+
+
+def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
+                 date="2026.07", brand="给自己造把锤子", tags=("深度", "观察")):
+    t = PALETTES[theme_key]; p = t["primary"]
+    tag_html = "".join(
+        f'<span style="background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:3px;'
+        f'font-size:8px;color:#fff;font-weight:600;"><span leaf="">{tg}</span></span>' for tg in tags)
+    return f'''<section style="margin:0 0 32px;background:#fff;border:1.5px solid {t['rgba_primary_015']};border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);width:100%;">
+  <section style="padding:32px 28px 28px;">
+    <section style="display:flex;align-items:center;gap:8px;margin-bottom:28px;">
+      <span style="width:6px;height:6px;background:{p};border-radius:50%;"><span leaf=""><br></span></span>
+      <span style="font-size:11px;font-weight:700;letter-spacing:3px;color:{p};"><span leaf="">{kicker}</span></span>
+      <section style="flex:1;height:1px;overflow:hidden;background:linear-gradient(to right,{t['rgba_primary_012']},transparent);"><span leaf=""><br></span></section>
+      <span style="font-size:10px;color:{t['divider']};font-weight:600;"><span leaf="">{date}</span></span>
+    </section>
+    <section>
+      <p style="font-size:15px;color:{t['divider']};margin:0 0 6px;text-decoration:line-through;text-decoration-color:{p};text-decoration-thickness:1.5px;letter-spacing:0.5px;">
+        <span leaf="">{strike}</span>
+      </p>
+      <p style="font-size:24px;font-weight:900;color:{t['title_color']};margin:0;line-height:1.05;letter-spacing:-2px;">
+        <span leaf="">{title_line1}</span>
+      </p>
+      <p style="font-size:24px;font-weight:900;color:{p};margin:0 0 16px;line-height:1.05;letter-spacing:-2px;">
+        <span leaf="">{title_line2}</span>
+      </p>
+      <section style="width:48px;height:3px;background:linear-gradient(to right,{p},{t['light_decor']});border-radius:2px;margin-bottom:12px;">
+        <span leaf=""><br></span>
+      </section>
+      <p style="font-size:13px;color:{t['aux_text']};margin:0;line-height:1.7;letter-spacing:0.5px;">
+        <span leaf="">{subtitle}</span>
+      </p>
+    </section>
+  </section>
+  <section style="background:linear-gradient(135deg,{p},{t['secondary']});padding:12px 28px;display:flex;align-items:center;justify-content:space-between;">
+    <p style="font-size:12px;color:rgba(255,255,255,0.9);margin:0;font-weight:600;letter-spacing:0.5px;">
+      <span leaf="">{brand}</span>
+    </p>
+    <section style="display:flex;gap:4px;">
+      {tag_html}
+    </section>
+  </section>
+</section>'''
+
+
+def _toc_card(t, part_label, title, subtitle, highlight):
+    p = t["primary"]
+    if highlight:
+        return f'''<section style="display:inline-block;white-space:normal;vertical-align:top;width:110px;background:linear-gradient(135deg,{p},{t['secondary']});border-radius:12px;padding:12px;margin-right:8px;">
+      <p style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1px;margin:0 0 5px;"><span leaf="">{part_label}</span></p>
+      <p style="font-size:13px;font-weight:800;color:#fff;margin:0 0 3px;"><span leaf="">{title}</span></p>
+      <p style="font-size:10px;color:rgba(255,255,255,0.7);margin:0;"><span leaf="">{subtitle}</span></p>
+    </section>'''
+    return f'''<section style="display:inline-block;white-space:normal;vertical-align:top;width:110px;background:#fff;border:1px solid {t['border_gray']};border-radius:12px;padding:12px;margin-right:8px;box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+      <p style="font-size:9px;font-weight:700;color:{t['aux_text']};letter-spacing:1px;margin:0 0 5px;"><span leaf="">{part_label}</span></p>
+      <p style="font-size:13px;font-weight:800;color:{t['title_color']};margin:0 0 3px;"><span leaf="">{title}</span></p>
+      <p style="font-size:10px;color:{t['aux_text']};margin:0;"><span leaf="">{subtitle}</span></p>
+    </section>'''
+
+
+def hammer_toc(theme_key, chapter_titles):
+    """Horizontal scroll TOC. One card per chapter (PART 01..0N) + a PART /// card."""
+    t = PALETTES[theme_key]
+    n = len(chapter_titles)
+    cards = []
+    for i, title in enumerate(chapter_titles, 1):
+        cards.append(_toc_card(t, f"PART {i:02d}", title, "", highlight=(i == 1)))
+    cards.append(_toc_card(t, "PART ///", "写在最后", "署名与 CTA", highlight=False))
+    return f'''<section style="margin:0 20px 32px;">
+  <section style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <p style="font-size:10px;color:{t['aux_text']};margin:0;text-transform:uppercase;letter-spacing:2px;font-weight:600;"><span leaf="">📦 {n} Parts + Conclusion</span></p>
+    <p style="font-size:10px;color:{t['aux_text']};margin:0;"><span leaf="">👉 滑动</span></p>
+  </section>
+  <section style="overflow-x:scroll;-webkit-overflow-scrolling:touch;white-space:nowrap;padding-bottom:8px;">
+    {''.join(cards)}
+  </section>
+</section>'''
+
+
+def hammer_oneliner(theme_key, text):
+    t = PALETTES[theme_key]; p = t["primary"]
+    return f'''<section style="background:#FFF;border:1px dashed {t['border_light']};border-radius:8px;padding:14px 16px;margin:0 20px 24px;text-align:center;">
+  <p style="margin:0;line-height:1.6;">
+    <span style="font-size:15px;color:{p};font-weight:bold;border-bottom:3px solid {t['yellow_highlight']};padding-bottom:2px;"><span leaf="">{text}</span></span>
+  </p>
+</section>'''
+
+
+def hammer_chapter(theme_key, num, title, en_label):
+    t = PALETTES[theme_key]; p = t["primary"]
+    return f'''<section style="margin-top:48px;margin-bottom:32px;padding:0 20px;">
+  <section style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+    <section style="text-align:center;flex-shrink:0;">
+      <p style="margin:0;font-size:28px;font-weight:900;color:{p};line-height:1;letter-spacing:-2px;"><span leaf="">{num}</span></p>
+      <p style="margin:0;font-size:8px;font-weight:700;color:{t['divider']};letter-spacing:2px;"><span leaf="">PART</span></p>
+    </section>
+    <span style="width:1px;height:36px;background:{t['border_gray']};flex-shrink:0;"><span leaf=""><br></span></span>
+    <section>
+      <p style="margin:0 0 1px;font-size:17px;font-weight:900;color:{t['title_color']};letter-spacing:0.3px;"><span leaf="">{title}</span></p>
+      <p style="margin:0;font-size:11px;font-weight:600;color:{t['aux_text']};letter-spacing:1.5px;"><span leaf="">{en_label}</span></p>
+    </section>
+  </section>
+</section>'''
+
+
+def hammer_para(theme_key, text):
+    return (f'<section style="margin:0 20px;">'
+            f'<p style="margin-bottom:16px;font-size:14px;line-height:1.9;text-align:justify;color:{PALETTES[theme_key]["body_color"]};">'
+            f'{s(text)}</p></section>')
+
+
+def hammer_image_2a(theme_key, url, caption=""):
+    """Official common-components 2a standard image, hammer-toned."""
+    t = PALETTES[theme_key]
+    cap = (f'<p style="font-size:12px;color:{t["aux_text"]};text-align:center;margin:0 0 24px;">'
+           f'<span leaf="">— {caption}</span></p>') if caption else ""
+    return f'''<section style="background:#FFF;border-radius:12px;padding:6px;border:1px solid {t['border_gray']};box-shadow:0 4px 12px -2px rgba(0,0,0,0.08);margin-bottom:8px;">
+  <section style="margin:0;border-radius:8px;overflow:hidden;">
+    <span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>
+  </section>
+</section>
+{cap}'''
+
+
+def hammer_media_text(theme_key, url, caption, exp):
+    """Official media+text card, hammer-toned (image_media_text fingerprint)."""
+    t = PALETTES[theme_key]
+    return f'''<section style="margin:0 0 8px;background:{t['bg_lightest_green']};border-radius:12px;padding:6px;border:1px solid {t['border_gray']};box-shadow:0 4px 16px -4px {t['rgba_primary_010_shadow']};">
+  <section style="margin:0;border-radius:12px;overflow:hidden;"><span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span></section>
+</section>
+<p style="margin:0 0 8px;font-size:12px;color:{t['aux_text']};text-align:center;"><span leaf="">{caption}</span></p>
+<p style="margin:0 0 24px;font-size:14px;color:{t['body_color']};line-height:1.8;"><span leaf="">{exp}</span></p>'''
+
+
+def hammer_fixed_signature(theme_key):
+    """Official fixed end-signature (common-components §4a), hammer color mapping.
+    文案 is authoritative and verbatim; brand-sentence color #8A4530 for contrast."""
+    t = PALETTES[theme_key]; p = t["primary"]
+    return f'''<section style="padding:0 20px 24px;">
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.8;color:{t['body_color']};">
+    <span leaf="">好了，今天就先聊到这儿。</span>
+  </p>
+  <section style="margin:0 0 16px;padding:10px 14px;border-left:3px solid {p};background:{t['lightest_decor']};border-radius:0 6px 6px 0;">
+    <p style="margin:0;font-size:14px;line-height:1.8;color:{t['dark']};font-weight:600;">
+      <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
+    </p>
+    <p style="margin:8px 0 0;font-size:14px;line-height:1.8;color:{t['dark']};font-weight:600;">
+      <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+    </p>
+  </section>
+  <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:{t['aux_text']};">
+    <span leaf="">/ 作者 给自己造把锤子</span>
+  </p>
+  <p style="margin:0;font-size:12px;line-height:1.7;color:{t['aux_text']};">
+    <span leaf="">/ 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com</span>
+  </p>
+</section>'''
+
+
+def hammer_footer_cta(theme_key):
+    """Official footer-cta (like/watch/share + THANKS FOR READING)."""
+    t = PALETTES[theme_key]; p = t["primary"]
+    return f'''<section style="background:radial-gradient(circle at center,{t['bg_extreme_light']} 0%,#FFFFFF 100%);border:1px solid {t['border_gray']};border-radius:16px;padding:32px 20px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.03);margin:0 20px 24px;">
+  <p style="font-size:13px;font-weight:bold;color:{t['title_color']};margin-bottom:20px;line-height:1.6;">
+    <span leaf="">既然看到这里了，如果觉得有用，随手点个赞、在看、转发三连吧。</span>
+  </p>
+  <section style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+    <section style="text-align:center;cursor:pointer;color:{t['secondary_text']};">
+      <section style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:#fff;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border:1px solid {t['bg_lightest_green']};">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+      </section>
+      <span style="font-size:10px;font-weight:600;"><span leaf="">点赞</span></span>
+    </section>
+    <section style="text-align:center;cursor:pointer;color:{t['secondary_text']};">
+      <section style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:#fff;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border:1px solid {t['bg_lightest_green']};">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path></svg>
+      </section>
+      <span style="font-size:10px;font-weight:600;"><span leaf="">在看</span></span>
+    </section>
+    <section style="text-align:center;cursor:pointer;color:{p};">
+      <section style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:{t['bg_light_green']};border-radius:12px;box-shadow:0 2px 4px {t['rgba_primary_015_shadow']};border:1px solid {t['lightest_decor']};">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18v-4a8 8 0 0 1 8-8h8"></path><polyline points="16 2 20 6 16 10"></polyline></svg>
+      </section>
+      <span style="font-size:10px;font-weight:600;"><span leaf="">转发</span></span>
+    </section>
+  </section>
+  <p style="font-size:10px;color:{t['aux_text']};letter-spacing:1px;margin:0;">
+    <span leaf="">THANKS FOR READING</span>
+  </p>
+</section>'''
+
+
 def wrap_html(body, title):
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">

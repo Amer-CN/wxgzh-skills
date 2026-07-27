@@ -45,6 +45,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 # 确保 Windows 控制台 UTF-8 输出，避免 emoji/中文 print 崩溃
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
@@ -91,6 +92,7 @@ from validate_gzh_html import validate, find_cn_quoted_attrs
 # 微信 API 端点
 TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token"
 ADD_DRAFT_URL = "https://api.weixin.qq.com/cgi-bin/draft/add"
+BATCHGET_DRAFT_URL = "https://api.weixin.qq.com/cgi-bin/draft/batchget"
 GET_DRAFT_URL = "https://api.weixin.qq.com/cgi-bin/draft/get"
 UPLOAD_MATERIAL_URL = "https://api.weixin.qq.com/cgi-bin/material/add_material"
 UPLOADIMG_URL = "https://api.weixin.qq.com/cgi-bin/media/uploadimg"
@@ -395,14 +397,115 @@ def preflight_html(html_content, html_path, raw_file_sha256=""):
     return sha256
 
 
+def batchget_drafts(access_token, offset=0, count=20):
+    """draft/batchget — list existing drafts (READ ONLY). Returns total_count +
+    a desensitized item list. Never publishes, never deletes."""
+    try:
+        resp = requests.post(
+            BATCHGET_DRAFT_URL,
+            params={"access_token": access_token},
+            data=json.dumps({"offset": offset, "count": count, "no_content": 1}).encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            timeout=30,
+        )
+        data = json.loads(resp.content.decode("utf-8"))
+    except requests.exceptions.RequestException as e:
+        api_error(f"draft/batchget 网络请求失败: {e}")
+    except (ValueError, UnicodeDecodeError):
+        api_error("draft/batchget 返回非 JSON 响应", {"errcode": -1, "errmsg": "non-JSON"})
+    if "total_count" not in data:
+        api_error("draft/batchget 失败", data)
+    return data
+
+
+def _desensitize_item(it):
+    mid = it.get("media_id", "") or ""
+    return {"media_id": (mid[:8] + "[REDACTED]") if mid else "",
+            "update_time": it.get("update_time")}
+
+
+def _snapshot(data, simulated, real_api_call):
+    items = [_desensitize_item(it) for it in data.get("item", data.get("items", []))]
+    return {"total_count": data.get("total_count", len(items)),
+            "item_count": data.get("item_count", len(items)),
+            "items": items, "simulated": simulated, "real_api_call": real_api_call}
+
+
+def run_audit_mode(args, html_content, raw_file_sha256, sha256):
+    """Draft-creation AUDIT: snapshot draft list before, create ONE draft, snapshot
+    after — proving AFTER = BEFORE + 1 with old drafts preserved. Writes
+    draft_before.json / draft_after.json / draft_creation_result.json.
+
+    --dry-run (or missing credentials) => fully simulated, ZERO network/side
+    effects, marked simulated=true. Real mode does real batchget + draft/add
+    (still draft-only: NO publish, NO mass-send, NO delete). NEVER formally
+    publishes.
+    """
+    audit_dir = Path(args.audit_dir)
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    app_id = os.environ.get("WECHAT_APP_ID", "")
+    app_secret = os.environ.get("WECHAT_APP_SECRET", "")
+    simulated = bool(args.dry_run) or not (app_id and app_secret)
+
+    if simulated:
+        seed = [{"media_id": f"seed{i:04d}"} for i in range(1, 4)]
+        before_raw = {"total_count": 3, "item_count": 3, "item": seed}
+        new_media = hashlib.sha256((args.title + sha256).encode()).hexdigest()
+        after_raw = {"total_count": 4, "item_count": 4,
+                     "item": seed + [{"media_id": new_media}]}
+        before = _snapshot(before_raw, simulated=True, real_api_call=False)
+        after = _snapshot(after_raw, simulated=True, real_api_call=False)
+        result_media = new_media[:8] + "[REDACTED]"
+    else:
+        token = get_access_token(app_id, app_secret)
+        before_raw = batchget_drafts(token)
+        before = _snapshot(before_raw, simulated=False, real_api_call=True)
+        if args.cover:
+            thumb = upload_cover(token, args.cover)
+        else:
+            thumb = args.thumb_media_id
+        media_id = create_draft(token, args.title, html_content, thumb)
+        after_raw = batchget_drafts(token)
+        after = _snapshot(after_raw, simulated=False, real_api_call=True)
+        result_media = (media_id[:8] + "[REDACTED]") if media_id else ""
+
+    result = {
+        "media_id": result_media, "title": args.title,
+        "before_total": before["total_count"], "after_total": after["total_count"],
+        "delta": after["total_count"] - before["total_count"],
+        "draft_only": True, "formally_published": False,
+        "mass_send": False, "scheduled": False, "deleted_any": False,
+        "real_api_call": not simulated, "simulated": simulated,
+        "content_sha256": sha256, "raw_file_sha256": raw_file_sha256,
+    }
+
+    for name, obj in (("draft_before.json", before), ("draft_after.json", after),
+                      ("draft_creation_result.json", result)):
+        (audit_dir / name).write_text(
+            json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8")
+
+    print(f"── 草稿审计 ──  simulated={simulated}  before={before['total_count']} "
+          f"after={after['total_count']} delta={result['delta']}")
+    if result["delta"] != 1:
+        print("错误: AFTER != BEFORE + 1，审计失败")
+        sys.exit(1)
+    print(f"  审计产物写入: {audit_dir}")
+    return result
+
+
 def main():
     ap = argparse.ArgumentParser(description="微信公众号草稿创建")
     ap.add_argument("--html", required=True, help="article.wechat.html 路径")
     ap.add_argument("--title", required=True, help="文章标题")
     ap.add_argument("--expect-sha256", help="期望的 HTML 文件 SHA-256（raw bytes），不一致则停止")
-    group = ap.add_mutually_exclusive_group(required=True)
+    group = ap.add_mutually_exclusive_group(required=False)
     group.add_argument("--thumb-media-id", help="已上传的封面素材 ID")
     group.add_argument("--cover", help="封面图片路径（自动上传）")
+    ap.add_argument("--audit-dir", default=None,
+                    help="审计模式：写 draft_before/after/creation_result.json 到该目录")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="审计模式下不触网、不建真实草稿（模拟 batchget 前后快照）")
     args = ap.parse_args()
 
     # 最低限度检查
@@ -445,6 +548,16 @@ def main():
 
     # ---- 发布前安全校验（必须在获取 token 前完成）----
     sha256 = preflight_html(html_content, html_path, raw_file_sha256=raw_file_sha256)
+
+    # ---- 审计模式：快照前后草稿数并写审计产物（--dry-run 时不触网、无副作用）----
+    if args.audit_dir:
+        run_audit_mode(args, html_content, raw_file_sha256, sha256)
+        return
+
+    # 非审计模式必须提供封面
+    if not args.thumb_media_id and not args.cover:
+        print("错误: 需要 --thumb-media-id 或 --cover（或使用 --audit-dir 审计模式）")
+        sys.exit(1)
 
     # ---- 预检通过后才读取环境变量并获取 token ----
     app_id = os.environ.get("WECHAT_APP_ID", "")
