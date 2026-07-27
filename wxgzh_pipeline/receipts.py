@@ -33,7 +33,9 @@ def hash_files(paths: list[Path]) -> dict:
 def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
                   invoked_entrypoint, input_files, output_files,
                   validator_path, validator_sha256, validator_exit_code,
-                  started_at, ended_at, side_effects=None) -> dict:
+                  started_at, ended_at, side_effects=None,
+                  entrypoint_path=None, entrypoint_sha256=None,
+                  official_validator=None, network_mode=None) -> dict:
     inp = [str(p) for p in input_files]
     out = [str(p) for p in output_files]
     try:
@@ -45,10 +47,12 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
         "skill_name": skill_name, "skill_dir": str(skill_dir),
         "skill_version": skill_version, "skill_root_sha256": skill_root_sha256,
         "invoked_entrypoint": invoked_entrypoint,
+        "entrypoint_path": entrypoint_path, "entrypoint_sha256": entrypoint_sha256,
         "input_files": inp, "input_hashes": hash_files(input_files),
         "output_files": out, "output_hashes": hash_files(output_files),
         "validator_path": validator_path, "validator_sha256": validator_sha256,
         "validator_exit_code": int(validator_exit_code),
+        "official_validator": official_validator, "network_mode": network_mode,
         "started_at": started_at, "ended_at": ended_at,
         "elapsed_seconds": round(elapsed, 3),
         "side_effects": side_effects or [],
@@ -82,3 +86,29 @@ def load_receipt(run_dir: Path, stage: str) -> dict | None:
 def receipt_valid(run_dir: Path, stage: str) -> bool:
     r = load_receipt(run_dir, stage)
     return r is not None and not validate_receipt(r)
+
+
+def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None) -> tuple[bool, list]:
+    """Tamper detection: recompute input/output/entrypoint/validator/skill hashes
+    from disk and compare to what the receipt recorded. Any drift => tampered."""
+    r = load_receipt(run_dir, stage)
+    if r is None:
+        return False, ["receipt missing"]
+    sd = Path(run_dir) / stage
+    mism = []
+    for name, h in (r.get("output_hashes") or {}).items():
+        p = sd / name
+        if not p.is_file():
+            mism.append(f"output missing: {name}")
+        elif sha256_file(p) != h:
+            mism.append(f"output hash mismatch: {name}")
+    for label, path_key, sha_key in [("validator", "validator_path", "validator_sha256"),
+                                     ("entrypoint", "entrypoint_path", "entrypoint_sha256")]:
+        p, want = r.get(path_key), r.get(sha_key)
+        if p and want and Path(p).is_file() and sha256_file(p) != want:
+            mism.append(f"{label} hash mismatch")
+    ov = r.get("official_validator") or {}
+    if ov.get("path") and ov.get("sha256") and Path(ov["path"]).is_file() \
+            and sha256_file(ov["path"]) != ov["sha256"]:
+        mism.append("official_validator hash mismatch")
+    return (not mism), mism

@@ -58,4 +58,5 @@ def post(ctx, sd, state, exit_code, report):
 
 
 def run_live(ctx, state):
-    raise NotImplementedError("live media-enrichment invokes run_media_enrichment.py; not run in dev/tests")
+    from ..producers import produce
+    return produce(ctx, STAGE, state)

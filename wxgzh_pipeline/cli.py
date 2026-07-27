@@ -41,7 +41,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="wxgzh-pipeline", add_help=True)
     ap.add_argument("phrase", nargs="?", help='e.g. "发文：Claude Opus 5" / "续发" / "进度" / "验收编排Skill"')
     ap.add_argument("--project-root", default=None)
-    ap.add_argument("--offline", action="store_true", help="use offline fixtures (dev/tests; no side effects)")
+    ap.add_argument("--offline", action="store_true", help="use offline fixtures (fast unit checks; no side effects)")
+    ap.add_argument("--fake-live", action="store_true",
+                    help="real orchestration machinery with fake sub-skills + fake WeChat (no real side effects)")
     ap.add_argument("--fixture-dir", default=None)
     a = ap.parse_args(argv)
 
@@ -55,7 +57,12 @@ def main(argv=None) -> int:
                           "raw": cmd.get("raw")}, ensure_ascii=False))
         return 2
 
-    net = "offline_fixture" if a.offline else "live"
+    if a.offline:
+        net = "offline_fixture"
+    elif a.fake_live:
+        net = "fake_live"
+    else:
+        net = "live"
     orch = Orchestrator(project_root=a.project_root, network_mode=net, fixture_dir=a.fixture_dir)
 
     if cmd["command"] == "fabu":

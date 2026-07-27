@@ -30,11 +30,13 @@ def validate(run_dir: str | Path) -> tuple[int, dict]:
     report = {
         "formally_published_false": d.get("formally_published") is False,
         "draft_created": d.get("draft_created"),
+        "draft_created_true": d.get("draft_created") is True,
         "all_stage_receipts_present": stages_ok,
         "manifest_hash_mismatch": hash_bad,
         "manifest_file_count": m.get("file_count"),
     }
-    ok = (report["formally_published_false"] and stages_ok and hash_bad == 0)
+    ok = (report["formally_published_false"] and report["draft_created_true"]
+          and stages_ok and hash_bad == 0)
     report["DELIVERY"] = "PASS" if ok else "FAIL"
     return (0 if ok else 1), report
 

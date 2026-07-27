@@ -46,4 +46,5 @@ def post(ctx, sd, state, exit_code, report):
 
 
 def run_live(ctx, state):
-    raise NotImplementedError("super-writer Full Mode is agent-driven; run under the agent, not dev/tests")
+    from ..producers import produce
+    return produce(ctx, STAGE, state)

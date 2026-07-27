@@ -8,9 +8,11 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 MIN_BODY_IMAGES = 6
 TARGET_BODY_IMAGES = 8
+MMBIZ_HOST = "mmbiz.qpic.cn"
 
 
 def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dict]:
@@ -29,8 +31,8 @@ def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dic
             continue
         if up.get("status") != "success":
             problems.append(f"{aid}: upload.status != success")
-        if "mmbiz.qpic.cn" not in url:
-            problems.append(f"{aid}: remote_url not mmbiz.qpic.cn")
+        if urlparse(url).hostname != MMBIZ_HOST:
+            problems.append(f"{aid}: remote_url host != {MMBIZ_HOST} (exact-match)")
         if a.get("sha256") != b.get("sha256"):
             problems.append(f"{aid}: binding sha256 != manifest sha256")
     count = len(body)

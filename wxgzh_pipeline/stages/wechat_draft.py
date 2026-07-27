@@ -52,8 +52,7 @@ def post(ctx, sd, state, exit_code, report):
 
 
 def run_live(ctx, state):
-    # Documented live path (agent/orchestrator runtime). Draft-only; reuses the
-    # audited module. NOT exercised during dev/tests (no real drafts).
-    raise NotImplementedError(
-        "live wechat_draft reuses gzh-design/scripts/publish_wechat_draft.py (draft only); "
-        "dev/tests never create a real draft")
+    # Real draft-only path. fake_live runs the fake WeChat client (no real API);
+    # live reuses the audited gzh-design/scripts/publish_wechat_draft.py (draft only).
+    from ..producers import produce
+    return produce(ctx, STAGE, state)

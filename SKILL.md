@@ -62,6 +62,31 @@ description: >-
 
 禁止恢复：Second Smoke / Kappa / Semantic Evaluator Phase B/C/D / 历史 provenance 路线。
 
+## 执行模型与网络模式（dev2）
+
+编排器按阶段类型用**两种真实机制**驱动（dev1 的 `run_live` 全是 `NotImplementedError`，dev2 已全部实现）：
+
+- **Agent 握手阶段**（aihot / super_writer / zh_human_writing）：编排器写 `agent_handshake_request.json` + `HANDSHAKE.md`，
+  由 Agent 产出规定产物并写 `agent_handshake.json`（ACK）。编排器用 ACK token 绑定“请求 + 产物当前 Hash”并校验；
+  产物被改则 token 失配即判失败。**live 模式下若尚无 ACK，返回 `AWAITING_AGENT`（干净暂停，不再崩溃）**。
+- **可执行阶段**（media_enrichment / gzh_design）与**微信阶段**（wechat_draft）：编排器**真实 subprocess** 调用入口脚本，
+  并**真实 subprocess** 运行该子 Skill 的正式 Validator（退出码写入 receipt）。
+
+三种网络模式（`NETWORK_MODES`）：
+
+| 模式 | 用途 | 副作用 |
+|---|---|---|
+| `offline_fixture` | 最快单测：拷贝预制产物 | 无 |
+| `fake_live` | **真实编排机制**（握手 + 真实 subprocess + 真实 Validator + receipt 复算 Hash），子 Skill 为 fake-live shim、微信为假响应 | **无真实副作用** |
+| `live` | 真实 Agent + 真实已安装子 Skill + 真实微信草稿 | 仅创建草稿 |
+
+`发文：<选题>` 默认 `live`；开发/测试/CI 用 `fake_live`（`--fake-live`）或 `offline_fixture`（`--offline`），全程零真实微信副作用。
+
+**逐阶段真实校验**：每阶段先真实产出 → 强制执行 `contracts/*.yaml`（必需产物齐全）→ 运行 in-repo Validator + 子 Skill 正式 Validator（真实 subprocess）→
+写 receipt（复算输入/输出/入口/Validator Hash）。`receipts.verify_receipt` 可从磁盘重算全部 Hash 做**篡改检测**。
+`gzh-design` 章节/目录门禁**动态**取自冻结终稿的 `##` 章节数（非自报）；`media` 绑定按 `urlparse` 精确校验 host==`mmbiz.qpic.cn`；
+交付要求 `draft_created=true`；`验收编排Skill` 真实运行整套 pytest。
+
 ## 绝不提供的能力（代码层面不存在）
 
 正式发布 / 群发 / 定时发布 / 自动删除草稿。即使 Agent 要求也无可调用实现；正式发布只能由用户本人在微信后台操作。

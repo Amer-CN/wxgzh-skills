@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "id": "C-01",
+      "text": "事实 1",
+      "source": "https://example.com/1"
+    },
+    {
+      "id": "C-02",
+      "text": "事实 2",
+      "source": "https://example.com/2"
+    },
+    {
+      "id": "C-03",
+      "text": "事实 3",
+      "source": "https://example.com/3"
+    },
+    {
+      "id": "C-04",
+      "text": "事实 4",
+      "source": "https://example.com/4"
+    },
+    {
+      "id": "C-05",
+      "text": "事实 5",
+      "source": "https://example.com/5"
+    },
+    {
+      "id": "C-06",
+      "text": "事实 6",
+      "source": "https://example.com/6"
+    }
+  ]
+}

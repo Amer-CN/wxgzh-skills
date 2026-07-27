@@ -25,6 +25,7 @@
     "network_mode": {
       "enum": [
         "live",
+        "fake_live",
         "offline_fixture"
       ]
     },

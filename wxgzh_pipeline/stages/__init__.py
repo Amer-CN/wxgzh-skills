@@ -14,6 +14,7 @@ from pathlib import Path
 from ..state import atomic_write_json, sha256_file
 from ..receipts import build_receipt, write_receipt, now
 from ..contracts import validate as schema_validate
+from ..contracts import enforce_contract
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 
@@ -32,6 +33,12 @@ class StageError(Exception):
     pass
 
 
+class StageAwait(Exception):
+    """Raised when an agent-driven stage is waiting for the agent to fulfill its
+    handshake (live mode, no ACK yet). Not a failure — a clean pause."""
+    pass
+
+
 @dataclass
 class StageContext:
     run_dir: Path
@@ -41,6 +48,7 @@ class StageContext:
     fixture_dir: Path | None = None
     env: dict = field(default_factory=dict)
     create_wechat_draft: bool = True
+    fake_agent: object = None
 
     def stage_dir(self, stage: str) -> Path:
         d = Path(self.run_dir) / stage
@@ -97,26 +105,50 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         raise StageError(f"{stage}: invalid stage_request: {req_errs}")
     atomic_write_json(sd / "stage_request.json", request)
 
-    # 2. produce outputs
+    # 2. produce outputs by network mode
+    meta = {}
     if ctx.network_mode == "offline_fixture":
         outputs = _copy_fixture_outputs(ctx, stage)
     else:
-        outputs = module.run_live(ctx, state)  # documented; not exercised during dev
+        outputs, meta = module.run_live(ctx, state)  # real: handshake / subprocess / wechat
+        if meta.get("await_agent"):
+            raise StageAwait(f"{stage}: awaiting agent handshake (no ACK yet)")
+        if meta.get("handshake_failed"):
+            raise StageError(f"{stage}: agent handshake verification failed: {meta.get('handshake')}")
+        er = meta.get("entry_run")
+        if er and er.get("exit_code") not in (0, None):
+            raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
 
-    # 3. content validation (exit code embedded in receipt)
+    # 3. content validation (in-repo real validators)
     exit_code, vreport, vpath, vsha = module.content_validate(ctx, sd, state)
 
-    # 4. receipt
+    # 3b. YAML contract enforcement (real consumption of contracts/*.yaml)
+    cok, creport = enforce_contract(stage, sd)
+    vreport = dict(vreport)
+    vreport["contract"] = creport
+    if not cok and exit_code == 0:
+        exit_code = 1
+
+    # 3c. official sub-skill validator (REAL subprocess) must also pass
+    ov = meta.get("official_validator")
+    if ov is not None and ov.get("exit_code") not in (0, None):
+        vreport["official_validator_failed"] = ov
+        if exit_code == 0:
+            exit_code = 1
+
+    # 4. receipt — recompute input/output hashes; record entrypoint + official validator hashes
     disc = ctx.discovery.get(skill, {})
     receipt = build_receipt(
         skill_name=stage, skill_dir=disc.get("skill_dir", str(Path(ctx.skills_home) / skill)),
         skill_version=disc.get("current_version") or disc.get("locked_version"),
         skill_root_sha256=disc.get("current_root_sha256") or disc.get("locked_root_sha256"),
-        invoked_entrypoint=module.invoked_entrypoint(ctx),
+        invoked_entrypoint=meta.get("invoked_entrypoint") or module.invoked_entrypoint(ctx),
         input_files=[sd / "stage_request.json"], output_files=outputs,
         validator_path=vpath, validator_sha256=vsha, validator_exit_code=exit_code,
         started_at=started, ended_at=now(),
         side_effects=module.side_effects(ctx, state),
+        entrypoint_path=meta.get("entrypoint_path"), entrypoint_sha256=meta.get("entrypoint_sha256"),
+        official_validator=ov, network_mode=ctx.network_mode,
     )
     write_receipt(ctx.run_dir, stage, receipt)
 

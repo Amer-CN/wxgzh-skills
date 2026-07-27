@@ -31,6 +31,35 @@ def load_env_values(env_path: Path) -> list[str]:
     return vals
 
 
+def parse_env_file(env_path: Path) -> dict:
+    """Parse KEY=VALUE lines into a dict (quotes/whitespace stripped). Values are
+    returned so callers can check presence — callers MUST NOT log the values."""
+    out: dict = {}
+    p = Path(env_path)
+    if not p.is_file():
+        return out
+    for line in p.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            out[k.strip()] = v.strip().strip('"').strip("'")
+    return out
+
+
+_PLACEHOLDERS = {"", "changeme", "xxx", "todo", "none", "null"}
+
+
+def wechat_credentials_present(env: dict) -> tuple[bool, dict]:
+    """Return (ok, detail) checking WECHAT_APP_ID / WECHAT_APP_SECRET are present
+    and NON-EMPTY (not placeholders). Only booleans are reported — never values."""
+    def _ok(v: str) -> bool:
+        v = (v or "").strip()
+        return bool(v) and "your_" not in v.lower() and v.lower() not in _PLACEHOLDERS
+    detail = {"WECHAT_APP_ID_nonempty": _ok(env.get("WECHAT_APP_ID")),
+              "WECHAT_APP_SECRET_nonempty": _ok(env.get("WECHAT_APP_SECRET"))}
+    return (detail["WECHAT_APP_ID_nonempty"] and detail["WECHAT_APP_SECRET_nonempty"]), detail
+
+
 def scan_tree(root: Path, env_values: list[str] | None = None) -> dict:
     env_values = env_values or []
     hits = []

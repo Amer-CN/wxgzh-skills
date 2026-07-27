@@ -45,7 +45,8 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     chapters = ev["chapter_title"]["occurrences"]
     sig = ev["signature"]["occurrences"]
     footer = ev["footer_cta"]["occurrences"]
-    toc_01_06 = all(f"PART 0{i}" in html for i in range(1, 7))
+    toc_dynamic_ok = bool(expected_chapters) and all(
+        f"PART {i:02d}" in html for i in range(1, expected_chapters + 1))
     img_types = [c for c in ("image_2a_standard", "image_media_text_card") if ev[c]["occurrences"] > 0]
     hammer_primary = "#B3593B" in html
     moyu_absent = "#059669" not in html
@@ -54,12 +55,12 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     strike_bad = "color:rgba(202,202,199,0.35)" in html.replace(" ", "")
     strike_props_ok = (line_through == 0) or (
         "text-decoration-color:#B3593B" in html and "text-decoration-thickness:1.5px" in html)
-    chapters_ok = (chapters == expected_chapters) if expected_chapters else (chapters >= 1)
+    chapters_ok = bool(expected_chapters) and (chapters == expected_chapters)
 
     report = {
         "HAMMER_COVER_BREAKING_COUNT": cover,
         "HAMMER_TOC_SCROLL_COUNT": toc,
-        "HAMMER_TOC_CONTAINS_01_06": toc_01_06,
+        "HAMMER_TOC_MATCHES_CHAPTERS": toc_dynamic_ok,
         "HAMMER_CHAPTER_TITLE_COUNT": chapters,
         "expected_chapters": expected_chapters,
         "HAMMER_SIGNATURE_COUNT": sig,
@@ -72,7 +73,7 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "strikethrough_props_ok": strike_props_ok,
         "components": ev,
     }
-    ok = (cover == 1 and toc == 1 and toc_01_06 and chapters_ok and sig == 1
+    ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
           and footer == 1 and len(img_types) >= 2 and not fallback_used
           and not strike_bad and strike_props_ok)
     report["THEME_IDENTITY"] = "PASS" if ok else "FAIL"

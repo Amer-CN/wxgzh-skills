@@ -45,4 +45,5 @@ def post(ctx, sd, state, exit_code, report):
 
 
 def run_live(ctx, state):
-    raise NotImplementedError("aihot live run is agent-driven; execute under the agent, not in dev/tests")
+    from ..producers import produce
+    return produce(ctx, STAGE, state)

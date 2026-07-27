@@ -4,6 +4,7 @@ official image component types 2-4, no fallback, safe strikethrough. THEME_IDENT
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from . import subskill_validator_sha, load_validator
@@ -31,10 +32,26 @@ def content_validate(ctx, sd: Path, state):
     final_html = sd / "final.html"
     if not final_html.is_file():
         return 1, {"reason": "final.html missing"}, vpath, vsha
-    expected_chapters = (state.output_hashes.get("super_writer") or {}).get("chapters")
+    # DYNAMIC chapter/TOC gate: expected chapter count is derived from the FROZEN
+    # article (## headings), not self-reported by super_writer.
+    fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
+    expected_chapters = _count_h2(fa) if fa.is_file() else None
     mod = load_validator("validate_theme_identity")
-    code, report = mod.validate(final_html, expected_chapters, usage_out=sd / "component_usage_report.json")
+    code, report = mod.validate(final_html, expected_chapters,
+                                usage_out=sd / "component_usage_report.json")
+    report["chapters_source"] = "frozen final_article.md (## headings)"
+    # program-generated theme identity report (never hand-declared)
+    (sd / "theme_identity_report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return code, report, vpath, vsha
+
+
+def _count_h2(md_path: Path) -> int:
+    n = 0
+    for ln in Path(md_path).read_text(encoding="utf-8").splitlines():
+        if ln.startswith("## ") and not ln.startswith("### "):
+            n += 1
+    return n
 
 
 def post(ctx, sd, state, exit_code, report):
@@ -42,4 +59,5 @@ def post(ctx, sd, state, exit_code, report):
 
 
 def run_live(ctx, state):
-    raise NotImplementedError("live gzh-design invokes the official hammer generator; not run in dev/tests")
+    from ..producers import produce
+    return produce(ctx, STAGE, state)
