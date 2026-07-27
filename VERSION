@@ -1,0 +1,6 @@
+version: 0.1.0-dev7-hotfix1
+previous_version: 0.1.0-dev7
+status: development
+engineering_tests: passed
+smoke_test: passed
+release_date: 2026-07-27

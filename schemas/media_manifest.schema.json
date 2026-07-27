@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Media Manifest",
+  "description": "Output manifest for the media-enrichment Skill",
+  "type": "object",
+  "required": ["schema_version", "skill_version", "run_id", "created_at", "input", "summary", "assets", "errors", "warnings", "gate"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "skill_version": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "type": "object",
+      "required": ["request_sha256", "article_sha256", "claims_total", "materials_total"],
+      "properties": {
+        "request_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "article_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "claims_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "materials_total": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pages_requested", "pages_fetched", "candidates_discovered", "downloads_succeeded", "exact_duplicates_removed", "perceptual_duplicates_removed", "rejected_assets", "review_required_assets", "eligible_assets", "generated_charts", "uploaded_assets"],
+      "properties": {
+        "pages_requested": { "type": "integer" },
+        "pages_fetched": { "type": "integer" },
+        "candidates_discovered": { "type": "integer" },
+        "downloads_succeeded": { "type": "integer" },
+        "exact_duplicates_removed": { "type": "integer" },
+        "perceptual_duplicates_removed": { "type": "integer" },
+        "rejected_assets": { "type": "integer" },
+        "review_required_assets": { "type": "integer" },
+        "eligible_assets": { "type": "integer" },
+        "generated_charts": { "type": "integer" },
+        "uploaded_assets": { "type": "integer" }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "asset_origin", "material_ids", "claim_ids", "decision", "reasons"],
+        "properties": {
+          "asset_id": { "type": "string" },
+          "asset_origin": { "type": "string", "enum": ["source", "generated"] },
+          "material_ids": { "type": "array", "items": { "type": "string" } },
+          "claim_ids": { "type": "array", "items": { "type": "string" } },
+          "aihot_permalink": { "type": ["string", "null"] },
+          "source_page_url": { "type": ["string", "null"] },
+          "discovered_url": { "type": ["string", "null"] },
+          "resolved_original_url": { "type": ["string", "null"] },
+          "extraction_method": { "type": ["string", "null"] },
+          "decode_method": { "type": ["string", "null"] },
+          "local_path": { "type": ["string", "null"] },
+          "sha256": { "type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$" },
+          "perceptual_hash": { "type": ["string", "null"] },
+          "mime_type": { "type": ["string", "null"] },
+          "width": { "type": ["integer", "null"] },
+          "height": { "type": ["integer", "null"] },
+          "file_size": { "type": ["integer", "null"] },
+          "quality_status": { "type": "string", "enum": ["pass", "fail"] },
+          "relevance_status": { "type": "string", "enum": ["relevant", "uncertain", "irrelevant"] },
+          "copyright_status": { "type": "string", "enum": ["known_allowed", "unknown", "restricted"] },
+          "copyright_risk": { "type": "string", "enum": ["low", "medium", "high"] },
+          "decision": { "type": "string", "enum": ["eligible", "review_required", "rejected"] },
+          "reasons": { "type": "array", "items": { "type": "string" } },
+          "duplicate_of": { "type": ["string", "null"] },
+          "caption": { "type": ["string", "null"] },
+          "alt_text": { "type": ["string", "null"] },
+          "placement": {
+            "type": ["object", "null"],
+            "properties": {
+              "anchor": { "type": "string" },
+              "position": { "type": "string", "enum": ["before", "after"] },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          },
+          "upload": {
+            "type": "object",
+            "properties": {
+              "mode": { "type": "string" },
+              "status": { "type": "string" },
+              "remote_url": { "type": ["string", "null"] },
+              "response_sha256": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "gate": {
+      "type": "object",
+      "required": ["input_contract_pass", "provenance_complete", "security_checks_pass", "secrets_detected", "publish_allowed"],
+      "properties": {
+        "input_contract_pass": { "type": "boolean" },
+        "provenance_complete": { "type": "boolean" },
+        "security_checks_pass": { "type": "boolean" },
+        "secrets_detected": { "type": "boolean" },
+        "publish_allowed": { "type": "boolean", "const": false }
+      }
+    }
+  }
+}
