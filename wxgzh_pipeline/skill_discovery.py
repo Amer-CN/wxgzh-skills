@@ -11,12 +11,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
+# .install-receipts holds EXTERNAL per-skill install proofs generated at install
+# time; it lives under skills_home (a sibling of each skill) and must never be
+# counted as skill runtime content (P0#1 — avoids commit/hash self-reference).
+INSTALL_RECEIPTS_DIRNAME = ".install-receipts"
 EXCLUDE_DIRS = {"__pycache__", ".git", ".pytest_cache", ".github", "tests",
-                "node_modules", ".idea", ".vscode"}
+                "node_modules", ".idea", ".vscode", INSTALL_RECEIPTS_DIRNAME}
 EXCLUDE_FILES = {"WXGZH_PIPELINE_INTEGRATION.md", ".gitignore", ".gitattributes"}
 EXCLUDE_SUFFIXES = {".pyc"}
+
+
+class InstallReceiptError(Exception):
+    """Fail-closed: checked-out HEAD does not match the locked commit."""
 
 
 def _file_sha(p: Path) -> str:
@@ -63,6 +72,59 @@ def compute_runtime_manifest_sha(root: Path) -> tuple[str | None, list[str]]:
 
 def load_lock(skill_root: Path) -> dict:
     return json.loads((Path(skill_root) / "skills.lock.json").read_text(encoding="utf-8"))
+
+
+def install_receipt_path(skills_home: Path, skill_name: str) -> Path:
+    return Path(skills_home) / INSTALL_RECEIPTS_DIRNAME / f"{skill_name}.json"
+
+
+def write_install_receipt(skills_home: Path, skill_name: str, *, repository_url: str,
+                          actual_commit: str, expected_commit: str | None,
+                          source_tree_sha: str | None = None,
+                          installer_version: str = "wxgzh-pipeline-installer") -> dict:
+    """Generate an EXTERNAL install receipt from the REAL checkout (P0#1).
+
+    The receipt is written OUTSIDE the skill tree
+    (<skills_home>/.install-receipts/<skill>.json) so it never counts toward the
+    skill runtime root hash. It records the checked-out commit + the recomputed
+    installed runtime root/manifest hashes. If the checked-out HEAD does not match
+    the locked full_commit_sha, we FAIL_CLOSED (InstallReceiptError) rather than
+    writing a receipt for the wrong tree.
+    """
+    root = Path(skills_home) / skill_name
+    if not root.is_dir():
+        raise InstallReceiptError(f"{skill_name}: install dir missing at {root}")
+    if expected_commit and actual_commit != expected_commit:
+        raise InstallReceiptError(
+            f"{skill_name}: checked-out HEAD {actual_commit} != locked {expected_commit}")
+    root_sha, _ = compute_root_sha(root)
+    man_sha, _ = compute_runtime_manifest_sha(root)
+    receipt = {
+        "schema_version": "1.0",
+        "skill_name": skill_name,
+        "repository_url": repository_url,
+        "full_commit_sha": actual_commit,
+        "source_tree_sha": source_tree_sha,
+        "installed_runtime_root_sha256": root_sha,
+        "installed_runtime_manifest_sha256": man_sha,
+        "installed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "installer_version": installer_version,
+    }
+    p = install_receipt_path(skills_home, skill_name)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True),
+                 encoding="utf-8", newline="\n")
+    return receipt
+
+
+def read_install_receipt(skills_home: Path, skill_name: str) -> dict | None:
+    p = install_receipt_path(skills_home, skill_name)
+    if not p.is_file():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except ValueError:
+        return None
 
 
 def check_aihot(skills_home: Path, env: dict | None = None) -> dict:

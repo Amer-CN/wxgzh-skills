@@ -31,38 +31,40 @@ jobs:
         run: python -m pytest tests -q
 
   integration:
-    # Real five-repo integration: checkout the four sub-skill PR commits, install
-    # them into a temp skills_home, verify_all/doctor + real CLI --help + minimal
-    # offline render. No real network / no WeChat side effects.
+    # Real five-repo integration (P0#4): checkout each sub-skill at the EXACT full
+    # commit SHA recorded in skills.lock.json (never just a branch name); the runner
+    # re-verifies actual HEAD == locked commit and FAILs on any mismatch, generates
+    # external install receipts, and runs a live-proof render + validate_theme_identity
+    # (THEME_IDENTITY must be PASS). No real network / no WeChat side effects.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout wxgzh-pipeline (this PR)
         uses: actions/checkout@v4
         with:
           path: wxgzh-pipeline
-      - name: Checkout super-writer PR branch
+      - name: Checkout super-writer @ locked commit
         uses: actions/checkout@v4
         with:
           repository: Amer-CN/super-writer
-          ref: chore/wxgzh-pipeline-dev2-integration
+          ref: 1e58d01e38346018886ab1ad6a183228263eae49
           path: clones/super-writer
-      - name: Checkout zh-human-writing PR branch
+      - name: Checkout zh-human-writing @ locked commit
         uses: actions/checkout@v4
         with:
           repository: Amer-CN/zh-human-writing
-          ref: chore/wxgzh-pipeline-dev2-integration
+          ref: 0c8962f354e9acc73f29bc57a8b328fc98695a10
           path: clones/zh-human-writing
-      - name: Checkout media-enrichment PR branch
+      - name: Checkout media-enrichment @ locked commit
         uses: actions/checkout@v4
         with:
           repository: Amer-CN/media-enrichment
-          ref: chore/wxgzh-pipeline-dev2-integration
+          ref: 7ff7be3c01073b4657f7794f15c4052ff09abf2b
           path: clones/media-enrichment
-      - name: Checkout gzh-design-skill PR branch
+      - name: Checkout gzh-design-skill @ locked commit
         uses: actions/checkout@v4
         with:
           repository: Amer-CN/gzh-design-skill
-          ref: chore/wxgzh-pipeline-dev2-integration
+          ref: 0007d7e6a4493aab59070d9c31dcde83830302fd
           path: clones/gzh-design-skill
       - uses: actions/setup-python@v5
         with:
@@ -71,13 +73,17 @@ jobs:
         run: |
           pip install pytest jsonschema pyyaml pillow requests beautifulsoup4 lxml
           for r in clones/*/requirements*.txt; do [ -f "$r" ] && pip install -r "$r" || true; done
-      - name: Run cross-repo integration (verify_all + real CLI --help + offline render)
+      - name: Run cross-repo integration (fixed-commit verify + install receipts + live-proof theme)
         env:
           WXGZH_SUBSKILL_CLONES: ${{ github.workspace }}/clones
         run: |
+          set +e
           python wxgzh-pipeline/scripts/run_cross_repo_integration.py \
             --result "$GITHUB_WORKSPACE/integration_result.json"
-          cat "$GITHUB_WORKSPACE/integration_result.json"
+          rc=$?
+          cat "$GITHUB_WORKSPACE/integration_result.json" || true
+          # FAIL the job on any commit mismatch / verify_all fail / THEME_IDENTITY != PASS
+          exit $rc
       - name: Cross-repo pytest (no SKIP allowed for cross-repo tests)
         env:
           WXGZH_SUBSKILL_CLONES: ${{ github.workspace }}/clones

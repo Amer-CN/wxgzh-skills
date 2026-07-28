@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -55,7 +56,16 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     moyu_absent = "#059669" not in html
     fallback_used = (not hammer_primary) or (not moyu_absent)
     line_through = html.count("line-through")
-    strike_bad = "color:rgba(202,202,199,0.35)" in html.replace(" ", "")
+    # A strikethrough is FORBIDDEN only when struck text uses the low-contrast
+    # colour WITHOUT the official hammer strike decoration on the SAME element.
+    # The hammer theme legitimately uses rgba(202,202,199,0.35) elsewhere (PART
+    # labels, dividers), so a global substring match would false-positive on a
+    # real render — scope the check to line-through elements (P0#1 live-proof).
+    _nz = html.replace(" ", "")
+    strike_bad = any(
+        ("line-through" in st and "color:rgba(202,202,199,0.35)" in st
+         and "text-decoration-color:#B3593B" not in st)
+        for st in re.findall(r'style="([^"]*)"', _nz))
     strike_props_ok = (line_through == 0) or (
         "text-decoration-color:#B3593B" in html and "text-decoration-thickness:1.5px" in html)
     chapters_ok = bool(expected_chapters) and (chapters == expected_chapters)
@@ -75,8 +85,15 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     locked_manifest = (lock_entry or {}).get("runtime_manifest_sha256")
 
     def _sha_file(path):
+        # newline-normalized content hash, IDENTICAL to the lock's _file_sha and
+        # to compute_root_sha, so entry/component matching holds cross-platform.
         try:
-            return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
+            if not (path and Path(path).is_file()):
+                return None
+            data = Path(path).read_bytes()
+            if b"\x00" not in data:
+                data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            return hashlib.sha256(data).hexdigest()
         except OSError:
             return None
 
@@ -89,14 +106,20 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     entry_hash_ok = bool(locked_entry_sha and actual_entry_sha == locked_entry_sha
                          and ev_ev.get("entry_sha256") == actual_entry_sha)
     component_hash_ok = bool(locked_component_sha and actual_comp_sha == locked_component_sha)
-    # live: installed runtime root + manifest hash must match the lock
+    # live: installed runtime root + manifest hash must match the lock AND the
+    # external install receipt (P0#1 three-way: recomputed == receipt == lock).
+    receipt_root = ev_ev.get("install_receipt_root_sha256")
+    receipt_manifest = ev_ev.get("install_receipt_manifest_sha256")
     if network_mode == "live":
         cur_root = ev_ev.get("installed_root_sha256")
         cur_manifest = ev_ev.get("installed_runtime_manifest_sha256")
-        root_ok = bool(locked_root and cur_root == locked_root)
-        manifest_ok = bool(locked_manifest and cur_manifest == locked_manifest)
+        root_ok = bool(locked_root and cur_root == locked_root and cur_root == receipt_root)
+        manifest_ok = bool(locked_manifest and cur_manifest == locked_manifest
+                           and cur_manifest == receipt_manifest)
     else:
+        cur_root = cur_manifest = None
         root_ok = manifest_ok = False
+    receipt_present = bool(ev_ev.get("install_source_commit"))
     commit_ok = bool(locked_commit and ev_ev.get("install_source_commit") == locked_commit)
     official_ok = (official_call and entry_hash_ok and component_hash_ok
                    and root_ok and manifest_ok and commit_ok and network_mode == "live")
@@ -125,6 +148,8 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "COMPONENT_SOURCE_HASH_MATCHES_LOCK": component_hash_ok,
         "INSTALLED_ROOT_MATCHES_LOCK": root_ok,
         "RUNTIME_MANIFEST_MATCHES_LOCK": manifest_ok,
+        "INSTALL_RECEIPT_PRESENT": receipt_present,
+        "INSTALL_RECEIPT_ROOT_MATCHES": bool(receipt_root and receipt_root == cur_root),
         "INSTALL_SOURCE_COMMIT_MATCHES_LOCK": commit_ok,
         "actual_render_entry_sha256": actual_entry_sha,
         "actual_component_source_sha256": actual_comp_sha,

@@ -18,6 +18,7 @@ recording command + exit + stdout/stderr sha256 for the receipt.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -149,28 +150,88 @@ class MediaRequestError(Exception):
     """Fail-closed: canonical registry missing / malformed / unmappable."""
 
 
+_HEX64 = re.compile(r"^[0-9a-fA-F]{64}$")
+_APPROVAL_BASE = {"approval_id", "approved_scope", "approved_at", "approved_by",
+                  "approval_evidence_sha256"}
+VALID_APPROVAL_SCOPES = ("material", "source_url", "single_asset")
+
+
 def _load_copyright_approvals(rd: Path) -> dict:
-    """P0#3: known_allowed can ONLY come from a real approval record on disk.
-    Returns {material_id or source_url: approval_record}. Absent file => {}.
-    Each record must bind approval_id/approved_scope/scope-ref/approved_at/
-    approved_by/approval_evidence_sha256; incomplete records are ignored."""
+    """P0#2: scope-aware copyright approvals. known_allowed can ONLY come from a
+    real approval record whose approved_scope is one of material/source_url/
+    single_asset, whose scope-specific binding field is present, and whose
+    approval_evidence_sha256 is a well-formed 64-hex digest. Returns:
+
+      {"material": {material_id: rec}, "source_url": {source_url: rec},
+       "single_asset": {asset_id: rec}, "count": int}
+
+    - material     -> requires material_id; approves ONLY that material.
+    - source_url   -> requires source_url;  approves ONLY that exact URL.
+    - single_asset -> requires asset_id;    NEVER marks the whole material
+                      known_allowed (applied per-asset downstream, AFTER the
+                      asset_id is produced from image extraction).
+    Unknown scope / scope-binding mismatch / malformed evidence hash => ignored.
+    """
+    out = {"material": {}, "source_url": {}, "single_asset": {}, "count": 0}
     p = rd / "media_enrichment" / "copyright_approval.json"
     if not p.is_file():
-        return {}
+        return out
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except ValueError:
-        return {}
-    req_fields = {"approval_id", "approved_scope", "approved_at", "approved_by",
-                  "approval_evidence_sha256"}
-    out = {}
+        return out
     for rec in data.get("approvals", []):
-        if not req_fields.issubset(rec):
+        if not isinstance(rec, dict) or not _APPROVAL_BASE.issubset(rec):
             continue
-        for key in (rec.get("material_id"), rec.get("source_url"), rec.get("asset_id")):
-            if key:
-                out[key] = rec
+        ev = rec.get("approval_evidence_sha256", "")
+        if not isinstance(ev, str) or not _HEX64.match(ev):
+            continue  # evidence hash format error => FAIL_CLOSED (ignore record)
+        scope = rec.get("approved_scope")
+        if scope == "material" and rec.get("material_id"):
+            out["material"][rec["material_id"]] = rec
+        elif scope == "source_url" and rec.get("source_url"):
+            out["source_url"][rec["source_url"]] = rec
+        elif scope == "single_asset" and rec.get("asset_id"):
+            out["single_asset"][rec["asset_id"]] = rec
+        else:
+            continue  # unknown scope OR missing required binding field => ignore
+        out["count"] += 1
     return out
+
+
+def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
+    """P0#3: load aihot/deduplicated_items.json into a deterministic index used to
+    cross-verify the canonical registry (tolerant of id/url key aliases). Raises
+    MediaRequestError on missing/malformed dedup, or when one dedup id maps to
+    multiple different URLs (ambiguous)."""
+    p = rd / "aihot" / "deduplicated_items.json"
+    if not p.is_file():
+        raise MediaRequestError("aihot/deduplicated_items.json missing (FAIL_CLOSED)")
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except ValueError as e:
+        raise MediaRequestError(f"deduplicated_items malformed: {e}")
+    items = data.get("items") if isinstance(data, dict) else data
+    if not isinstance(items, list) or not items:
+        raise MediaRequestError("deduplicated_items empty/invalid (FAIL_CLOSED)")
+    by_id, by_url = {}, {}
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        iid = it.get("id", it.get("material_id", it.get("item_id")))
+        iid = str(iid) if iid is not None else None
+        url = it.get("source_url") or it.get("url")
+        permalink = it.get("aihot_permalink") or it.get("permalink") or url
+        norm = {"id": iid, "source_url": url, "aihot_permalink": permalink,
+                "title": it.get("title", "")}
+        if iid is not None:
+            if iid in by_id and by_id[iid]["source_url"] != url:
+                raise MediaRequestError(
+                    f"dedup id {iid} maps to multiple URLs (FAIL_CLOSED)")
+            by_id[iid] = norm
+        if url:
+            by_url[url] = norm
+    return p, {"by_id": by_id, "by_url": by_url}
 
 
 def _build_media_request(ctx, sd: Path, state) -> Path:
@@ -195,17 +256,34 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
     if not reg_claims or not reg_materials:
         raise MediaRequestError("canonical registry has no claims/materials (FAIL_CLOSED)")
 
-    approvals = _load_copyright_approvals(rd)
+    dedup_p, dedup = _load_dedup_index(rd)           # P0#3 (raises on missing/bad)
+    approvals = _load_copyright_approvals(rd)         # P0#2 scope-aware
     materials, claims = [], []
     mat_ids = set()
+    verified_material_count = 0
     for m in reg_materials:
         mid = m.get("material_id")
         src = m.get("source_url")
         if not mid or not src:
             raise MediaRequestError(f"registry material missing id/source_url: {m}")
         mat_ids.add(mid)
-        # P0#3: approval ONLY from a real record; else pipeline does not approve.
-        appr = approvals.get(mid) or approvals.get(src)
+        # ── P0#3 cross-verify against dedup: unambiguous id mapping + EXACT
+        #    source_url + EXACT aihot_permalink; else FAIL_CLOSED. ──
+        dkey = str(m.get("dedup_id") or m.get("upstream_id") or m.get("aihot_id") or mid)
+        di = dedup["by_id"].get(dkey) or dedup["by_url"].get(src)
+        if di is None:
+            raise MediaRequestError(f"material {mid} not found in dedup (FAIL_CLOSED)")
+        if di["source_url"] != src:
+            raise MediaRequestError(
+                f"material {mid} source_url disagrees with dedup (FAIL_CLOSED)")
+        permalink = m.get("aihot_permalink") or src
+        if di.get("aihot_permalink") and di["aihot_permalink"] != permalink:
+            raise MediaRequestError(
+                f"material {mid} aihot_permalink disagrees with dedup (FAIL_CLOSED)")
+        verified_material_count += 1
+        # ── P0#2 approval: ONLY material/source_url scope marks the material;
+        #    single_asset NEVER marks the whole material known_allowed. ──
+        appr = approvals["material"].get(mid) or approvals["source_url"].get(src)
         cr = ({"status": "known_allowed", "reviewed_by": appr["approved_by"],
                "reviewed_at": appr["approved_at"],
                "evidence": appr["approval_evidence_sha256"],
@@ -213,9 +291,10 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
               if appr else {"status": "unknown"})
         materials.append({
             "material_id": mid,
-            "aihot_permalink": m.get("aihot_permalink") or src,
+            "aihot_permalink": permalink,
             "source_url": src, "title": m.get("title", ""),
             "selected_claim_ids": list(m.get("selected_claim_ids", [])),
+            "dedup_id": di["id"],
             "copyright_review": cr,
         })
     for c in reg_claims:
@@ -238,6 +317,11 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
         "article": {"path": "../zh_human_writing/final_article.md",
                     "sha256": state.final_article_sha256 or sha256_file(article)},
         "materials": materials, "claims": claims,
+        "asset_approvals": [
+            {"asset_id": aid, "approval_id": rec["approval_id"],
+             "approved_scope": "single_asset", "approved_by": rec["approved_by"],
+             "approved_at": rec["approved_at"], "evidence": rec["approval_evidence_sha256"]}
+            for aid, rec in sorted(approvals["single_asset"].items())],
         "config": {
             "upload_mode": "wechat_audit" if ctx.network_mode == "fake_live" else "wechat_image_host",
             "network_mode": "offline_fixture" if ctx.network_mode == "fake_live" else "live",
@@ -245,7 +329,10 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
             "allow_unknown_license_for_publish": False,
         },
         "provenance": {"canonical_registry_sha256": sha256_file(reg_p),
-                       "copyright_approvals_bound": len(approvals)},
+                       "deduplicated_items_sha256": sha256_file(dedup_p),
+                       "material_mapping_verified": True,
+                       "verified_material_count": verified_material_count,
+                       "copyright_approvals_bound": approvals["count"]},
     }
     req_path = sd / "media_request.json"
     req_path.write_text(json.dumps(req, ensure_ascii=False, indent=2, sort_keys=True),

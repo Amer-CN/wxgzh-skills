@@ -125,9 +125,15 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
                   "command": (meta.get("entry_run") or {}).get("command"),
                   "exit_code": (meta.get("entry_run") or {}).get("exit_code")}
             if live:
-                # real install-source proof: recompute installed hashes + read the
-                # committed install-source SHA so theme identity can be OFFICIAL.
-                from ..skill_discovery import compute_root_sha, compute_runtime_manifest_sha
+                # real install-source proof (P0#1): recompute the installed runtime
+                # hashes AND read the EXTERNAL install receipt generated at install
+                # time (<skills_home>/.install-receipts/gzh-design.json — never inside
+                # the skill tree, so no commit/hash self-reference). Theme identity
+                # three-way compares recomputed == receipt == lock; a missing or
+                # mismatched receipt leaves install_source_commit None => FAIL.
+                from ..skill_discovery import (compute_root_sha,
+                                               compute_runtime_manifest_sha,
+                                               read_install_receipt)
                 gdir = Path(ctx.skills_home) / "gzh-design"
                 comp = gdir / "scripts" / "generate_hammer_upgrade_samples.py"
                 ev["component_source_path"] = str(comp)
@@ -135,14 +141,14 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
                 man_sha, _ = compute_runtime_manifest_sha(gdir)
                 ev["installed_root_sha256"] = root_sha
                 ev["installed_runtime_manifest_sha256"] = man_sha
-                proof = gdir / "INSTALL_SOURCE.json"
-                if proof.is_file():
-                    import json as _json
-                    try:
-                        ev["install_source_commit"] = _json.loads(
-                            proof.read_text(encoding="utf-8")).get("full_commit_sha")
-                    except ValueError:
-                        ev["install_source_commit"] = None
+                receipt = read_install_receipt(ctx.skills_home, "gzh-design")
+                if receipt:
+                    ev["install_source_commit"] = receipt.get("full_commit_sha")
+                    ev["install_receipt_root_sha256"] = receipt.get("installed_runtime_root_sha256")
+                    ev["install_receipt_manifest_sha256"] = receipt.get("installed_runtime_manifest_sha256")
+                    ev["install_receipt_repository_url"] = receipt.get("repository_url")
+                else:
+                    ev["install_source_commit"] = None
             atomic_write_json(sd / "gzh_execution_evidence.json", ev)
 
     # 3. content validation (in-repo real validators)

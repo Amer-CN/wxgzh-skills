@@ -52,8 +52,13 @@ def test_theme_official_pass_requires_real_hashes(tmp_path):
     import hashlib
     entry = tmp_path / "render_article.py"; entry.write_text("# entry\n", encoding="utf-8")
     comp = tmp_path / "generate_hammer_upgrade_samples.py"; comp.write_text("# comp\n", encoding="utf-8")
-    entry_sha = hashlib.sha256(entry.read_bytes()).hexdigest()
-    comp_sha = hashlib.sha256(comp.read_bytes()).hexdigest()
+
+    def _nsha(p):  # newline-normalized, matching the lock + validator hashing
+        d = p.read_bytes()
+        return hashlib.sha256(d.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+                              if b"\x00" not in d else d).hexdigest()
+    entry_sha = _nsha(entry)
+    comp_sha = _nsha(comp)
     lock_entry = {"entrypoint_sha256": entry_sha, "component_source_sha256": comp_sha,
                   "full_commit_sha": "f" * 40, "skill_root_sha256": "r" * 64,
                   "runtime_manifest_sha256": "m" * 64}
@@ -62,18 +67,28 @@ def test_theme_official_pass_requires_real_hashes(tmp_path):
             "component_source_path": str(comp),
             "installed_root_sha256": "r" * 64,
             "installed_runtime_manifest_sha256": "m" * 64,
+            "install_receipt_root_sha256": "r" * 64,
+            "install_receipt_manifest_sha256": "m" * 64,
             "install_source_commit": "f" * 40}
     code, rep = _theme(_pass_html(), tmp_path, exec_evidence=good,
                        network_mode="live", lock_entry=lock_entry)
     assert code == 0 and rep["THEME_IDENTITY"] == "PASS", rep
     assert rep["RENDER_ENTRY_HASH_MATCHES_LOCK"] and rep["COMPONENT_SOURCE_HASH_MATCHES_LOCK"]
     assert rep["INSTALLED_ROOT_MATCHES_LOCK"] and rep["INSTALL_SOURCE_COMMIT_MATCHES_LOCK"]
+    assert rep["INSTALL_RECEIPT_PRESENT"] and rep["INSTALL_RECEIPT_ROOT_MATCHES"]
     # lock fields alone (no real files / wrong entry hash) => FAIL
     bad = dict(good, entry_sha256="0" * 64, render_entry_path=str(tmp_path / "nope.py"))
     code2, rep2 = _theme(_pass_html(), tmp_path, exec_evidence=bad,
                          network_mode="live", lock_entry=lock_entry)
     assert code2 == 1 and rep2["THEME_IDENTITY"] == "FAIL"
     assert rep2["RENDER_ENTRY_HASH_MATCHES_LOCK"] is False
+    # P0#1: install receipt root that disagrees with lock/recomputed => FAIL
+    # (recomputed==lock but receipt tampered — three-way compare catches it)
+    tampered_receipt = dict(good, install_receipt_root_sha256="9" * 64)
+    codeR, repR = _theme(_pass_html(), tmp_path, exec_evidence=tampered_receipt,
+                         network_mode="live", lock_entry=lock_entry)
+    assert codeR == 1 and repR["THEME_IDENTITY"] == "FAIL"
+    assert repR["INSTALLED_ROOT_MATCHES_LOCK"] is False
     # tampered component source (real file hash != lock) => FAIL
     comp.write_text("# TAMPERED\n", encoding="utf-8")
     code3, rep3 = _theme(_pass_html(), tmp_path, exec_evidence=good,

@@ -42,17 +42,29 @@ REGISTRY = {
     ],
 }
 
+# AI HOT dedup that matches the canonical registry (P0#3 cross-verification).
+DEDUP = [
+    {"id": "M-001", "title": "素材甲", "source_url": "https://src.test/a",
+     "aihot_permalink": "https://aihot.virxact.com/items/a"},
+    {"id": "M-002", "title": "素材乙", "source_url": "https://src.test/b",
+     "aihot_permalink": "https://aihot.virxact.com/items/b"},
+]
 
-def _setup(tmp_path: Path, registry=REGISTRY, approvals=None):
-    """Build a minimal run_dir with the canonical registry + frozen article
-    (+ optional copyright_approval.json) and return (ctx, state, media_dir)."""
+
+def _setup(tmp_path: Path, registry=REGISTRY, approvals=None, dedup=DEDUP):
+    """Build a minimal run_dir with the canonical registry + AI HOT dedup + frozen
+    article (+ optional copyright_approval.json); return (ctx, state, media_dir)."""
     rd = tmp_path / "run"
     (rd / "super_writer").mkdir(parents=True)
     (rd / "zh_human_writing").mkdir(parents=True)
+    (rd / "aihot").mkdir(parents=True)
     md = rd / "media_enrichment"; md.mkdir(parents=True)
     if registry is not None:
         (rd / "super_writer" / "canonical_claim_registry.json").write_text(
             json.dumps(registry, ensure_ascii=False), encoding="utf-8")
+    if dedup is not None:
+        (rd / "aihot" / "deduplicated_items.json").write_text(
+            json.dumps(dedup, ensure_ascii=False), encoding="utf-8")
     article = rd / "zh_human_writing" / "final_article.md"
     article.write_text("# 标题\n\n正文。\n", encoding="utf-8")
     if approvals is not None:
@@ -126,9 +138,9 @@ def test_claim_referencing_unknown_material_fails_closed(tmp_path):
 
 # ----------------------------- P0#3 -----------------------------
 
-def _approval(material_id="M-001"):
+def _approval(material_id="M-001", scope="material"):
     return {"approvals": [{
-        "approval_id": "AP-1", "approved_scope": "single_asset",
+        "approval_id": "AP-1", "approved_scope": scope,
         "material_id": material_id, "approved_at": "2026-07-26T00:00:00Z",
         "approved_by": "real-user", "approval_evidence_sha256": "e" * 64}]}
 

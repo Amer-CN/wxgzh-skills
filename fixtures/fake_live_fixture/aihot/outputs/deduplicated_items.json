@@ -1,32 +1,14 @@
 [
   {
-    "id": "item-1",
-    "title": "素材 1",
-    "url": "https://example.com/1"
+    "id": "M-001",
+    "title": "旧显卡本地 AI 画图机",
+    "source_url": "https://www.example-source.test/rx580-local-ai",
+    "aihot_permalink": "https://aihot.virxact.com/items/rx580"
   },
   {
-    "id": "item-2",
-    "title": "素材 2",
-    "url": "https://example.com/2"
-  },
-  {
-    "id": "item-3",
-    "title": "素材 3",
-    "url": "https://example.com/3"
-  },
-  {
-    "id": "item-4",
-    "title": "素材 4",
-    "url": "https://example.com/4"
-  },
-  {
-    "id": "item-5",
-    "title": "素材 5",
-    "url": "https://example.com/5"
-  },
-  {
-    "id": "item-6",
-    "title": "素材 6",
-    "url": "https://example.com/6"
+    "id": "M-002",
+    "title": "AMD 卡跑 Stable Diffusion",
+    "source_url": "https://www.example-source.test/sd-webui-amd",
+    "aihot_permalink": "https://aihot.virxact.com/items/sd-amd"
   }
 ]
