@@ -136,27 +136,48 @@ def test_real_skills_accept_same_flags_when_available():
         pytest.skip("no real sub-skills available in this environment")
 
 
-# ---------- P0#6: AI HOT real existence check ----------
+# ---------- P0#6/#8: AI HOT real CAPABILITY check ----------
 
-def test_aihot_not_installed_fails_closed_in_live(tmp_path, skills_home):
+def test_aihot_bare_skill_md_is_unverified_and_fails_live(tmp_path):
+    """hotfix2: a bare SKILL.md is NOT a verified capability."""
+    from wxgzh_pipeline.orchestrator import Orchestrator
+    reg = tmp_path / "aihot"; reg.mkdir()
+    (reg / "SKILL.md").write_text("---\nname: aihot\n---\n", encoding="utf-8")  # SKILL.md only
+    o = Orchestrator(project_root=tmp_path, network_mode="live", skills_home=tmp_path,
+                     env={"WXGZH_AIHOT_SKILL_DIR": str(reg),
+                          "WECHAT_APP_ID": "wx123456", "WECHAT_APP_SECRET": "abcdef123456"})
+    ok, rep = o.doctor()
+    assert rep["EXTERNAL_DEPENDENCY_AIHOT"] == "UNVERIFIED"
+    assert rep["LIVE_PIPELINE_ALLOWED"] is False
+    assert ok is False and rep["FAIL_CLOSED"] is True
+
+
+def test_aihot_not_installed_fails_closed_in_live(tmp_path):
     from wxgzh_pipeline.orchestrator import Orchestrator
     empty = tmp_path / "no-aihot-here"; empty.mkdir()
     o = Orchestrator(project_root=tmp_path, network_mode="live", skills_home=tmp_path,
                      env={"WXGZH_AIHOT_SKILL_DIR": str(empty),
                           "WECHAT_APP_ID": "wx123456", "WECHAT_APP_SECRET": "abcdef123456"})
     ok, rep = o.doctor()
-    assert rep["EXTERNAL_DEPENDENCY_AIHOT"] == "NOT_INSTALLED"
+    assert rep["EXTERNAL_DEPENDENCY_AIHOT"] == "UNVERIFIED"
     assert ok is False and rep["FAIL_CLOSED"] is True
 
 
-def test_aihot_registration_detected(tmp_path):
+def test_aihot_valid_registration_detected(tmp_path):
+    """A real registration manifest (name + output_contract + discoverable) verifies."""
     from wxgzh_pipeline.skill_discovery import check_aihot
-    reg = tmp_path / "aihot"; reg.mkdir()
-    (reg / "SKILL.md").write_text("---\nname: aihot\n---\n", encoding="utf-8")
-    res = check_aihot(tmp_path, env={"WXGZH_AIHOT_SKILL_DIR": str(reg)})
-    assert res["exists"] is True and res["registration"].endswith("SKILL.md")
-    res2 = check_aihot(tmp_path, env={"WXGZH_AIHOT_SKILL_DIR": str(tmp_path / "nope")})
-    assert res2["exists"] is False
+    manifest = tmp_path / "aihot_reg.json"
+    manifest.write_text(json.dumps({"name": "aihot", "identifier": "aihot",
+                                    "discoverable": True,
+                                    "output_contract": {"items": "array"}}), encoding="utf-8")
+    res = check_aihot(tmp_path, env={"WXGZH_AIHOT_REGISTRATION": str(manifest)})
+    assert res["exists"] is True and res["status"] == "INSTALLED"
+    assert res["live_pipeline_allowed"] is True
+    # missing output_contract => UNVERIFIED
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"name": "aihot", "discoverable": True}), encoding="utf-8")
+    res2 = check_aihot(tmp_path, env={"WXGZH_AIHOT_REGISTRATION": str(bad)})
+    assert res2["exists"] is False and res2["status"] == "UNVERIFIED"
 
 
 # ---------- P0#9: reinstall from PR trees => doctor skill verification PASS ----------
@@ -175,6 +196,9 @@ def test_reinstall_from_pr_trees_doctor_pass(tmp_path):
     lock = SD.load_lock(SKILL_ROOT)
     aihot_dir = staging / "aihot"; aihot_dir.mkdir()
     (aihot_dir / "SKILL.md").write_text("---\nname: aihot\n---\n", encoding="utf-8")
+    (aihot_dir / "registration.json").write_text(json.dumps(
+        {"name": "aihot", "identifier": "aihot", "discoverable": True,
+         "output_contract": {"items": "array"}}), encoding="utf-8")
     ok, disc = SD.verify_all(staging, lock, env={"WXGZH_AIHOT_SKILL_DIR": str(aihot_dir)})
     problems = {k: v for k, v in disc.items() if not v["ok"]}
     assert ok, f"reinstalled PR trees must verify against the lock: {problems}"

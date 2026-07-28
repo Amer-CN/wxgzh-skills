@@ -81,23 +81,27 @@ class Orchestrator:
                 env.setdefault(k, v)
         wechat_ok, wechat_detail = SEC.wechat_credentials_present(env)
         writable = _is_writable(self.project_root)
-        # P0#6 — AI HOT existence is REALLY checked in every mode (never a
-        # hardcoded ok). Missing AI HOT fail-closes LIVE mode; fake_live/offline
-        # are hermetic by design but the true status is still reported.
+        # P0#6/#8 — AI HOT capability is REALLY checked (registration + output
+        # contract + discoverable). A bare SKILL.md is UNVERIFIED. Missing/
+        # unverified AI HOT fail-closes LIVE mode; fake_live/offline are hermetic.
         aihot_check = SD.check_aihot(self.skills_home, env=env)
-        aihot_status = "INSTALLED" if aihot_check["exists"] else "NOT_INSTALLED"
+        aihot_status = aihot_check.get("status", "INSTALLED" if aihot_check["exists"] else "NOT_INSTALLED")
+        live_pipeline_allowed = aihot_check.get("live_pipeline_allowed", aihot_check["exists"])
         aihot_ok = aihot_check["exists"] or self.network_mode != "live"
         report = {
             "wxgzh_pipeline_version": __version__, "project_root": str(self.project_root),
             "skills_home": str(self.skills_home), "network_mode": self.network_mode,
             "skills_locked_ok": ok_skills, "skills": disc,
             "EXTERNAL_DEPENDENCY_AIHOT": aihot_status,
+            "LIVE_PIPELINE_ALLOWED": (live_pipeline_allowed if self.network_mode == "live" else True),
             "aihot_registration": aihot_check["registration"],
             "aihot_checked_locations": aihot_check["checked"],
             "wechat_config_present": wechat_ok, "wechat_credential_detail": wechat_detail,
             "wechat_required": require_wechat, "project_writable": writable,
         }
         ok = ok_skills and writable and aihot_ok and (wechat_ok or not require_wechat)
+        if self.network_mode == "live":
+            ok = ok and live_pipeline_allowed
         report["FAIL_CLOSED"] = not ok
         report["doctor"] = "PASS" if ok else "FAIL"
         return ok, report
@@ -132,7 +136,7 @@ class Orchestrator:
         for s in STAGES:
             if s not in st.completed_stages:
                 break
-            ok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home)
+            ok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home, network_mode=self.network_mode)
             verify_reports[s] = {"ok": ok, "mismatches": mism}
             if ok and broken is None:
                 kept.append(s)
@@ -172,7 +176,7 @@ class Orchestrator:
             if stage == "wechat_draft":
                 bad = {}
                 for s in STAGES[:5]:
-                    vok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home)
+                    vok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home, network_mode=self.network_mode)
                     if not vok:
                         bad[s] = mism
                 if bad or not create_wechat_draft:
@@ -219,19 +223,21 @@ class Orchestrator:
     # ---------- release audit ----------
     def release_audit(self) -> dict:
         ok_skills, disc = self._verify_skills_for_mode()
-        # audit: no formal-publish capability anywhere in the package
         pub = _scan_forbidden_endpoints(SKILL_ROOT / "wxgzh_pipeline")
         tests = self._run_full_tests()
-        tests_ok = tests.get("exit_code") in (0, None)  # None == skipped nested
-        # P0#10: secrets scan over the shipped tree (credential-shaped values)
+        # P0#9: tests MUST have actually run and passed. exit_code=None (nested
+        # skip) or a missing tests dir does NOT pass a TOP-LEVEL audit.
+        tests_ran = tests.get("ran") is True
+        tests_ok = tests_ran and tests.get("exit_code") == 0
+        # cross-repo integration must have been executed (see run_cross_repo_integration)
+        integ = self._integration_status()
+        integ_ok = integ.get("ran") is True and integ.get("exit_code") == 0
         sec = SEC.scan_tree(SKILL_ROOT)
         secrets_ok = not sec.get("secrets_detected")
-        # P0#10: absolute-path scan — shipped runtime code must be portable
         abs_hits = _scan_absolute_paths([SKILL_ROOT / "wxgzh_pipeline",
                                          SKILL_ROOT / "validators",
                                          SKILL_ROOT / "fake_live",
                                          SKILL_ROOT / "scripts"])
-        # P0#10: doctor must pass in the audited environment
         doc_ok, doc = self.doctor()
         report = {"profile": "release_audit", "side_effects": "none",
                   "skills_locked_ok": ok_skills, "skills": disc,
@@ -241,10 +247,27 @@ class Orchestrator:
                   "absolute_path_hits": abs_hits[:10],
                   "absolute_paths_clean": not abs_hits,
                   "doctor": doc.get("doctor"),
-                  "creates_wechat_draft": False, "uploads_images": False, "tests": tests}
+                  "tests_ran": tests_ran, "tests": tests,
+                  "cross_repo_integration": integ,
+                  "creates_wechat_draft": False, "uploads_images": False}
         report["RELEASE_AUDIT"] = "PASS" if (ok_skills and not pub and tests_ok
-                                             and secrets_ok and not abs_hits and doc_ok) else "FAIL"
+                                             and integ_ok and secrets_ok
+                                             and not abs_hits and doc_ok) else "FAIL"
         return report
+
+    @staticmethod
+    def _integration_status() -> dict:
+        """Cross-repo integration status. Read from a marker the integration CI job
+        (or run_cross_repo_integration) writes; absent => not run (audit FAILs)."""
+        import os
+        marker = os.environ.get("WXGZH_INTEGRATION_RESULT")
+        if marker and Path(marker).is_file():
+            try:
+                return json.loads(Path(marker).read_text(encoding="utf-8"))
+            except ValueError:
+                return {"ran": False, "exit_code": None, "error": "marker unreadable"}
+        return {"ran": False, "exit_code": None,
+                "note": "cross-repo integration not run (set WXGZH_INTEGRATION_RESULT)"}
 
     @staticmethod
     def _run_full_tests() -> dict:

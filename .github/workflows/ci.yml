@@ -27,5 +27,67 @@ jobs:
         run: pip install pytest jsonschema pyyaml
       - name: Byte-compile all sources
         run: python -m compileall -q wxgzh_pipeline validators scripts fake_live tests
-      - name: Run tests (fake_live only — no real WeChat side effects)
+      - name: Run hermetic tests (fake_live — no real WeChat side effects)
         run: python -m pytest tests -q
+
+  integration:
+    # Real five-repo integration: checkout the four sub-skill PR commits, install
+    # them into a temp skills_home, verify_all/doctor + real CLI --help + minimal
+    # offline render. No real network / no WeChat side effects.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout wxgzh-pipeline (this PR)
+        uses: actions/checkout@v4
+        with:
+          path: wxgzh-pipeline
+      - name: Checkout super-writer PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/super-writer
+          ref: chore/wxgzh-pipeline-dev2-integration
+          path: clones/super-writer
+      - name: Checkout zh-human-writing PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/zh-human-writing
+          ref: chore/wxgzh-pipeline-dev2-integration
+          path: clones/zh-human-writing
+      - name: Checkout media-enrichment PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/media-enrichment
+          ref: chore/wxgzh-pipeline-dev2-integration
+          path: clones/media-enrichment
+      - name: Checkout gzh-design-skill PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/gzh-design-skill
+          ref: chore/wxgzh-pipeline-dev2-integration
+          path: clones/gzh-design-skill
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install pytest jsonschema pyyaml pillow requests
+      - name: Run cross-repo integration (verify_all + real CLI --help + offline render)
+        env:
+          WXGZH_SUBSKILL_CLONES: ${{ github.workspace }}/clones
+        run: |
+          python wxgzh-pipeline/scripts/run_cross_repo_integration.py \
+            --result "$GITHUB_WORKSPACE/integration_result.json"
+          cat "$GITHUB_WORKSPACE/integration_result.json"
+      - name: Cross-repo pytest (no SKIP allowed for cross-repo tests)
+        env:
+          WXGZH_SUBSKILL_CLONES: ${{ github.workspace }}/clones
+          WXGZH_REAL_SKILLS_HOME: ${{ github.workspace }}/clones
+        working-directory: wxgzh-pipeline
+        run: |
+          python -m pytest tests/test_hotfix1.py -q -o addopts='' -rs 2>&1 | tee out.txt
+          if grep -Eq "SKIPPED.*(reinstall|cross|real skills|PR trees)" out.txt; then
+            echo "cross-repo tests were SKIPPED"; exit 1; fi
+      - name: Upload integration result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-result
+          path: integration_result.json

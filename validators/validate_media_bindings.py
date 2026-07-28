@@ -12,7 +12,18 @@ from urllib.parse import urlparse
 
 MIN_BODY_IMAGES = 6
 TARGET_BODY_IMAGES = 8
-MMBIZ_HOST = "mmbiz.qpic.cn"
+MMBIZ_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
+
+
+def _exact_wechat_url(url: str) -> bool:
+    """dev2-hotfix2: https + hostname EQUALS a WeChat image host."""
+    if not url:
+        return False
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return False
+    return p.scheme == "https" and p.hostname in MMBIZ_HOSTS
 
 
 def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dict]:
@@ -31,8 +42,8 @@ def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dic
             continue
         if up.get("status") != "success":
             problems.append(f"{aid}: upload.status != success")
-        if urlparse(url).hostname != MMBIZ_HOST:
-            problems.append(f"{aid}: remote_url host != {MMBIZ_HOST} (exact-match)")
+        if not _exact_wechat_url(url):
+            problems.append(f"{aid}: remote_url must be https on {MMBIZ_HOSTS} (exact-match)")
         if a.get("sha256") != b.get("sha256"):
             problems.append(f"{aid}: binding sha256 != manifest sha256")
     count = len(body)

@@ -10,11 +10,17 @@ from pathlib import Path
 from .state import atomic_write_json, sha256_file
 
 REQUIRED_FIELDS = [
-    "skill_name", "skill_dir", "skill_version", "skill_root_sha256",
-    "invoked_entrypoint", "input_files", "input_hashes", "output_files",
+    "stage", "skill_name", "skill_dir", "skill_version", "skill_root_sha256",
+    "invoked_entrypoint", "entrypoint_path", "entrypoint_sha256",
+    "input_files", "input_hashes", "output_files",
     "output_hashes", "validator_path", "validator_sha256", "validator_exit_code",
+    "official_validator", "official_validators", "network_mode",
     "started_at", "ended_at", "elapsed_seconds", "side_effects",
 ]
+
+# fields every official-validator record must carry (P0#1)
+OFFICIAL_VALIDATOR_FIELDS = ["path", "sha256", "command", "exit_code",
+                             "stdout_sha256", "stderr_sha256"]
 
 
 def now() -> str:
@@ -46,7 +52,7 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
                   started_at, ended_at, side_effects=None,
                   entrypoint_path=None, entrypoint_sha256=None,
                   official_validator=None, official_validators=None,
-                  network_mode=None) -> dict:
+                  network_mode=None, stage=None) -> dict:
     inp = [str(p) for p in input_files]
     out = [str(p) for p in output_files]
     try:
@@ -55,6 +61,7 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
     except Exception:
         elapsed = 0.0
     return {
+        "stage": stage,
         "skill_name": skill_name, "skill_dir": str(skill_dir),
         "skill_version": skill_version, "skill_root_sha256": skill_root_sha256,
         "invoked_entrypoint": invoked_entrypoint,
@@ -83,9 +90,37 @@ def write_receipt(run_dir: Path, stage: str, receipt: dict) -> Path:
 
 
 def validate_receipt(receipt: dict) -> list[str]:
+    """Structural validation (P0#1). Empty objects, deleted fields, and
+    inconsistent hash coverage are all failures."""
+    if not isinstance(receipt, dict) or not receipt:
+        return ["receipt is empty or not an object"]
     errs = [f"missing field: {f}" for f in REQUIRED_FIELDS if f not in receipt]
-    if not errs and receipt.get("validator_exit_code", 1) != 0:
+    if errs:
+        return errs
+    if receipt.get("validator_exit_code", 1) != 0:
         errs.append(f"validator_exit_code != 0 ({receipt.get('validator_exit_code')})")
+    # input_files set must EXACTLY equal input_hashes key set
+    in_files = set(receipt.get("input_files") or [])
+    in_keys = set((receipt.get("input_hashes") or {}).keys())
+    if in_files != in_keys:
+        errs.append(f"input_files/input_hashes mismatch: only_files={sorted(in_files - in_keys)[:3]} "
+                    f"only_hashes={sorted(in_keys - in_files)[:3]}")
+    # output_files (by name) must EXACTLY equal output_hashes key set
+    out_names = {Path(p).name for p in (receipt.get("output_files") or [])}
+    out_keys = set((receipt.get("output_hashes") or {}).keys())
+    if out_names != out_keys:
+        errs.append(f"output_files/output_hashes mismatch: only_files={sorted(out_names - out_keys)[:3]} "
+                    f"only_hashes={sorted(out_keys - out_names)[:3]}")
+    # every official validator record must be complete + exit 0
+    officials = list(receipt.get("official_validators") or [])
+    if receipt.get("official_validator"):
+        officials.append(receipt["official_validator"])
+    for ov in officials:
+        missing = [f for f in OFFICIAL_VALIDATOR_FIELDS if not ov.get(f) and ov.get(f) != 0]
+        if missing:
+            errs.append(f"official validator record incomplete: missing {missing}")
+        if ov.get("exit_code") != 0:
+            errs.append(f"official validator exit_code != 0 ({ov.get('exit_code')})")
     return errs
 
 
@@ -101,16 +136,47 @@ def receipt_valid(run_dir: Path, stage: str) -> bool:
     return r is not None and not validate_receipt(r)
 
 
-def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None) -> tuple[bool, list]:
-    """Tamper detection (P0#2/#3): recompute EVERY recorded hash from disk —
-    inputs (full-path keyed), outputs, entrypoint, validators, official
-    validator(s), and (live) the sub-skill root sha. A MISSING file is a FAIL,
-    never a skip. Any drift => tampered."""
+def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None,
+                   network_mode: str | None = None) -> tuple[bool, list]:
+    """Tamper detection (P0#1/#2/#3). Starts with FULL structural validation
+    (validate_receipt), then verifies identity + per-mode expectations, then
+    recomputes EVERY recorded hash from disk. Empty receipts, deleted fields,
+    deleted hash entries, and missing files are all FAIL — never a skip."""
     r = load_receipt(run_dir, stage)
-    if r is None:
-        return False, ["receipt missing"]
+    if not r:
+        return False, ["receipt missing or empty"]
+    mism = list(validate_receipt(r))  # structural first (P0#1)
     sd = Path(run_dir) / stage
-    mism = []
+
+    # identity: receipt must belong to THIS stage/skill and (if given) this mode
+    from .execmodel import (STAGE_EXEC, STAGE_SKILL, EXPECTED_OUTPUTS,
+                            AGENT_VALIDATORS, SUBPROC, WECHAT)
+    if r.get("stage") != stage:
+        mism.append(f"stage mismatch: receipt.stage={r.get('stage')} != {stage}")
+    if r.get("skill_name") != STAGE_SKILL.get(stage):
+        mism.append(f"skill mismatch: receipt.skill_name={r.get('skill_name')} != {STAGE_SKILL.get(stage)}")
+    rmode = r.get("network_mode")
+    if network_mode is not None and rmode != network_mode:
+        mism.append(f"network_mode mismatch: receipt={rmode} != current={network_mode}")
+
+    real_exec = rmode in ("fake_live", "live")
+    # executable stages MUST record their entrypoint (real execution modes)
+    if real_exec and STAGE_EXEC.get(stage) in (SUBPROC, WECHAT):
+        if not r.get("entrypoint_path") or not r.get("entrypoint_sha256"):
+            mism.append("executable stage missing entrypoint_path/entrypoint_sha256")
+    # stages that declare official validators MUST carry complete records
+    if real_exec:
+        if stage in ("media_enrichment", "gzh_design") and not r.get("official_validator"):
+            mism.append(f"{stage}: official_validator missing")
+        if AGENT_VALIDATORS.get(stage) and len(r.get("official_validators") or []) < len(AGENT_VALIDATORS[stage]):
+            mism.append(f"{stage}: official_validators incomplete "
+                        f"({len(r.get('official_validators') or [])}/{len(AGENT_VALIDATORS[stage])})")
+
+    # expected contract outputs must all be covered by output_hashes
+    missing_expected = [o for o in EXPECTED_OUTPUTS.get(stage, [])
+                        if o not in (r.get("output_hashes") or {})]
+    if missing_expected:
+        mism.append(f"expected outputs not covered by output_hashes: {missing_expected}")
 
     # inputs — full-path keyed; recorded None means it was missing at run time
     for path_str, want in (r.get("input_hashes") or {}).items():

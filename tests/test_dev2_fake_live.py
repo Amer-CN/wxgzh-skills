@@ -73,13 +73,31 @@ def test_receipt_tamper(orch):
     assert not ok2 and any("media_manifest.json" in m for m in mism2)
 
 
-# ---- 10. release_audit really runs the whole suite ----
-def test_release_audit_runs_all_tests(orch):
+# ---- 10. release_audit really runs the whole suite + strict P0#9 gating ----
+def test_release_audit_runs_all_tests(orch, tmp_path, monkeypatch):
+    from wxgzh_pipeline.orchestrator import Orchestrator
+    # stub the (recursion-guarded) full-suite + integration so we can exercise the
+    # STRICT gating deterministically without re-spawning pytest inside pytest.
+    marker = tmp_path / "integration.json"
+    marker.write_text('{"ran": true, "exit_code": 0}', encoding="utf-8")
+    monkeypatch.setenv("WXGZH_INTEGRATION_RESULT", str(marker))
+    monkeypatch.setattr(Orchestrator, "_run_full_tests",
+                        staticmethod(lambda: {"ran": True, "exit_code": 0}))
     rep = orch.release_audit()
-    assert rep["RELEASE_AUDIT"] == "PASS"
+    assert rep["RELEASE_AUDIT"] == "PASS", rep
     assert rep["no_formal_publish_capability"] is True
-    t = rep["tests"]
-    assert t.get("skipped_nested") or (t.get("ran") and t.get("exit_code") == 0)
+    assert rep["tests_ran"] is True and rep["tests"]["exit_code"] == 0
+    assert rep["cross_repo_integration"]["ran"] is True
+
+    # P0#9: exit_code=None must NOT pass
+    monkeypatch.setattr(Orchestrator, "_run_full_tests",
+                        staticmethod(lambda: {"ran": False, "exit_code": None, "skipped_nested": True}))
+    assert orch.release_audit()["RELEASE_AUDIT"] == "FAIL"
+    # P0#9: missing cross-repo integration must NOT pass
+    monkeypatch.setattr(Orchestrator, "_run_full_tests",
+                        staticmethod(lambda: {"ran": True, "exit_code": 0}))
+    monkeypatch.delenv("WXGZH_INTEGRATION_RESULT", raising=False)
+    assert orch.release_audit()["RELEASE_AUDIT"] == "FAIL"
 
 
 # ---- P0 FIX: live mode PAUSES for the agent instead of crashing at aihot ----
@@ -108,18 +126,33 @@ def test_doctor_credential_parsing(tmp_path):
 # ---- mmbiz exact-host verification (reject look-alikes) ----
 @pytest.mark.parametrize("host,good", [
     ("mmbiz.qpic.cn", True),
+    ("mmbiz.qlogo.cn", True),
     ("mmbiz.qpic.cn.evil.com", False),
     ("evilmmbiz.qpic.cn", False),
 ])
 def test_mmbiz_exact_host(tmp_path, host, good):
     v = load_validator("validate_media_bindings")
     assets = [{"asset_id": f"A-{i}", "decision": "eligible", "sha256": str(i),
-               "upload": {"status": "success", "remote_url": f"http://{host}/x"}} for i in range(6)]
-    body = [{"asset_id": f"A-{i}", "sha256": str(i), "wechat_remote_url": f"http://{host}/x"} for i in range(6)]
+               "upload": {"status": "success", "remote_url": f"https://{host}/x"}} for i in range(6)]
+    body = [{"asset_id": f"A-{i}", "sha256": str(i), "wechat_remote_url": f"https://{host}/x"} for i in range(6)]
     mp = tmp_path / "m.json"; mp.write_text(json.dumps({"assets": assets}), encoding="utf-8")
     bp = tmp_path / "b.json"; bp.write_text(json.dumps({"body_images": body}), encoding="utf-8")
     code, rep = v.validate(mp, bp)
     assert (code == 0) == good
+
+
+def test_mmbiz_http_and_tricks_rejected(tmp_path):
+    """hotfix2: http:// and off-host tricks must FAIL even for the exact host name."""
+    v = load_validator("validate_media_bindings")
+    for url in ("http://mmbiz.qpic.cn/x", "https://evil.example/?x=mmbiz.qpic.cn",
+                "https://mmbiz.qpic.cn@evil.example/a"):
+        assets = [{"asset_id": f"A-{i}", "decision": "eligible", "sha256": str(i),
+                   "upload": {"status": "success", "remote_url": url}} for i in range(6)]
+        body = [{"asset_id": f"A-{i}", "sha256": str(i)} for i in range(6)]
+        mp = tmp_path / "m.json"; mp.write_text(json.dumps({"assets": assets}), encoding="utf-8")
+        bp = tmp_path / "b.json"; bp.write_text(json.dumps({"body_images": body}), encoding="utf-8")
+        code, rep = v.validate(mp, bp)
+        assert code == 1, url
 
 
 # ---- dynamic chapter/TOC gate: derived from article, not hard-coded ----

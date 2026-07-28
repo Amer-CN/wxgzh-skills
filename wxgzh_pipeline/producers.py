@@ -145,34 +145,94 @@ def _agent(ctx, stage, sd, expected, state):
 
 # ---------- executable stages ----------
 
+class MediaRequestError(Exception):
+    """Fail-closed: canonical registry missing / malformed / unmappable."""
+
+
+def _load_copyright_approvals(rd: Path) -> dict:
+    """P0#3: known_allowed can ONLY come from a real approval record on disk.
+    Returns {material_id or source_url: approval_record}. Absent file => {}.
+    Each record must bind approval_id/approved_scope/scope-ref/approved_at/
+    approved_by/approval_evidence_sha256; incomplete records are ignored."""
+    p = rd / "media_enrichment" / "copyright_approval.json"
+    if not p.is_file():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except ValueError:
+        return {}
+    req_fields = {"approval_id", "approved_scope", "approved_at", "approved_by",
+                  "approval_evidence_sha256"}
+    out = {}
+    for rec in data.get("approvals", []):
+        if not req_fields.issubset(rec):
+            continue
+        for key in (rec.get("material_id"), rec.get("source_url"), rec.get("asset_id")):
+            if key:
+                out[key] = rec
+    return out
+
+
 def _build_media_request(ctx, sd: Path, state) -> Path:
-    """Build the REAL media_enrichment_request the installed skill validates."""
+    """Build the REAL media request bound to the CANONICAL registry (P0#2/#3).
+
+    Reads super_writer/canonical_claim_registry.json + aihot/deduplicated_items
+    + the frozen article, and copies claim_id/material_id/claim_text/source_url/
+    source_excerpt/selected_claim_ids/numbers/chart_group VERBATIM. NEVER invents
+    IDs, NEVER uses material titles as claims, NEVER uses example.com fallback,
+    and NEVER self-approves copyright. Missing/malformed registry => FAIL_CLOSED.
+    """
     rd = Path(ctx.run_dir)
-    article = _frozen_article(ctx)
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    reg_p = rd / "super_writer" / "canonical_claim_registry.json"
+    if not reg_p.is_file():
+        raise MediaRequestError("canonical_claim_registry.json missing (FAIL_CLOSED)")
+    try:
+        reg = json.loads(reg_p.read_text(encoding="utf-8"))
+    except ValueError as e:
+        raise MediaRequestError(f"canonical registry malformed: {e}")
+    reg_claims = reg.get("claims") or reg.get("canonical_claims") or []
+    reg_materials = reg.get("materials") or []
+    if not reg_claims or not reg_materials:
+        raise MediaRequestError("canonical registry has no claims/materials (FAIL_CLOSED)")
+
+    approvals = _load_copyright_approvals(rd)
     materials, claims = [], []
-    dedup = rd / "aihot" / "deduplicated_items.json"
-    items = []
-    if dedup.is_file():
-        try:
-            data = json.loads(dedup.read_text(encoding="utf-8"))
-            items = data if isinstance(data, list) else data.get("items", [])
-        except ValueError:
-            items = []
-    if not items:
-        items = [{"title": state.topic or "untitled", "url": "https://example.com/source"}]
-    for i, it in enumerate(items[:3], 1):
-        mid, cid = f"M-{i:03d}", f"C-{i:02d}"
-        src = it.get("source_url") or it.get("url") or "https://example.com/source"
+    mat_ids = set()
+    for m in reg_materials:
+        mid = m.get("material_id")
+        src = m.get("source_url")
+        if not mid or not src:
+            raise MediaRequestError(f"registry material missing id/source_url: {m}")
+        mat_ids.add(mid)
+        # P0#3: approval ONLY from a real record; else pipeline does not approve.
+        appr = approvals.get(mid) or approvals.get(src)
+        cr = ({"status": "known_allowed", "reviewed_by": appr["approved_by"],
+               "reviewed_at": appr["approved_at"],
+               "evidence": appr["approval_evidence_sha256"],
+               "approval_id": appr["approval_id"], "approved_scope": appr["approved_scope"]}
+              if appr else {"status": "unknown"})
         materials.append({
-            "material_id": mid, "aihot_permalink": it.get("permalink") or src,
-            "source_url": src, "title": it.get("title", ""), "selected_claim_ids": [cid],
-            "copyright_review": {"status": "known_allowed", "reviewed_by": "wxgzh-pipeline",
-                                 "reviewed_at": now,
-                                 "evidence": "user blanket approval (USER_BLANKET_APPROVAL=true)"},
+            "material_id": mid,
+            "aihot_permalink": m.get("aihot_permalink") or src,
+            "source_url": src, "title": m.get("title", ""),
+            "selected_claim_ids": list(m.get("selected_claim_ids", [])),
+            "copyright_review": cr,
         })
-        claims.append({"claim_id": cid, "claim_text": it.get("title", ""), "material_id": mid,
-                       "source_url": src, "source_excerpt": it.get("title", "")})
+    for c in reg_claims:
+        cid, mid = c.get("claim_id"), c.get("material_id")
+        if not cid or not mid:
+            raise MediaRequestError(f"registry claim missing claim_id/material_id: {c}")
+        if mid not in mat_ids:
+            raise MediaRequestError(f"claim {cid} references unknown material {mid} (FAIL_CLOSED)")
+        claim = {"claim_id": cid, "claim_text": c.get("claim_text", ""),
+                 "material_id": mid, "source_url": c.get("source_url", ""),
+                 "source_excerpt": c.get("source_excerpt", "")}
+        for opt in ("numbers", "chart_group", "metric_name", "series_label"):
+            if opt in c:
+                claim[opt] = c[opt]
+        claims.append(claim)
+
+    article = _frozen_article(ctx)
     req = {
         "schema_version": "1.0", "run_id": state.run_id,
         "article": {"path": "../zh_human_writing/final_article.md",
@@ -184,6 +244,8 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
             "max_images_per_material": 3, "max_total_images": 8,
             "allow_unknown_license_for_publish": False,
         },
+        "provenance": {"canonical_registry_sha256": sha256_file(reg_p),
+                       "copyright_approvals_bound": len(approvals)},
     }
     req_path = sd / "media_request.json"
     req_path.write_text(json.dumps(req, ensure_ascii=False, indent=2, sort_keys=True),
@@ -214,7 +276,15 @@ def _validator_args(stage: str, sd: Path, req_path: Path | None) -> list:
 
 def _subprocess(ctx, stage, sd, expected, state):
     entry, validator = EM.resolve_entry(stage, ctx.network_mode, ctx.skills_home)
-    req_path = _build_media_request(ctx, sd, state) if stage == "media_enrichment" else None
+    req_path = None
+    if stage == "media_enrichment":
+        try:
+            req_path = _build_media_request(ctx, sd, state)
+        except MediaRequestError as e:
+            return [], {"exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
+                        "entrypoint_path": None, "entrypoint_sha256": None,
+                        "media_request_failed": str(e),
+                        "entry_run": {"exit_code": 2, "stderr": f"FAIL_CLOSED: {e}"}}
     run = run_script(entry, _entry_args(ctx, stage, sd, state, req_path), timeout=300)
     meta = {"exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],

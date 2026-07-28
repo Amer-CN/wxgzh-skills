@@ -57,28 +57,73 @@ def load_lock(skill_root: Path) -> dict:
 
 
 def check_aihot(skills_home: Path, env: dict | None = None) -> dict:
-    """REAL existence check for the external agent-invoked AI HOT skill (P0#6).
+    """REAL capability check for the external agent-invoked AI HOT skill (P0#6/#8).
 
-    Never unconditionally True. If WXGZH_AIHOT_SKILL_DIR is set, ONLY that
-    registration is accepted (deterministic for tests/doctor). Otherwise the
-    known agent-skill registration locations are probed for aihot/SKILL.md.
+    A bare SKILL.md is NOT enough. We require a genuine agent-skill REGISTRATION
+    record that declares name/identifier + an output contract, plus a signal that
+    the CURRENT agent can discover it. Sources, in order:
+
+    - WXGZH_AIHOT_REGISTRATION=<file>: a JSON registration manifest; must declare
+      skill name/id + output_contract + discoverable=true.
+    - WXGZH_AIHOT_SKILL_DIR=<dir>: must contain SKILL.md AND a registration file
+      (registration.json / skill.json) with the same fields.
+
+    If capability cannot be verified => status UNVERIFIED and
+    live_pipeline_allowed=false. Never PASS on a throwaway fake SKILL.md.
     """
+    import json as _json
     import os
     e = env if env is not None else os.environ
+
+    def _valid_registration(data: dict) -> bool:
+        name = data.get("name") or data.get("skill") or data.get("identifier")
+        has_output = bool(data.get("output_contract") or data.get("outputs")
+                          or data.get("output"))
+        discoverable = data.get("discoverable", True) is not False
+        return bool(name) and has_output and discoverable
+
+    reg_file = e.get("WXGZH_AIHOT_REGISTRATION")
+    if reg_file:
+        p = Path(reg_file)
+        if p.is_file():
+            try:
+                data = _json.loads(p.read_text(encoding="utf-8"))
+            except ValueError:
+                data = {}
+            if _valid_registration(data):
+                return {"exists": True, "status": "INSTALLED",
+                        "registration": str(p), "checked": [str(p)],
+                        "live_pipeline_allowed": True}
+        return {"exists": False, "status": "UNVERIFIED", "registration": None,
+                "checked": [str(p)], "live_pipeline_allowed": False,
+                "reason": "registration manifest missing/invalid"}
+
     override = e.get("WXGZH_AIHOT_SKILL_DIR")
-    if override:
-        p = Path(override) / "SKILL.md"
-        return {"exists": p.is_file(), "registration": str(p) if p.is_file() else None,
-                "checked": [str(Path(override))]}
-    candidates = [Path(skills_home) / "aihot",
-                  Path.home() / ".agents" / "skills" / "aihot",
-                  Path.home() / ".qoder" / "skills" / "aihot"]
-    for c in candidates:
-        if (c / "SKILL.md").is_file():
-            return {"exists": True, "registration": str(c / "SKILL.md"),
-                    "checked": [str(x) for x in candidates]}
-    return {"exists": False, "registration": None,
-            "checked": [str(x) for x in candidates]}
+    dirs = [Path(override)] if override else [
+        Path(skills_home) / "aihot",
+        Path.home() / ".agents" / "skills" / "aihot",
+        Path.home() / ".qoder" / "skills" / "aihot"]
+    checked = []
+    for d in dirs:
+        checked.append(str(d))
+        if not (d / "SKILL.md").is_file():
+            continue
+        # require a real registration record alongside SKILL.md
+        for regname in ("registration.json", "skill.json", "agent_skill.json"):
+            rp = d / regname
+            if rp.is_file():
+                try:
+                    data = _json.loads(rp.read_text(encoding="utf-8"))
+                except ValueError:
+                    data = {}
+                if _valid_registration(data):
+                    return {"exists": True, "status": "INSTALLED",
+                            "registration": str(rp), "checked": checked,
+                            "live_pipeline_allowed": True}
+    # SKILL.md alone (or nothing) cannot be verified as a callable capability
+    return {"exists": False, "status": "UNVERIFIED", "registration": None,
+            "checked": checked, "live_pipeline_allowed": False,
+            "reason": "no valid agent-skill registration (SKILL.md alone is insufficient)"}
 
 
 def discover(skills_home: Path, lock: dict, env: dict | None = None) -> dict:
@@ -91,12 +136,13 @@ def discover(skills_home: Path, lock: dict, env: dict | None = None) -> dict:
             ai = check_aihot(skills_home, env=env)
             result[name] = {"skill_name": name, "kind": "agent_invoked_skill",
                             "exists": ai["exists"], "registration": ai["registration"],
-                            "EXTERNAL_DEPENDENCY_AIHOT":
-                                "INSTALLED" if ai["exists"] else "NOT_INSTALLED",
+                            "EXTERNAL_DEPENDENCY_AIHOT": ai.get("status",
+                                "INSTALLED" if ai["exists"] else "NOT_INSTALLED"),
+                            "live_pipeline_allowed": ai.get("live_pipeline_allowed", ai["exists"]),
                             "version_ok": ai["exists"], "hash_ok": ai["exists"],
                             "entrypoints_ok": ai["exists"], "ok": ai["exists"],
-                            "note": "external dependency (卡兹克); registration checked for real; "
-                                    "never copied/modified/republished"}
+                            "note": "external dependency (卡兹克); capability checked for real "
+                                    "(registration + output contract); never copied/modified/republished"}
             continue
         root = Path(skills_home) / name
         exists = root.is_dir()

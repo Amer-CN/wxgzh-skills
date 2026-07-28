@@ -25,10 +25,14 @@ def invoked_entrypoint(ctx):
 
 
 def side_effects(ctx, state):
-    # In offline_fixture no real upload occurs; live would upload serially to mmbiz.
-    if ctx.network_mode == "offline_fixture":
-        return [{"type": "none", "detail": "offline fixture — no real WeChat image upload"}]
-    return [{"type": "wechat_image_upload", "detail": "serial uploadimg to mmbiz.qpic.cn"}]
+    # Only LIVE performs a real serial upload to mmbiz. offline_fixture (copy) and
+    # fake_live (wechat_audit, no network) declare NO real write side-effect.
+    if ctx.network_mode == "live":
+        return [{"type": "wechat_image_upload", "detail": "serial uploadimg to mmbiz.qpic.cn"}]
+    detail = ("offline fixture — no real WeChat image upload"
+              if ctx.network_mode == "offline_fixture"
+              else "fake_live wechat_audit — deterministic mmbiz URL, no network/upload")
+    return [{"type": "none", "detail": detail, "simulated": ctx.network_mode == "fake_live"}]
 
 
 def content_validate(ctx, sd: Path, state):

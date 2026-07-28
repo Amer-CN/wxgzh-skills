@@ -32,6 +32,8 @@ def main(argv=None) -> int:
     out.mkdir(parents=True, exist_ok=True)
 
     assets, body = [], []
+    events = []
+    _t = 100.0
     for i in range(1, N_IMAGES + 1):
         aid = f"A-{i:03d}"
         sha = hashlib.sha256(f"{run_id}:{aid}".encode()).hexdigest()
@@ -50,6 +52,10 @@ def main(argv=None) -> int:
                      "remote_url": url, "upload_mode": "wechat_audit",
                      "material_ids": ["M-001"], "claim_ids": [f"C-{i:02d}"],
                      "caption": f"图{i}", "alt_text": f"图示 {i}", "placement": placement})
+        events.append({"asset_id": aid, "mode": "wechat_audit", "status": "success",
+                       "started_at": "2026-07-28T00:00:00Z", "ended_at": "2026-07-28T00:00:01Z",
+                       "start_monotonic": round(_t, 6), "end_monotonic": round(_t + 0.5, 6)})
+        _t += 1.0
 
     manifest = {
         "schema_version": "1.0", "simulated": True, "run_id": run_id,
@@ -69,7 +75,10 @@ def main(argv=None) -> int:
                 "body_images": body, "publish_allowed": False}
     (out / "article_image_bindings.json").write_text(
         json.dumps(bindings, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
-    print(f"[fake media-enrichment] manifest+bindings N={N_IMAGES} simulated=True article_sha={article_sha[:12]}")
+    (out / "upload_events.json").write_text(
+        json.dumps({"schema_version": "1.0", "serial": True, "simulated": True,
+                    "events": events}, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[fake media-enrichment] manifest+bindings+events N={N_IMAGES} simulated=True article_sha={article_sha[:12]}")
     return 0
 
 

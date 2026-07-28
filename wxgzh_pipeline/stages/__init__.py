@@ -15,18 +15,9 @@ from ..state import atomic_write_json, sha256_file
 from ..receipts import build_receipt, write_receipt, now
 from ..contracts import validate as schema_validate
 from ..contracts import enforce_contract
+from ..execmodel import STAGE_SKILL  # single source of truth (dev2-hotfix2)
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
-
-# stage -> discovery skill key (wechat_draft reuses gzh-design's publish module)
-STAGE_SKILL = {
-    "aihot": "aihot",
-    "super_writer": "super-writer",
-    "zh_human_writing": "zh-human-writing",
-    "media_enrichment": "media-enrichment",
-    "gzh_design": "gzh-design",
-    "wechat_draft": "gzh-design",
-}
 
 
 class StageError(Exception):
@@ -125,20 +116,42 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         if er and er.get("exit_code") not in (0, None):
             raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
         if stage == "gzh_design":
-            atomic_write_json(sd / "gzh_execution_evidence.json", {
-                "simulated": ctx.network_mode != "live",
-                "mode": ctx.network_mode,
-                "official_gzh_call": ctx.network_mode == "live",
-                "entry_path": meta.get("entrypoint_path"),
-                "entry_sha256": meta.get("entrypoint_sha256"),
-                "command": (meta.get("entry_run") or {}).get("command"),
-                "exit_code": (meta.get("entry_run") or {}).get("exit_code")})
+            live = ctx.network_mode == "live"
+            ev = {"simulated": not live, "mode": ctx.network_mode,
+                  "official_gzh_call": live,
+                  "render_entry_path": meta.get("entrypoint_path"),
+                  "entry_path": meta.get("entrypoint_path"),
+                  "entry_sha256": meta.get("entrypoint_sha256"),
+                  "command": (meta.get("entry_run") or {}).get("command"),
+                  "exit_code": (meta.get("entry_run") or {}).get("exit_code")}
+            if live:
+                # real install-source proof: recompute installed hashes + read the
+                # committed install-source SHA so theme identity can be OFFICIAL.
+                from ..skill_discovery import compute_root_sha, compute_runtime_manifest_sha
+                gdir = Path(ctx.skills_home) / "gzh-design"
+                comp = gdir / "scripts" / "generate_hammer_upgrade_samples.py"
+                ev["component_source_path"] = str(comp)
+                root_sha, _ = compute_root_sha(gdir)
+                man_sha, _ = compute_runtime_manifest_sha(gdir)
+                ev["installed_root_sha256"] = root_sha
+                ev["installed_runtime_manifest_sha256"] = man_sha
+                proof = gdir / "INSTALL_SOURCE.json"
+                if proof.is_file():
+                    import json as _json
+                    try:
+                        ev["install_source_commit"] = _json.loads(
+                            proof.read_text(encoding="utf-8")).get("full_commit_sha")
+                    except ValueError:
+                        ev["install_source_commit"] = None
+            atomic_write_json(sd / "gzh_execution_evidence.json", ev)
 
     # 3. content validation (in-repo real validators)
     exit_code, vreport, vpath, vsha = module.content_validate(ctx, sd, state)
 
     # 3b. YAML contract enforcement (FULL consumption of contracts/*.yaml, P0#7)
-    cok, creport = enforce_contract(stage, sd, ctx=ctx, state=state)
+    declared_side_effects = module.side_effects(ctx, state)
+    cok, creport = enforce_contract(stage, sd, ctx=ctx, state=state,
+                                    side_effects=declared_side_effects)
     vreport = dict(vreport)
     vreport["contract"] = creport
     if not cok and exit_code == 0:
@@ -157,21 +170,29 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         if exit_code == 0:
             exit_code = 1
 
-    # 4. receipt — bind REAL upstream inputs (P0#2), recompute all hashes,
-    #    record entrypoint + official validator command/exit/stdout-stderr hashes
-    from ..execmodel import UPSTREAM_INPUTS
-    input_files = [sd / "stage_request.json"] + \
-        [Path(ctx.run_dir) / rel for rel in UPSTREAM_INPUTS.get(stage, [])]
+    # 4. receipt — bind REAL upstream inputs + optional inputs (P0#2), recompute
+    #    all hashes, record entrypoint + official validator cmd/exit/stdout-stderr.
+    #    offline_fixture is a copy-only sanity mode (no producers) so it binds only
+    #    the stage_request; real exec modes bind the true upstream files.
+    from ..execmodel import UPSTREAM_INPUTS, OPTIONAL_INPUTS
+    input_files = [sd / "stage_request.json"]
+    if ctx.network_mode != "offline_fixture":
+        input_files += [Path(ctx.run_dir) / rel for rel in UPSTREAM_INPUTS.get(stage, [])]
+        for rel in OPTIONAL_INPUTS.get(stage, []):
+            p = Path(ctx.run_dir) / rel
+            if p.is_file():
+                input_files.append(p)
     disc = ctx.discovery.get(skill, {})
     receipt = build_receipt(
-        skill_name=stage, skill_dir=disc.get("skill_dir", str(Path(ctx.skills_home) / skill)),
+        stage=stage, skill_name=skill,
+        skill_dir=disc.get("skill_dir", str(Path(ctx.skills_home) / skill)),
         skill_version=disc.get("current_version") or disc.get("locked_version"),
         skill_root_sha256=disc.get("current_root_sha256") or disc.get("locked_root_sha256"),
         invoked_entrypoint=meta.get("invoked_entrypoint") or module.invoked_entrypoint(ctx),
         input_files=input_files, output_files=outputs,
         validator_path=vpath, validator_sha256=vsha, validator_exit_code=exit_code,
         started_at=started, ended_at=now(),
-        side_effects=module.side_effects(ctx, state),
+        side_effects=declared_side_effects,
         entrypoint_path=meta.get("entrypoint_path"), entrypoint_sha256=meta.get("entrypoint_sha256"),
         official_validator=ov, official_validators=ovs, network_mode=ctx.network_mode,
     )

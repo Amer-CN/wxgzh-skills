@@ -45,21 +45,40 @@ def test_theme_simulated_executor_never_official(tmp_path):
     assert rep["OFFICIAL_GZH_CALL"] is False
 
 
-def test_theme_official_pass_requires_lock_anchored_entry(tmp_path):
-    """OFFICIAL PASS needs official_gzh_call + entry hash matching the lock +
-    locked component source + locked commit."""
-    lock_entry = {"entrypoint_sha256": "e" * 64, "component_source_sha256": "c" * 64,
-                  "full_commit_sha": "f" * 40}
-    good = {"official_gzh_call": True, "entry_sha256": "e" * 64}
+def test_theme_official_pass_requires_real_hashes(tmp_path):
+    """hotfix2: OFFICIAL PASS needs official_gzh_call + ACTUAL on-disk render-entry
+    & component-source hashes matching the lock + installed root/manifest match +
+    install-source commit match + network_mode=live. Lock fields alone never pass."""
+    import hashlib
+    entry = tmp_path / "render_article.py"; entry.write_text("# entry\n", encoding="utf-8")
+    comp = tmp_path / "generate_hammer_upgrade_samples.py"; comp.write_text("# comp\n", encoding="utf-8")
+    entry_sha = hashlib.sha256(entry.read_bytes()).hexdigest()
+    comp_sha = hashlib.sha256(comp.read_bytes()).hexdigest()
+    lock_entry = {"entrypoint_sha256": entry_sha, "component_source_sha256": comp_sha,
+                  "full_commit_sha": "f" * 40, "skill_root_sha256": "r" * 64,
+                  "runtime_manifest_sha256": "m" * 64}
+    good = {"official_gzh_call": True,
+            "render_entry_path": str(entry), "entry_sha256": entry_sha,
+            "component_source_path": str(comp),
+            "installed_root_sha256": "r" * 64,
+            "installed_runtime_manifest_sha256": "m" * 64,
+            "install_source_commit": "f" * 40}
     code, rep = _theme(_pass_html(), tmp_path, exec_evidence=good,
                        network_mode="live", lock_entry=lock_entry)
-    assert code == 0 and rep["THEME_IDENTITY"] == "PASS"
-    # wrong entry hash => never official => FAIL in live
-    bad = {"official_gzh_call": True, "entry_sha256": "0" * 64}
+    assert code == 0 and rep["THEME_IDENTITY"] == "PASS", rep
+    assert rep["RENDER_ENTRY_HASH_MATCHES_LOCK"] and rep["COMPONENT_SOURCE_HASH_MATCHES_LOCK"]
+    assert rep["INSTALLED_ROOT_MATCHES_LOCK"] and rep["INSTALL_SOURCE_COMMIT_MATCHES_LOCK"]
+    # lock fields alone (no real files / wrong entry hash) => FAIL
+    bad = dict(good, entry_sha256="0" * 64, render_entry_path=str(tmp_path / "nope.py"))
     code2, rep2 = _theme(_pass_html(), tmp_path, exec_evidence=bad,
                          network_mode="live", lock_entry=lock_entry)
     assert code2 == 1 and rep2["THEME_IDENTITY"] == "FAIL"
     assert rep2["RENDER_ENTRY_HASH_MATCHES_LOCK"] is False
+    # tampered component source (real file hash != lock) => FAIL
+    comp.write_text("# TAMPERED\n", encoding="utf-8")
+    code3, rep3 = _theme(_pass_html(), tmp_path, exec_evidence=good,
+                         network_mode="live", lock_entry=lock_entry)
+    assert code3 == 1 and rep3["COMPONENT_SOURCE_HASH_MATCHES_LOCK"] is False
 
 
 # ---- 16. gzh not actually called (no hammer structure at all) => fail ----

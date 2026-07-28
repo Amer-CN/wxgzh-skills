@@ -1,34 +1,35 @@
 {
-  "claims": [
+  "schema_version": "1.0",
+  "materials": [
     {
-      "id": "C-01",
-      "text": "事实 1",
-      "source": "https://example.com/1"
+      "material_id": "M-001",
+      "source_url": "https://www.example-source.test/rx580-local-ai",
+      "aihot_permalink": "https://aihot.virxact.com/items/rx580",
+      "title": "旧显卡本地 AI 画图机",
+      "selected_claim_ids": ["C-01", "C-02", "C-03"]
     },
     {
-      "id": "C-02",
-      "text": "事实 2",
-      "source": "https://example.com/2"
-    },
-    {
-      "id": "C-03",
-      "text": "事实 3",
-      "source": "https://example.com/3"
-    },
-    {
-      "id": "C-04",
-      "text": "事实 4",
-      "source": "https://example.com/4"
-    },
-    {
-      "id": "C-05",
-      "text": "事实 5",
-      "source": "https://example.com/5"
-    },
-    {
-      "id": "C-06",
-      "text": "事实 6",
-      "source": "https://example.com/6"
+      "material_id": "M-002",
+      "source_url": "https://www.example-source.test/sd-webui-amd",
+      "aihot_permalink": "https://aihot.virxact.com/items/sd-amd",
+      "title": "AMD 卡跑 Stable Diffusion",
+      "selected_claim_ids": ["C-04", "C-05", "C-06"]
     }
+  ],
+  "claims": [
+    {"claim_id": "C-01", "material_id": "M-001", "claim_text": "RX 580 8G 可运行本地 SD",
+     "source_url": "https://www.example-source.test/rx580-local-ai", "source_excerpt": "8G 显存足以出图"},
+    {"claim_id": "C-02", "material_id": "M-001", "claim_text": "二手价约两三百元",
+     "source_url": "https://www.example-source.test/rx580-local-ai", "source_excerpt": "闲鱼价 200-300"},
+    {"claim_id": "C-03", "material_id": "M-001", "claim_text": "驱动需 ROCm 或 DirectML",
+     "source_url": "https://www.example-source.test/rx580-local-ai", "source_excerpt": "A 卡驱动配置"},
+    {"claim_id": "C-04", "material_id": "M-002", "claim_text": "DirectML 出图约 5 分钟一张",
+     "source_url": "https://www.example-source.test/sd-webui-amd", "source_excerpt": "512x512 约 5 分钟",
+     "numbers": [{"value": 5, "unit": "min"}], "chart_group": "render_time", "metric_name": "per_image_minutes"},
+    {"claim_id": "C-05", "material_id": "M-002", "claim_text": "显存占用约 6GB",
+     "source_url": "https://www.example-source.test/sd-webui-amd", "source_excerpt": "峰值 6GB",
+     "numbers": [{"value": 6, "unit": "GB"}], "chart_group": "render_time", "metric_name": "vram_gb"},
+    {"claim_id": "C-06", "material_id": "M-002", "claim_text": "折腾成本约三天",
+     "source_url": "https://www.example-source.test/sd-webui-amd", "source_excerpt": "配置耗时"}
   ]
 }

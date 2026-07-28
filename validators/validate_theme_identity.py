@@ -60,19 +60,46 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "text-decoration-color:#B3593B" in html and "text-decoration-thickness:1.5px" in html)
     chapters_ok = bool(expected_chapters) and (chapters == expected_chapters)
 
-    # ── P0#8: theme identity is only OFFICIAL with real gzh execution proof ──
-    # A structurally perfect HTML with NO gzh execution evidence must FAIL: the
-    # fingerprints alone can be copied; the execution receipt cannot.
+    # ── P0#8/hotfix2: theme identity is only OFFICIAL with REAL execution proof ──
+    # We do not trust lock fields alone. The gzh execution receipt must name the
+    # render entry + component source, and their ACTUAL on-disk sha256 (recomputed
+    # here) must equal BOTH the receipt's recorded value AND the lock. Live also
+    # requires the installed runtime root + runtime-manifest hash to match the
+    # lock, and a commit present in an install-source proof.
     exec_present = exec_evidence is not None
     official_call = bool(exec_evidence and exec_evidence.get("official_gzh_call"))
-    entry_sha = (exec_evidence or {}).get("entry_sha256")
     locked_entry_sha = (lock_entry or {}).get("entrypoint_sha256") or (lock_entry or {}).get("render_entry_sha256")
     locked_component_sha = (lock_entry or {}).get("component_source_sha256")
     locked_commit = (lock_entry or {}).get("full_commit_sha")
-    entry_hash_ok = bool(entry_sha and locked_entry_sha and entry_sha == locked_entry_sha)
-    component_hash_ok = bool(locked_component_sha)  # locked; verified on disk in live doctor/receipt
-    commit_ok = bool(locked_commit)
-    official_ok = official_call and entry_hash_ok and component_hash_ok and commit_ok
+    locked_root = (lock_entry or {}).get("skill_root_sha256")
+    locked_manifest = (lock_entry or {}).get("runtime_manifest_sha256")
+
+    def _sha_file(path):
+        try:
+            return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
+        except OSError:
+            return None
+
+    ev_ev = exec_evidence or {}
+    entry_path = ev_ev.get("render_entry_path") or ev_ev.get("entry_path")
+    comp_path = ev_ev.get("component_source_path")
+    actual_entry_sha = _sha_file(entry_path)
+    actual_comp_sha = _sha_file(comp_path)
+    # entry: actual file hash must equal lock AND the receipt-recorded value
+    entry_hash_ok = bool(locked_entry_sha and actual_entry_sha == locked_entry_sha
+                         and ev_ev.get("entry_sha256") == actual_entry_sha)
+    component_hash_ok = bool(locked_component_sha and actual_comp_sha == locked_component_sha)
+    # live: installed runtime root + manifest hash must match the lock
+    if network_mode == "live":
+        cur_root = ev_ev.get("installed_root_sha256")
+        cur_manifest = ev_ev.get("installed_runtime_manifest_sha256")
+        root_ok = bool(locked_root and cur_root == locked_root)
+        manifest_ok = bool(locked_manifest and cur_manifest == locked_manifest)
+    else:
+        root_ok = manifest_ok = False
+    commit_ok = bool(locked_commit and ev_ev.get("install_source_commit") == locked_commit)
+    official_ok = (official_call and entry_hash_ok and component_hash_ok
+                   and root_ok and manifest_ok and commit_ok and network_mode == "live")
 
     structure_ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
                     and footer == 1 and len(img_types) >= 2 and not fallback_used
@@ -95,7 +122,12 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "GZH_EXECUTION_EVIDENCE_PRESENT": exec_present,
         "OFFICIAL_GZH_CALL": official_call,
         "RENDER_ENTRY_HASH_MATCHES_LOCK": entry_hash_ok,
-        "COMPONENT_SOURCE_LOCKED": component_hash_ok,
+        "COMPONENT_SOURCE_HASH_MATCHES_LOCK": component_hash_ok,
+        "INSTALLED_ROOT_MATCHES_LOCK": root_ok,
+        "RUNTIME_MANIFEST_MATCHES_LOCK": manifest_ok,
+        "INSTALL_SOURCE_COMMIT_MATCHES_LOCK": commit_ok,
+        "actual_render_entry_sha256": actual_entry_sha,
+        "actual_component_source_sha256": actual_comp_sha,
         "GZH_COMMIT_LOCKED": locked_commit,
         "structure_ok": structure_ok,
         "components": ev,

@@ -26,9 +26,14 @@ def invoked_entrypoint(ctx):
 
 
 def side_effects(ctx, state):
-    if ctx.network_mode == "offline_fixture":
-        return [{"type": "offline_mock", "detail": "no real WeChat API; draft delta from snapshot fixtures"}]
-    return [{"type": "wechat_draft_add", "detail": "single draft/add; cover add_material; no publish"}]
+    # Only LIVE creates a real draft. offline_fixture (copy) and fake_live
+    # (publish --dry-run, simulated batchget) declare NO real write side-effect.
+    if ctx.network_mode == "live":
+        return [{"type": "wechat_draft_add", "detail": "single draft/add; cover add_material; no publish"}]
+    detail = ("no real WeChat API; draft delta from snapshot fixtures"
+              if ctx.network_mode == "offline_fixture"
+              else "fake_live publish --dry-run — simulated batchget, no real draft")
+    return [{"type": "offline_mock", "detail": detail, "simulated": ctx.network_mode == "fake_live"}]
 
 
 def content_validate(ctx, sd: Path, state):

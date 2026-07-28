@@ -38,13 +38,24 @@ STAGE_EXEC = {
     "wechat_draft": WECHAT,
 }
 
+# stage -> executing sub-skill (wechat_draft reuses gzh-design's publish module)
+STAGE_SKILL = {
+    "aihot": "aihot",
+    "super_writer": "super-writer",
+    "zh_human_writing": "zh-human-writing",
+    "media_enrichment": "media-enrichment",
+    "gzh_design": "gzh-design",
+    "wechat_draft": "gzh-design",
+}
+
 # Contract outputs each stage must produce into its stage dir (enforced).
 EXPECTED_OUTPUTS = {
     "aihot": ["raw_items.json", "deduplicated_items.json", "fetch_log.json"],
     "super_writer": ["article.md", "outline.md", "canonical_claim_registry.json",
                      "full_mode_validator_report.json"],
     "zh_human_writing": ["final_article.md", "fidelity_report.json"],
-    "media_enrichment": ["media_manifest.json", "article_image_bindings.json"],
+    "media_enrichment": ["media_manifest.json", "article_image_bindings.json",
+                         "upload_events.json"],
     "gzh_design": ["final.html", "final_runtime.html",
                    "component_usage_report.json", "theme_identity_report.json"],
     "wechat_draft": ["draft_before.json", "draft_after.json", "draft_creation_result.json"],
@@ -60,6 +71,8 @@ UPSTREAM_INPUTS = {
                          "super_writer/canonical_claim_registry.json",
                          "super_writer/full_mode_validator_report.json"],
     "media_enrichment": ["zh_human_writing/final_article.md",
+                         "super_writer/canonical_claim_registry.json",
+                         "aihot/deduplicated_items.json",
                          "media_enrichment/media_request.json"],
     "gzh_design": ["zh_human_writing/final_article.md",
                    "media_enrichment/article_image_bindings.json",
@@ -67,6 +80,12 @@ UPSTREAM_INPUTS = {
     "wechat_draft": ["gzh_design/final.html", "gzh_design/final_runtime.html",
                      "media_enrichment/article_image_bindings.json",
                      "gzh_design/theme_identity_report.json"],
+}
+
+# Optional receipt inputs: bound iff present (e.g. user copyright approvals when
+# source images are used).
+OPTIONAL_INPUTS = {
+    "media_enrichment": ["media_enrichment/copyright_approval.json"],
 }
 
 # Executable stage -> sub-skill entry + official validator, by mode.
