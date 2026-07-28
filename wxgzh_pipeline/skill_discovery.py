@@ -20,7 +20,13 @@ EXCLUDE_SUFFIXES = {".pyc"}
 
 
 def _file_sha(p: Path) -> str:
-    return hashlib.sha256(p.read_bytes()).hexdigest()
+    """Content hash that is IDENTICAL across Windows/Linux checkouts (P0#9 CI):
+    text files are newline-normalized (CRLF/CR -> LF) before hashing; binary
+    files (containing a NUL byte) are hashed byte-for-byte."""
+    data = p.read_bytes()
+    if b"\x00" not in data:  # text: normalize line endings
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def _runtime_files(root: Path) -> list[Path]:
