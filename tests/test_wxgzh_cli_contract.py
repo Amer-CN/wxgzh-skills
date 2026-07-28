@@ -14,9 +14,11 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = SKILL_ROOT / "scripts"
 
 CONTRACT = {
-    "material_ingestion.py": ["--ledger", "--output"],
-    "validate_article_length.py": ["--article", "--full-mode"],
-    "validate_semantic_map.py": ["--article", "--semantic-map"],
+    # dev2-hotfix2: full flag surface the orchestrator may pass (incl. optional)
+    "material_ingestion.py": ["--ledger", "--output", "--diagnostic-output", "--json"],
+    "validate_article_length.py": ["--article", "--full-mode", "--outline", "--brief",
+                                   "--evidence-map", "--core-card", "--editor-report"],
+    "validate_semantic_map.py": ["--article", "--semantic-map", "--evidence-map", "--json"],
 }
 
 
