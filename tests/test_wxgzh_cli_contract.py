@@ -13,8 +13,9 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = SKILL_ROOT / "scripts"
 
 CONTRACT = {
-    "fidelity_guard.py": ["--original", "--edited"],
-    "pattern_audit.py": ["--text"],
+    # dev2-hotfix2: full flag surface the orchestrator may pass (incl. optional)
+    "fidelity_guard.py": ["--original", "--edited", "--profile", "--source", "--output"],
+    "pattern_audit.py": ["--text", "--profile", "--check-level", "--output"],
     "change_report.py": ["--original", "--edited"],
 }
 
