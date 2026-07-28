@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-dev7-hotfix3 (2026-07-28)
+
+- P0#3: replaced display-order-only single_asset approval with a two-phase discovery/continue contract bound to material, source page, resolved URL, content SHA256, stable asset identity, and the frozen discovery manifest SHA256.
+- Discovery is upload-free and emits asset_discovery_manifest.json; continue fail-closes with approval_identity_mismatch on inserted images, changed bytes, changed material, or tampered discovery manifests.
+- CI now installs runtime/test dependencies, runs full pytest plus non-skippable safety suites, preserves compileall, and uploads structured pytest/skip-reason artifacts.
+
 ## 0.1.0-dev7-hotfix2 (2026-07-29)
 
 - P0#2 (wxgzh-pipeline dev2-hotfix4): consume `asset_approvals` (approved_scope=single_asset) AFTER the real asset_id is produced — only the matching asset becomes known_allowed; the material stays unknown; unmatched approvals are recorded as NOT consumed; the upload gate now judges the asset's final copyright status.

@@ -29,6 +29,13 @@ from media_enrichment.chart_generator import build_chart_specs, generate_chart
 from media_enrichment.uploader import create_uploader, scan_for_secrets, timed_upload
 from media_enrichment.placement_planner import find_anchors
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
+from media_enrichment.asset_approval import (
+    approval_mismatches,
+    freeze_discovery_manifest,
+    stable_asset_identity,
+    verify_discovery_manifest,
+    write_discovery_manifest,
+)
 
 
 def main():
@@ -36,6 +43,11 @@ def main():
     parser.add_argument("--request", required=True)
     parser.add_argument("--output-dir", default="output")
     parser.add_argument("--fixture-dir", default=None)
+    parser.add_argument(
+        "--phase", choices=("discover", "continue"), default="discover",
+        help="discover never uploads; continue requires --discovery-manifest and stable approvals",
+    )
+    parser.add_argument("--discovery-manifest", default=None)
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
@@ -74,12 +86,14 @@ def main():
     )
 
     dedup_state = DedupState()
-    upload_mode = config.get("upload_mode", "dry_run")
+    requested_upload_mode = config.get("upload_mode", "dry_run")
+    upload_mode = "dry_run" if args.phase == "discover" else requested_upload_mode
     # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
     upload_events: list = []
 
-    # Validate upload_mode
+    # Validate upload_mode. Discovery is side-effect-free regardless of request.
     try:
+        create_uploader(requested_upload_mode)
         uploader = create_uploader(upload_mode)
     except ValueError as exc:
         builder.errors.append(str(exc))
@@ -92,10 +106,12 @@ def main():
     materials_by_id = {m["material_id"]: m for m in materials}
     network_mode = config.get("network_mode", "live")
     fixture_dir = args.fixture_dir or str(SKILL_ROOT / "fixtures" / "html")
-    # hotfix4 P0#2: asset-scoped copyright approvals (already validated by
-    # input_contract: unique asset_id, scope=single_asset, 64-hex evidence).
+    # hotfix5 P0#3: approvals are considered only in the continue phase and are
+    # matched to a stable identity after discovery and content hashing complete.
     asset_approvals = {ap["asset_id"]: ap for ap in request.get("asset_approvals", [])}
     consumed_asset_approvals: set[str] = set()
+    discovery_records: list[dict] = []
+    pending_uploads: list[tuple[AssetRecord, str, object, str]] = []
     # offline image "downloads" read from a sibling images/ fixture dir (no network)
     fixture_images_dir = Path(fixture_dir).parent / "images"
 
@@ -172,13 +188,7 @@ def main():
 
             asset_counter += 1
             asset_id = f"A-{asset_counter:03d}"
-            # hotfix4 P0#2: resolve the per-asset copyright status AFTER the real
-            # asset_id exists. A single_asset approval upgrades ONLY this asset;
-            # the Material itself stays at mat_copyright_status (e.g. unknown).
-            asset_approval = asset_approvals.get(asset_id)
-            effective_copyright = "known_allowed" if asset_approval else mat_copyright_status
-            if asset_approval:
-                consumed_asset_approvals.add(asset_id)
+            effective_copyright = mat_copyright_status
 
             decode_result = decode_proxy_url(candidate.url)
             resolved_url = decode_result.decoded_url
@@ -239,6 +249,19 @@ def main():
                 builder.add_asset(asset)
                 continue
 
+            identity_sha256 = stable_asset_identity(
+                material_id, page_url, resolved_url, inspection.sha256,
+            )
+            discovery_record = {
+                "asset_id": asset_id,
+                "material_id": material_id,
+                "source_page_url": page_url,
+                "resolved_original_url": resolved_url,
+                "asset_sha256": inspection.sha256,
+                "asset_identity_sha256": identity_sha256,
+            }
+            discovery_records.append(discovery_record)
+
             classification = classify_image(
                 url=resolved_url, inspection=inspection,
                 min_width=config.get("min_width", 640), min_height=config.get("min_height", 360),
@@ -259,39 +282,109 @@ def main():
                 relevance_status="relevant" if classification.decision == "eligible" else "uncertain",
                 copyright_status=effective_copyright,
                 copyright_risk="high" if classification.decision == "rejected" else "medium",
-                approval_id=(asset_approval or {}).get("approval_id"),
-                approved_scope=(asset_approval or {}).get("approved_scope"),
-                approval_evidence=(asset_approval or {}).get("evidence"),
-                asset_approval_consumed=bool(asset_approval),
+                asset_identity_sha256=identity_sha256,
                 decision=classification.decision,
                 reasons=classification.rejection_reasons or classification.relevance_reasons,
             )
-
-            # Only upload if ALL conditions met — hotfix4: judged on the ASSET's
-            # final copyright status (single_asset approval), never only on the
-            # material-level status.
-            if (classification.decision == "eligible"
-                    and asset.copyright_status == "known_allowed"
-                    and asset.quality_status == "pass"
-                    and asset.relevance_status == "relevant"
-                    and asset.duplicate_of is None):
-                upload_result = timed_upload(uploader, upload_events,
-                                             download_result.local_path, asset_id,
-                                             copyright_status=asset.copyright_status)
-                asset.upload = {
-                    "mode": upload_mode, "status": upload_result.status,
-                    "remote_url": upload_result.remote_url, "response_sha256": upload_result.response_sha256,
-                }
-
+            pending_uploads.append((asset, download_result.local_path, inspection, candidate.extraction_method))
             builder.add_asset(asset)
             total_assets_added += 1
             material_image_count += 1
 
-    # hotfix4 P0#2: any asset approval that never matched a produced asset_id is
-    # recorded as UNCONSUMED — it must never silently pretend to have taken effect.
+    # Freeze discovery before any source upload can occur. Discovery mode writes
+    # the manifest and stops at classification; continue mode compares a freshly
+    # resolved discovery against the user-approved frozen manifest.
+    current_discovery = freeze_discovery_manifest(discovery_records)
+    discovery_path = output_dir / "asset_discovery_manifest.json"
+    write_discovery_manifest(discovery_path, current_discovery)
+    current_discovery_sha = current_discovery["discovery_manifest_sha256"]
+
+    approved_discovery = None
+    approved_records: dict[str, dict] = {}
+    discovery_file_valid = False
+    if args.phase == "continue":
+        if not args.discovery_manifest:
+            builder.errors.append("continue phase requires --discovery-manifest")
+        else:
+            try:
+                approved_discovery = json.loads(
+                    Path(args.discovery_manifest).read_text(encoding="utf-8"))
+                discovery_file_valid, approved_sha = verify_discovery_manifest(approved_discovery)
+                if not discovery_file_valid:
+                    builder.errors.append("approval_identity_mismatch: discovery manifest sha256 invalid")
+                approved_records = {
+                    item["asset_id"]: item for item in approved_discovery.get("assets", [])
+                }
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                builder.errors.append(f"approval_identity_mismatch: cannot read discovery manifest: {exc}")
+
+        current_by_id = {item["asset_id"]: item for item in discovery_records}
+        for asset, local_path, inspection, extraction_method in pending_uploads:
+            approval = asset_approvals.get(asset.asset_id)
+            frozen = approved_records.get(asset.asset_id)
+            mismatches: list[str] = []
+            if approval is not None:
+                if not discovery_file_valid or frozen is None:
+                    mismatches.append("discovery_manifest")
+                else:
+                    mismatches.extend(approval_mismatches(
+                        approval, frozen,
+                        approved_discovery["discovery_manifest_sha256"],
+                    ))
+                    fresh = current_by_id.get(asset.asset_id)
+                    if fresh is None:
+                        mismatches.append("fresh_discovery")
+                    else:
+                        for field_name in (
+                            "material_id", "source_page_url", "resolved_original_url",
+                            "asset_sha256", "asset_identity_sha256",
+                        ):
+                            if fresh.get(field_name) != frozen.get(field_name):
+                                mismatches.append(f"fresh_{field_name}")
+                if mismatches:
+                    asset.approval_identity_mismatch = sorted(set(mismatches))
+                    asset.reasons.append(
+                        "approval_identity_mismatch: " + ", ".join(asset.approval_identity_mismatch))
+                else:
+                    consumed_asset_approvals.add(asset.asset_id)
+                    asset.discovery_manifest_sha256 = approval["discovery_manifest_sha256"]
+                    asset.approval_id = approval["approval_id"]
+                    asset.approved_scope = approval["approved_scope"]
+                    asset.approved_by = approval["approved_by"]
+                    asset.approved_at = approval["approved_at"]
+                    asset.approval_evidence_sha256 = approval["approval_evidence_sha256"]
+                    asset.asset_approval_consumed = True
+                    asset.copyright_status = "known_allowed"
+                    classification = classify_image(
+                        url=asset.resolved_original_url, inspection=inspection,
+                        min_width=config.get("min_width", 640),
+                        min_height=config.get("min_height", 360),
+                        context="", copyright_status="known_allowed",
+                        extraction_method=extraction_method,
+                    )
+                    asset.decision = classification.decision
+                    asset.relevance_status = (
+                        "relevant" if classification.decision == "eligible" else "uncertain")
+                    asset.copyright_risk = (
+                        "high" if classification.decision == "rejected" else "medium")
+                    asset.reasons = (
+                        classification.rejection_reasons or classification.relevance_reasons)
+                    if (asset.decision == "eligible"
+                            and asset.quality_status == "pass"
+                            and asset.relevance_status == "relevant"
+                            and asset.duplicate_of is None):
+                        upload_result = timed_upload(
+                            uploader, upload_events, local_path, asset.asset_id,
+                            copyright_status=asset.copyright_status,
+                        )
+                        asset.upload = {
+                            "mode": upload_mode, "status": upload_result.status,
+                            "remote_url": upload_result.remote_url,
+                            "response_sha256": upload_result.response_sha256,
+                        }
+
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
-        builder.warnings.append(
-            f"asset_approval for {aid} NOT consumed (no such asset_id was produced)")
+        builder.warnings.append(f"asset_approval for {aid} NOT consumed")
 
     # Generate charts (dev5: fail-closed chart_group/metric gating)
     print(f"\n[media-enrichment] Generating charts...")
@@ -307,10 +400,23 @@ def main():
             if chart_result.success:
                 asset_counter += 1
                 asset_id = f"A-{asset_counter:03d}"
-                # Call uploader for generated chart (known_allowed)
-                chart_upload_result = timed_upload(uploader, upload_events,
-                                                   chart_result.chart_path, asset_id,
-                                                   copyright_status="known_allowed")
+                chart_upload = {
+                    "mode": upload_mode, "status": "not_uploaded",
+                    "remote_url": None, "response_sha256": None,
+                }
+                # Discovery is strictly side-effect-free: do not even invoke a
+                # dry-run uploader or emit an upload-attempt event. Generated
+                # charts may be uploaded only in the explicit continue phase.
+                if args.phase == "continue":
+                    chart_upload_result = timed_upload(
+                        uploader, upload_events, chart_result.chart_path, asset_id,
+                        copyright_status="known_allowed",
+                    )
+                    chart_upload = {
+                        "mode": upload_mode, "status": chart_upload_result.status,
+                        "remote_url": chart_upload_result.remote_url,
+                        "response_sha256": chart_upload_result.response_sha256,
+                    }
                 asset = AssetRecord(
                     asset_id=asset_id, asset_origin="generated",
                     material_ids=list(set(dp.material_id for dp in spec.data_points)),
@@ -326,11 +432,7 @@ def main():
                     copyright_status="known_allowed", copyright_risk="low",
                     decision="eligible", reasons=["Generated from canonical claim data"],
                     caption=spec.caption or spec.title, alt_text=spec.caption or spec.title,
-                    upload={
-                        "mode": upload_mode, "status": chart_upload_result.status,
-                        "remote_url": chart_upload_result.remote_url,
-                        "response_sha256": chart_upload_result.response_sha256,
-                    },
+                    upload=chart_upload,
                 )
                 builder.add_asset(asset)
                 print(f"  Chart {i+1}: {chart_path} ({spec.chart_type})")

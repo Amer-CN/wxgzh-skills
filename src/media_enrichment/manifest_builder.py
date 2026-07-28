@@ -47,12 +47,17 @@ class AssetRecord:
     caption: str | None = None
     alt_text: str | None = None
     placement: dict[str, Any] | None = None
-    # hotfix4 P0#2: asset-scoped copyright approval (single_asset), applied only
-    # after the real asset_id was produced during extraction.
+    # hotfix5 P0#3: approval is bound to stable content/source identity and a
+    # frozen discovery manifest, not merely the sequential display asset_id.
+    asset_identity_sha256: str | None = None
+    discovery_manifest_sha256: str | None = None
     approval_id: str | None = None
     approved_scope: str | None = None
-    approval_evidence: str | None = None
+    approved_by: str | None = None
+    approved_at: str | None = None
+    approval_evidence_sha256: str | None = None
     asset_approval_consumed: bool = False
+    approval_identity_mismatch: list[str] = field(default_factory=list)
     upload: dict[str, Any] = field(default_factory=lambda: {
         "mode": "dry_run",
         "status": "not_uploaded",
@@ -90,10 +95,15 @@ class AssetRecord:
             "caption": self.caption,
             "alt_text": self.alt_text,
             "placement": self.placement,
+            "asset_identity_sha256": self.asset_identity_sha256,
+            "discovery_manifest_sha256": self.discovery_manifest_sha256,
             "approval_id": self.approval_id,
             "approved_scope": self.approved_scope,
-            "approval_evidence": self.approval_evidence,
+            "approved_by": self.approved_by,
+            "approved_at": self.approved_at,
+            "approval_evidence_sha256": self.approval_evidence_sha256,
             "asset_approval_consumed": self.asset_approval_consumed,
+            "approval_identity_mismatch": sorted(self.approval_identity_mismatch),
             "upload": self.upload,
         }
 

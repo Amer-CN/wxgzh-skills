@@ -8,8 +8,8 @@ deterministic root hash, and never modifies its business logic.
 | Field | Value |
 | --- | --- |
 | Skill | `media-enrichment` |
-| Locked version | `0.1.0-dev7-hotfix2` |
-| Locked root SHA-256 | `30035b03d66ffe2a9bd0211767c607b59f3db847ed3cdcaa80d9002414add436` |
+| Skill version | `0.1.0-dev7-hotfix3` |
+| Pipeline lock | Computed from the complete committed tree and pinned externally in `wxgzh-pipeline/skills.lock.json` |
 | Hash algorithm | sha256 over sorted `relpath:sha256(content)`, excluding `__pycache__/.git/.pytest_cache/.github` |
 
 **Documented entrypoints**

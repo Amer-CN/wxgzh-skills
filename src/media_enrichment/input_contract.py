@@ -16,7 +16,7 @@ from typing import Any
 
 import jsonschema
 
-SKILL_VERSION = "0.1.0-dev7-hotfix2"
+SKILL_VERSION = "0.1.0-dev7-hotfix3"
 
 
 @dataclass
@@ -192,19 +192,34 @@ def validate_request(request_path: str | Path) -> ValidationResult:
             if not cr.get("evidence"):
                 errors.append(f"Material {mat['material_id']}: copyright_review.status=known_allowed but evidence is empty")
 
-    # Step 7 (hotfix4 P0#2): validate asset-scoped copyright approvals.
-    # asset_id must be unique, scope must be single_asset, evidence must be a
-    # 64-hex digest, and the same asset_id must not carry conflicting approvals.
+    # Step 7 (hotfix5 P0#3): approvals bind a frozen discovery manifest and a
+    # stable identity, never merely the sequential display asset_id.
     import re as _re
     hex64 = _re.compile(r"^[0-9a-fA-F]{64}$")
+    hash_fields = (
+        "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+        "approval_evidence_sha256",
+    )
     seen_asset_approvals: dict[str, dict] = {}
     for idx, ap in enumerate(request.get("asset_approvals", [])):
         aid = ap.get("asset_id", "")
         if ap.get("approved_scope") != "single_asset":
             errors.append(f"asset_approvals[{idx}]: approved_scope must be single_asset")
-        ev = ap.get("evidence", "")
-        if not isinstance(ev, str) or not hex64.match(ev):
-            errors.append(f"asset_approvals[{idx}] ({aid}): evidence must be a 64-hex sha256")
+        for field_name in hash_fields:
+            value = ap.get(field_name, "")
+            if not isinstance(value, str) or not hex64.fullmatch(value):
+                errors.append(
+                    f"asset_approvals[{idx}] ({aid}): {field_name} must be a 64-hex sha256")
+        identity_material = "\n".join((
+            str(ap.get("material_id", "")),
+            str(ap.get("source_page_url", "")),
+            str(ap.get("resolved_original_url", "")),
+            str(ap.get("asset_sha256", "")),
+        )).encode("utf-8")
+        expected_identity = compute_sha256(identity_material)
+        if ap.get("asset_identity_sha256") != expected_identity:
+            errors.append(
+                f"asset_approvals[{idx}] ({aid}): asset_identity_sha256 does not match stable identity fields")
         if aid in seen_asset_approvals:
             prev = seen_asset_approvals[aid]
             if prev != ap:

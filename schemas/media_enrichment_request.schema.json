@@ -78,35 +78,28 @@
     },
     "asset_approvals": {
       "type": "array",
-      "description": "hotfix4 P0#2: user copyright approvals scoped to a SINGLE asset. Applied only AFTER the real asset_id is produced during extraction; never upgrades the whole material.",
+      "description": "User approvals bound to one frozen discovery manifest and one stable asset identity.",
       "items": {
         "type": "object",
-        "required": ["asset_id", "approval_id", "approved_scope", "approved_by", "approved_at", "evidence"],
+        "required": [
+          "asset_id", "material_id", "source_page_url", "resolved_original_url",
+          "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+          "approval_id", "approved_scope", "approved_by", "approved_at",
+          "approval_evidence_sha256"
+        ],
         "properties": {
-          "asset_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "approval_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "approved_scope": {
-            "type": "string",
-            "const": "single_asset"
-          },
-          "approved_by": {
-            "type": "string",
-            "minLength": 1
-          },
-          "approved_at": {
-            "type": "string",
-            "minLength": 1
-          },
-          "evidence": {
-            "type": "string",
-            "pattern": "^[a-fA-F0-9]{64}$"
-          }
+          "asset_id": {"type": "string", "minLength": 1},
+          "material_id": {"type": "string", "minLength": 1},
+          "source_page_url": {"type": "string", "format": "uri"},
+          "resolved_original_url": {"type": "string", "format": "uri"},
+          "asset_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "asset_identity_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "discovery_manifest_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "approval_id": {"type": "string", "minLength": 1},
+          "approved_scope": {"type": "string", "const": "single_asset"},
+          "approved_by": {"type": "string", "minLength": 1},
+          "approved_at": {"type": "string", "minLength": 1},
+          "approval_evidence_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
         }
       }
     },

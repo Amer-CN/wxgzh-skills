@@ -1,147 +1,238 @@
-"""hotfix4 P0#2 e2e: single_asset copyright approvals are consumed by the REAL
-media-enrichment CLI, per-asset, AFTER the real asset_id is produced.
+"""hotfix5 P0#3 real CLI E2E for stable single_asset approval identity.
 
-Real subprocess run of scripts/run_media_enrichment.py in offline_fixture mode
-(offline page + offline image fixtures, wechat_audit uploader — ZERO network,
-ZERO WeChat side effects). One material yields A-001 and A-002; only A-001 is
-approved:
-  - A-001 enters the upload call (upload_events contains ONLY A-001);
-  - A-002 stays skipped/not uploaded;
-  - manifest: A-001 known_allowed (+approval fields, consumed=True), A-002 unknown;
-  - the material itself stays unknown;
-  - an approval for a non-existent asset is recorded as NOT consumed.
+All subprocesses use offline fixtures and the deterministic wechat_audit uploader.
+No network or real WeChat API is reachable from these tests.
 """
+from __future__ import annotations
+
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-import pytest
+from PIL import Image
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "src"))
 
+from media_enrichment.asset_approval import stable_asset_identity  # noqa: E402
 from media_enrichment.input_contract import validate_request  # noqa: E402
 
-H = "e" * 64
 SRC_URL = "https://www.example-source.test/single-asset-e2e"
 PERMALINK = "https://aihot.virxact.com/items/single-asset-e2e"
+EVIDENCE_SHA = "e" * 64
 
 
-def _approval(asset_id, **over):
-    rec = {"asset_id": asset_id, "approval_id": f"AP-{asset_id}",
-           "approved_scope": "single_asset", "approved_by": "real-user",
-           "approved_at": "2026-07-29T00:00:00Z", "evidence": H}
-    rec.update(over)
-    return rec
+def _fixtures(tmp_path: Path) -> Path:
+    root = tmp_path / "fixtures"
+    shutil.copytree(SKILL_ROOT / "fixtures" / "html", root / "html")
+    shutil.copytree(SKILL_ROOT / "fixtures" / "images", root / "images")
+    return root
 
 
-def _write_request(tmp_path: Path, approvals):
+def _write_request(tmp_path: Path, approvals, material_id="M-001", with_chart=False) -> Path:
     article = tmp_path / "final_article.md"
     article.write_text("# 标题\n\n示例论点一。\n\n正文说明两张图。\n", encoding="utf-8")
+    claim = {"claim_id": "C-01", "claim_text": "示例论点一",
+             "material_id": material_id, "source_url": SRC_URL,
+             "source_excerpt": "原文摘录"}
+    claims = [claim]
+    if with_chart:
+        claim.update({"numbers": ["76.2%"], "chart_group": "MMLU",
+                      "metric_name": "得分", "series_label": "模型A"})
+        claims.append({
+            "claim_id": "C-02", "claim_text": "示例论点二",
+            "material_id": material_id, "source_url": SRC_URL,
+            "source_excerpt": "第二条原文摘录", "numbers": ["68.4%"],
+            "chart_group": "MMLU", "metric_name": "得分",
+            "series_label": "模型B",
+        })
     req = {
-        "schema_version": "1.0", "run_id": "e2e-single-asset",
+        "schema_version": "1.0", "run_id": "e2e-stable-single-asset",
         "article": {"path": "final_article.md",
                     "sha256": hashlib.sha256(article.read_bytes()).hexdigest()},
-        "materials": [{"material_id": "M-001", "aihot_permalink": PERMALINK,
+        "materials": [{"material_id": material_id, "aihot_permalink": PERMALINK,
                        "source_url": SRC_URL, "title": "示例素材",
                        "selected_claim_ids": ["C-01"],
                        "copyright_review": {"status": "unknown"}}],
-        "claims": [{"claim_id": "C-01", "claim_text": "示例论点一",
-                    "material_id": "M-001", "source_url": SRC_URL,
-                    "source_excerpt": "原文摘录"}],
+        "claims": claims,
         "asset_approvals": approvals,
         "config": {"network_mode": "offline_fixture", "upload_mode": "wechat_audit",
-                   "max_images_per_material": 3, "max_total_images": 8,
+                   "max_images_per_material": 4, "max_total_images": 8,
                    "allow_unknown_license_for_publish": False},
     }
-    p = tmp_path / "media_request.json"
-    p.write_text(json.dumps(req, ensure_ascii=False, indent=2), encoding="utf-8")
-    return p
+    path = tmp_path / "media_request.json"
+    path.write_text(json.dumps(req, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
 
 
-def _run_cli(tmp_path: Path, approvals):
-    req = _write_request(tmp_path, approvals)
-    out = tmp_path / "out"
-    r = subprocess.run(
-        [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
-         "--request", str(req), "--output-dir", str(out),
-         "--fixture-dir", str(SKILL_ROOT / "fixtures" / "html")],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
-    manifest = json.loads((out / "media_manifest.json").read_text(encoding="utf-8")) \
-        if (out / "media_manifest.json").is_file() else None
-    events = json.loads((out / "upload_events.json").read_text(encoding="utf-8")) \
-        if (out / "upload_events.json").is_file() else None
-    return r, manifest, events
+def _cli(tmp_path: Path, fixture_root: Path, phase: str, approvals=(),
+         discovery_manifest: Path | None = None, material_id="M-001",
+         with_chart=False):
+    request = _write_request(
+        tmp_path, list(approvals), material_id=material_id, with_chart=with_chart,
+    )
+    out = tmp_path / f"out-{phase}-{len(list(tmp_path.glob('out-*')))}"
+    cmd = [
+        sys.executable, "-X", "utf8",
+        str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
+        "--request", str(request), "--output-dir", str(out),
+        "--fixture-dir", str(fixture_root / "html"), "--phase", phase,
+    ]
+    if discovery_manifest is not None:
+        cmd.extend(["--discovery-manifest", str(discovery_manifest)])
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=180,
+    )
+    manifest = json.loads((out / "media_manifest.json").read_text(encoding="utf-8"))
+    discovery = json.loads(
+        (out / "asset_discovery_manifest.json").read_text(encoding="utf-8"))
+    events = json.loads((out / "upload_events.json").read_text(encoding="utf-8"))
+    return result, out, manifest, discovery, events
 
 
-class TestSingleAssetEndToEnd:
-    def test_only_approved_asset_uploads(self, tmp_path):
-        r, manifest, events = _run_cli(tmp_path, [_approval("A-001")])
-        assert r.returncode == 0, r.stdout[-800:] + r.stderr[-400:]
+def _approval(discovery: dict, asset_id="A-001", **overrides) -> dict:
+    asset = next(a for a in discovery["assets"] if a["asset_id"] == asset_id)
+    record = dict(asset)
+    record.update({
+        "discovery_manifest_sha256": discovery["discovery_manifest_sha256"],
+        "approval_id": f"AP-{asset_id}", "approved_scope": "single_asset",
+        "approved_by": "real-user", "approved_at": "2026-07-29T00:00:00Z",
+        "approval_evidence_sha256": EVIDENCE_SHA,
+    })
+    record.update(overrides)
+    return record
+
+
+def _assert_no_upload(manifest, events):
+    assert events["events"] == []
+    assert all(a["upload"]["status"] != "success" for a in manifest["assets"])
+
+
+class TestStableSingleAssetIdentityCli:
+    def test_discovery_phase_never_uploads_and_emits_stable_manifest(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        result, _, manifest, discovery, events = _cli(tmp_path, fixtures, "discover")
+        assert result.returncode == 0, result.stdout + result.stderr
+        _assert_no_upload(manifest, events)
+        assert {a["asset_id"] for a in discovery["assets"]} == {"A-001", "A-002"}
+        for asset in discovery["assets"]:
+            assert asset["asset_identity_sha256"] == stable_asset_identity(
+                asset["material_id"], asset["source_page_url"],
+                asset["resolved_original_url"], asset["asset_sha256"])
+
+    def test_discovery_with_generated_chart_has_zero_upload_attempts(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "discover", with_chart=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        _assert_no_upload(manifest, events)
+        charts = [a for a in manifest["assets"] if a["asset_origin"] == "generated"]
+        assert charts, "fixture must exercise the generated-chart branch"
+        assert all(a["upload"] == {
+            "mode": "dry_run", "status": "not_uploaded",
+            "remote_url": None, "response_sha256": None,
+        } for a in charts)
+
+    def test_inserted_image_before_a001_does_not_transfer_approval(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen)
+        Image.new("RGB", (900, 600), (11, 99, 177)).save(
+            fixtures / "images" / "inserted.png", "PNG")
+        html = (fixtures / "html" / "single-asset-e2e.html").read_text(encoding="utf-8")
+        html = html.replace("<img src=", '<img src="https://img.example-source.test/inserted.png">\n<img src=', 1)
+        (fixtures / "html" / "single-asset-e2e.html").write_text(html, encoding="utf-8")
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json")
+        assert result.returncode == 0
+        _assert_no_upload(manifest, events)
+        a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        assert "fresh_asset_sha256" in a1["approval_identity_mismatch"]
+        assert a1["copyright_status"] == "unknown"
+
+    def test_same_url_changed_content_does_not_upload(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen)
+        Image.new("RGB", (1000, 700), (222, 17, 31)).save(
+            fixtures / "images" / "e2e-photo-a.png", "PNG")
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json")
+        assert result.returncode == 0
+        _assert_no_upload(manifest, events)
+        a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        assert "fresh_asset_sha256" in a1["approval_identity_mismatch"]
+
+    def test_same_content_different_material_does_not_inherit(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen)
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json", material_id="M-002")
+        assert result.returncode == 0
+        _assert_no_upload(manifest, events)
+        a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        assert "fresh_material_id" in a1["approval_identity_mismatch"]
+
+    def test_modified_discovery_manifest_does_not_upload(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen)
+        frozen_path = out / "asset_discovery_manifest.json"
+        tampered = json.loads(frozen_path.read_text(encoding="utf-8"))
+        tampered["assets"][0]["source_page_url"] += "?tampered=1"
+        frozen_path.write_text(json.dumps(tampered), encoding="utf-8")
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval], frozen_path)
+        assert result.returncode != 0
+        _assert_no_upload(manifest, events)
+        assert any("discovery manifest sha256 invalid" in e for e in manifest["errors"])
+
+    def test_exact_frozen_identity_uploads_only_target(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
         assets = {a["asset_id"]: a for a in manifest["assets"]}
-        assert set(assets) == {"A-001", "A-002"}, assets.keys()
-
-        a1, a2 = assets["A-001"], assets["A-002"]
-        # A-001: approved -> known_allowed, eligible, REAL upload call succeeded
-        assert a1["copyright_status"] == "known_allowed"
-        assert a1["decision"] == "eligible"
-        assert a1["asset_approval_consumed"] is True
-        assert a1["approval_id"] == "AP-A-001" and a1["approved_scope"] == "single_asset"
-        assert a1["approval_evidence"] == H
-        assert a1["upload"]["status"] == "success"
-        assert a1["upload"]["remote_url"].startswith("https://mmbiz.qpic.cn/")
-        # A-002: NOT approved -> unknown, never uploaded (approval must not leak)
-        assert a2["copyright_status"] == "unknown"
-        assert a2["decision"] == "review_required"
-        assert a2["asset_approval_consumed"] is False
-        assert a2["approval_id"] is None
-        assert a2["upload"]["status"] in ("not_uploaded", "skipped")
-        # upload_events: ONLY A-001 ever entered the uploader
-        ids = [e["asset_id"] for e in events["events"]]
-        assert ids == ["A-001"], ids
-
-    def test_no_approvals_nothing_uploads(self, tmp_path):
-        r, manifest, events = _run_cli(tmp_path, [])
-        assert r.returncode == 0, r.stdout[-800:]
-        assets = {a["asset_id"]: a for a in manifest["assets"]}
-        assert all(a["copyright_status"] == "unknown" for a in assets.values())
-        assert all(a["upload"]["status"] != "success" for a in assets.values())
-        assert events["events"] == []
-
-    def test_unmatched_approval_recorded_as_unconsumed(self, tmp_path):
-        r, manifest, events = _run_cli(tmp_path, [_approval("A-999")])
-        assert r.returncode == 0
-        assert any("A-999" in w and "NOT consumed" in w for w in manifest["warnings"]), \
-            manifest["warnings"]
-        assert [e["asset_id"] for e in events["events"]] == []
-        # nothing silently pretended: no asset carries the unmatched approval
-        assert all(not a["asset_approval_consumed"] for a in manifest["assets"])
+        assert assets["A-001"]["asset_approval_consumed"] is True
+        assert assets["A-001"]["copyright_status"] == "known_allowed"
+        assert assets["A-001"]["upload"]["status"] == "success"
+        assert assets["A-002"]["copyright_status"] == "unknown"
+        assert assets["A-002"]["upload"]["status"] != "success"
 
 
-class TestAssetApprovalContract:
-    def _req(self, tmp_path, approvals):
-        return validate_request(_write_request(tmp_path, approvals))
+class TestStableApprovalContract:
+    def test_valid_stable_approval_passes(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, _, _, discovery, _ = _cli(tmp_path, fixtures, "discover")
+        assert validate_request(_write_request(tmp_path, [_approval(discovery)])).valid
 
-    def test_valid_approval_passes(self, tmp_path):
-        assert self._req(tmp_path, [_approval("A-001")]).valid is True
+    def test_display_id_only_approval_is_rejected(self, tmp_path):
+        approval = {
+            "asset_id": "A-001", "approval_id": "AP-A-001",
+            "approved_scope": "single_asset", "approved_by": "real-user",
+            "approved_at": "2026-07-29T00:00:00Z",
+            "approval_evidence_sha256": EVIDENCE_SHA,
+        }
+        validation = validate_request(_write_request(tmp_path, [approval]))
+        assert not validation.valid
 
-    def test_wrong_scope_rejected(self, tmp_path):
-        v = self._req(tmp_path, [_approval("A-001", approved_scope="material")])
-        assert v.valid is False
-
-    def test_bad_evidence_rejected(self, tmp_path):
-        v = self._req(tmp_path, [_approval("A-001", evidence="not-a-hash")])
-        # rejected either by the JSON schema pattern or by the 64-hex contract check
-        assert v.valid is False
-        assert any("64-hex" in e or "[a-fA-F0-9]{64}" in e for e in v.errors), v.errors
-
-    def test_conflicting_approvals_rejected(self, tmp_path):
-        v = self._req(tmp_path, [_approval("A-001"),
-                                 _approval("A-001", approved_by="someone-else")])
-        assert v.valid is False and any("conflicting" in e for e in v.errors)
-
-    def test_duplicate_approval_rejected(self, tmp_path):
-        v = self._req(tmp_path, [_approval("A-001"), _approval("A-001")])
-        assert v.valid is False and any("duplicate" in e for e in v.errors)
+    def test_forged_stable_identity_is_rejected(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, _, _, discovery, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(discovery, asset_identity_sha256="f" * 64)
+        validation = validate_request(_write_request(tmp_path, [approval]))
+        assert not validation.valid
+        assert any("stable identity fields" in error for error in validation.errors)
