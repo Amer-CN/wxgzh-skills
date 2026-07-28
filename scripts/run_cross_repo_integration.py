@@ -91,6 +91,15 @@ def main(argv=None) -> int:
     vok, disc = SD.verify_all(skills_home, lock, env=env)
     bad = {k: v for k, v in disc.items() if not v.get("ok")}
     record("verify_all", vok, json.dumps(bad, ensure_ascii=False)[:400])
+    if not vok:
+        # dump per-file runtime hashes for the failing skills (cross-platform debug)
+        dbg = {}
+        for k in bad:
+            sk = skills_home / k
+            files = SD._runtime_files(sk)
+            dbg[k] = {"root": SD.compute_root_sha(sk)[0],
+                      "files": {p.relative_to(sk).as_posix(): SD._file_sha(p) for p in files}}
+        details["hash_debug"] = dbg
 
     # real CLI --help for every entry the pipeline invokes
     for skill, scripts in CLI_HELP.items():
