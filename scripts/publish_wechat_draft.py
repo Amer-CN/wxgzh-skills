@@ -46,6 +46,27 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
+
+# WeChat image hosts (exact-match gate; dev2-hotfix2)
+WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
+
+
+def normalize_wechat_image_url(url):
+    """Upgrade http->https and require the hostname to EQUAL a WeChat image
+    host (urlparse; query/subdomain/path/userinfo tricks rejected). Returns the
+    normalized https URL or None."""
+    if not url:
+        return None
+    if url.startswith("http://"):
+        url = "https://" + url[len("http://"):]
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return None
+    if p.scheme != "https" or p.hostname not in WECHAT_IMAGE_HOSTS:
+        return None
+    return url
 
 # 确保 Windows 控制台 UTF-8 输出，避免 emoji/中文 print 崩溃
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
@@ -181,10 +202,11 @@ def upload_content_image(access_token, image_path):
         api_error("微信返回非 JSON 响应", {"errcode": -1, "errmsg": "non-JSON response"})
     if "url" not in data:
         api_error("上传正文图片失败", data)
-    url = data["url"]
-    # mmbiz.qpic.cn 支持 HTTPS，强制升级
-    if url.startswith("http://"):
-        url = "https://" + url[len("http://"):]
+    # dev2-hotfix2: uploadimg 必须返回真正的微信图床 URL（精确 host），否则阻断
+    url = normalize_wechat_image_url(data["url"])
+    if url is None:
+        api_error("上传正文图片返回非微信图床 URL，已阻断",
+                  {"errcode": -1, "errmsg": "non-WeChat-host url"})
     return url
 
 

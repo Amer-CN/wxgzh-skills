@@ -15,7 +15,7 @@ jobs:
         run: python -m compileall -q .
       - name: Install test deps
         run: pip install pytest requests
-      - name: Run wxgzh-pipeline hotfix feature tests (render_article + draft audit)
-        run: python -m pytest tests/test_render_article_hotfix.py tests/test_publish_audit_hotfix.py -q
+      - name: Run wxgzh-pipeline hotfix feature tests (render_article + draft audit + exact host)
+        run: python -m pytest tests/test_render_article_hotfix.py tests/test_publish_audit_hotfix.py tests/test_exact_host_hotfix2.py -q
       - name: wxgzh-pipeline integration lock present
         run: test -f WXGZH_PIPELINE_INTEGRATION.md
