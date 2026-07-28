@@ -15,6 +15,7 @@ from wxgzh_pipeline.skill_discovery import (InstallReceiptError, install_receipt
                                             read_install_receipt, write_install_receipt)
 
 COMMIT = "0007d7e6a4493aab59070d9c31dcde83830302fd"
+TREE = "a1f408201e394add46b0d7dede8c017030160644"
 
 
 def _mk_gzh(home: Path):
@@ -33,7 +34,7 @@ def test_receipt_matches_recompute_and_lives_outside_skill(tmp_path):
     man_sha, _ = SD.compute_runtime_manifest_sha(home / "gzh-design")
     rec = write_install_receipt(home, "gzh-design", repository_url="https://x/gzh-design",
                                 actual_commit=COMMIT, expected_commit=COMMIT,
-                                source_tree_sha="t" * 40)
+                                source_tree_sha=TREE, expected_source_tree_sha=TREE)
     assert rec["full_commit_sha"] == COMMIT
     assert rec["installed_runtime_root_sha256"] == root_sha
     assert rec["installed_runtime_manifest_sha256"] == man_sha
@@ -57,7 +58,8 @@ def test_receipt_never_counts_toward_root_hash(tmp_path):
     home = tmp_path / "skills"; _mk_gzh(home)
     before, nfiles = SD.compute_root_sha(home / "gzh-design")
     write_install_receipt(home, "gzh-design", repository_url="r",
-                          actual_commit=COMMIT, expected_commit=COMMIT)
+                          actual_commit=COMMIT, expected_commit=COMMIT,
+                              source_tree_sha=TREE, expected_source_tree_sha=TREE)
     after, nfiles_after = SD.compute_root_sha(home / "gzh-design")
     assert after == before and nfiles_after == nfiles
     # even a stray .install-receipts INSIDE the skill tree is excluded
@@ -98,22 +100,26 @@ def test_lock_bound_fields_enforced(tmp_path):
     with pytest.raises(InstallReceiptError):
         write_install_receipt(home, "gzh-design", repository_url="https://evil.example/x",
                               actual_commit=COMMIT, expected_commit=COMMIT,
+                              source_tree_sha=TREE, expected_source_tree_sha=TREE,
                               expected_repository_url="https://github.com/Amer-CN/gzh-design-skill")
     # wrong root hash vs lock => FAIL
     with pytest.raises(InstallReceiptError):
         write_install_receipt(home, "gzh-design", repository_url="r",
                               actual_commit=COMMIT, expected_commit=COMMIT,
+                              source_tree_sha=TREE, expected_source_tree_sha=TREE,
                               expected_root_sha256="0" * 64)
     # wrong manifest hash vs lock => FAIL
     with pytest.raises(InstallReceiptError):
         write_install_receipt(home, "gzh-design", repository_url="r",
                               actual_commit=COMMIT, expected_commit=COMMIT,
+                              source_tree_sha=TREE, expected_source_tree_sha=TREE,
                               expected_manifest_sha256="0" * 64)
     assert read_install_receipt(home, "gzh-design") is None
     # everything matching => receipt written
     rec = write_install_receipt(home, "gzh-design",
                                 repository_url="https://github.com/Amer-CN/gzh-design-skill",
                                 actual_commit=COMMIT, expected_commit=COMMIT,
+                                source_tree_sha=TREE, expected_source_tree_sha=TREE,
                                 expected_repository_url="https://github.com/Amer-CN/gzh-design-skill",
                                 expected_root_sha256=root_sha,
                                 expected_manifest_sha256=man_sha)

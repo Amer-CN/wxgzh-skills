@@ -30,6 +30,20 @@ INSTALL_MD = {
 
 
 def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
+    # Validate the complete lock set before creating output/staging or copying a
+    # single byte. A missing locked Skill must leave no partial bundle, MANIFEST,
+    # or ZIP behind.
+    lock = SD.load_lock(SKILL_ROOT)
+    expected_skills = {
+        name for name, meta in lock["skills"].items()
+        if meta.get("kind") != "agent_invoked_skill"
+    }
+    missing_sources = sorted(
+        name for name in expected_skills if not (Path(skills_home) / name).is_dir())
+    if missing_sources:
+        raise SystemExit(
+            f"locked skill source directories missing: {missing_sources} — bundle not generated")
+
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     if staging.exists():
         shutil.rmtree(staging)
@@ -42,14 +56,17 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     (bundle / "installer").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(SKILL_ROOT / "scripts" / "install.py", bundle / "installer" / "install.py")
     # 3. locked sub-skills (file skills only; aihot is agent-invoked)
-    lock = SD.load_lock(SKILL_ROOT)
     locked_counts = {}
-    for name, meta in lock["skills"].items():
-        if meta.get("kind") == "agent_invoked_skill":
-            continue
-        src = Path(skills_home) / name
-        if src.is_dir():
-            locked_counts[name] = copy_tree(src, bundle / "locked-skills" / name)
+    for name in sorted(expected_skills):
+        locked_counts[name] = copy_tree(
+            Path(skills_home) / name, bundle / "locked-skills" / name)
+    actual_skills = {
+        path.name for path in (bundle / "locked-skills").iterdir() if path.is_dir()
+    }
+    if actual_skills != expected_skills:
+        raise SystemExit(
+            f"locked-skills set mismatch: expected={sorted(expected_skills)} "
+            f"actual={sorted(actual_skills)}")
     # 4. lock + config + install docs
     shutil.copyfile(SKILL_ROOT / "skills.lock.json", bundle / "skills.lock.json")
     shutil.copyfile(SKILL_ROOT / "config.example.env", bundle / "config.example.env")

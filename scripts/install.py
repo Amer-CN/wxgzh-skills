@@ -1,33 +1,16 @@
 #!/usr/bin/env python3
-"""Cross-platform installer for wxgzh-pipeline + locked sub-skills (hotfix4 P0#1).
+"""Transactional installer for wxgzh-pipeline and every locked file skill.
 
-For EVERY locked sub-skill the installer:
-  1. copies the source tree into the target skills home (backing up any existing
-     same-name skill — never deletes user work, NEVER touches the user's .env);
-  2. recomputes the installed runtime root + runtime manifest hashes and REQUIRES
-     them to equal skills.lock.json;
-  3. verifies the install SOURCE:
-       - git checkout install: reads `git rev-parse HEAD` / `HEAD^{tree}` and the
-         origin remote URL from the source clone;
-       - ZIP/bundle install: reads the BUILD-generated source-proofs.json, which
-         must itself be hash-bound by the bundle MANIFEST.json, and every
-         installed runtime file must match its MANIFEST sha256 (a hand-written /
-         tampered proof or a tampered runtime file always FAILs);
-  4. requires source commit == lock.full_commit_sha and
-     repository_url == lock.repository_url;
-  5. only after ALL checks pass writes the EXTERNAL install receipt
-     <skills_home>/.install-receipts/<skill>.json (strict write_install_receipt);
-  6. on ANY mismatch: InstallReceiptError — no receipt is written, the installer
-     exits non-zero and never reports the skill as installed.
-
-Runs doctor-grade hash verification afterwards. Never runs an article, uploads
-images, or creates a draft.
+The installer is fail-closed and side-effect-free until every source, commit,
+tree, repository, runtime hash, manifest member and staged receipt verifies.
+It never runs an article, uploads an image, or touches WeChat drafts.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -35,223 +18,406 @@ from datetime import datetime
 from pathlib import Path
 
 _HERE = Path(__file__).resolve()
-# Locate the wxgzh-pipeline skill dir (contains the wxgzh_pipeline package) in
-# either layout: dev (scripts/ inside the skill) or bundle (installer/ sibling).
+
+
 def _locate_skill_root() -> Path:
-    for c in [_HERE.parents[1], _HERE.parents[1] / "wxgzh-pipeline",
-              _HERE.parents[1].parent / "wxgzh-pipeline"]:
-        if (c / "wxgzh_pipeline" / "__init__.py").is_file():
-            return c
+    for candidate in (
+        _HERE.parents[1],
+        _HERE.parents[1] / "wxgzh-pipeline",
+        _HERE.parents[1].parent / "wxgzh-pipeline",
+    ):
+        if (candidate / "wxgzh_pipeline" / "__init__.py").is_file():
+            return candidate
     return _HERE.parents[1]
 
 
 SKILL_ROOT = _locate_skill_root()
 sys.path.insert(0, str(SKILL_ROOT))
-from wxgzh_pipeline import __version__                        # noqa: E402
-from wxgzh_pipeline import paths as P                         # noqa: E402
-from wxgzh_pipeline import skill_discovery as SD              # noqa: E402
+from wxgzh_pipeline import __version__  # noqa: E402
+from wxgzh_pipeline import paths as P  # noqa: E402
+from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
 from wxgzh_pipeline.skill_discovery import InstallReceiptError  # noqa: E402
-from wxgzh_pipeline.zipping import copy_tree                  # noqa: E402
+from wxgzh_pipeline.zipping import copy_tree  # noqa: E402
 
 
 def _find_source() -> tuple[Path, Path | None, Path | None]:
-    """Return (wxgzh_pipeline_src, locked_skills_dir_or_None, bundle_dir_or_None)."""
     for bundle in {SKILL_ROOT.parent, _HERE.parents[1].parent, _HERE.parents[1]}:
         if (bundle / "locked-skills").is_dir() and (bundle / "wxgzh-pipeline").is_dir():
             return bundle / "wxgzh-pipeline", bundle / "locked-skills", bundle
     return SKILL_ROOT, None, None
 
 
-def _git(src: Path, *args) -> str | None:
+def _git(src: Path, *args: str) -> str | None:
     if not (Path(src) / ".git").exists():
         return None
-    r = subprocess.run(["git", "-C", str(src), *args], capture_output=True, text=True)
-    return r.stdout.strip() or None
+    result = subprocess.run(
+        ["git", "-C", str(src), *args], capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise InstallReceiptError(
+            f"git {' '.join(args)} failed for {src}: "
+            f"{(result.stderr or result.stdout).strip()}")
+    value = result.stdout.strip()
+    if not value:
+        raise InstallReceiptError(
+            f"git {' '.join(args)} returned no value for {src}")
+    return value
 
 
 def _norm_repo_url(url: str | None) -> str | None:
     if not url:
         return url
-    u = url.strip()
-    if u.endswith(".git"):
-        u = u[:-4]
-    if u.startswith("git@github.com:"):
-        u = "https://github.com/" + u[len("git@github.com:"):]
-    return u.rstrip("/")
+    normalized = url.strip()
+    if normalized.endswith(".git"):
+        normalized = normalized[:-4]
+    if normalized.startswith("git@github.com:"):
+        normalized = "https://github.com/" + normalized[len("git@github.com:"):]
+    return normalized.rstrip("/")
 
 
-def _file_sha256(p: Path) -> str:
-    return hashlib.sha256(p.read_bytes()).hexdigest()
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _manifest_index(bundle: Path) -> dict[str, str]:
+    manifest_path = bundle / "MANIFEST.json"
+    if not manifest_path.is_file():
+        raise InstallReceiptError("bundle MANIFEST.json missing")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        return {item["path"]: item["sha256"] for item in manifest["files"]}
+    except (ValueError, KeyError, TypeError) as exc:
+        raise InstallReceiptError(f"invalid bundle MANIFEST.json: {exc}") from exc
+
+
+def _validate_bundle_set(bundle: Path, expected_skills: set[str]) -> None:
+    locked_dir = bundle / "locked-skills"
+    actual_skills = {
+        path.name for path in locked_dir.iterdir() if path.is_dir()
+    } if locked_dir.is_dir() else set()
+    if actual_skills != expected_skills:
+        raise InstallReceiptError(
+            f"bundle locked skill set mismatch: expected={sorted(expected_skills)} "
+            f"actual={sorted(actual_skills)}")
+
+    manifest_index = _manifest_index(bundle)
+    proof_path = bundle / "source-proofs.json"
+    recorded_proof_sha = manifest_index.get("source-proofs.json")
+    if (not proof_path.is_file() or not recorded_proof_sha
+            or _file_sha256(proof_path) != recorded_proof_sha):
+        raise InstallReceiptError(
+            "source-proofs.json missing or not hash-bound by bundle MANIFEST")
+    try:
+        proofs = json.loads(proof_path.read_text(encoding="utf-8"))
+        proof_skills = set(proofs["skills"])
+    except (ValueError, KeyError, TypeError) as exc:
+        raise InstallReceiptError(f"invalid source-proofs.json: {exc}") from exc
+    if proof_skills != expected_skills:
+        raise InstallReceiptError(
+            f"source proof skill set mismatch: expected={sorted(expected_skills)} "
+            f"actual={sorted(proof_skills)}")
+
+    for skill_name in sorted(expected_skills):
+        prefix = f"locked-skills/{skill_name}/"
+        listed = {path for path in manifest_index if path.startswith(prefix)}
+        on_disk = {
+            f"{prefix}{path.relative_to(locked_dir / skill_name).as_posix()}"
+            for path in (locked_dir / skill_name).rglob("*") if path.is_file()
+        }
+        if not listed or listed != on_disk:
+            raise InstallReceiptError(
+                f"{skill_name}: MANIFEST file set mismatch; "
+                f"missing={sorted(on_disk - listed)[:5]} extra={sorted(listed - on_disk)[:5]}")
+        for relative_path in sorted(listed):
+            path = bundle / relative_path
+            if _file_sha256(path) != manifest_index[relative_path]:
+                raise InstallReceiptError(
+                    f"{skill_name}: {relative_path} does not match MANIFEST sha256")
 
 
 def _bundle_source_proof(bundle: Path, skill_name: str, src: Path) -> dict:
-    """P0#1: bundle installs must prove their source via the BUILD-generated
-    source-proofs.json, hash-bound by the bundle MANIFEST.json. Verifies:
-      - MANIFEST.json exists and lists source-proofs.json with a matching sha256
-        (an arbitrary hand-written proof JSON is rejected);
-      - every locked-skills/<skill>/ file listed in the MANIFEST matches its
-        recorded sha256 and no runtime file was added/removed (tamper => FAIL).
-    Returns the per-skill proof dict {repository_url, full_commit_sha, source_tree_sha}.
-    """
-    man_p = bundle / "MANIFEST.json"
-    proof_p = bundle / "source-proofs.json"
-    if not man_p.is_file() or not proof_p.is_file():
-        raise InstallReceiptError(
-            f"{skill_name}: bundle MANIFEST.json/source-proofs.json missing — "
-            "cannot prove install source (FAIL_CLOSED)")
-    manifest = json.loads(man_p.read_text(encoding="utf-8"))
-    by_path = {f["path"]: f["sha256"] for f in manifest.get("files", [])}
-    # 1. the proof file itself must be bound by the manifest
-    recorded = by_path.get("source-proofs.json")
-    if not recorded or _file_sha256(proof_p) != recorded:
-        raise InstallReceiptError(
-            f"{skill_name}: source-proofs.json is not hash-bound by the bundle "
-            "MANIFEST (tampered or hand-written) — FAIL_CLOSED")
-    # 2. every bundled runtime file of this skill must match the manifest
-    prefix = f"locked-skills/{skill_name}/"
-    listed = {p: s for p, s in by_path.items() if p.startswith(prefix)}
-    if not listed:
-        raise InstallReceiptError(f"{skill_name}: bundle MANIFEST lists no files for {prefix}")
-    for rel, sha in sorted(listed.items()):
-        f = bundle / rel
-        if not f.is_file() or _file_sha256(f) != sha:
-            raise InstallReceiptError(
-                f"{skill_name}: bundled runtime file {rel} missing or does not "
-                "match the bundle MANIFEST sha256 (tampered) — FAIL_CLOSED")
-    on_disk = {f"{prefix}{q.relative_to(src).as_posix()}"
-               for q in src.rglob("*") if q.is_file()}
-    extra = on_disk - set(listed)
-    if extra:
-        raise InstallReceiptError(
-            f"{skill_name}: bundle contains files not bound by the MANIFEST: "
-            f"{sorted(extra)[:5]} — FAIL_CLOSED")
-    proofs = json.loads(proof_p.read_text(encoding="utf-8"))
-    proof = (proofs.get("skills") or proofs).get(skill_name)
+    expected = {
+        path.name for path in (bundle / "locked-skills").iterdir() if path.is_dir()
+    }
+    _validate_bundle_set(bundle, expected)
+    proofs = json.loads((bundle / "source-proofs.json").read_text(encoding="utf-8"))
+    proof = proofs["skills"].get(skill_name)
     if not isinstance(proof, dict):
-        raise InstallReceiptError(f"{skill_name}: no source proof entry in source-proofs.json")
+        raise InstallReceiptError(f"{skill_name}: source proof missing")
     return proof
 
 
-def _resolve_source_proof(bundle: Path | None, skill_name: str, src: Path,
-                          locked: dict) -> tuple[str | None, str | None, str | None]:
-    """Return (repository_url, actual_commit, source_tree_sha) for the install
-    source — from git (checkout install) or from the manifest-bound bundle proof."""
+def _resolve_source_proof(
+    bundle: Path | None, skill_name: str, src: Path, locked: dict,
+) -> tuple[str, str, str]:
     if (Path(src) / ".git").exists():
         actual = _git(src, "rev-parse", "HEAD")
         tree = _git(src, "rev-parse", "HEAD^{tree}")
         remote = _norm_repo_url(_git(src, "config", "--get", "remote.origin.url"))
-        return remote or locked.get("repository_url"), actual, tree
+        if not remote:
+            raise InstallReceiptError(
+                f"{skill_name}: git remote.origin.url missing — FAIL_CLOSED")
+        return remote, actual or "", tree or ""
     if bundle is not None:
         proof = _bundle_source_proof(bundle, skill_name, src)
-        return (_norm_repo_url(proof.get("repository_url")),
-                proof.get("full_commit_sha"), proof.get("source_tree_sha"))
+        return (
+            _norm_repo_url(proof.get("repository_url")) or "",
+            proof.get("full_commit_sha") or "",
+            proof.get("source_tree_sha") or "",
+        )
     raise InstallReceiptError(
-        f"{skill_name}: no verifiable install source (neither a git checkout nor "
-        "a manifest-bound bundle proof) — FAIL_CLOSED")
+        f"{skill_name}: no verifiable source (git checkout or manifest-bound bundle)")
 
 
-def install(target_skills_home: Path, dry_run: bool = True,
-            skills_src: Path | None = None) -> dict:
-    src_pipeline, locked_dir, bundle = _find_source()
-    target_skills_home = Path(target_skills_home)
-    ts = datetime.now().strftime("%Y%m%dT%H%M%S")
-    plan = []
-    ok = True
-
-    lock = SD.load_lock(src_pipeline)
-    lock_skills = {n: m for n, m in lock.get("skills", {}).items()
-                   if m.get("kind") != "agent_invoked_skill"}
-
-    # sources for the locked sub-skills: --skills-src clones > bundle locked-skills
-    to_install: list[tuple[str, Path, dict | None]] = [("wxgzh-pipeline", src_pipeline, None)]
+def _resolve_sources(
+    src_pipeline: Path,
+    locked_dir: Path | None,
+    bundle: Path | None,
+    lock_skills: dict[str, dict],
+    skills_src: Path | None,
+) -> list[tuple[str, Path, dict | None]]:
+    expected_skills = set(lock_skills)
+    if bundle is not None:
+        _validate_bundle_set(bundle, expected_skills)
+    sources: list[tuple[str, Path, dict | None]] = [
+        ("wxgzh-pipeline", src_pipeline, None),
+    ]
     if skills_src is not None:
-        for name, meta in sorted(lock_skills.items()):
-            repo_base = _norm_repo_url(meta.get("repository_url", "")) or ""
-            candidates = [Path(skills_src) / name,
-                          Path(skills_src) / repo_base.rsplit("/", 1)[-1]]
-            src = next((c for c in candidates if c.is_dir()), None)
-            if src is None:
-                plan.append({"skill": name, "installed": False,
-                             "error": f"source not found under {skills_src}"})
-                ok = False
-                continue
-            to_install.append((name, src, meta))
+        for name in sorted(expected_skills):
+            meta = lock_skills[name]
+            repo_name = (_norm_repo_url(meta.get("repository_url")) or "").rsplit("/", 1)[-1]
+            candidates = [Path(skills_src) / name, Path(skills_src) / repo_name]
+            source = next((path for path in candidates if path.is_dir()), None)
+            if source is None:
+                raise InstallReceiptError(f"{name}: source not found under {skills_src}")
+            sources.append((name, source, meta))
     elif locked_dir is not None:
-        for d in sorted(locked_dir.iterdir()):
-            if d.is_dir():
-                to_install.append((d.name, d, lock_skills.get(d.name)))
+        actual = {path.name for path in locked_dir.iterdir() if path.is_dir()}
+        if actual != expected_skills:
+            raise InstallReceiptError(
+                f"bundle locked skill set mismatch: expected={sorted(expected_skills)} "
+                f"actual={sorted(actual)}")
+        sources.extend((name, locked_dir / name, lock_skills[name])
+                       for name in sorted(expected_skills))
+    else:
+        raise InstallReceiptError("locked skill sources unavailable")
+    if {name for name, _, meta in sources if meta is not None} != expected_skills:
+        raise InstallReceiptError("resolved source set does not equal skills.lock")
+    return sources
 
-    for name, src, locked in to_install:
-        dst = target_skills_home / name
-        action = {"skill": name, "src": str(src), "dst": str(dst),
-                  "existing_backup": None, "installed": False, "file_count": None,
-                  "install_receipt": None, "source_proof": None}
-        if not dry_run:
-            target_skills_home.mkdir(parents=True, exist_ok=True)
-            if dst.exists():
-                bak = target_skills_home / f"{name}.bak-{ts}"
-                shutil.move(str(dst), str(bak))
-                action["existing_backup"] = str(bak)
-            action["file_count"] = copy_tree(src, dst)
-            if locked is not None:
-                # P0#1: verify source + hashes against the lock, then write the
-                # EXTERNAL install receipt. Fail-closed on any mismatch.
-                try:
-                    repo_url, actual, tree = _resolve_source_proof(bundle, name, src, locked)
-                    receipt = SD.write_install_receipt(
-                        target_skills_home, name,
-                        repository_url=repo_url or "",
-                        actual_commit=actual or "",
-                        expected_commit=locked.get("full_commit_sha"),
-                        expected_repository_url=_norm_repo_url(locked.get("repository_url")),
-                        expected_root_sha256=locked.get("skill_root_sha256"),
-                        expected_manifest_sha256=locked.get("runtime_manifest_sha256"),
-                        source_tree_sha=tree,
-                        installer_version=f"wxgzh-pipeline-installer/{__version__}")
-                    action["install_receipt"] = str(
-                        SD.install_receipt_path(target_skills_home, name))
-                    action["source_proof"] = {
-                        "repository_url": repo_url, "expected_commit": locked.get("full_commit_sha"),
-                        "actual_commit": actual, "source_tree_sha": tree, "match": True}
+
+def _rollback_switch(
+    target: Path,
+    switched: list[str],
+    backups: dict[str, Path],
+    receipts_backup: Path | None,
+) -> None:
+    # Restore both successfully switched destinations and the current destination
+    # whose OLD directory was backed up but whose NEW move may have failed before
+    # it could be appended to ``switched``.
+    restore_names = list(dict.fromkeys([*reversed(switched), *reversed(backups)]))
+    for name in restore_names:
+        destination = target / name
+        if destination.exists():
+            shutil.rmtree(destination)
+        backup = backups.get(name)
+        if backup and backup.exists():
+            shutil.move(str(backup), str(destination))
+    receipt_dir = target / SD.INSTALL_RECEIPTS_DIRNAME
+    if receipt_dir.exists():
+        shutil.rmtree(receipt_dir)
+    if receipts_backup and receipts_backup.exists():
+        shutil.move(str(receipts_backup), str(receipt_dir))
+
+
+def install(
+    target_skills_home: Path,
+    dry_run: bool = True,
+    skills_src: Path | None = None,
+) -> dict:
+    src_pipeline, locked_dir, bundle = _find_source()
+    target = Path(target_skills_home)
+    lock = SD.load_lock(src_pipeline)
+    lock_skills = {
+        name: meta for name, meta in lock.get("skills", {}).items()
+        if meta.get("kind") != "agent_invoked_skill"
+    }
+    expected_skills = set(lock_skills)
+    plan: list[dict] = []
+    try:
+        sources = _resolve_sources(
+            src_pipeline, locked_dir, bundle, lock_skills,
+            Path(skills_src) if skills_src is not None else None,
+        )
+        source_proofs: dict[str, tuple[str, str, str]] = {}
+        for name, source, meta in sources:
+            action = {
+                "skill": name, "src": str(source), "dst": str(target / name),
+                "installed": False, "source_present": source.is_dir(),
+                "commit_match": None, "source_tree_match": None,
+                "repository_match": None, "runtime_root_match": None,
+                "runtime_manifest_match": None, "receipt_written": False,
+                "verify_all_ok": False, "install_receipt": None,
+            }
+            plan.append(action)
+            if not source.is_dir():
+                raise InstallReceiptError(f"{name}: source directory missing")
+            if meta is not None:
+                repository, commit, tree = _resolve_source_proof(bundle, name, source, meta)
+                source_proofs[name] = (repository, commit, tree)
+                action.update({
+                    "commit_match": commit == meta.get("full_commit_sha"),
+                    "source_tree_match": tree == meta.get("source_tree_sha"),
+                    "repository_match": repository == _norm_repo_url(meta.get("repository_url")),
+                })
+                if not all((action["commit_match"], action["source_tree_match"],
+                            action["repository_match"])):
+                    raise InstallReceiptError(f"{name}: source proof does not match skills.lock")
+        if dry_run:
+            return {
+                "ok": True, "dry_run": True, "target_skills_home": str(target),
+                "env_untouched": True, "plan": plan,
+                "hash_verification": "run without --dry-run to verify",
+                "note": "installer never runs an article / uploads images / creates a draft",
+            }
+
+        transaction = target.parent / (
+            f".{target.name}.hotfix5-install-{os.getpid()}-"
+            f"{datetime.now().strftime('%Y%m%dT%H%M%S%f')}")
+        staging_home = transaction / "staging"
+        backups_dir = transaction / "backups"
+        staging_home.mkdir(parents=True)
+        backups_dir.mkdir(parents=True)
+        try:
+            for name, source, _ in sources:
+                copy_tree(source, staging_home / name)
+
+            for action in plan:
+                name = action["skill"]
+                meta = lock_skills.get(name)
+                if meta is None:
                     action["installed"] = True
-                except InstallReceiptError as e:
-                    action["error"] = str(e)
-                    action["installed"] = False           # never report success
-                    ok = False
-            else:
-                action["installed"] = True                # orchestrator skill itself
-        plan.append(action)
+                    continue
+                repository, commit, tree = source_proofs[name]
+                SD.write_install_receipt(
+                    staging_home, name,
+                    repository_url=repository,
+                    actual_commit=commit,
+                    expected_commit=meta.get("full_commit_sha"),
+                    expected_repository_url=_norm_repo_url(meta.get("repository_url")),
+                    expected_root_sha256=meta.get("skill_root_sha256"),
+                    expected_manifest_sha256=meta.get("runtime_manifest_sha256"),
+                    source_tree_sha=tree,
+                    expected_source_tree_sha=meta.get("source_tree_sha"),
+                    installer_version=f"wxgzh-pipeline-installer/{__version__}",
+                )
+                action["runtime_root_match"] = True
+                action["runtime_manifest_match"] = True
+                action["receipt_written"] = True
+                action["install_receipt"] = str(
+                    SD.install_receipt_path(target, name))
 
-    # hash verification against lock (only meaningful after real install)
-    verify = {}
-    if not dry_run:
-        _, verify = SD.verify_all(target_skills_home, lock)
-        if any(locked is not None for _, __, locked in to_install):
-            ok = ok and all(v.get("ok") for n, v in verify.items()
-                            if n in lock_skills and any(t[0] == n for t in to_install))
+            runtime_lock = {"lock_version": lock.get("lock_version"), "skills": lock_skills}
+            verify_ok, verify = SD.verify_all(staging_home, runtime_lock)
+            if set(verify) != expected_skills or not verify_ok or not all(
+                verify[name].get("ok") for name in expected_skills
+            ):
+                raise InstallReceiptError(
+                    f"staging verify_all failed for complete lock set: {verify}")
 
-    return {"ok": ok if not dry_run else True, "dry_run": dry_run,
-            "target_skills_home": str(target_skills_home),
-            "env_untouched": True, "plan": plan,
-            "hash_verification": {k: v.get("ok") for k, v in verify.items()} if verify else "run without --dry-run to verify",
-            "note": "installer never runs an article / uploads images / creates a draft"}
+            target.mkdir(parents=True, exist_ok=True)
+            switched: list[str] = []
+            backups: dict[str, Path] = {}
+            receipt_dir = target / SD.INSTALL_RECEIPTS_DIRNAME
+            receipts_backup = None
+            try:
+                if receipt_dir.exists():
+                    receipts_backup = backups_dir / SD.INSTALL_RECEIPTS_DIRNAME
+                    shutil.move(str(receipt_dir), str(receipts_backup))
+                for name, _, _ in sources:
+                    destination = target / name
+                    if destination.exists():
+                        backup = backups_dir / name
+                        shutil.move(str(destination), str(backup))
+                        backups[name] = backup
+                    shutil.move(str(staging_home / name), str(destination))
+                    switched.append(name)
+                shutil.move(
+                    str(staging_home / SD.INSTALL_RECEIPTS_DIRNAME),
+                    str(receipt_dir),
+                )
+            except Exception:
+                _rollback_switch(target, switched, backups, receipts_backup)
+                raise
+
+            final_lock = {"lock_version": lock.get("lock_version"), "skills": lock_skills}
+            final_ok, final_verify = SD.verify_all(target, final_lock)
+            if not final_ok or set(final_verify) != expected_skills:
+                _rollback_switch(target, switched, backups, receipts_backup)
+                raise InstallReceiptError("post-switch verify_all failed; rolled back")
+            required_action_gates = (
+                "source_present", "commit_match", "source_tree_match",
+                "repository_match", "runtime_root_match",
+                "runtime_manifest_match", "receipt_written", "verify_all_ok",
+            )
+            for action in plan:
+                if action["skill"] in expected_skills:
+                    action["verify_all_ok"] = bool(
+                        final_verify[action["skill"]].get("ok"))
+                    action["installed"] = all(
+                        action.get(field) is True for field in required_action_gates)
+            complete_lock_ok = all(
+                action.get("installed") is True
+                for action in plan if action["skill"] in expected_skills
+            )
+            if not complete_lock_ok:
+                _rollback_switch(target, switched, backups, receipts_backup)
+                raise InstallReceiptError(
+                    "post-switch complete lock action gates failed; rolled back")
+            return {
+                "ok": True, "dry_run": False, "target_skills_home": str(target),
+                "env_untouched": True, "plan": plan,
+                "hash_verification": {
+                    name: final_verify[name].get("ok") for name in sorted(expected_skills)
+                },
+                "note": "installer never runs an article / uploads images / creates a draft",
+            }
+        finally:
+            if transaction.exists():
+                shutil.rmtree(transaction)
+    except (InstallReceiptError, OSError, ValueError, KeyError, TypeError) as exc:
+        if not plan:
+            plan = [{
+                "skill": name, "installed": False, "receipt_written": False,
+                "error": str(exc),
+            } for name in sorted(expected_skills)]
+        for action in plan:
+            if not action.get("installed"):
+                action.setdefault("error", str(exc))
+        return {
+            "ok": False, "dry_run": dry_run, "target_skills_home": str(target),
+            "env_untouched": True, "plan": plan, "error": str(exc),
+            "hash_verification": {},
+            "note": "installer never runs an article / uploads images / creates a draft",
+        }
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--target", default=None, help="target skills home (default: auto-discover)")
-    ap.add_argument("--project-root", default=None)
-    ap.add_argument("--skills-src", default=None,
-                    help="directory holding the locked sub-skill sources (git clones)")
-    ap.add_argument("--dry-run", action="store_true")
-    a = ap.parse_args(argv)
-    if a.target:
-        target = Path(a.target)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target", default=None)
+    parser.add_argument("--project-root", default=None)
+    parser.add_argument("--skills-src", default=None)
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args(argv)
+    if args.target:
+        target = Path(args.target)
     else:
-        pr = P.resolve_project_root(a.project_root)
-        target = P.skills_home(pr)
-    report = install(target, dry_run=a.dry_run,
-                     skills_src=Path(a.skills_src) if a.skills_src else None)
+        project_root = P.resolve_project_root(args.project_root)
+        target = P.skills_home(project_root)
+    report = install(
+        target, dry_run=args.dry_run,
+        skills_src=Path(args.skills_src) if args.skills_src else None,
+    )
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report.get("ok") else 1
 

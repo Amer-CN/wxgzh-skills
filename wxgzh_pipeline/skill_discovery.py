@@ -86,6 +86,7 @@ def write_install_receipt(skills_home: Path, skill_name: str, *, repository_url:
                           expected_root_sha256: str | None = None,
                           expected_manifest_sha256: str | None = None,
                           source_tree_sha: str | None = None,
+                          expected_source_tree_sha: str | None = None,
                           installer_version: str = "wxgzh-pipeline-installer") -> dict:
     """Generate an EXTERNAL install receipt from the REAL checkout (P0#1, strict).
 
@@ -111,6 +112,17 @@ def write_install_receipt(skills_home: Path, skill_name: str, *, repository_url:
     if actual_commit != expected_commit:
         raise InstallReceiptError(
             f"{skill_name}: checked-out HEAD {actual_commit} != locked {expected_commit}")
+    if not (isinstance(expected_source_tree_sha, str) and _HEX40.fullmatch(expected_source_tree_sha)):
+        raise InstallReceiptError(
+            f"{skill_name}: expected_source_tree_sha must be a 40-hex sha "
+            f"(got {expected_source_tree_sha!r})")
+    if not (isinstance(source_tree_sha, str) and _HEX40.fullmatch(source_tree_sha)):
+        raise InstallReceiptError(
+            f"{skill_name}: actual source_tree_sha must be a 40-hex sha "
+            f"(got {source_tree_sha!r})")
+    if source_tree_sha != expected_source_tree_sha:
+        raise InstallReceiptError(
+            f"{skill_name}: source tree {source_tree_sha} != locked {expected_source_tree_sha}")
     if expected_repository_url is not None and repository_url != expected_repository_url:
         raise InstallReceiptError(
             f"{skill_name}: repository_url {repository_url!r} != locked {expected_repository_url!r}")

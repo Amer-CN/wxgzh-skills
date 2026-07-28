@@ -35,7 +35,7 @@ smartisan 主题正式排版）→ **创建微信草稿** → 停止。默认主
 
 ## 版本
 
-0.1.0-dev1 · orchestrator（只编排，不复制子 Skill 业务逻辑）
+0.1.0-dev2-hotfix5 · orchestrator（只编排，不复制子 Skill 业务逻辑）
 
 ## 依赖的已安装子 Skill（版本与根 Hash 锁定见 `skills.lock.json`）
 
@@ -44,7 +44,7 @@ smartisan 主题正式排版）→ **创建微信草稿** → 停止。默认主
 | 1 | aihot（agent 调用） | — |
 | 2 | super-writer | 0.3.2-rc1 |
 | 3 | zh-human-writing | 0.1.0 |
-| 4 | media-enrichment | ≥ 0.1.0-dev7-hotfix1 |
+| 4 | media-enrichment | 0.1.0-dev7-hotfix3 |
 | 5 | gzh-design | v2026.07.18-hammer.1 |
 | 6 | 微信草稿 | 复用 gzh-design/scripts/publish_wechat_draft.py |
 
