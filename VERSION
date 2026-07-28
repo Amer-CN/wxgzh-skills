@@ -1,5 +1,5 @@
-version: 0.1.0-dev2-hotfix3
-previous_version: 0.1.0-dev2-hotfix2
+version: 0.1.0-dev2-hotfix4
+previous_version: 0.1.0-dev2-hotfix3
 status: development
 release_date: 2026-07-29
 kind: orchestrator

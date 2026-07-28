@@ -56,6 +56,18 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     for name, text in INSTALL_MD.items():
         (bundle / name).write_text(text, encoding="utf-8")
 
+    # 4b. P0#1 (hotfix4): BUILD-generated per-skill source proofs. The file is a
+    # regular bundle member, so the bundle MANIFEST (step 6) hash-binds it — the
+    # installer rejects any hand-written / tampered proof.
+    proofs = {name: {"repository_url": meta.get("repository_url"),
+                     "full_commit_sha": meta.get("full_commit_sha"),
+                     "source_tree_sha": meta.get("source_tree_sha")}
+              for name, meta in lock["skills"].items()
+              if meta.get("kind") != "agent_invoked_skill"}
+    (bundle / "source-proofs.json").write_text(json.dumps(
+        {"generated_by": f"build_portable_bundle/{__version__}", "skills": proofs},
+        ensure_ascii=False, indent=2), encoding="utf-8")
+
     # 5. secrets scan (must be clean) — bundle must not contain .env / real creds
     scan = SEC.scan_tree(bundle, SEC.load_env_values(P.resolve_project_root() / ".env"))
     if scan["secrets_detected"]:

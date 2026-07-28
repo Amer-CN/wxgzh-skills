@@ -200,10 +200,11 @@ def _load_copyright_approvals(rd: Path) -> dict:
 
 
 def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
-    """P0#3: load aihot/deduplicated_items.json into a deterministic index used to
-    cross-verify the canonical registry (tolerant of id/url key aliases). Raises
-    MediaRequestError on missing/malformed dedup, or when one dedup id maps to
-    multiple different URLs (ambiguous)."""
+    """P0#3 (strict): load aihot/deduplicated_items.json into a deterministic index
+    used to cross-verify the canonical registry (tolerant of id/url key aliases).
+    Raises MediaRequestError on missing/malformed dedup, on ANY duplicated dedup id
+    (even with an identical URL), or when one source_url is mapped by multiple
+    different ids (ambiguous)."""
     p = rd / "aihot" / "deduplicated_items.json"
     if not p.is_file():
         raise MediaRequestError("aihot/deduplicated_items.json missing (FAIL_CLOSED)")
@@ -225,11 +226,16 @@ def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
         norm = {"id": iid, "source_url": url, "aihot_permalink": permalink,
                 "title": it.get("title", "")}
         if iid is not None:
-            if iid in by_id and by_id[iid]["source_url"] != url:
+            if iid in by_id:
                 raise MediaRequestError(
-                    f"dedup id {iid} maps to multiple URLs (FAIL_CLOSED)")
+                    f"dedup id {iid} appears more than once (FAIL_CLOSED)")
             by_id[iid] = norm
         if url:
+            prev = by_url.get(url)
+            if prev is not None and prev["id"] != iid:
+                raise MediaRequestError(
+                    f"dedup source_url {url} is mapped by multiple different ids "
+                    "(ambiguous, FAIL_CLOSED)")
             by_url[url] = norm
     return p, {"by_id": by_id, "by_url": by_url}
 
@@ -267,12 +273,22 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
         if not mid or not src:
             raise MediaRequestError(f"registry material missing id/source_url: {m}")
         mat_ids.add(mid)
-        # ── P0#3 cross-verify against dedup: unambiguous id mapping + EXACT
-        #    source_url + EXACT aihot_permalink; else FAIL_CLOSED. ──
-        dkey = str(m.get("dedup_id") or m.get("upstream_id") or m.get("aihot_id") or mid)
-        di = dedup["by_id"].get(dkey) or dedup["by_url"].get(src)
+        # ── P0#3 STRICT dedup mapping (hotfix4): the canonical material must map
+        #    by its FORMAL upstream/dedup ID ONLY. A URL can NEVER be used to find
+        #    a substitute item for a wrong/missing ID (no by_url fallback). ──
+        explicit = m.get("dedup_id") or m.get("upstream_id") or m.get("aihot_id")
+        dkey = str(explicit) if explicit is not None else str(mid)
+        di = dedup["by_id"].get(dkey)
         if di is None:
-            raise MediaRequestError(f"material {mid} not found in dedup (FAIL_CLOSED)")
+            raise MediaRequestError(
+                f"material {mid}: canonical/upstream id {dkey} not found in dedup "
+                "(URL fallback is FORBIDDEN) (FAIL_CLOSED)")
+        if explicit is not None:
+            also = dedup["by_id"].get(str(mid))
+            if also is not None and also != di:
+                raise MediaRequestError(
+                    f"material {mid}: dedup_id {dkey} conflicts with the "
+                    "material_id mapping (FAIL_CLOSED)")
         if di["source_url"] != src:
             raise MediaRequestError(
                 f"material {mid} source_url disagrees with dedup (FAIL_CLOSED)")

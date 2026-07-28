@@ -75,9 +75,46 @@ def test_read_missing_or_malformed_returns_none(tmp_path):
     assert read_install_receipt(home, "gzh-design") is None
 
 
-def test_missing_expected_commit_still_records_actual(tmp_path):
-    # when no lock commit is known, the receipt still records the real HEAD
+def test_missing_expected_commit_is_forbidden(tmp_path):
+    # hotfix4 P0#1: expected_commit=None is FORBIDDEN — the receipt can only be
+    # written against a real 40-hex locked commit.
     home = tmp_path / "skills"; _mk_gzh(home)
-    rec = write_install_receipt(home, "gzh-design", repository_url="r",
-                                actual_commit=COMMIT, expected_commit=None)
-    assert rec["full_commit_sha"] == COMMIT
+    with pytest.raises(InstallReceiptError):
+        write_install_receipt(home, "gzh-design", repository_url="r",
+                              actual_commit=COMMIT, expected_commit=None)
+    with pytest.raises(InstallReceiptError):
+        write_install_receipt(home, "gzh-design", repository_url="r",
+                              actual_commit=COMMIT, expected_commit="not-a-sha")
+    assert read_install_receipt(home, "gzh-design") is None
+
+
+def test_lock_bound_fields_enforced(tmp_path):
+    """hotfix4 P0#1: repository_url and root/manifest must equal the lock."""
+    home = tmp_path / "skills"; _mk_gzh(home)
+    import wxgzh_pipeline.skill_discovery as SD2
+    root_sha, _ = SD2.compute_root_sha(home / "gzh-design")
+    man_sha, _ = SD2.compute_runtime_manifest_sha(home / "gzh-design")
+    # wrong repository_url => FAIL, nothing written
+    with pytest.raises(InstallReceiptError):
+        write_install_receipt(home, "gzh-design", repository_url="https://evil.example/x",
+                              actual_commit=COMMIT, expected_commit=COMMIT,
+                              expected_repository_url="https://github.com/Amer-CN/gzh-design-skill")
+    # wrong root hash vs lock => FAIL
+    with pytest.raises(InstallReceiptError):
+        write_install_receipt(home, "gzh-design", repository_url="r",
+                              actual_commit=COMMIT, expected_commit=COMMIT,
+                              expected_root_sha256="0" * 64)
+    # wrong manifest hash vs lock => FAIL
+    with pytest.raises(InstallReceiptError):
+        write_install_receipt(home, "gzh-design", repository_url="r",
+                              actual_commit=COMMIT, expected_commit=COMMIT,
+                              expected_manifest_sha256="0" * 64)
+    assert read_install_receipt(home, "gzh-design") is None
+    # everything matching => receipt written
+    rec = write_install_receipt(home, "gzh-design",
+                                repository_url="https://github.com/Amer-CN/gzh-design-skill",
+                                actual_commit=COMMIT, expected_commit=COMMIT,
+                                expected_repository_url="https://github.com/Amer-CN/gzh-design-skill",
+                                expected_root_sha256=root_sha,
+                                expected_manifest_sha256=man_sha)
+    assert rec["installed_runtime_root_sha256"] == root_sha

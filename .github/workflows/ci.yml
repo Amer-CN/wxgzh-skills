@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Amer-CN/media-enrichment
-          ref: 7ff7be3c01073b4657f7794f15c4052ff09abf2b
+          ref: 5ed758cf0487ac88090efed24bfe02e21d8edd45
           path: clones/media-enrichment
       - name: Checkout gzh-design-skill @ locked commit
         uses: actions/checkout@v4

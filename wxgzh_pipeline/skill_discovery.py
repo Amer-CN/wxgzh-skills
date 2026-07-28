@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from pathlib import Path
 # time; it lives under skills_home (a sibling of each skill) and must never be
 # counted as skill runtime content (P0#1 — avoids commit/hash self-reference).
 INSTALL_RECEIPTS_DIRNAME = ".install-receipts"
+_HEX40 = re.compile(r"^[0-9a-fA-F]{40}$")
 EXCLUDE_DIRS = {"__pycache__", ".git", ".pytest_cache", ".github", "tests",
                 "node_modules", ".idea", ".vscode", INSTALL_RECEIPTS_DIRNAME}
 EXCLUDE_FILES = {"WXGZH_PIPELINE_INTEGRATION.md", ".gitignore", ".gitattributes"}
@@ -80,25 +82,46 @@ def install_receipt_path(skills_home: Path, skill_name: str) -> Path:
 
 def write_install_receipt(skills_home: Path, skill_name: str, *, repository_url: str,
                           actual_commit: str, expected_commit: str | None,
+                          expected_repository_url: str | None = None,
+                          expected_root_sha256: str | None = None,
+                          expected_manifest_sha256: str | None = None,
                           source_tree_sha: str | None = None,
                           installer_version: str = "wxgzh-pipeline-installer") -> dict:
-    """Generate an EXTERNAL install receipt from the REAL checkout (P0#1).
+    """Generate an EXTERNAL install receipt from the REAL checkout (P0#1, strict).
 
     The receipt is written OUTSIDE the skill tree
     (<skills_home>/.install-receipts/<skill>.json) so it never counts toward the
-    skill runtime root hash. It records the checked-out commit + the recomputed
-    installed runtime root/manifest hashes. If the checked-out HEAD does not match
-    the locked full_commit_sha, we FAIL_CLOSED (InstallReceiptError) rather than
-    writing a receipt for the wrong tree.
+    skill runtime root hash. Fail-closed (InstallReceiptError, NO receipt written)
+    unless ALL of the following hold:
+      - expected_commit is present and a 40-hex sha (expected_commit=None FORBIDDEN);
+      - actual_commit is present and a 40-hex sha;
+      - actual_commit == expected_commit;
+      - repository_url == expected_repository_url (when the lock value is given);
+      - the recomputed runtime root/manifest == the lock values (when given).
     """
     root = Path(skills_home) / skill_name
     if not root.is_dir():
         raise InstallReceiptError(f"{skill_name}: install dir missing at {root}")
-    if expected_commit and actual_commit != expected_commit:
+    if not (isinstance(expected_commit, str) and _HEX40.match(expected_commit)):
+        raise InstallReceiptError(
+            f"{skill_name}: expected_commit must be a 40-hex sha (got {expected_commit!r})")
+    if not (isinstance(actual_commit, str) and _HEX40.match(actual_commit)):
+        raise InstallReceiptError(
+            f"{skill_name}: actual_commit must be a 40-hex sha (got {actual_commit!r})")
+    if actual_commit != expected_commit:
         raise InstallReceiptError(
             f"{skill_name}: checked-out HEAD {actual_commit} != locked {expected_commit}")
+    if expected_repository_url is not None and repository_url != expected_repository_url:
+        raise InstallReceiptError(
+            f"{skill_name}: repository_url {repository_url!r} != locked {expected_repository_url!r}")
     root_sha, _ = compute_root_sha(root)
     man_sha, _ = compute_runtime_manifest_sha(root)
+    if expected_root_sha256 is not None and root_sha != expected_root_sha256:
+        raise InstallReceiptError(
+            f"{skill_name}: installed root {root_sha} != locked {expected_root_sha256}")
+    if expected_manifest_sha256 is not None and man_sha != expected_manifest_sha256:
+        raise InstallReceiptError(
+            f"{skill_name}: runtime manifest {man_sha} != locked {expected_manifest_sha256}")
     receipt = {
         "schema_version": "1.0",
         "skill_name": skill_name,

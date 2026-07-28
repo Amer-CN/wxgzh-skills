@@ -71,6 +71,75 @@ def _load_validator(name: str):
     return m
 
 
+def _single_asset_e2e(skills_home: Path, staging: Path) -> dict:
+    """P0#2: run the REAL media-enrichment CLI on an offline fixture where ONE
+    material yields A-001 + A-002 and ONLY A-001 carries a single_asset approval.
+    Asserts: A-001 uploads (audit uploader), A-002 stays un-uploaded, and the
+    upload event log contains ONLY A-001. Zero network / zero WeChat effects."""
+    media = skills_home / "media-enrichment"
+    sa = staging / "single_asset_e2e"
+    sa.mkdir(parents=True, exist_ok=True)
+    article = sa / "final_article.md"
+    article.write_text("# 标题\n\n示例论点一。\n\n正文说明两张图。\n", encoding="utf-8")
+    src_url = "https://www.example-source.test/single-asset-e2e"
+    req = {
+        "schema_version": "1.0", "run_id": "integ-single-asset",
+        "article": {"path": "final_article.md",
+                    "sha256": hashlib.sha256(article.read_bytes()).hexdigest()},
+        "materials": [{"material_id": "M-001",
+                       "aihot_permalink": "https://aihot.virxact.com/items/single-asset-e2e",
+                       "source_url": src_url, "title": "示例素材",
+                       "selected_claim_ids": ["C-01"],
+                       "copyright_review": {"status": "unknown"}}],
+        "claims": [{"claim_id": "C-01", "claim_text": "示例论点一",
+                    "material_id": "M-001", "source_url": src_url,
+                    "source_excerpt": "原文摘录"}],
+        "asset_approvals": [{"asset_id": "A-001", "approval_id": "AP-A-001",
+                             "approved_scope": "single_asset",
+                             "approved_by": "integration-user",
+                             "approved_at": "2026-07-29T00:00:00Z",
+                             "evidence": "e" * 64}],
+        "config": {"network_mode": "offline_fixture", "upload_mode": "wechat_audit",
+                   "max_images_per_material": 3, "max_total_images": 8,
+                   "allow_unknown_license_for_publish": False},
+    }
+    (sa / "media_request.json").write_text(json.dumps(req, ensure_ascii=False, indent=2),
+                                           encoding="utf-8")
+    out = sa / "out"
+    r = _run([sys.executable, "-X", "utf8",
+              str(media / "scripts" / "run_media_enrichment.py"),
+              "--request", str(sa / "media_request.json"),
+              "--output-dir", str(out),
+              "--fixture-dir", str(media / "fixtures" / "html")])
+    res = {"exit_code": r.returncode}
+    try:
+        manifest = json.loads((out / "media_manifest.json").read_text(encoding="utf-8"))
+        events = json.loads((out / "upload_events.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        res["ok"] = False
+        res["error"] = f"outputs missing: {e}; stderr={r.stderr[-300:]}"
+        return res
+    assets = {a["asset_id"]: a for a in manifest.get("assets", [])}
+    a1, a2 = assets.get("A-001") or {}, assets.get("A-002") or {}
+    ev_ids = [e["asset_id"] for e in events.get("events", [])]
+    res.update({
+        "A-001_copyright": a1.get("copyright_status"),
+        "A-001_upload": (a1.get("upload") or {}).get("status"),
+        "A-001_consumed": a1.get("asset_approval_consumed"),
+        "A-002_copyright": a2.get("copyright_status"),
+        "A-002_upload": (a2.get("upload") or {}).get("status"),
+        "upload_event_asset_ids": ev_ids,
+    })
+    res["ok"] = (r.returncode == 0
+                 and a1.get("copyright_status") == "known_allowed"
+                 and (a1.get("upload") or {}).get("status") == "success"
+                 and a1.get("asset_approval_consumed") is True
+                 and a2.get("copyright_status") == "unknown"
+                 and (a2.get("upload") or {}).get("status") != "success"
+                 and ev_ids == ["A-001"])
+    return res
+
+
 def _live_proof_theme(skills_home: Path, gzh_lock: dict, staging: Path) -> dict:
     """P0#1: run the REAL gzh render_article on a full 6-chapter article + image
     bindings, then run the REAL validate_theme_identity in live mode. Requires an
@@ -151,15 +220,27 @@ def main(argv=None) -> int:
         record(f"commit_match:{skill_name}", match, f"expected={locked} actual={actual}")
     details["commit_verification"] = commit_checks
 
-    # install the (verified) trees + a verifiable AI HOT registration
-    for clone_name, skill_name in CLONE_TO_SKILL.items():
-        src = clones / clone_name
-        if not src.is_dir():
-            record(f"clone_present:{clone_name}", False, "missing")
-            continue
-        shutil.copytree(src, skills_home / skill_name,
-                        ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache"))
-        record(f"installed:{skill_name}", True)
+    # ── P0#1: FORMAL installer (scripts/install.py) installs the locked trees AND
+    # generates the external install receipts. The integration must NOT copy the
+    # directories itself and bypass the formal installer. ──
+    inst = _run([sys.executable, "-X", "utf8", str(REPO / "scripts" / "install.py"),
+                 "--target", str(skills_home), "--skills-src", str(clones)])
+    record("formal_install_py", inst.returncode == 0,
+           (inst.stdout + inst.stderr)[-400:] if inst.returncode else "")
+    receipts = {}
+    for skill_name in CLONE_TO_SKILL.values():
+        rec = SD.read_install_receipt(skills_home, skill_name)
+        receipts[skill_name] = rec
+        le = lock_skills.get(skill_name) or {}
+        ok_rec = bool(rec
+                      and rec.get("full_commit_sha") == le.get("full_commit_sha")
+                      and rec.get("installed_runtime_root_sha256") == le.get("skill_root_sha256")
+                      and rec.get("installed_runtime_manifest_sha256") == le.get("runtime_manifest_sha256"))
+        record(f"install_receipt:{skill_name}", ok_rec,
+               "" if ok_rec else f"receipt={rec}")
+    details["install_receipts"] = receipts
+
+    # a verifiable AI HOT registration (external agent-invoked dependency)
     aihot = skills_home / "aihot"
     aihot.mkdir(exist_ok=True)
     (aihot / "SKILL.md").write_text("---\nname: aihot\n---\n", encoding="utf-8")
@@ -168,21 +249,6 @@ def main(argv=None) -> int:
          "output_contract": {"items": "array of AI HOT entries"}}), encoding="utf-8")
     env = dict(os.environ)
     env["WXGZH_AIHOT_SKILL_DIR"] = str(aihot)
-
-    # ── P0#1: EXTERNAL install receipts generated from the real checkout ──
-    for clone_name, skill_name in CLONE_TO_SKILL.items():
-        clone = clones / clone_name
-        le = lock_skills.get(skill_name) or {}
-        actual = _git(clone, "rev-parse", "HEAD")
-        tree = _git(clone, "rev-parse", "HEAD^{tree}")
-        try:
-            SD.write_install_receipt(
-                skills_home, skill_name, repository_url=le.get("repository_url", ""),
-                actual_commit=actual or "", expected_commit=le.get("full_commit_sha"),
-                source_tree_sha=tree, installer_version="wxgzh-integration/0.1.0-dev2-hotfix3")
-            record(f"install_receipt:{skill_name}", True)
-        except SD.InstallReceiptError as e:
-            record(f"install_receipt:{skill_name}", False, str(e))
 
     # verify_all against the freshly installed trees (uses the shipped lock)
     vok, disc = SD.verify_all(skills_home, lock, env=env)
@@ -206,6 +272,12 @@ def main(argv=None) -> int:
                 continue
             r = _run([sys.executable, "-X", "utf8", str(p), "--help"])
             record(f"help:{skill}/{Path(rel).name}", r.returncode == 0, r.stderr[:200])
+
+    # ── P0#2: single_asset approval e2e through the REAL media-enrichment CLI ──
+    sa = _single_asset_e2e(skills_home, staging)
+    details["single_asset_e2e"] = sa
+    record("single_asset_media_cli_e2e", sa.get("ok", False),
+           json.dumps({k: v for k, v in sa.items() if k != "ok"}, ensure_ascii=False)[:300])
 
     # ── P0#1 live-proof: real render + real theme identity => must PASS ──
     theme = _live_proof_theme(skills_home, lock_skills.get("gzh-design", {}), staging)
