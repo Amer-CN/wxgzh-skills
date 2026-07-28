@@ -31,7 +31,7 @@ def _file_sha(p: Path) -> str:
 
 def _runtime_files(root: Path) -> list[Path]:
     out = []
-    for p in sorted(Path(root).rglob("*")):
+    for p in Path(root).rglob("*"):
         if not p.is_file():
             continue
         if any(part in EXCLUDE_DIRS for part in p.parts):
@@ -39,7 +39,10 @@ def _runtime_files(root: Path) -> list[Path]:
         if p.name in EXCLUDE_FILES or p.suffix in EXCLUDE_SUFFIXES:
             continue
         out.append(p)
-    return out
+    # sort by POSIX relpath (NOT Path objects) so the order is identical on
+    # Windows and Linux — os-separator sorting would flip subdir ordering and
+    # change the aggregate root hash even when every file hash matches (P0#9 CI).
+    return sorted(out, key=lambda p: p.relative_to(root).as_posix())
 
 
 def compute_root_sha(root: Path) -> tuple[str | None, int]:
