@@ -92,6 +92,12 @@ def main():
     materials_by_id = {m["material_id"]: m for m in materials}
     network_mode = config.get("network_mode", "live")
     fixture_dir = args.fixture_dir or str(SKILL_ROOT / "fixtures" / "html")
+    # hotfix4 P0#2: asset-scoped copyright approvals (already validated by
+    # input_contract: unique asset_id, scope=single_asset, 64-hex evidence).
+    asset_approvals = {ap["asset_id"]: ap for ap in request.get("asset_approvals", [])}
+    consumed_asset_approvals: set[str] = set()
+    # offline image "downloads" read from a sibling images/ fixture dir (no network)
+    fixture_images_dir = Path(fixture_dir).parent / "images"
 
     max_images_per_material = config.get("max_images_per_material", 3)
     max_total_images = config.get("max_total_images", 12)
@@ -166,11 +172,18 @@ def main():
 
             asset_counter += 1
             asset_id = f"A-{asset_counter:03d}"
+            # hotfix4 P0#2: resolve the per-asset copyright status AFTER the real
+            # asset_id exists. A single_asset approval upgrades ONLY this asset;
+            # the Material itself stays at mat_copyright_status (e.g. unknown).
+            asset_approval = asset_approvals.get(asset_id)
+            effective_copyright = "known_allowed" if asset_approval else mat_copyright_status
+            if asset_approval:
+                consumed_asset_approvals.add(asset_id)
 
             decode_result = decode_proxy_url(candidate.url)
             resolved_url = decode_result.decoded_url
 
-            sec_check = is_safe_url(resolved_url)
+            sec_check = is_safe_url(resolved_url, require_dns=(network_mode == "live"))
             if not sec_check.safe:
                 asset = AssetRecord(
                     asset_id=asset_id, asset_origin="source",
@@ -186,7 +199,8 @@ def main():
 
             images_dir = output_dir / "images"
             download_result = download_image(resolved_url, images_dir,
-                                              max_bytes=config.get("max_download_bytes", 15728640))
+                                              max_bytes=config.get("max_download_bytes", 15728640),
+                                              mode=network_mode, fixture_dir=fixture_images_dir)
             if not download_result.success:
                 asset = AssetRecord(
                     asset_id=asset_id, asset_origin="source",
@@ -228,7 +242,7 @@ def main():
             classification = classify_image(
                 url=resolved_url, inspection=inspection,
                 min_width=config.get("min_width", 640), min_height=config.get("min_height", 360),
-                context=candidate.context, copyright_status=mat_copyright_status,
+                context=candidate.context, copyright_status=effective_copyright,
                 extraction_method=candidate.extraction_method,
             )
 
@@ -243,21 +257,27 @@ def main():
                 width=inspection.width, height=inspection.height, file_size=inspection.file_size,
                 quality_status="pass" if inspection.is_valid else "fail",
                 relevance_status="relevant" if classification.decision == "eligible" else "uncertain",
-                copyright_status=mat_copyright_status,
+                copyright_status=effective_copyright,
                 copyright_risk="high" if classification.decision == "rejected" else "medium",
+                approval_id=(asset_approval or {}).get("approval_id"),
+                approved_scope=(asset_approval or {}).get("approved_scope"),
+                approval_evidence=(asset_approval or {}).get("evidence"),
+                asset_approval_consumed=bool(asset_approval),
                 decision=classification.decision,
                 reasons=classification.rejection_reasons or classification.relevance_reasons,
             )
 
-            # Only upload if ALL conditions met
+            # Only upload if ALL conditions met — hotfix4: judged on the ASSET's
+            # final copyright status (single_asset approval), never only on the
+            # material-level status.
             if (classification.decision == "eligible"
-                    and mat_copyright_status == "known_allowed"
+                    and asset.copyright_status == "known_allowed"
                     and asset.quality_status == "pass"
                     and asset.relevance_status == "relevant"
                     and asset.duplicate_of is None):
                 upload_result = timed_upload(uploader, upload_events,
                                              download_result.local_path, asset_id,
-                                             copyright_status=mat_copyright_status)
+                                             copyright_status=asset.copyright_status)
                 asset.upload = {
                     "mode": upload_mode, "status": upload_result.status,
                     "remote_url": upload_result.remote_url, "response_sha256": upload_result.response_sha256,
@@ -266,6 +286,12 @@ def main():
             builder.add_asset(asset)
             total_assets_added += 1
             material_image_count += 1
+
+    # hotfix4 P0#2: any asset approval that never matched a produced asset_id is
+    # recorded as UNCONSUMED — it must never silently pretend to have taken effect.
+    for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
+        builder.warnings.append(
+            f"asset_approval for {aid} NOT consumed (no such asset_id was produced)")
 
     # Generate charts (dev5: fail-closed chart_group/metric gating)
     print(f"\n[media-enrichment] Generating charts...")

@@ -16,7 +16,7 @@ from typing import Any
 
 import jsonschema
 
-SKILL_VERSION = "0.1.0-dev7-hotfix1"
+SKILL_VERSION = "0.1.0-dev7-hotfix2"
 
 
 @dataclass
@@ -191,6 +191,28 @@ def validate_request(request_path: str | Path) -> ValidationResult:
                 errors.append(f"Material {mat['material_id']}: copyright_review.status=known_allowed but reviewed_at is empty")
             if not cr.get("evidence"):
                 errors.append(f"Material {mat['material_id']}: copyright_review.status=known_allowed but evidence is empty")
+
+    # Step 7 (hotfix4 P0#2): validate asset-scoped copyright approvals.
+    # asset_id must be unique, scope must be single_asset, evidence must be a
+    # 64-hex digest, and the same asset_id must not carry conflicting approvals.
+    import re as _re
+    hex64 = _re.compile(r"^[0-9a-fA-F]{64}$")
+    seen_asset_approvals: dict[str, dict] = {}
+    for idx, ap in enumerate(request.get("asset_approvals", [])):
+        aid = ap.get("asset_id", "")
+        if ap.get("approved_scope") != "single_asset":
+            errors.append(f"asset_approvals[{idx}]: approved_scope must be single_asset")
+        ev = ap.get("evidence", "")
+        if not isinstance(ev, str) or not hex64.match(ev):
+            errors.append(f"asset_approvals[{idx}] ({aid}): evidence must be a 64-hex sha256")
+        if aid in seen_asset_approvals:
+            prev = seen_asset_approvals[aid]
+            if prev != ap:
+                errors.append(f"asset_approvals: conflicting approvals for asset_id {aid}")
+            else:
+                errors.append(f"asset_approvals: duplicate approval for asset_id {aid}")
+        else:
+            seen_asset_approvals[aid] = ap
 
     if errors:
         return ValidationResult(valid=False, errors=errors, warnings=warnings, request_sha256=result.request_sha256, article_sha256=article_sha256)

@@ -47,6 +47,12 @@ class AssetRecord:
     caption: str | None = None
     alt_text: str | None = None
     placement: dict[str, Any] | None = None
+    # hotfix4 P0#2: asset-scoped copyright approval (single_asset), applied only
+    # after the real asset_id was produced during extraction.
+    approval_id: str | None = None
+    approved_scope: str | None = None
+    approval_evidence: str | None = None
+    asset_approval_consumed: bool = False
     upload: dict[str, Any] = field(default_factory=lambda: {
         "mode": "dry_run",
         "status": "not_uploaded",
@@ -84,6 +90,10 @@ class AssetRecord:
             "caption": self.caption,
             "alt_text": self.alt_text,
             "placement": self.placement,
+            "approval_id": self.approval_id,
+            "approved_scope": self.approved_scope,
+            "approval_evidence": self.approval_evidence,
+            "asset_approval_consumed": self.asset_approval_consumed,
             "upload": self.upload,
         }
 

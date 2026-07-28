@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev7-hotfix2 (2026-07-29)
+
+- P0#2 (wxgzh-pipeline dev2-hotfix4): consume `asset_approvals` (approved_scope=single_asset) AFTER the real asset_id is produced — only the matching asset becomes known_allowed; the material stays unknown; unmatched approvals are recorded as NOT consumed; the upload gate now judges the asset's final copyright status.
+- Request schema: formal `asset_approvals` definition + `wechat_audit` upload_mode; input contract validates unique asset_id / single_asset scope / 64-hex evidence / no conflicting approvals.
+- Manifest assets now record approval_id / approved_scope / approval_evidence / asset_approval_consumed.
+- offline_fixture: image downloads read local fixtures (zero network); `is_safe_url(require_dns=False)` skips only DNS in offline runs.
+
 ## 0.1.0-dev7-hotfix1 (2026-07-27)
 
 ### 阻断问题修复（社交分享卡 URL 误杀，与 dev6-hotfix1 同源）

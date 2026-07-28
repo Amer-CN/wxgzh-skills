@@ -64,10 +64,18 @@ def download_image(
     output_dir: str | Path,
     max_bytes: int = 15728640,
     timeout: int = 30,
+    mode: str = "live",
+    fixture_dir: str | Path | None = None,
 ) -> DownloadResult:
-    """Download an image with manual redirect handling and SSRF checks."""
+    """Download an image with manual redirect handling and SSRF checks.
+
+    hotfix4: mode="offline_fixture" reads the image from a local fixture dir
+    (URL path basename -> <fixture_dir>/<basename>) with ZERO network.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if mode == "offline_fixture":
+        return _download_offline(url, output_dir, fixture_dir, max_bytes)
     start_time = time.time()
 
     # Initial safety check
@@ -129,3 +137,33 @@ def download_image(
             success=False, url=url, error=f"unexpected error: {exc}",
             duration_ms=int((time.time() - start_time) * 1000),
         )
+
+
+def _download_offline(url: str, output_dir: Path, fixture_dir: str | Path | None,
+                      max_bytes: int) -> DownloadResult:
+    """hotfix4: offline_fixture image "download" — copies the fixture file whose
+    name equals the URL path basename. ZERO network; still size-limited, still
+    SHA256-named with a real extension (same downstream contract as live)."""
+    if fixture_dir is None:
+        return DownloadResult(success=False, url=url,
+                              error="fixture_dir required for offline_fixture download")
+    from urllib.parse import urlparse
+    name = Path(urlparse(url).path).name
+    if not name:
+        return DownloadResult(success=False, url=url, error="offline: URL has no basename")
+    src = Path(fixture_dir) / name
+    if not src.is_file():
+        return DownloadResult(success=False, url=url,
+                              error=f"offline image fixture not found: {src}")
+    data = src.read_bytes()
+    if len(data) > max_bytes:
+        return DownloadResult(success=False, url=url,
+                              error=f"file exceeded max size {max_bytes}")
+    sha_hex = hashlib.sha256(data).hexdigest()
+    final_path = output_dir / f"{sha_hex}{src.suffix.lower()}"
+    if not final_path.exists():
+        final_path.write_bytes(data)
+    actual_mime = detect_mime(final_path)
+    return DownloadResult(success=True, url=url, local_path=str(final_path),
+                          sha256=sha_hex, file_size=len(data),
+                          content_type=actual_mime, actual_mime=actual_mime)

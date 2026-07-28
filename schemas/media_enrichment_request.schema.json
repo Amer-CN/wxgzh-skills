@@ -76,6 +76,40 @@
         }
       }
     },
+    "asset_approvals": {
+      "type": "array",
+      "description": "hotfix4 P0#2: user copyright approvals scoped to a SINGLE asset. Applied only AFTER the real asset_id is produced during extraction; never upgrades the whole material.",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "approval_id", "approved_scope", "approved_by", "approved_at", "evidence"],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approval_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approved_scope": {
+            "type": "string",
+            "const": "single_asset"
+          },
+          "approved_by": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approved_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          }
+        }
+      }
+    },
     "claims": {
       "type": "array",
       "items": {
@@ -139,7 +173,7 @@
         },
         "upload_mode": {
           "type": "string",
-          "enum": ["dry_run", "wechat_image_host", "stable_storage"]
+          "enum": ["dry_run", "wechat_image_host", "stable_storage", "wechat_audit"]
         },
         "max_images_per_material": {
           "type": "integer",

@@ -110,13 +110,16 @@ def _is_blocked_ip(ip: ipaddress._BaseAddress) -> bool:
     return False
 
 
-def is_safe_url(url: str) -> URLSecurityResult:
+def is_safe_url(url: str, require_dns: bool = True) -> URLSecurityResult:
     """Check if a URL is safe (no SSRF).
 
     - Only http/https
     - No localhost, private, link-local, multicast, reserved, documentation, cloud-metadata
     - DNS resolution and IP re-check (including IPv4-mapped IPv6)
     - No auth credentials in URL
+    - require_dns=False (hotfix4, offline_fixture only): every static check still
+      applies but the DNS resolution step is skipped — offline runs never touch
+      the network, so there is nothing to resolve.
     """
     if not url or not url.strip():
         return URLSecurityResult(safe=False, url=url, reasons=["empty URL"])
@@ -166,7 +169,9 @@ def is_safe_url(url: str) -> URLSecurityResult:
     except ValueError:
         pass  # Not an IP, it's a hostname
 
-    # DNS resolution and re-check
+    # DNS resolution and re-check (skipped only for offline_fixture runs)
+    if not require_dns:
+        return URLSecurityResult(safe=True, url=url, reasons=[])
     try:
         addrs = socket.getaddrinfo(bare_hostname, None)
         for addr_info in addrs:
@@ -218,7 +223,7 @@ def safe_fetch_with_redirects(
     current_url = normalize_url(url)
     redirect_chain: list[str] = []
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev7-hotfix1"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev7-hotfix2"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):
@@ -292,7 +297,7 @@ def safe_download_with_redirects(
     redirect_chain: list[str] = []
     output_path = Path(output_path)
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev7-hotfix1"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev7-hotfix2"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):
