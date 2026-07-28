@@ -142,10 +142,15 @@ def test_mmbiz_exact_host(tmp_path, host, good):
 
 
 def test_mmbiz_http_and_tricks_rejected(tmp_path):
-    """hotfix2: http:// and off-host tricks must FAIL even for the exact host name."""
+    """hotfix2 P0#4: http:// and every off-host trick must FAIL even when the
+    exact allow-listed host name appears somewhere in the URL. These are the
+    exact cases from the spec (query / subdomain / path / userinfo / scheme)."""
     v = load_validator("validate_media_bindings")
-    for url in ("http://mmbiz.qpic.cn/x", "https://evil.example/?x=mmbiz.qpic.cn",
-                "https://mmbiz.qpic.cn@evil.example/a"):
+    for url in ("https://evil.example/?x=mmbiz.qpic.cn",
+                "https://mmbiz.qpic.cn.evil.example/a.png",
+                "https://evil.example/mmbiz.qlogo.cn/a.png",
+                "https://mmbiz.qpic.cn@evil.example/a.png",
+                "http://mmbiz.qpic.cn/a.png"):
         assets = [{"asset_id": f"A-{i}", "decision": "eligible", "sha256": str(i),
                    "upload": {"status": "success", "remote_url": url}} for i in range(6)]
         body = [{"asset_id": f"A-{i}", "sha256": str(i)} for i in range(6)]
