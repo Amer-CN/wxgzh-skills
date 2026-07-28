@@ -1,69 +1,97 @@
 {
-  "lock_version": 1,
+  "lock_version": 2,
+  "hash_scope": "runtime_manifest (excludes .git/.github/tests/__pycache__/WXGZH_PIPELINE_INTEGRATION.md/.gitignore/.gitattributes/*.pyc)",
   "skills": {
     "super-writer": {
       "skill_name": "super-writer",
+      "repository_url": "https://github.com/Amer-CN/super-writer",
+      "branch": "chore/wxgzh-pipeline-dev2-integration",
+      "full_commit_sha": "5a975c2d63a0e008596521508b77621bba592f00",
       "skill_version": "0.3.2-rc1",
-      "skill_root_sha256": "b822c24a6027c462e04936924f43b0bdee9e7170b11b471e53817ae1c29ce8f0",
+      "skill_root_sha256": "8e36d2c07c03cf8abfa1d25962511eb26ff3624e3885b8e5df37400bca56d0ae",
+      "runtime_manifest_sha256": "365e236739a22b9280517103fc29414163e1165bfb5cf26329e7b589e38a5436",
+      "runtime_file_count": 50,
+      "entrypoint": "scripts/material_ingestion.py",
+      "entrypoint_sha256": "23236cccbbb65dc70c753cf4c0d0f34d5ec626356fc1eabe415e7c61dae01bc0",
+      "validator": "scripts/validate_article_length.py",
+      "validator_sha256": "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92",
       "required_files": [
         "scripts/material_ingestion.py",
         "scripts/validate_article_length.py",
         "scripts/validate_semantic_map.py"
-      ],
-      "documented_entrypoint": "scripts/material_ingestion.py",
-      "validator_entrypoint": "scripts/validate_article_length.py",
-      "input_contract_version": "SKILL.md",
-      "output_contract_version": "SKILL.md"
+      ]
     },
     "zh-human-writing": {
       "skill_name": "zh-human-writing",
+      "repository_url": "https://github.com/Amer-CN/zh-human-writing",
+      "branch": "chore/wxgzh-pipeline-dev2-integration",
+      "full_commit_sha": "70304267a4bf8a200597a27ddb84d63ae658ebc3",
       "skill_version": "0.1.0",
-      "skill_root_sha256": "ecd1db3e8eddc8ad943469ef1a73fe1b730eef5f7725450ba24eb5ffdaf57af8",
+      "skill_root_sha256": "18b1e3b95a8351c134215248ce88d12d23a7edb049a04701fdbb9618389952b4",
+      "runtime_manifest_sha256": "32370514a12e41a880e833e5cc2203e3214ec1f70bb764a0b04cf9aa0d2fe231",
+      "runtime_file_count": 53,
+      "entrypoint": "scripts/fidelity_guard.py",
+      "entrypoint_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+      "validator": "scripts/fidelity_guard.py",
+      "validator_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
       "required_files": [
         "scripts/change_report.py",
         "scripts/fidelity_guard.py",
         "scripts/pattern_audit.py"
-      ],
-      "documented_entrypoint": "scripts/fidelity_guard.py",
-      "validator_entrypoint": "scripts/fidelity_guard.py",
-      "input_contract_version": "SKILL.md",
-      "output_contract_version": "SKILL.md"
+      ]
     },
     "media-enrichment": {
       "skill_name": "media-enrichment",
+      "repository_url": "https://github.com/Amer-CN/media-enrichment",
+      "branch": "chore/wxgzh-pipeline-dev2-integration",
+      "full_commit_sha": "3aaf77b31ba78f2e648216f6f1ce0116bffc3aef",
       "skill_version": "0.1.0-dev7-hotfix1",
-      "skill_root_sha256": "30035b03d66ffe2a9bd0211767c607b59f3db847ed3cdcaa80d9002414add436",
+      "skill_root_sha256": "37d63dc54821e362182b4a992b82b1a0552e512276f8b5b16c76b116f2d546f9",
+      "runtime_manifest_sha256": "e6c1647001fc75ee2ebee012571cdd92e1c4852ea05cd3ec93c73f59ce2a1220",
+      "runtime_file_count": 53,
+      "entrypoint": "scripts/run_media_enrichment.py",
+      "entrypoint_sha256": "52924982a187fd00269ec0a6046d2eb12ac39430d4ddd1bfb2560b7711158633",
+      "validator": "scripts/validate_media_manifest.py",
+      "validator_sha256": "1d38d60db2e27c95f87af6d946e7735b5290eb9746e611ab58248b7af88155db",
       "required_files": [
         "scripts/run_media_enrichment.py",
         "scripts/validate_media_manifest.py",
-        "src/media_enrichment/uploader.py"
-      ],
-      "documented_entrypoint": "scripts/run_media_enrichment.py",
-      "validator_entrypoint": "scripts/validate_media_manifest.py",
-      "input_contract_version": "schemas/media_enrichment_request.schema.json",
-      "output_contract_version": "schemas/media_enrichment_request.schema.json"
+        "src/media_enrichment/uploader.py",
+        "src/media_enrichment/article_bindings.py"
+      ]
     },
     "gzh-design": {
       "skill_name": "gzh-design",
+      "repository_url": "https://github.com/Amer-CN/gzh-design-skill",
+      "branch": "chore/wxgzh-pipeline-dev2-integration",
+      "full_commit_sha": "558b9561d033858ef75e584b03a9acf1d4a8f767",
       "skill_version": "v2026.07.18-hammer.1",
-      "skill_root_sha256": "127601fa033d6bac7150e7b98e3f46667bd0184ad1a43fe330e48f400c8e2636",
+      "skill_root_sha256": "b3a3ad1ff5f8e58c75bb8fe9ab2f525eb81f96b3b3f89ce31f840d1080714c3f",
+      "runtime_manifest_sha256": "9e9636a149e7e0d46a1c7c53a723f09dadf39852f9c509bb1e42259b2cf17a14",
+      "runtime_file_count": 76,
+      "entrypoint": "scripts/render_article.py",
+      "entrypoint_sha256": "1fff39616201a503cea5d99225cdc44d49808e6a62e1f770794b8517d3cccd5a",
+      "validator": "scripts/validate_gzh_html.py",
+      "validator_sha256": "61b8e8ef1cc3adf62f9b3e207e7989b96e2e1b877c47d98e9a41a32b3433c6c2",
       "required_files": [
-        "scripts/generate_advanced_html.py",
-        "scripts/generate_hammer_upgrade_samples.py",
+        "scripts/render_article.py",
+        "scripts/validate_gzh_html.py",
         "scripts/publish_wechat_draft.py",
-        "scripts/validate_gzh_html.py"
+        "scripts/generate_hammer_upgrade_samples.py"
       ],
-      "documented_entrypoint": "scripts/generate_hammer_upgrade_samples.py",
-      "validator_entrypoint": "scripts/validate_gzh_html.py",
-      "input_contract_version": "SKILL.md",
-      "output_contract_version": "SKILL.md"
+      "render_entry": "scripts/render_article.py",
+      "render_entry_sha256": "1fff39616201a503cea5d99225cdc44d49808e6a62e1f770794b8517d3cccd5a",
+      "component_source": "scripts/generate_hammer_upgrade_samples.py",
+      "component_source_sha256": "f8473add7d62ea73aa4be27d64708cffc8bd64b73df39563fd8e518e5d510543"
     },
     "aihot": {
       "skill_name": "aihot",
       "kind": "agent_invoked_skill",
       "skill_version": null,
       "skill_root_sha256": null,
-      "note": "agent-invoked; output-hash locked at run time, not root-hash locked"
+      "external_dependency": true,
+      "author": "卡兹克",
+      "note": "external agent-invoked dependency; existence REALLY checked by doctor (check_aihot); never copied/modified/pushed/packaged"
     }
   }
 }

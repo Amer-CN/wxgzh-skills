@@ -37,6 +37,8 @@ def run_script(script_path, args=None, cwd=None, timeout=120, env=None, python=N
         rc, out, err = 127, "", f"script not found: {e}"
     return {
         "command": cmd, "exit_code": rc, "stdout": out, "stderr": err,
+        "stdout_sha256": hashlib.sha256((out or "").encode("utf-8")).hexdigest(),
+        "stderr_sha256": hashlib.sha256((err or "").encode("utf-8")).hexdigest(),
         "elapsed_seconds": round(time.time() - t0, 3),
         "script_path": str(script_path), "script_sha256": sha256_file(script_path),
     }

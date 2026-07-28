@@ -18,7 +18,7 @@ from . import paths as P
 from . import skill_discovery as SD
 from . import secrets as SEC
 from .state import PipelineState, save_state, load_state, sha256_file
-from .receipts import receipt_valid, load_receipt
+from .receipts import receipt_valid, verify_receipt, load_receipt
 from .evidence import write_delivery
 from .stages import StageContext, StageError, StageAwait, execute_stage
 from .stages import aihot, super_writer, zh_human_writing, media_enrichment, gzh_design, wechat_draft
@@ -81,14 +81,23 @@ class Orchestrator:
                 env.setdefault(k, v)
         wechat_ok, wechat_detail = SEC.wechat_credentials_present(env)
         writable = _is_writable(self.project_root)
+        # P0#6 — AI HOT existence is REALLY checked in every mode (never a
+        # hardcoded ok). Missing AI HOT fail-closes LIVE mode; fake_live/offline
+        # are hermetic by design but the true status is still reported.
+        aihot_check = SD.check_aihot(self.skills_home, env=env)
+        aihot_status = "INSTALLED" if aihot_check["exists"] else "NOT_INSTALLED"
+        aihot_ok = aihot_check["exists"] or self.network_mode != "live"
         report = {
             "wxgzh_pipeline_version": __version__, "project_root": str(self.project_root),
             "skills_home": str(self.skills_home), "network_mode": self.network_mode,
             "skills_locked_ok": ok_skills, "skills": disc,
+            "EXTERNAL_DEPENDENCY_AIHOT": aihot_status,
+            "aihot_registration": aihot_check["registration"],
+            "aihot_checked_locations": aihot_check["checked"],
             "wechat_config_present": wechat_ok, "wechat_credential_detail": wechat_detail,
             "wechat_required": require_wechat, "project_writable": writable,
         }
-        ok = ok_skills and writable and (wechat_ok or not require_wechat)
+        ok = ok_skills and writable and aihot_ok and (wechat_ok or not require_wechat)
         report["FAIL_CLOSED"] = not ok
         report["doctor"] = "PASS" if ok else "FAIL"
         return ok, report
@@ -114,17 +123,39 @@ class Orchestrator:
         if run_dir is None:
             return {"status": "NO_RESUMABLE_RUN"}
         st = load_state(run_dir)
+        # P0#3 — FULL tamper verification (verify_receipt, not receipt_valid):
+        # recompute every input/output/entrypoint/validator hash from disk. The
+        # first invalid stage invalidates ITSELF AND EVERYTHING AFTER IT.
+        verify_reports = {}
+        kept = []
+        broken = None
+        for s in STAGES:
+            if s not in st.completed_stages:
+                break
+            ok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home)
+            verify_reports[s] = {"ok": ok, "mismatches": mism}
+            if ok and broken is None:
+                kept.append(s)
+            elif broken is None:
+                broken = s
         if st.draft_created or st.is_complete():
-            return {"status": "ALREADY_COMPLETE", "run_id": st.run_id,
-                    "draft_created": st.draft_created, "note": "not recreating draft"}
+            if broken is None:
+                return {"status": "ALREADY_COMPLETE", "run_id": st.run_id,
+                        "draft_created": st.draft_created, "verify": verify_reports,
+                        "note": "all receipts re-verified; not recreating draft"}
+            # tampered completed run: NEVER report ALREADY_COMPLETE
+            st.draft_created = False
+            st.failed_stage = broken
+        st.completed_stages = kept
+        save_state(run_dir, st)
         ok, dreport = self.doctor()
         if not ok:
             return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport}
-        # recompute completed-stage receipts still valid; drop invalid tail
-        st.completed_stages = [s for s in STAGES
-                               if s in st.completed_stages and receipt_valid(run_dir, s)]
-        save_state(run_dir, st)
-        return self._drive(run_dir, st, dreport["skills"], create_wechat_draft=True, resumed=True)
+        out = self._drive(run_dir, st, dreport["skills"], create_wechat_draft=True, resumed=True)
+        out["receipt_verification"] = verify_reports
+        if broken:
+            out["invalidated_from"] = broken
+        return out
 
     def _drive(self, run_dir, st, disc, create_wechat_draft, resumed=False) -> dict:
         ctx = self._context(run_dir, disc, create_wechat_draft)
@@ -136,13 +167,18 @@ class Orchestrator:
             if stage != expected:
                 st.mark_failed(stage); save_state(run_dir, st)
                 return {"status": "FAIL_CLOSED", "reason": f"stage order violation: {stage} != {expected}"}
-            # WeChat draft gate: all prior 5 receipts must be valid
+            # WeChat draft gate (P0#3): all prior 5 receipts must pass FULL
+            # verify_receipt (hash recomputation), not just structural validity.
             if stage == "wechat_draft":
-                bad = [s for s in STAGES[:5] if not receipt_valid(run_dir, s)]
+                bad = {}
+                for s in STAGES[:5]:
+                    vok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home)
+                    if not vok:
+                        bad[s] = mism
                 if bad or not create_wechat_draft:
                     st.mark_failed(stage); save_state(run_dir, st)
                     return {"status": "FAIL_CLOSED",
-                            "reason": f"draft blocked; invalid prior receipts={bad} create={create_wechat_draft}"}
+                            "reason": f"draft blocked; tampered/invalid prior receipts={bad} create={create_wechat_draft}"}
             st.current_stage = stage
             save_state(run_dir, st)
             try:
@@ -187,11 +223,27 @@ class Orchestrator:
         pub = _scan_forbidden_endpoints(SKILL_ROOT / "wxgzh_pipeline")
         tests = self._run_full_tests()
         tests_ok = tests.get("exit_code") in (0, None)  # None == skipped nested
+        # P0#10: secrets scan over the shipped tree (credential-shaped values)
+        sec = SEC.scan_tree(SKILL_ROOT)
+        secrets_ok = not sec.get("secrets_detected")
+        # P0#10: absolute-path scan — shipped runtime code must be portable
+        abs_hits = _scan_absolute_paths([SKILL_ROOT / "wxgzh_pipeline",
+                                         SKILL_ROOT / "validators",
+                                         SKILL_ROOT / "fake_live",
+                                         SKILL_ROOT / "scripts"])
+        # P0#10: doctor must pass in the audited environment
+        doc_ok, doc = self.doctor()
         report = {"profile": "release_audit", "side_effects": "none",
                   "skills_locked_ok": ok_skills, "skills": disc,
                   "no_formal_publish_capability": not pub, "forbidden_endpoint_hits": pub,
+                  "secrets_scan_clean": secrets_ok,
+                  "secrets_hits": (sec.get("hits") or [])[:5],
+                  "absolute_path_hits": abs_hits[:10],
+                  "absolute_paths_clean": not abs_hits,
+                  "doctor": doc.get("doctor"),
                   "creates_wechat_draft": False, "uploads_images": False, "tests": tests}
-        report["RELEASE_AUDIT"] = "PASS" if (ok_skills and not pub and tests_ok) else "FAIL"
+        report["RELEASE_AUDIT"] = "PASS" if (ok_skills and not pub and tests_ok
+                                             and secrets_ok and not abs_hits and doc_ok) else "FAIL"
         return report
 
     @staticmethod
@@ -262,10 +314,7 @@ def _is_writable(path: Path) -> bool:
 
 def _scan_forbidden_endpoints(pkg_dir: Path) -> list:
     """Prove no formal-publish/mass-send/scheduled/delete WeChat ENDPOINTS exist.
-
-    Needles are assembled from fragments so this scanner file itself never
-    contains a contiguous forbidden-endpoint literal (avoids self-matching).
-    """
+    Needles are fragment-built so this scanner never self-matches."""
     _fp = "free" + "publish"
     _mass = "mass"
     needles = ["cgi-bin/" + _fp, _fp + "/submit", "cgi-bin/message/" + _mass,
@@ -276,4 +325,23 @@ def _scan_forbidden_endpoints(pkg_dir: Path) -> list:
         for n in needles:
             if n in txt:
                 hits.append({"file": str(p), "endpoint": n})
+    return hits
+
+
+def _scan_absolute_paths(dirs: list) -> list:
+    """P0#10: shipped runtime code must be portable — no hardcoded absolute
+    machine paths (windows drive paths or /Users//home) in shipped .py files."""
+    import re
+    pat = re.compile(r"""["'](?:[A-Za-z]:\\\\|[A-Za-z]:/(?!/)|/Users/|/home/)""")
+    hits = []
+    for d in dirs:
+        d = Path(d)
+        if not d.is_dir():
+            continue
+        for p in d.rglob("*.py"):
+            if "__pycache__" in p.parts:
+                continue
+            for i, line in enumerate(p.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+                if pat.search(line):
+                    hits.append({"file": str(p), "line": i})
     return hits

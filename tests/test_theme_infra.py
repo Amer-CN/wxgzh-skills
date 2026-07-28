@@ -16,16 +16,50 @@ def _pass_html():
     return (SKILL_ROOT / "fixtures" / "offline_pipeline_fixture" / "gzh_design" / "outputs" / "final.html").read_text(encoding="utf-8")
 
 
-def _theme(html, tmp_path, expected=6):
+def _theme(html, tmp_path, expected=6, exec_evidence=None, network_mode=None,
+           lock_entry=None):
     v = load_validator("validate_theme_identity")
     p = tmp_path / "final.html"
     p.write_text(html, encoding="utf-8")
-    return v.validate(p, expected_chapters=expected, usage_out=tmp_path / "usage.json")
+    return v.validate(p, expected_chapters=expected, usage_out=tmp_path / "usage.json",
+                      exec_evidence=exec_evidence, network_mode=network_mode,
+                      lock_entry=lock_entry)
 
 
-def test_theme_baseline_passes(tmp_path):
+def test_theme_baseline_copied_html_without_execution_fails(tmp_path):
+    """P0#8: structurally perfect HTML with NO gzh execution evidence = FAIL
+    (fingerprints can be copied; the execution receipt cannot)."""
     code, rep = _theme(_pass_html(), tmp_path)
+    assert code == 1 and rep["THEME_IDENTITY"] == "FAIL"
+    assert rep["structure_ok"] is True
+    assert "copied HTML" in rep.get("fail_reason", "")
+
+
+def test_theme_simulated_executor_never_official(tmp_path):
+    """fake_live simulated executor => SIMULATED (accepted for orchestration),
+    NEVER reported as an official gzh-design call."""
+    code, rep = _theme(_pass_html(), tmp_path,
+                       exec_evidence={"simulated": True, "official_gzh_call": False},
+                       network_mode="fake_live")
+    assert code == 0 and rep["THEME_IDENTITY"] == "SIMULATED"
+    assert rep["OFFICIAL_GZH_CALL"] is False
+
+
+def test_theme_official_pass_requires_lock_anchored_entry(tmp_path):
+    """OFFICIAL PASS needs official_gzh_call + entry hash matching the lock +
+    locked component source + locked commit."""
+    lock_entry = {"entrypoint_sha256": "e" * 64, "component_source_sha256": "c" * 64,
+                  "full_commit_sha": "f" * 40}
+    good = {"official_gzh_call": True, "entry_sha256": "e" * 64}
+    code, rep = _theme(_pass_html(), tmp_path, exec_evidence=good,
+                       network_mode="live", lock_entry=lock_entry)
     assert code == 0 and rep["THEME_IDENTITY"] == "PASS"
+    # wrong entry hash => never official => FAIL in live
+    bad = {"official_gzh_call": True, "entry_sha256": "0" * 64}
+    code2, rep2 = _theme(_pass_html(), tmp_path, exec_evidence=bad,
+                         network_mode="live", lock_entry=lock_entry)
+    assert code2 == 1 and rep2["THEME_IDENTITY"] == "FAIL"
+    assert rep2["RENDER_ENTRY_HASH_MATCHES_LOCK"] is False
 
 
 # ---- 16. gzh not actually called (no hammer structure at all) => fail ----

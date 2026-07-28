@@ -1,12 +1,22 @@
-"""Per-stage execution model for dev2.
+"""Per-stage execution model for dev2-hotfix1.
 
 Classifies each stage as agent-driven (handshake) or executable (real
-subprocess), declares the contract outputs each stage must produce, and resolves
-the entrypoint / official-validator script for a given network mode:
+subprocess), declares the contract outputs, and resolves the entrypoint /
+official-validator scripts by network mode. All entry CLIs are the REAL
+sub-skill CLIs (dev2's invented --stage-dir/--article args are gone):
 
-- fake_live -> shipped fake-live shim scripts under fake_live/skills/** (real
-  scripts, real subprocess, no network, no WeChat).
+  media-enrichment  run_media_enrichment.py  --request/--output-dir[/--fixture-dir]
+                    validate_media_manifest.py --manifest/--request/--bindings
+  gzh-design        render_article.py --article/--bindings/--output-dir/--theme
+                    validate_gzh_html.py <final.html>   (positional)
+  wechat_draft      publish_wechat_draft.py --html/--title/--audit-dir/--dry-run
+
+- fake_live -> shim scripts under fake_live/skills/** that mirror the EXACT real
+  CLIs (real subprocess, no network, honestly marked simulated).
 - live      -> the audited installed sub-skill under <skills_home>/<skill>/**.
+
+Agent-driven stages also declare their OFFICIAL sub-skill validators, which the
+orchestrator subprocess-executes for real (P0#5).
 """
 from __future__ import annotations
 
@@ -35,30 +45,68 @@ EXPECTED_OUTPUTS = {
                      "full_mode_validator_report.json"],
     "zh_human_writing": ["final_article.md", "fidelity_report.json"],
     "media_enrichment": ["media_manifest.json", "article_image_bindings.json"],
-    "gzh_design": ["final.html", "component_usage_report.json", "theme_identity_report.json"],
+    "gzh_design": ["final.html", "final_runtime.html",
+                   "component_usage_report.json", "theme_identity_report.json"],
     "wechat_draft": ["draft_before.json", "draft_after.json", "draft_creation_result.json"],
 }
 
-# Executable stage -> installed sub-skill entry + official validator (live mode).
+# Real upstream inputs each stage consumes (relative to run_dir). Receipts bind
+# these files + their hashes (P0#2); the contract enforces their presence (P0#7).
+UPSTREAM_INPUTS = {
+    "aihot": [],
+    "super_writer": ["aihot/deduplicated_items.json", "aihot/raw_items.json",
+                     "aihot/fetch_log.json"],
+    "zh_human_writing": ["super_writer/article.md",
+                         "super_writer/canonical_claim_registry.json",
+                         "super_writer/full_mode_validator_report.json"],
+    "media_enrichment": ["zh_human_writing/final_article.md",
+                         "media_enrichment/media_request.json"],
+    "gzh_design": ["zh_human_writing/final_article.md",
+                   "media_enrichment/article_image_bindings.json",
+                   "media_enrichment/media_manifest.json"],
+    "wechat_draft": ["gzh_design/final.html", "gzh_design/final_runtime.html",
+                     "media_enrichment/article_image_bindings.json",
+                     "gzh_design/theme_identity_report.json"],
+}
+
+# Executable stage -> sub-skill entry + official validator, by mode.
 LIVE_ENTRY = {
     "media_enrichment": {"skill": "media-enrichment",
                          "entry": "scripts/run_media_enrichment.py",
                          "validator": "scripts/validate_media_manifest.py"},
     "gzh_design": {"skill": "gzh-design",
-                   "entry": "scripts/generate_advanced_html.py",
+                   "entry": "scripts/render_article.py",
                    "validator": "scripts/validate_gzh_html.py"},
     "wechat_draft": {"skill": "gzh-design",
                      "entry": "scripts/publish_wechat_draft.py", "validator": None},
 }
 
-# Executable stage -> fake-live shim entry + validator (fake_live mode).
 FAKE_ENTRY = {
     "media_enrichment": {"entry": "media-enrichment/run_media_enrichment.py",
                          "validator": "media-enrichment/validate_media_manifest.py"},
-    "gzh_design": {"entry": "gzh-design/generate.py",
+    "gzh_design": {"entry": "gzh-design/render_article.py",
                    "validator": "gzh-design/validate_gzh_html.py"},
-    "wechat_draft": {"entry": "wechat/fake_wechat_client.py", "validator": None},
+    "wechat_draft": {"entry": "gzh-design/publish_wechat_draft.py", "validator": None},
 }
+
+# Agent stage -> official sub-skill validators the orchestrator subprocess-runs
+# (P0#5). Each: (skill, validator_relpath). The argv is built in producers.py.
+AGENT_VALIDATORS = {
+    "super_writer": [
+        ("super-writer", "scripts/material_ingestion.py"),
+        ("super-writer", "scripts/validate_article_length.py"),
+        ("super-writer", "scripts/validate_semantic_map.py"),
+    ],
+    "zh_human_writing": [
+        ("zh-human-writing", "scripts/fidelity_guard.py"),
+        ("zh-human-writing", "scripts/pattern_audit.py"),
+        ("zh-human-writing", "scripts/change_report.py"),
+    ],
+    "aihot": [],
+}
+
+# fake_live shim homes for agent validators (skill name -> shim dir name)
+FAKE_SKILL_DIR = {"super-writer": "super-writer", "zh-human-writing": "zh-human-writing"}
 
 
 def resolve_entry(stage: str, network_mode: str, skills_home: Path):
@@ -75,3 +123,10 @@ def resolve_entry(stage: str, network_mode: str, skills_home: Path):
     entry = root / le["entry"]
     val = (root / le["validator"]) if le.get("validator") else None
     return entry, val
+
+
+def resolve_agent_validator(skill: str, rel: str, network_mode: str, skills_home: Path) -> Path:
+    """Resolve one official agent-stage validator script by mode."""
+    if network_mode == "fake_live":
+        return FAKE_LIVE_HOME / FAKE_SKILL_DIR.get(skill, skill) / Path(rel).name
+    return Path(skills_home) / skill / rel

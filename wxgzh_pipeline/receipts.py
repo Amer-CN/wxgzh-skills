@@ -30,12 +30,23 @@ def hash_files(paths: list[Path]) -> dict:
     return out
 
 
+def hash_files_by_path(paths: list[Path]) -> dict:
+    """Key by FULL path string — upstream inputs live in different stage dirs,
+    and a missing input must be representable (value None => recorded missing)."""
+    out = {}
+    for p in paths:
+        p = Path(p)
+        out[str(p)] = sha256_file(p) if p.is_file() else None
+    return out
+
+
 def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
                   invoked_entrypoint, input_files, output_files,
                   validator_path, validator_sha256, validator_exit_code,
                   started_at, ended_at, side_effects=None,
                   entrypoint_path=None, entrypoint_sha256=None,
-                  official_validator=None, network_mode=None) -> dict:
+                  official_validator=None, official_validators=None,
+                  network_mode=None) -> dict:
     inp = [str(p) for p in input_files]
     out = [str(p) for p in output_files]
     try:
@@ -48,11 +59,13 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
         "skill_version": skill_version, "skill_root_sha256": skill_root_sha256,
         "invoked_entrypoint": invoked_entrypoint,
         "entrypoint_path": entrypoint_path, "entrypoint_sha256": entrypoint_sha256,
-        "input_files": inp, "input_hashes": hash_files(input_files),
+        "input_files": inp, "input_hashes": hash_files_by_path(input_files),
         "output_files": out, "output_hashes": hash_files(output_files),
         "validator_path": validator_path, "validator_sha256": validator_sha256,
         "validator_exit_code": int(validator_exit_code),
-        "official_validator": official_validator, "network_mode": network_mode,
+        "official_validator": official_validator,
+        "official_validators": official_validators or [],
+        "network_mode": network_mode,
         "started_at": started_at, "ended_at": ended_at,
         "elapsed_seconds": round(elapsed, 3),
         "side_effects": side_effects or [],
@@ -89,26 +102,63 @@ def receipt_valid(run_dir: Path, stage: str) -> bool:
 
 
 def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None) -> tuple[bool, list]:
-    """Tamper detection: recompute input/output/entrypoint/validator/skill hashes
-    from disk and compare to what the receipt recorded. Any drift => tampered."""
+    """Tamper detection (P0#2/#3): recompute EVERY recorded hash from disk —
+    inputs (full-path keyed), outputs, entrypoint, validators, official
+    validator(s), and (live) the sub-skill root sha. A MISSING file is a FAIL,
+    never a skip. Any drift => tampered."""
     r = load_receipt(run_dir, stage)
     if r is None:
         return False, ["receipt missing"]
     sd = Path(run_dir) / stage
     mism = []
+
+    # inputs — full-path keyed; recorded None means it was missing at run time
+    for path_str, want in (r.get("input_hashes") or {}).items():
+        p = Path(path_str)
+        cur = sha256_file(p) if p.is_file() else None
+        if want is None:
+            mism.append(f"input was missing at run time: {path_str}")
+        elif cur is None:
+            mism.append(f"input missing now: {path_str}")
+        elif cur != want:
+            mism.append(f"input hash mismatch: {path_str}")
+
+    # outputs — must exist and match
     for name, h in (r.get("output_hashes") or {}).items():
         p = sd / name
         if not p.is_file():
             mism.append(f"output missing: {name}")
         elif sha256_file(p) != h:
             mism.append(f"output hash mismatch: {name}")
+
+    # entrypoint / pipeline validator — recorded path+sha must both exist AND match
     for label, path_key, sha_key in [("validator", "validator_path", "validator_sha256"),
                                      ("entrypoint", "entrypoint_path", "entrypoint_sha256")]:
         p, want = r.get(path_key), r.get(sha_key)
-        if p and want and Path(p).is_file() and sha256_file(p) != want:
-            mism.append(f"{label} hash mismatch")
-    ov = r.get("official_validator") or {}
-    if ov.get("path") and ov.get("sha256") and Path(ov["path"]).is_file() \
-            and sha256_file(ov["path"]) != ov["sha256"]:
-        mism.append("official_validator hash mismatch")
+        if p and want:
+            if not Path(p).is_file():
+                mism.append(f"{label} script missing: {p}")
+            elif sha256_file(Path(p)) != want:
+                mism.append(f"{label} hash mismatch")
+
+    # official sub-skill validator(s) — same strictness
+    officials = list(r.get("official_validators") or [])
+    if r.get("official_validator"):
+        officials.append(r["official_validator"])
+    for ov in officials:
+        p, want = ov.get("path"), ov.get("sha256")
+        if p and want:
+            if not Path(p).is_file():
+                mism.append(f"official_validator script missing: {p}")
+            elif sha256_file(Path(p)) != want:
+                mism.append("official_validator hash mismatch")
+
+    # sub-skill root sha (live only — installed skill must still match the receipt)
+    if skills_home and r.get("network_mode") == "live" and r.get("skill_root_sha256"):
+        from .skill_discovery import compute_root_sha
+        skill_dir = Path(r.get("skill_dir") or (Path(skills_home) / r.get("skill_name", "")))
+        cur, _ = compute_root_sha(skill_dir)
+        if cur != r["skill_root_sha256"]:
+            mism.append("skill_root_sha256 mismatch (installed sub-skill changed)")
+
     return (not mism), mism

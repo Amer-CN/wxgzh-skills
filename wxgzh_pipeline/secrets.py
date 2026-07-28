@@ -66,6 +66,11 @@ def scan_tree(root: Path, env_values: list[str] | None = None) -> dict:
     for f in Path(root).rglob("*"):
         if not f.is_file() or f.suffix.lower() in _BINARY_SUFFIXES:
             continue
+        # local build caches are not shipped source — never audit targets
+        if any(part in ("__pycache__", ".pytest_cache", ".git") for part in f.parts):
+            continue
+        if f.suffix.lower() == ".pyc":
+            continue
         try:
             txt = f.read_text(encoding="utf-8", errors="ignore")
         except Exception:

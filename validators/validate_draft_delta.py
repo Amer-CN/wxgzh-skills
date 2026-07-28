@@ -12,6 +12,11 @@ from pathlib import Path
 
 
 def _fps(snap: dict) -> set:
+    """Draft identity set. Primary format = the REAL publish_wechat_draft audit
+    snapshots (items[].media_id, desensitized); legacy drafts[].fingerprint is
+    still accepted for old offline fixtures."""
+    if snap.get("items"):
+        return {d.get("media_id") for d in snap["items"] if d.get("media_id")}
     return {d["fingerprint"] for d in snap.get("drafts", [])}
 
 

@@ -36,9 +36,19 @@ def content_validate(ctx, sd: Path, state):
     # article (## headings), not self-reported by super_writer.
     fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
     expected_chapters = _count_h2(fa) if fa.is_file() else None
+    # P0#8: theme identity requires the gzh EXECUTION evidence + the locked
+    # render-entry/component-source hashes — copied HTML without execution FAILs;
+    # a simulated executor can only ever yield SIMULATED, never official PASS.
+    evp = sd / "gzh_execution_evidence.json"
+    exec_evidence = json.loads(evp.read_text(encoding="utf-8")) if evp.is_file() else None
+    from ..skill_discovery import load_lock
+    from . import SKILL_ROOT
+    lock_entry = load_lock(SKILL_ROOT).get("skills", {}).get("gzh-design", {})
     mod = load_validator("validate_theme_identity")
     code, report = mod.validate(final_html, expected_chapters,
-                                usage_out=sd / "component_usage_report.json")
+                                usage_out=sd / "component_usage_report.json",
+                                exec_evidence=exec_evidence, lock_entry=lock_entry,
+                                network_mode=ctx.network_mode)
     report["chapters_source"] = "frozen final_article.md (## headings)"
     # program-generated theme identity report (never hand-declared)
     (sd / "theme_identity_report.json").write_text(

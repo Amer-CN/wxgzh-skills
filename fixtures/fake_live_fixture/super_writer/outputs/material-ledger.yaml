@@ -1,0 +1,8 @@
+# synthetic material ledger (fake_live fixture; consumed by the official
+# super-writer material_ingestion validator via the pipeline's subprocess call)
+schema_version: "1.0"
+materials:
+  - material_id: M-001
+    title: "旧显卡本地 AI 画图机"
+    source_url: "https://example.com/source"
+    selected_claim_ids: [C-01]

@@ -1,17 +1,17 @@
-"""Agent-driven stage handshake.
+"""Agent-driven stage handshake — dev2-hotfix1.
 
-Some stages can only be performed by an LLM agent: AI HOT fetch/aggregate,
-Super Writer Material-Heavy Full Mode, and zh-human-writing de-AI. The
-orchestrator does NOT call a subprocess for these. Instead it writes a handshake
-REQUEST describing what to produce and where; the agent produces the outputs on
-disk and writes a signed ACK. The orchestrator then verifies the ACK: every
-expected output must exist and the ACK token must bind the request to the
-CURRENT file hashes (so tampering an output after the ACK breaks the token).
+The orchestrator writes a handshake REQUEST that embeds: run_id, stage,
+stage_request.json sha256, ALL upstream input hashes, expected outputs, the
+sub-skill identity (name/version/root sha) and the stage contract sha256. The
+agent produces the outputs and writes an ACK whose token binds the REQUEST FILE
+BYTES + the CURRENT produced output hashes. Verification recomputes everything
+from disk, so:
 
-- live mode + no ACK yet  -> AWAITING_AGENT (a clean pause, never a crash;
-  this is the dev1 P0 fix — live no longer dies on NotImplementedError).
-- fake_live mode          -> FakeAgent fulfills the handshake deterministically
-  from fixture templates (real handshake machinery, no real agent, no side effects).
+- editing the request                -> request sha changes -> token mismatch -> FAIL
+- editing any produced output        -> produced hash changes -> token mismatch -> FAIL
+- editing any UPSTREAM input after ACK -> upstream drift check -> FAIL
+- live mode with no ACK yet          -> AWAITING_AGENT (clean pause, not a crash)
+- fake_live                          -> FakeAgent fulfills deterministically
 """
 from __future__ import annotations
 
@@ -27,52 +27,101 @@ ACK_FILE = "agent_handshake.json"
 DOC_FILE = "HANDSHAKE.md"
 
 
-def token(stage: str, expected_outputs, produced_hashes: dict) -> str:
-    basis = stage + "|" + ",".join(sorted(expected_outputs)) + "|" + \
-        ",".join(f"{k}={produced_hashes[k]}" for k in sorted(produced_hashes))
+def _canon(obj) -> str:
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def token(*, run_id, stage, request_sha256, stage_request_sha256, upstream_hashes,
+          expected_outputs, produced_hashes, skill_identity, contract_sha256) -> str:
+    basis = _canon({
+        "run_id": run_id, "stage": stage,
+        "request_sha256": request_sha256,
+        "stage_request_sha256": stage_request_sha256,
+        "upstream_hashes": upstream_hashes or {},
+        "expected_outputs": sorted(expected_outputs),
+        "produced_hashes": produced_hashes,
+        "skill_identity": skill_identity or {},
+        "contract_sha256": contract_sha256,
+    })
     return hashlib.sha256(basis.encode("utf-8")).hexdigest()
 
 
 def write_request(sd: Path, stage: str, skill: str, instructions: str,
-                  expected_outputs, inputs: dict) -> dict:
+                  expected_outputs, inputs: dict, *, run_id=None,
+                  upstream_hashes=None, stage_request_sha256=None,
+                  skill_identity=None, contract_sha256=None) -> dict:
     sd = Path(sd)
-    req = {"stage": stage, "skill": skill, "kind": "agent_handshake",
+    req = {"run_id": run_id, "stage": stage, "skill": skill, "kind": "agent_handshake",
            "instructions": instructions, "expected_outputs": list(expected_outputs),
-           "inputs": inputs}
+           "inputs": inputs, "upstream_hashes": upstream_hashes or {},
+           "stage_request_sha256": stage_request_sha256,
+           "skill_identity": skill_identity or {"skill_name": skill},
+           "contract_sha256": contract_sha256}
     atomic_write_json(sd / REQUEST_FILE, req)
     (sd / DOC_FILE).write_text(
         f"# Agent handshake — {stage}\n\nSkill: `{skill}`\n\n{instructions}\n\n"
         f"Produce these files in this directory, then write `{ACK_FILE}`:\n"
         + "".join(f"- `{o}`\n" for o in expected_outputs)
-        + "\nThe orchestrator resumes and verifies the ACK token against the "
-        "produced file hashes before accepting this stage.\n",
+        + "\nThe ACK token binds the request bytes + upstream input hashes + the "
+        "produced file hashes; any post-ACK edit invalidates the handshake.\n",
         encoding="utf-8", newline="\n")
     return req
 
 
+def _token_from_disk(sd: Path, stage: str, expected_outputs) -> tuple[str | None, dict]:
+    """Recompute the token basis fully from CURRENT on-disk state."""
+    sd = Path(sd)
+    reqp = sd / REQUEST_FILE
+    if not reqp.is_file():
+        return None, {}
+    req = json.loads(reqp.read_text(encoding="utf-8"))
+    produced = {o: sha256_file(sd / o) for o in expected_outputs if (sd / o).is_file()}
+    t = token(run_id=req.get("run_id"), stage=stage,
+              request_sha256=sha256_file(reqp),
+              stage_request_sha256=req.get("stage_request_sha256"),
+              upstream_hashes=req.get("upstream_hashes"),
+              expected_outputs=expected_outputs, produced_hashes=produced,
+              skill_identity=req.get("skill_identity"),
+              contract_sha256=req.get("contract_sha256"))
+    return t, req
+
+
 def write_ack(sd: Path, stage: str, expected_outputs, agent_id: str = "agent") -> dict:
     sd = Path(sd)
+    t, req = _token_from_disk(sd, stage, expected_outputs)
     produced = {o: sha256_file(sd / o) for o in expected_outputs if (sd / o).is_file()}
-    ack = {"stage": stage, "agent_id": agent_id, "produced_files": sorted(produced),
-           "produced_hashes": produced, "handshake_token": token(stage, expected_outputs, produced)}
+    ack = {"run_id": req.get("run_id"), "stage": stage, "agent_id": agent_id,
+           "produced_files": sorted(produced), "produced_hashes": produced,
+           "handshake_token": t}
     atomic_write_json(sd / ACK_FILE, ack)
     return ack
 
 
-def verify_ack(sd: Path, stage: str, expected_outputs) -> tuple[bool, dict]:
+def verify_ack(sd: Path, stage: str, expected_outputs,
+               run_dir: Path | None = None) -> tuple[bool, dict]:
     sd = Path(sd)
     ackp = sd / ACK_FILE
     if not ackp.is_file():
         return False, {"HANDSHAKE": "AWAITING_AGENT", "reason": f"{ACK_FILE} not present yet"}
     ack = json.loads(ackp.read_text(encoding="utf-8"))
     missing = [o for o in expected_outputs if not (sd / o).is_file()]
-    current = {o: sha256_file(sd / o) for o in expected_outputs if (sd / o).is_file()}
-    recomputed = token(stage, expected_outputs, current)
-    token_ok = ack.get("handshake_token") == recomputed
-    ok = (not missing) and token_ok and ack.get("stage") == stage
+    recomputed, req = _token_from_disk(sd, stage, expected_outputs)
+    token_ok = recomputed is not None and ack.get("handshake_token") == recomputed
+
+    # upstream drift: recompute every upstream input hash from disk and compare
+    # with what the request bound at request time.
+    upstream_drift = []
+    if run_dir and req:
+        for rel, want in (req.get("upstream_hashes") or {}).items():
+            p = Path(run_dir) / rel
+            cur = sha256_file(p) if p.is_file() else None
+            if cur != want:
+                upstream_drift.append(rel)
+
+    ok = (not missing) and token_ok and ack.get("stage") == stage and not upstream_drift
     return ok, {"HANDSHAKE": "PASS" if ok else "FAIL", "missing_outputs": missing,
-                "token_ok": token_ok, "agent_id": ack.get("agent_id"),
-                "recomputed_token": recomputed}
+                "token_ok": token_ok, "upstream_drift": upstream_drift,
+                "agent_id": ack.get("agent_id"), "recomputed_token": recomputed}
 
 
 class FakeAgent:
@@ -85,8 +134,10 @@ class FakeAgent:
     def fulfill(self, sd: Path, stage: str, expected_outputs) -> dict:
         sd = Path(sd)
         src = self.fixture_dir / stage / "outputs"
-        for o in expected_outputs:
-            s = src / o
-            if s.is_file():
-                shutil.copyfile(s, sd / o)
+        if src.is_dir():
+            for p in sorted(src.rglob("*")):
+                if p.is_file():
+                    target = sd / p.relative_to(src)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(p, target)
         return write_ack(sd, stage, expected_outputs, agent_id="fake-agent")

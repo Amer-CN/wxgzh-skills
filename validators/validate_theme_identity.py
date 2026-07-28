@@ -31,7 +31,10 @@ def _sha(t: str) -> str:
 
 
 def validate(final_html: str | Path, expected_chapters: int | None = None,
-             usage_out: str | Path | None = None) -> tuple[int, dict]:
+             usage_out: str | Path | None = None,
+             exec_evidence: dict | None = None,
+             lock_entry: dict | None = None,
+             network_mode: str | None = None) -> tuple[int, dict]:
     html = Path(final_html).read_text(encoding="utf-8")
     ev = {}
     for cid, fp in FINGERPRINTS.items():
@@ -57,6 +60,24 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "text-decoration-color:#B3593B" in html and "text-decoration-thickness:1.5px" in html)
     chapters_ok = bool(expected_chapters) and (chapters == expected_chapters)
 
+    # ── P0#8: theme identity is only OFFICIAL with real gzh execution proof ──
+    # A structurally perfect HTML with NO gzh execution evidence must FAIL: the
+    # fingerprints alone can be copied; the execution receipt cannot.
+    exec_present = exec_evidence is not None
+    official_call = bool(exec_evidence and exec_evidence.get("official_gzh_call"))
+    entry_sha = (exec_evidence or {}).get("entry_sha256")
+    locked_entry_sha = (lock_entry or {}).get("entrypoint_sha256") or (lock_entry or {}).get("render_entry_sha256")
+    locked_component_sha = (lock_entry or {}).get("component_source_sha256")
+    locked_commit = (lock_entry or {}).get("full_commit_sha")
+    entry_hash_ok = bool(entry_sha and locked_entry_sha and entry_sha == locked_entry_sha)
+    component_hash_ok = bool(locked_component_sha)  # locked; verified on disk in live doctor/receipt
+    commit_ok = bool(locked_commit)
+    official_ok = official_call and entry_hash_ok and component_hash_ok and commit_ok
+
+    structure_ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
+                    and footer == 1 and len(img_types) >= 2 and not fallback_used
+                    and not strike_bad and strike_props_ok)
+
     report = {
         "HAMMER_COVER_BREAKING_COUNT": cover,
         "HAMMER_TOC_SCROLL_COUNT": toc,
@@ -71,12 +92,28 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
         "LINE_THROUGH_COUNT": line_through,
         "strikethrough_forbidden_rgba_present": strike_bad,
         "strikethrough_props_ok": strike_props_ok,
+        "GZH_EXECUTION_EVIDENCE_PRESENT": exec_present,
+        "OFFICIAL_GZH_CALL": official_call,
+        "RENDER_ENTRY_HASH_MATCHES_LOCK": entry_hash_ok,
+        "COMPONENT_SOURCE_LOCKED": component_hash_ok,
+        "GZH_COMMIT_LOCKED": locked_commit,
+        "structure_ok": structure_ok,
         "components": ev,
     }
-    ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
-          and footer == 1 and len(img_types) >= 2 and not fallback_used
-          and not strike_bad and strike_props_ok)
-    report["THEME_IDENTITY"] = "PASS" if ok else "FAIL"
+    if structure_ok and official_ok:
+        report["THEME_IDENTITY"] = "PASS"           # official gzh call, hash-anchored
+        code = 0
+    elif structure_ok and exec_present and network_mode in ("fake_live", "offline_fixture"):
+        # simulated executor: orchestration accepted, NEVER claimed official
+        report["THEME_IDENTITY"] = "SIMULATED"
+        report["note"] = ("simulated gzh executor — structure verified, but this is NOT "
+                          "an official gzh-design call and must not be reported as one")
+        code = 0
+    else:
+        report["THEME_IDENTITY"] = "FAIL"
+        if structure_ok and not exec_present:
+            report["fail_reason"] = "fingerprints present but NO gzh execution evidence (copied HTML)"
+        code = 1
 
     if usage_out:
         usage = {"source": "reverse-parsed from final.html (program-generated, not hand-declared)",
@@ -85,9 +122,10 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
                                            ("cover_breaking", "toc_scroll", "chapter_title", "signature", "footer_cta")},
                  "image_components": {c: ev[c]["occurrences"] for c in img_types},
                  "official_image_component_types": len(img_types),
-                 "theme_fallback_used": fallback_used}
+                 "theme_fallback_used": fallback_used,
+                 "official_gzh_call": official_call}
         Path(usage_out).write_text(json.dumps(usage, ensure_ascii=False, indent=2), encoding="utf-8")
-    return (0 if ok else 1), report
+    return code, report
 
 
 def main(argv=None):

@@ -1,0 +1,6 @@
+# synthetic semantic map (fake_live fixture; consumed by the official
+# super-writer validate_semantic_map validator via the pipeline's subprocess call)
+schema_version: "1.0"
+claims:
+  - claim_id: C-01
+    anchor: "## 缘起：一块旧显卡的第二次生命"

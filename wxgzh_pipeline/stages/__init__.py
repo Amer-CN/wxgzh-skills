@@ -109,6 +109,12 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
     meta = {}
     if ctx.network_mode == "offline_fixture":
         outputs = _copy_fixture_outputs(ctx, stage)
+        if stage == "gzh_design":
+            # unit-test mode execution evidence: fixture copy, honestly labeled;
+            # NEVER reported as an official gzh-design call.
+            atomic_write_json(sd / "gzh_execution_evidence.json", {
+                "simulated": True, "mode": "offline_fixture", "fixture_copy": True,
+                "official_gzh_call": False})
     else:
         outputs, meta = module.run_live(ctx, state)  # real: handshake / subprocess / wechat
         if meta.get("await_agent"):
@@ -118,37 +124,56 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         er = meta.get("entry_run")
         if er and er.get("exit_code") not in (0, None):
             raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
+        if stage == "gzh_design":
+            atomic_write_json(sd / "gzh_execution_evidence.json", {
+                "simulated": ctx.network_mode != "live",
+                "mode": ctx.network_mode,
+                "official_gzh_call": ctx.network_mode == "live",
+                "entry_path": meta.get("entrypoint_path"),
+                "entry_sha256": meta.get("entrypoint_sha256"),
+                "command": (meta.get("entry_run") or {}).get("command"),
+                "exit_code": (meta.get("entry_run") or {}).get("exit_code")})
 
     # 3. content validation (in-repo real validators)
     exit_code, vreport, vpath, vsha = module.content_validate(ctx, sd, state)
 
-    # 3b. YAML contract enforcement (real consumption of contracts/*.yaml)
-    cok, creport = enforce_contract(stage, sd)
+    # 3b. YAML contract enforcement (FULL consumption of contracts/*.yaml, P0#7)
+    cok, creport = enforce_contract(stage, sd, ctx=ctx, state=state)
     vreport = dict(vreport)
     vreport["contract"] = creport
     if not cok and exit_code == 0:
         exit_code = 1
 
-    # 3c. official sub-skill validator (REAL subprocess) must also pass
+    # 3c. official sub-skill validator(s) (REAL subprocess) must also pass
     ov = meta.get("official_validator")
     if ov is not None and ov.get("exit_code") not in (0, None):
         vreport["official_validator_failed"] = ov
         if exit_code == 0:
             exit_code = 1
+    ovs = meta.get("official_validators") or []
+    failed_ovs = [v for v in ovs if v.get("exit_code") not in (0, None)]
+    if failed_ovs:
+        vreport["official_validators_failed"] = failed_ovs
+        if exit_code == 0:
+            exit_code = 1
 
-    # 4. receipt — recompute input/output hashes; record entrypoint + official validator hashes
+    # 4. receipt — bind REAL upstream inputs (P0#2), recompute all hashes,
+    #    record entrypoint + official validator command/exit/stdout-stderr hashes
+    from ..execmodel import UPSTREAM_INPUTS
+    input_files = [sd / "stage_request.json"] + \
+        [Path(ctx.run_dir) / rel for rel in UPSTREAM_INPUTS.get(stage, [])]
     disc = ctx.discovery.get(skill, {})
     receipt = build_receipt(
         skill_name=stage, skill_dir=disc.get("skill_dir", str(Path(ctx.skills_home) / skill)),
         skill_version=disc.get("current_version") or disc.get("locked_version"),
         skill_root_sha256=disc.get("current_root_sha256") or disc.get("locked_root_sha256"),
         invoked_entrypoint=meta.get("invoked_entrypoint") or module.invoked_entrypoint(ctx),
-        input_files=[sd / "stage_request.json"], output_files=outputs,
+        input_files=input_files, output_files=outputs,
         validator_path=vpath, validator_sha256=vsha, validator_exit_code=exit_code,
         started_at=started, ended_at=now(),
         side_effects=module.side_effects(ctx, state),
         entrypoint_path=meta.get("entrypoint_path"), entrypoint_sha256=meta.get("entrypoint_sha256"),
-        official_validator=ov, network_mode=ctx.network_mode,
+        official_validator=ov, official_validators=ovs, network_mode=ctx.network_mode,
     )
     write_receipt(ctx.run_dir, stage, receipt)
 

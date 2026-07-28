@@ -129,7 +129,9 @@ def test_dynamic_chapter_gate(orch):
     # the frozen article has 6 H2 headings; the theme report must reflect 6
     rep = json.loads((rd / "gzh_design" / "theme_identity_report.json").read_text(encoding="utf-8"))
     assert rep["expected_chapters"] == 6 and rep["HAMMER_CHAPTER_TITLE_COUNT"] == 6
-    assert rep["HAMMER_TOC_MATCHES_CHAPTERS"] is True and rep["THEME_IDENTITY"] == "PASS"
+    # fake_live uses a simulated executor: SIMULATED, never claimed official (P0#8)
+    assert rep["HAMMER_TOC_MATCHES_CHAPTERS"] is True and rep["THEME_IDENTITY"] == "SIMULATED"
+    assert rep["OFFICIAL_GZH_CALL"] is False
     # a 4-chapter expectation against 6-chapter HTML must FAIL; None also fails
     v = load_validator("validate_theme_identity")
     html = (rd / "gzh_design" / "final.html")
