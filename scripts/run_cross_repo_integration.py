@@ -72,10 +72,13 @@ def _load_validator(name: str):
 
 
 def _single_asset_e2e(skills_home: Path, staging: Path) -> dict:
-    """P0#2: run the REAL media-enrichment CLI on an offline fixture where ONE
-    material yields A-001 + A-002 and ONLY A-001 carries a single_asset approval.
-    Asserts: A-001 uploads (audit uploader), A-002 stays un-uploaded, and the
-    upload event log contains ONLY A-001. Zero network / zero WeChat effects."""
+    """Run the REAL two-phase media CLI with stable single-asset approval.
+
+    Discovery and continuation both use offline fixtures. Discovery must emit a
+    frozen manifest without any upload event. The continuation approval is built
+    from A-001's complete frozen identity and may upload only that asset through
+    the deterministic wechat_audit uploader. No network or real WeChat effects.
+    """
     media = skills_home / "media-enrichment"
     sa = staging / "single_asset_e2e"
     sa.mkdir(parents=True, exist_ok=True)
@@ -94,46 +97,105 @@ def _single_asset_e2e(skills_home: Path, staging: Path) -> dict:
         "claims": [{"claim_id": "C-01", "claim_text": "示例论点一",
                     "material_id": "M-001", "source_url": src_url,
                     "source_excerpt": "原文摘录"}],
-        "asset_approvals": [{"asset_id": "A-001", "approval_id": "AP-A-001",
-                             "approved_scope": "single_asset",
-                             "approved_by": "integration-user",
-                             "approved_at": "2026-07-29T00:00:00Z",
-                             "evidence": "e" * 64}],
+        "asset_approvals": [],
         "config": {"network_mode": "offline_fixture", "upload_mode": "wechat_audit",
                    "max_images_per_material": 3, "max_total_images": 8,
                    "allow_unknown_license_for_publish": False},
     }
-    (sa / "media_request.json").write_text(json.dumps(req, ensure_ascii=False, indent=2),
-                                           encoding="utf-8")
-    out = sa / "out"
-    r = _run([sys.executable, "-X", "utf8",
-              str(media / "scripts" / "run_media_enrichment.py"),
-              "--request", str(sa / "media_request.json"),
-              "--output-dir", str(out),
-              "--fixture-dir", str(media / "fixtures" / "html")])
-    res = {"exit_code": r.returncode}
+    request_path = sa / "media_request.json"
+    request_path.write_text(json.dumps(req, ensure_ascii=False, indent=2), encoding="utf-8")
+    cli = media / "scripts" / "run_media_enrichment.py"
+    fixture_dir = media / "fixtures" / "html"
+    discover_out = sa / "discover-out"
+    discover = _run([
+        sys.executable, "-X", "utf8", str(cli),
+        "--request", str(request_path), "--output-dir", str(discover_out),
+        "--fixture-dir", str(fixture_dir), "--phase", "discover",
+    ])
+    res = {"discover_exit_code": discover.returncode}
     try:
-        manifest = json.loads((out / "media_manifest.json").read_text(encoding="utf-8"))
-        events = json.loads((out / "upload_events.json").read_text(encoding="utf-8"))
+        frozen_path = discover_out / "asset_discovery_manifest.json"
+        frozen = json.loads(frozen_path.read_text(encoding="utf-8"))
+        discover_events = json.loads(
+            (discover_out / "upload_events.json").read_text(encoding="utf-8"))
+        target = next(
+            asset for asset in frozen.get("assets", [])
+            if asset.get("asset_id") == "A-001"
+        )
+    except (OSError, ValueError, StopIteration) as e:
+        res["ok"] = False
+        res["error"] = f"discovery outputs invalid: {e}; stderr={discover.stderr[-300:]}"
+        return res
+
+    approval = dict(target)
+    approval.update({
+        "discovery_manifest_sha256": frozen.get("discovery_manifest_sha256"),
+        "approval_id": "AP-A-001", "approved_scope": "single_asset",
+        "approved_by": "integration-user", "approved_at": "2026-07-29T00:00:00Z",
+        "approval_evidence_sha256": "e" * 64,
+    })
+    stable_fields = (
+        "asset_id", "material_id", "source_page_url", "resolved_original_url",
+        "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+    )
+    missing_fields = [field for field in stable_fields if not approval.get(field)]
+    digest_fields = (
+        "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+        "approval_evidence_sha256",
+    )
+    invalid_digests = [
+        field for field in digest_fields
+        if len(str(approval.get(field, ""))) != 64
+        or any(ch not in "0123456789abcdef" for ch in str(approval.get(field, "")))
+    ]
+    if missing_fields or invalid_digests:
+        res["ok"] = False
+        res["error"] = (f"frozen approval identity invalid: missing={missing_fields} "
+                        f"invalid_digests={invalid_digests}")
+        return res
+    req["asset_approvals"] = [approval]
+    request_path.write_text(json.dumps(req, ensure_ascii=False, indent=2), encoding="utf-8")
+    continue_out = sa / "continue-out"
+    continued = _run([
+        sys.executable, "-X", "utf8", str(cli),
+        "--request", str(request_path), "--output-dir", str(continue_out),
+        "--fixture-dir", str(fixture_dir), "--phase", "continue",
+        "--discovery-manifest", str(frozen_path),
+    ])
+    res["continue_exit_code"] = continued.returncode
+    try:
+        manifest = json.loads(
+            (continue_out / "media_manifest.json").read_text(encoding="utf-8"))
+        events = json.loads(
+            (continue_out / "upload_events.json").read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
         res["ok"] = False
-        res["error"] = f"outputs missing: {e}; stderr={r.stderr[-300:]}"
+        res["error"] = f"continuation outputs invalid: {e}; stderr={continued.stderr[-300:]}"
         return res
-    assets = {a["asset_id"]: a for a in manifest.get("assets", [])}
+
+    assets = {asset["asset_id"]: asset for asset in manifest.get("assets", [])}
     a1, a2 = assets.get("A-001") or {}, assets.get("A-002") or {}
-    ev_ids = [e["asset_id"] for e in events.get("events", [])]
+    discover_ev_ids = [event["asset_id"] for event in discover_events.get("events", [])]
+    ev_ids = [event["asset_id"] for event in events.get("events", [])]
     res.update({
+        "discovery_manifest_sha256": frozen.get("discovery_manifest_sha256"),
+        "approved_asset_identity_sha256": approval.get("asset_identity_sha256"),
+        "discovery_upload_event_asset_ids": discover_ev_ids,
         "A-001_copyright": a1.get("copyright_status"),
         "A-001_upload": (a1.get("upload") or {}).get("status"),
         "A-001_consumed": a1.get("asset_approval_consumed"),
+        "A-001_identity_mismatch": a1.get("approval_identity_mismatch"),
         "A-002_copyright": a2.get("copyright_status"),
         "A-002_upload": (a2.get("upload") or {}).get("status"),
         "upload_event_asset_ids": ev_ids,
     })
-    res["ok"] = (r.returncode == 0
+    res["ok"] = (discover.returncode == 0
+                 and continued.returncode == 0
+                 and discover_ev_ids == []
                  and a1.get("copyright_status") == "known_allowed"
                  and (a1.get("upload") or {}).get("status") == "success"
                  and a1.get("asset_approval_consumed") is True
+                 and a1.get("approval_identity_mismatch") == []
                  and a2.get("copyright_status") == "unknown"
                  and (a2.get("upload") or {}).get("status") != "success"
                  and ev_ids == ["A-001"])
@@ -273,7 +335,7 @@ def main(argv=None) -> int:
             r = _run([sys.executable, "-X", "utf8", str(p), "--help"])
             record(f"help:{skill}/{Path(rel).name}", r.returncode == 0, r.stderr[:200])
 
-    # ── P0#2: single_asset approval e2e through the REAL media-enrichment CLI ──
+    # ── P0#3: stable single_asset approval via the REAL two-phase media CLI ──
     sa = _single_asset_e2e(skills_home, staging)
     details["single_asset_e2e"] = sa
     record("single_asset_media_cli_e2e", sa.get("ok", False),
