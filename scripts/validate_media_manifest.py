@@ -18,11 +18,26 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "src"))
 
 import jsonschema
+from urllib.parse import urlparse
 from media_enrichment.url_security import is_private_network_url
 from media_enrichment.uploader import scan_for_secrets
 from media_enrichment.image_inspector import inspect_image, compute_sha256
 from media_enrichment.input_contract import compute_file_sha256
 from media_enrichment.downloader_mime import detect_mime
+
+WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
+
+
+def _is_exact_wechat_url(url: str) -> bool:
+    """dev2-hotfix2: EXACT host gate — https + hostname EQUALS a WeChat image
+    host. Query/subdomain/path/userinfo tricks and http all FAIL."""
+    if not url:
+        return False
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return False
+    return p.scheme == "https" and p.hostname in WECHAT_IMAGE_HOSTS
 
 SECRET_PATTERNS_RE = [
     re.compile(r"(?i)access_token"), re.compile(r"(?i)api[_-]?key"),
@@ -388,9 +403,8 @@ def validate_bindings(manifest_path: str, bindings_path: str) -> dict:
         check(f"BOUND_{aid}_UPLOAD_SUCCESS", up.get("status") == "success",
               f"upload.status={up.get('status')}")
         check(f"BOUND_{aid}_REMOTE_URL_WECHAT",
-              bool(remote) and ("mmbiz.qpic.cn" in remote
-                               or "mmbiz.qlogo.cn" in remote),
-              f"remote_url={remote[:80]!r}")
+              _is_exact_wechat_url(remote),
+              f"remote_url={remote[:80]!r} (exact https+host required)")
         if b.get("sha256"):
             check(f"BOUND_{aid}_SHA256_MATCH", b["sha256"] == a.get("sha256"),
                   f"bindings sha {b['sha256'][:12]} != manifest {str(a.get('sha256'))[:12]}")

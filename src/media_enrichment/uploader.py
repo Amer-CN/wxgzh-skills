@@ -39,6 +39,49 @@ def _scrub_token(text: str) -> str:
     return re.sub(r'access_token=[^&\s]+', 'access_token=[REDACTED]', text)
 
 
+WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
+
+
+def normalize_wechat_url(url: str | None) -> str | None:
+    """dev2-hotfix2: normalize + gate a WeChat image-host URL.
+
+    - upgrades http:// to https:// (mmbiz hosts support HTTPS);
+    - urlparse EXACT hostname match against the WeChat image hosts;
+    - returns the normalized https URL, or None if the URL is not genuinely on
+      a WeChat image host (query/subdomain/path/userinfo tricks all rejected).
+    """
+    from urllib.parse import urlparse
+    if not url:
+        return None
+    if url.startswith("http://"):
+        url = "https://" + url[len("http://"):]
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return None
+    if p.scheme != "https" or p.hostname not in WECHAT_IMAGE_HOSTS:
+        return None
+    return url
+
+
+def timed_upload(uploader, events: list, local_path: str, asset_id: str,
+                 copyright_status: str) -> "UploadResult":
+    """Run one upload SERIALLY and append a verifiable event record (start/end
+    monotonic + wall-clock). The event log lets downstream auditors prove
+    uploads never overlapped and each asset had exactly one attempt."""
+    start_m = time.monotonic()
+    started = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    result = uploader.upload(local_path, asset_id, copyright_status=copyright_status)
+    end_m = time.monotonic()
+    events.append({
+        "asset_id": asset_id, "mode": result.mode, "status": result.status,
+        "started_at": started,
+        "ended_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "start_monotonic": round(start_m, 6), "end_monotonic": round(end_m, 6),
+    })
+    return result
+
+
 @dataclass
 class UploadResult:
     """Result of an upload operation."""
@@ -186,10 +229,19 @@ class WechatImageHostUploader:
             sanitized = sanitize_response(data)
 
             if "url" in data:
-                resp_hash = hashlib.sha256(data["url"].encode()).hexdigest()
+                # dev2-hotfix2: WeChat must return a genuine image-host URL;
+                # normalize to https and reject anything off-host.
+                normalized = normalize_wechat_url(data["url"])
+                if normalized is None:
+                    return UploadResult(
+                        mode="wechat_image_host", status="failed",
+                        error=_scrub_token(f"upload returned non-WeChat-host url: {sanitize_response(data)}"),
+                        actual_mime=mime,
+                    )
+                resp_hash = hashlib.sha256(normalized.encode()).hexdigest()
                 return UploadResult(
                     mode="wechat_image_host", status="success",
-                    remote_url=data["url"], response_sha256=resp_hash,
+                    remote_url=normalized, response_sha256=resp_hash,
                     actual_mime=mime,
                     uploaded_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 )

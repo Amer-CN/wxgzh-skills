@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from . import __version__ as SKILL_VERSION
 
@@ -27,7 +28,19 @@ WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
 
 
 def _is_wechat_url(url: str | None) -> bool:
-    return bool(url) and any(h in url for h in WECHAT_IMAGE_HOSTS)
+    """EXACT WeChat image-host check (dev2-hotfix2).
+
+    urlparse-based: scheme must be https and hostname must EQUAL one of the
+    WeChat image hosts. Substring tricks (query strings, subdomain suffixes,
+    paths, userinfo@) and plain http all FAIL.
+    """
+    if not url:
+        return False
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return False
+    return p.scheme == "https" and p.hostname in WECHAT_IMAGE_HOSTS
 
 
 def build_bindings(manifest: dict[str, Any]) -> dict[str, Any]:

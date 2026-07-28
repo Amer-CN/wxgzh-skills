@@ -26,7 +26,7 @@ from media_enrichment.image_inspector import inspect_image
 from media_enrichment.image_deduplicator import deduplicate_asset, DedupState
 from media_enrichment.image_classifier import classify_image
 from media_enrichment.chart_generator import build_chart_specs, generate_chart
-from media_enrichment.uploader import create_uploader, scan_for_secrets
+from media_enrichment.uploader import create_uploader, scan_for_secrets, timed_upload
 from media_enrichment.placement_planner import find_anchors
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
 
@@ -75,6 +75,8 @@ def main():
 
     dedup_state = DedupState()
     upload_mode = config.get("upload_mode", "dry_run")
+    # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
+    upload_events: list = []
 
     # Validate upload_mode
     try:
@@ -253,8 +255,9 @@ def main():
                     and asset.quality_status == "pass"
                     and asset.relevance_status == "relevant"
                     and asset.duplicate_of is None):
-                upload_result = uploader.upload(download_result.local_path, asset_id,
-                                                 copyright_status=mat_copyright_status)
+                upload_result = timed_upload(uploader, upload_events,
+                                             download_result.local_path, asset_id,
+                                             copyright_status=mat_copyright_status)
                 asset.upload = {
                     "mode": upload_mode, "status": upload_result.status,
                     "remote_url": upload_result.remote_url, "response_sha256": upload_result.response_sha256,
@@ -279,8 +282,9 @@ def main():
                 asset_counter += 1
                 asset_id = f"A-{asset_counter:03d}"
                 # Call uploader for generated chart (known_allowed)
-                chart_upload_result = uploader.upload(chart_result.chart_path, asset_id,
-                                                       copyright_status="known_allowed")
+                chart_upload_result = timed_upload(uploader, upload_events,
+                                                   chart_result.chart_path, asset_id,
+                                                   copyright_status="known_allowed")
                 asset = AssetRecord(
                     asset_id=asset_id, asset_origin="generated",
                     material_ids=list(set(dp.material_id for dp in spec.data_points)),
@@ -349,6 +353,12 @@ def main():
     from media_enrichment.article_bindings import write_bindings
     bindings_path = output_dir / "article_image_bindings.json"
     write_bindings(manifest, bindings_path)
+
+    # dev2-hotfix2: persist the serial upload event log for downstream audit
+    events_path = output_dir / "upload_events.json"
+    with open(events_path, "w", encoding="utf-8") as f:
+        json.dump({"schema_version": "1.0", "serial": True,
+                   "events": upload_events}, f, ensure_ascii=False, indent=2)
 
     print(f"\n[media-enrichment] Manifest: {manifest_path}")
     print(f"[media-enrichment] Bindings: {bindings_path}")

@@ -86,7 +86,7 @@ class TestRunnerRouting:
 
 class TestValidateBindings:
     def _mk(self, tmp_path, upload_status="success",
-            remote="http://mmbiz.qpic.cn/x/y", decision="eligible",
+            remote="https://mmbiz.qpic.cn/x/y", decision="eligible",
             sha="c" * 64, bind_sha=None):
         manifest = {"assets": [{"asset_id": "A-001", "decision": decision,
                                 "sha256": sha,
