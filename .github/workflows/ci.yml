@@ -20,6 +20,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout fixed media contract
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/media-enrichment
+          ref: cedf92ca45b0cdb7e010d489e9da67dd28ef6e59
+          path: fixed-media
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -28,6 +34,8 @@ jobs:
       - name: Byte-compile all sources
         run: python -m compileall -q wxgzh_pipeline validators scripts fake_live tests
       - name: Run hermetic tests (fake_live — no real WeChat side effects)
+        env:
+          WXGZH_FIXED_MEDIA_ROOT: ${{ github.workspace }}/fixed-media
         run: python -m pytest tests -q
 
   integration:
