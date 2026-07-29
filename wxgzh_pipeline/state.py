@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -37,7 +38,16 @@ def atomic_write_json(path: Path, obj) -> None:
             json.dump(obj, f, ensure_ascii=False, indent=2, sort_keys=True)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(tmp, path)  # atomic on Windows and POSIX
+        # Windows antivirus/indexers can briefly hold the destination open.
+        # Retry the SAME atomic replace; never fall back to a non-atomic write.
+        for attempt in range(5):
+            try:
+                os.replace(tmp, path)  # atomic on Windows and POSIX
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.01 * (attempt + 1))
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)

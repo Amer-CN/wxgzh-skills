@@ -31,8 +31,9 @@ def side_effects(ctx, state):
         return [{"type": "wechat_image_upload", "detail": "serial uploadimg to mmbiz.qpic.cn"}]
     detail = ("offline fixture — no real WeChat image upload"
               if ctx.network_mode == "offline_fixture"
-              else "fake_live wechat_audit — deterministic mmbiz URL, no network/upload")
-    return [{"type": "none", "detail": detail, "simulated": ctx.network_mode == "fake_live"}]
+              else f"{ctx.network_mode} wechat_audit — deterministic mmbiz URL, no network/upload")
+    return [{"type": "none", "detail": detail,
+             "simulated": ctx.network_mode in ("fake_live", "integration")}]
 
 
 def content_validate(ctx, sd: Path, state):
@@ -58,7 +59,7 @@ def post(ctx, sd, state, exit_code, report):
         state.uploaded_image_count = report.get("body_image_count", 0)
         state.side_effects.append({"stage": "media_enrichment",
                                    "uploaded_image_count": state.uploaded_image_count,
-                                   "real_upload": ctx.network_mode != "offline_fixture"})
+                                   "real_upload": ctx.network_mode == "live"})
 
 
 def run_live(ctx, state):

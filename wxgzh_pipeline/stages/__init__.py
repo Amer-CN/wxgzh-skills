@@ -30,6 +30,15 @@ class StageAwait(Exception):
     pass
 
 
+class MediaApprovalAwait(Exception):
+    """Raised after real media discovery while awaiting a frozen stable approval."""
+
+    def __init__(self, discovery_manifest: str, approval_file: str):
+        super().__init__("awaiting stable media asset approval")
+        self.discovery_manifest = discovery_manifest
+        self.approval_file = approval_file
+
+
 @dataclass
 class StageContext:
     run_dir: Path
@@ -108,6 +117,9 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
                 "official_gzh_call": False})
     else:
         outputs, meta = module.run_live(ctx, state)  # real: handshake / subprocess / wechat
+        if meta.get("await_media_approval"):
+            raise MediaApprovalAwait(
+                meta.get("discovery_manifest", ""), meta.get("approval_file", ""))
         if meta.get("await_agent"):
             raise StageAwait(f"{stage}: awaiting agent handshake (no ACK yet)")
         if meta.get("handshake_failed"):
@@ -116,26 +128,29 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         if er and er.get("exit_code") not in (0, None):
             raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
         if stage == "gzh_design":
-            live = ctx.network_mode == "live"
-            ev = {"simulated": not live, "mode": ctx.network_mode,
-                  "official_gzh_call": live,
+            official = ctx.network_mode in ("live", "integration")
+            ev = {"simulated": not official, "mode": ctx.network_mode,
+                  "official_gzh_call": official,
                   "render_entry_path": meta.get("entrypoint_path"),
                   "entry_path": meta.get("entrypoint_path"),
                   "entry_sha256": meta.get("entrypoint_sha256"),
                   "command": (meta.get("entry_run") or {}).get("command"),
                   "exit_code": (meta.get("entry_run") or {}).get("exit_code")}
-            if live:
+            if official:
                 # real install-source proof (P0#1): recompute the installed runtime
                 # hashes AND read the EXTERNAL install receipt generated at install
                 # time (<skills_home>/.install-receipts/gzh-design.json — never inside
                 # the skill tree, so no commit/hash self-reference). Theme identity
                 # three-way compares recomputed == receipt == lock; a missing or
                 # mismatched receipt leaves install_source_commit None => FAIL.
-                from ..skill_discovery import (compute_root_sha,
+                from ..skill_discovery import (_file_sha,
+                                               compute_root_sha,
                                                compute_runtime_manifest_sha,
                                                read_install_receipt)
                 gdir = Path(ctx.skills_home) / "gzh-design"
                 comp = gdir / "scripts" / "generate_hammer_upgrade_samples.py"
+                render_entry = Path(meta.get("entrypoint_path"))
+                ev["entry_sha256"] = _file_sha(render_entry)
                 ev["component_source_path"] = str(comp)
                 root_sha, _ = compute_root_sha(gdir)
                 man_sha, _ = compute_runtime_manifest_sha(gdir)
@@ -183,7 +198,15 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
     from ..execmodel import UPSTREAM_INPUTS, OPTIONAL_INPUTS
     input_files = [sd / "stage_request.json"]
     if ctx.network_mode != "offline_fixture":
-        input_files += [Path(ctx.run_dir) / rel for rel in UPSTREAM_INPUTS.get(stage, [])]
+        upstream = list(UPSTREAM_INPUTS.get(stage, []))
+        if ctx.network_mode == "fake_live" and stage == "media_enrichment":
+            upstream = [rel for rel in upstream if rel in (
+                "zh_human_writing/final_article.md",
+                "super_writer/canonical_claim_registry.json",
+                "aihot/deduplicated_items.json",
+                "media_enrichment/media_discovery_request.json",
+            )]
+        input_files += [Path(ctx.run_dir) / rel for rel in upstream]
         for rel in OPTIONAL_INPUTS.get(stage, []):
             p = Path(ctx.run_dir) / rel
             if p.is_file():

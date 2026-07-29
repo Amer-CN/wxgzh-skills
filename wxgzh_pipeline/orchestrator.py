@@ -20,7 +20,8 @@ from . import secrets as SEC
 from .state import PipelineState, save_state, load_state, sha256_file
 from .receipts import receipt_valid, verify_receipt, load_receipt
 from .evidence import write_delivery
-from .stages import StageContext, StageError, StageAwait, execute_stage
+from .stages import (StageContext, StageError, StageAwait,
+                     MediaApprovalAwait, execute_stage)
 from .stages import aihot, super_writer, zh_human_writing, media_enrichment, gzh_design, wechat_draft
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -39,11 +40,13 @@ class Orchestrator:
         _env = self.env if self.env is not None else None
         self.project_root = P.resolve_project_root(project_root, env=_env)
         self.skills_home = Path(skills_home) if skills_home else P.skills_home(self.project_root, env=_env)
+        if network_mode not in ("offline_fixture", "fake_live", "integration", "live"):
+            raise ValueError(f"unsupported network_mode: {network_mode}")
         self.network_mode = network_mode
         if fixture_dir:
             self.fixture_dir = Path(fixture_dir)
         else:
-            self.fixture_dir = FAKE_LIVE_FIXTURE if network_mode == "fake_live" else DEFAULT_FIXTURE
+            self.fixture_dir = FAKE_LIVE_FIXTURE if network_mode in ("fake_live", "integration") else DEFAULT_FIXTURE
         self.lock = SD.load_lock(SKILL_ROOT)
 
     # ---------- doctor ----------
@@ -54,6 +57,36 @@ class Orchestrator:
         run WITHOUT the installed sub-skills while staying fail-closed."""
         if self.network_mode == "live":
             return SD.verify_all(self.skills_home, self.lock)
+        if self.network_mode == "integration":
+            from . import execmodel as EM
+            disc = {}
+            all_ok = True
+            for stage in STAGES:
+                skill = EM.STAGE_SKILL[stage]
+                if EM.STAGE_EXEC[stage] == EM.AGENT:
+                    ok = (Path(self.fixture_dir) / stage / "outputs").is_dir()
+                    detail = {"skill_name": skill, "mode": "integration",
+                              "asset": "fake_agent_fixture", "ok": ok}
+                else:
+                    entry, validator = EM.resolve_entry(stage, self.network_mode, self.skills_home)
+                    ok = bool(entry) and Path(entry).is_file() and (
+                        validator is None or Path(validator).is_file())
+                    detail = {"skill_name": skill, "mode": "integration",
+                              "asset": "real_fixed_subskill" if stage != "wechat_draft" else "dry_run_shim",
+                              "entry": str(entry), "validator": str(validator) if validator else None,
+                              "ok": ok}
+                disc[skill] = detail
+                all_ok = all_ok and ok
+            aihot = SD.check_aihot(self.skills_home, env=self.env)
+            disc["aihot"] = {
+                "skill_name": "aihot",
+                "kind": "agent_invoked_skill",
+                "mode": "integration",
+                "asset": "fake_agent_fixture",
+                "registration": aihot.get("registration"),
+                "ok": True,
+            }
+            return all_ok, disc
         from . import execmodel as EM
         disc = {}
         all_ok = True
@@ -170,7 +203,8 @@ class Orchestrator:
             expected = st.next_stage()
             if stage != expected:
                 st.mark_failed(stage); save_state(run_dir, st)
-                return {"status": "FAIL_CLOSED", "reason": f"stage order violation: {stage} != {expected}"}
+                return {"status": "FAIL_CLOSED", "reason": f"stage order violation: {stage} != {expected}",
+                        "run_dir": str(run_dir)}
             # WeChat draft gate (P0#3): all prior 5 receipts must pass FULL
             # verify_receipt (hash recomputation), not just structural validity.
             if stage == "wechat_draft":
@@ -182,11 +216,25 @@ class Orchestrator:
                 if bad or not create_wechat_draft:
                     st.mark_failed(stage); save_state(run_dir, st)
                     return {"status": "FAIL_CLOSED",
-                            "reason": f"draft blocked; tampered/invalid prior receipts={bad} create={create_wechat_draft}"}
+                            "reason": f"draft blocked; tampered/invalid prior receipts={bad} create={create_wechat_draft}",
+                            "run_dir": str(run_dir)}
             st.current_stage = stage
             save_state(run_dir, st)
             try:
                 execute_stage(ctx, STAGE_MODULES[stage], st)
+            except MediaApprovalAwait as awaiting:
+                st.current_stage = stage
+                save_state(run_dir, st)
+                return {
+                    "status": "AWAITING_MEDIA_ASSET_APPROVAL",
+                    "run_id": st.run_id,
+                    "stage": stage,
+                    "discovery_manifest": awaiting.discovery_manifest,
+                    "approval_file": awaiting.approval_file,
+                    "gzh_design_executed": (Path(run_dir) / "gzh_design" / "stage_receipt.json").exists(),
+                    "wechat_draft_executed": (Path(run_dir) / "wechat_draft" / "stage_receipt.json").exists(),
+                    "note": "approve assets from the frozen discovery manifest, then 续发",
+                }
             except StageAwait:
                 st.current_stage = stage
                 save_state(run_dir, st)
@@ -196,7 +244,7 @@ class Orchestrator:
             except (StageError, NotImplementedError) as e:
                 st.mark_failed(stage); save_state(run_dir, st)
                 return {"status": "STAGE_FAILED", "run_id": st.run_id, "failed_stage": stage,
-                        "error": str(e), "fail_closed": True}
+                        "error": str(e), "fail_closed": True, "run_dir": str(run_dir)}
             st.mark_complete(stage)
             st.current_stage = None
             save_state(run_dir, st)

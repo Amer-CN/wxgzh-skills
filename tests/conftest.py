@@ -35,8 +35,10 @@ def orch(tmp_path, skills_home):
     handshake + real subprocess + real validators + receipt hashes), with fake
     sub-skills and a fake WeChat client — no real side effects, fully hermetic."""
     from wxgzh_pipeline.orchestrator import Orchestrator
+    media_root = SKILL_ROOT.parent / "media-enrichment"
+    env = {"WXGZH_FIXED_MEDIA_ROOT": str(media_root)} if media_root.is_dir() else {}
     return Orchestrator(project_root=tmp_path, network_mode="fake_live",
-                        skills_home=skills_home, fixture_dir=FAKE_FIXTURE)
+                        skills_home=skills_home, fixture_dir=FAKE_FIXTURE, env=env)
 
 
 @pytest.fixture

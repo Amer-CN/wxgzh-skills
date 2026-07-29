@@ -26,6 +26,7 @@
       "enum": [
         "live",
         "fake_live",
+        "integration",
         "offline_fixture"
       ]
     },

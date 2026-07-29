@@ -110,7 +110,7 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     # external install receipt (P0#1 three-way: recomputed == receipt == lock).
     receipt_root = ev_ev.get("install_receipt_root_sha256")
     receipt_manifest = ev_ev.get("install_receipt_manifest_sha256")
-    if network_mode == "live":
+    if network_mode in ("live", "integration"):
         cur_root = ev_ev.get("installed_root_sha256")
         cur_manifest = ev_ev.get("installed_runtime_manifest_sha256")
         root_ok = bool(locked_root and cur_root == locked_root and cur_root == receipt_root)
@@ -122,7 +122,8 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     receipt_present = bool(ev_ev.get("install_source_commit"))
     commit_ok = bool(locked_commit and ev_ev.get("install_source_commit") == locked_commit)
     official_ok = (official_call and entry_hash_ok and component_hash_ok
-                   and root_ok and manifest_ok and commit_ok and network_mode == "live")
+                   and root_ok and manifest_ok and commit_ok
+                   and network_mode in ("live", "integration"))
 
     structure_ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
                     and footer == 1 and len(img_types) >= 2 and not fallback_used

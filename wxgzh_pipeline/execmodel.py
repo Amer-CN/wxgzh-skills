@@ -73,7 +73,9 @@ UPSTREAM_INPUTS = {
     "media_enrichment": ["zh_human_writing/final_article.md",
                          "super_writer/canonical_claim_registry.json",
                          "aihot/deduplicated_items.json",
-                         "media_enrichment/media_request.json"],
+                         "media_enrichment/media_discovery_request.json",
+                         "media_enrichment/media_continuation_request.json",
+                         "media_enrichment/discover/asset_discovery_manifest.json"],
     "gzh_design": ["zh_human_writing/final_article.md",
                    "media_enrichment/article_image_bindings.json",
                    "media_enrichment/media_manifest.json"],
@@ -85,7 +87,9 @@ UPSTREAM_INPUTS = {
 # Optional receipt inputs: bound iff present (e.g. user copyright approvals when
 # source images are used).
 OPTIONAL_INPUTS = {
-    "media_enrichment": ["media_enrichment/copyright_approval.json"],
+    "media_enrichment": ["media_enrichment/copyright_approval.json",
+                         "media_enrichment/discover_request_validation.json",
+                         "media_enrichment/continue_request_validation.json"],
 }
 
 # Executable stage -> sub-skill entry + official validator, by mode.
@@ -130,7 +134,7 @@ FAKE_SKILL_DIR = {"super-writer": "super-writer", "zh-human-writing": "zh-human-
 
 def resolve_entry(stage: str, network_mode: str, skills_home: Path):
     """Return (entry_path, validator_path) for a subprocess/wechat stage."""
-    if network_mode == "fake_live":
+    if network_mode == "fake_live" or (network_mode == "integration" and stage == "wechat_draft"):
         fe = FAKE_ENTRY.get(stage, {})
         entry = (FAKE_LIVE_HOME / fe["entry"]) if fe.get("entry") else None
         val = (FAKE_LIVE_HOME / fe["validator"]) if fe.get("validator") else None
@@ -146,6 +150,6 @@ def resolve_entry(stage: str, network_mode: str, skills_home: Path):
 
 def resolve_agent_validator(skill: str, rel: str, network_mode: str, skills_home: Path) -> Path:
     """Resolve one official agent-stage validator script by mode."""
-    if network_mode == "fake_live":
+    if network_mode in ("fake_live", "integration"):
         return FAKE_LIVE_HOME / FAKE_SKILL_DIR.get(skill, skill) / Path(rel).name
     return Path(skills_home) / skill / rel

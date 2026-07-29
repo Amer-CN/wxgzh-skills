@@ -81,7 +81,8 @@ def test_pipeline_builds_real_media_cli(tmp_path):
     ctx = _Ctx(tmp_path, tmp_path)
     sd = tmp_path / "media_enrichment"; sd.mkdir()
     args = PR._entry_args(ctx, "media_enrichment", sd, None, sd / "media_request.json")
-    assert args[0] == "--request" and args[2] == "--output-dir"
+    assert args[:2] == ["--phase", "discover"]
+    assert "--request" in args and "--output-dir" in args
     v = PR._validator_args("media_enrichment", sd, sd / "media_request.json")
     assert v[0] == "--manifest" and v[2] == "--request" and v[4] == "--bindings"
 

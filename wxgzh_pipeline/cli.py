@@ -44,6 +44,9 @@ def main(argv=None) -> int:
     ap.add_argument("--offline", action="store_true", help="use offline fixtures (fast unit checks; no side effects)")
     ap.add_argument("--fake-live", action="store_true",
                     help="real orchestration machinery with fake sub-skills + fake WeChat (no real side effects)")
+    ap.add_argument("--integration", action="store_true",
+                    help="fake agent inputs + real fixed media/gzh-design; WeChat dry-run only")
+    ap.add_argument("--skills-home", default=None)
     ap.add_argument("--fixture-dir", default=None)
     a = ap.parse_args(argv)
 
@@ -57,13 +60,21 @@ def main(argv=None) -> int:
                           "raw": cmd.get("raw")}, ensure_ascii=False))
         return 2
 
+    modes = sum(bool(x) for x in (a.offline, a.fake_live, a.integration))
+    if modes > 1:
+        ap.error("choose only one of --offline, --fake-live, --integration")
     if a.offline:
         net = "offline_fixture"
     elif a.fake_live:
         net = "fake_live"
+    elif a.integration:
+        net = "integration"
     else:
         net = "live"
-    orch = Orchestrator(project_root=a.project_root, network_mode=net, fixture_dir=a.fixture_dir)
+    orch = Orchestrator(
+        project_root=a.project_root, network_mode=net,
+        fixture_dir=a.fixture_dir, skills_home=a.skills_home,
+    )
 
     if cmd["command"] == "fabu":
         out = orch.run(cmd["topic"], profile="fast_publish", create_wechat_draft=True)
@@ -85,8 +96,10 @@ def main(argv=None) -> int:
 
     print(json.dumps(out, ensure_ascii=False, indent=2))
     status = str(out.get("status", out.get("RELEASE_AUDIT", "")))
-    return 0 if status in ("COMPLETE", "ALREADY_COMPLETE", "PASS", "MULTIPLE_INCOMPLETE",
-                           "") or out.get("RELEASE_AUDIT") == "PASS" else 1
+    return 0 if status in (
+        "COMPLETE", "ALREADY_COMPLETE", "PASS", "MULTIPLE_INCOMPLETE",
+        "AWAITING_AGENT", "AWAITING_MEDIA_ASSET_APPROVAL", "",
+    ) or out.get("RELEASE_AUDIT") == "PASS" else 1
 
 
 if __name__ == "__main__":

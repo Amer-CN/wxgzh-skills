@@ -19,6 +19,8 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from wxgzh_pipeline import producers as P
 
 H = "a" * 64  # a well-formed 64-hex evidence digest
@@ -68,7 +70,10 @@ def _build(tmp_path, *approvals):
     if approvals:
         (rd / "media_enrichment" / "copyright_approval.json").write_text(
             json.dumps({"approvals": list(approvals)}, ensure_ascii=False), encoding="utf-8")
-    ctx = SimpleNamespace(run_dir=str(rd), network_mode="fake_live")
+    ctx = SimpleNamespace(
+        run_dir=str(rd), network_mode="fake_live", env={},
+        skills_home=Path(__file__).resolve().parents[2],
+    )
     state = SimpleNamespace(run_id="R", final_article_sha256=hashlib.sha256(
         art.read_bytes()).hexdigest())
     return json.loads(P._build_media_request(ctx, rd / "media_enrichment", state)
@@ -82,19 +87,14 @@ def _status(req):
 # --------------------------- negative cases a-e ---------------------------
 
 def test_a_single_asset_with_material_id_no_asset_id_not_known_allowed(tmp_path):
-    # single_asset MUST carry asset_id; a material_id alone must NOT approve the material
-    req = _build(tmp_path, _appr(approved_scope="single_asset", material_id="M-001"))
-    assert _status(req) == {"M-001": "unknown", "M-002": "unknown"}
-    assert req["asset_approvals"] == []
-    assert req["provenance"]["copyright_approvals_bound"] == 0
+    # hotfix6: every old/incomplete single_asset record is rejected fail-closed.
+    with pytest.raises(P.MediaRequestError, match="old single_asset approval rejected"):
+        _build(tmp_path, _appr(approved_scope="single_asset", material_id="M-001"))
 
 
-def test_b_single_asset_scopes_only_that_asset(tmp_path):
-    req = _build(tmp_path, _appr(approved_scope="single_asset", asset_id="A-001"))
-    # material stays unknown (so A-002 from it can never upload); only A-001 is scoped
-    assert _status(req) == {"M-001": "unknown", "M-002": "unknown"}
-    ids = [a["asset_id"] for a in req["asset_approvals"]]
-    assert ids == ["A-001"] and "A-002" not in ids
+def test_b_old_asset_id_only_single_asset_is_rejected(tmp_path):
+    with pytest.raises(P.MediaRequestError, match="old single_asset approval rejected"):
+        _build(tmp_path, _appr(approved_scope="single_asset", asset_id="A-001"))
 
 
 def test_c_material_scope_only_that_material(tmp_path):
@@ -133,10 +133,8 @@ def test_source_url_for_unknown_url_approves_nobody(tmp_path):
     assert _status(req) == {"M-001": "unknown", "M-002": "unknown"}
 
 
-def test_positive_material_and_single_asset_together(tmp_path):
-    req = _build(tmp_path,
-                 _appr(approval_id="A1", approved_scope="material", material_id="M-002"),
-                 _appr(approval_id="A2", approved_scope="single_asset", asset_id="A-007"))
-    assert _status(req) == {"M-001": "unknown", "M-002": "known_allowed"}
-    assert [a["asset_id"] for a in req["asset_approvals"]] == ["A-007"]
-    assert req["provenance"]["copyright_approvals_bound"] == 2
+def test_material_plus_old_single_asset_fails_closed(tmp_path):
+    with pytest.raises(P.MediaRequestError, match="old single_asset approval rejected"):
+        _build(tmp_path,
+               _appr(approval_id="A1", approved_scope="material", material_id="M-002"),
+               _appr(approval_id="A2", approved_scope="single_asset", asset_id="A-007"))

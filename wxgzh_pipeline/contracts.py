@@ -104,7 +104,14 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
     # pipeline-generated inputs like media_request.json don't exist there).
     offline = getattr(ctx, "network_mode", None) == "offline_fixture"
     if not offline:
-        ups = EM.UPSTREAM_INPUTS.get(stage, [])
+        ups = list(EM.UPSTREAM_INPUTS.get(stage, []))
+        if getattr(ctx, "network_mode", None) == "fake_live" and stage == "media_enrichment":
+            ups = [rel for rel in ups if rel in (
+                "zh_human_writing/final_article.md",
+                "super_writer/canonical_claim_registry.json",
+                "aihot/deduplicated_items.json",
+                "media_enrichment/media_discovery_request.json",
+            )]
         missing_in = [rel for rel in ups if not (run_dir / rel).is_file()]
         chk("real_inputs_present", not missing_in, f"missing inputs {missing_in}")
 

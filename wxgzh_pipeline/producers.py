@@ -17,8 +17,11 @@ recording command + exit + stdout/stderr sha256 for the receipt.
 """
 from __future__ import annotations
 
+import hashlib
+import importlib.util
 import json
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -119,7 +122,7 @@ def _agent(ctx, stage, sd, expected, state):
                      expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
                      stage_request_sha256=sha256_file(sd / "stage_request.json"),
                      skill_identity=identity, contract_sha256=_contract_sha(stage))
-    if ctx.network_mode == "fake_live":
+    if ctx.network_mode in ("fake_live", "integration"):
         agent = ctx.fake_agent or AH.FakeAgent(ctx.fixture_dir)
         agent.fulfill(sd, stage, expected)
     ok, hs = AH.verify_ack(sd, stage, expected, run_dir=ctx.run_dir)
@@ -153,7 +156,32 @@ class MediaRequestError(Exception):
 _HEX64 = re.compile(r"^[0-9a-fA-F]{64}$")
 _APPROVAL_BASE = {"approval_id", "approved_scope", "approved_at", "approved_by",
                   "approval_evidence_sha256"}
+_STABLE_SINGLE_ASSET_FIELDS = {
+    "asset_id", "material_id", "source_page_url", "resolved_original_url",
+    "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+    "approval_id", "approved_scope", "approved_by", "approved_at",
+    "approval_evidence_sha256",
+}
 VALID_APPROVAL_SCOPES = ("material", "source_url", "single_asset")
+
+
+def _canonical_discovery_sha(manifest: dict) -> str:
+    unsigned = dict(manifest)
+    unsigned.pop("discovery_manifest_sha256", None)
+    payload = (json.dumps(
+        unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ) + "\n").encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _stable_asset_identity(record: dict) -> str:
+    payload = "\n".join((
+        str(record.get("material_id", "")),
+        str(record.get("source_page_url", "")),
+        str(record.get("resolved_original_url", "")),
+        str(record.get("asset_sha256", "")),
+    )).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _load_copyright_approvals(rd: Path) -> dict:
@@ -182,6 +210,9 @@ def _load_copyright_approvals(rd: Path) -> dict:
         return out
     for rec in data.get("approvals", []):
         if not isinstance(rec, dict) or not _APPROVAL_BASE.issubset(rec):
+            if isinstance(rec, dict) and rec.get("approved_scope") == "single_asset":
+                raise MediaRequestError(
+                    "old/malformed single_asset approval rejected: full stable fields required")
             continue
         ev = rec.get("approval_evidence_sha256", "")
         if not isinstance(ev, str) or not _HEX64.match(ev):
@@ -191,7 +222,22 @@ def _load_copyright_approvals(rd: Path) -> dict:
             out["material"][rec["material_id"]] = rec
         elif scope == "source_url" and rec.get("source_url"):
             out["source_url"][rec["source_url"]] = rec
-        elif scope == "single_asset" and rec.get("asset_id"):
+        elif scope == "single_asset":
+            if not _STABLE_SINGLE_ASSET_FIELDS.issubset(rec):
+                raise MediaRequestError(
+                    "old single_asset approval rejected: full stable fields required")
+            if any(not rec.get(field) for field in _STABLE_SINGLE_ASSET_FIELDS):
+                raise MediaRequestError(
+                    "single_asset approval rejected: stable fields cannot be empty")
+            if any(not _HEX64.fullmatch(str(rec.get(field, ""))) for field in (
+                "asset_sha256", "asset_identity_sha256",
+                "discovery_manifest_sha256", "approval_evidence_sha256",
+            )):
+                raise MediaRequestError(
+                    "single_asset approval rejected: invalid sha256 field")
+            if rec["asset_identity_sha256"] != _stable_asset_identity(rec):
+                raise MediaRequestError(
+                    "single_asset approval rejected: asset_identity_sha256 mismatch")
             out["single_asset"][rec["asset_id"]] = rec
         else:
             continue  # unknown scope OR missing required binding field => ignore
@@ -240,7 +286,54 @@ def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
     return p, {"by_id": by_id, "by_url": by_url}
 
 
-def _build_media_request(ctx, sd: Path, state) -> Path:
+def _validate_with_fixed_media(ctx, request_path: Path) -> dict:
+    """Run the installed/fixed media Commit's real validate_request in-process.
+
+    This is deliberately independent from Pipeline's own field checks. Every
+    generated media_request.json must pass the exact media runtime that will be
+    invoked next; otherwise Pipeline fails closed before media execution.
+    """
+    ctx_env = getattr(ctx, "env", {}) or {}
+    media_root = Path(
+        ctx_env.get("WXGZH_FIXED_MEDIA_ROOT")
+        or (Path(getattr(ctx, "skills_home", Path(__file__).resolve().parents[2]))
+            / "media-enrichment")
+    )
+    contract_path = media_root / "src" / "media_enrichment" / "input_contract.py"
+    package_root = media_root / "src"
+    if not contract_path.is_file():
+        raise MediaRequestError(
+            f"fixed media validate_request unavailable: {contract_path}")
+    inserted = False
+    if str(package_root) not in sys.path:
+        sys.path.insert(0, str(package_root))
+        inserted = True
+    try:
+        module_name = f"_wxgzh_fixed_media_contract_{hashlib.sha256(str(contract_path).encode()).hexdigest()[:12]}"
+        spec = importlib.util.spec_from_file_location(module_name, contract_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        try:
+            spec.loader.exec_module(module)
+            validation = module.validate_request(request_path)
+        finally:
+            sys.modules.pop(module_name, None)
+    finally:
+        if inserted:
+            sys.path.remove(str(package_root))
+    if not validation.valid:
+        raise MediaRequestError(
+            "fixed media validate_request rejected Pipeline request: "
+            + "; ".join(validation.errors))
+    return {
+        "validator": str(contract_path),
+        "validator_sha256": sha256_file(contract_path),
+        "request_sha256": validation.request_sha256,
+        "valid": True,
+    }
+
+
+def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Path:
     """Build the REAL media request bound to the CANONICAL registry (P0#2/#3).
 
     Reads super_writer/canonical_claim_registry.json + aihot/deduplicated_items
@@ -262,8 +355,14 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
     if not reg_claims or not reg_materials:
         raise MediaRequestError("canonical registry has no claims/materials (FAIL_CLOSED)")
 
+    if phase not in ("discover", "continue"):
+        raise MediaRequestError(f"invalid media phase: {phase}")
     dedup_p, dedup = _load_dedup_index(rd)           # P0#3 (raises on missing/bad)
     approvals = _load_copyright_approvals(rd)         # P0#2 scope-aware
+    if phase == "discover":
+        # Discovery must never carry an old, forged, or even valid single-asset
+        # approval. Stable approval can only be created from its frozen output.
+        approvals["single_asset"] = {}
     materials, claims = [], []
     mat_ids = set()
     verified_material_count = 0
@@ -328,20 +427,36 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
         claims.append(claim)
 
     article = _frozen_article(ctx)
+    # Integration uses the real media CLI with frozen local HTML/image fixtures.
+    # Those fixtures contain one material; keep the Pipeline path authentic while
+    # avoiding unrelated fixture coverage gaps for the second canonical material.
+    ctx_env = getattr(ctx, "env", {}) or {}
+    if ctx.network_mode == "integration" and ctx_env.get("WXGZH_INTEGRATION_MATERIAL_ID"):
+        only_mid = ctx_env["WXGZH_INTEGRATION_MATERIAL_ID"]
+        materials = [m for m in materials if m["material_id"] == only_mid]
+        claims = [c for c in claims if c["material_id"] == only_mid]
+        if not materials or not claims:
+            raise MediaRequestError(
+                f"integration material {only_mid} missing from canonical registry")
     req = {
         "schema_version": "1.0", "run_id": state.run_id,
         "article": {"path": "../zh_human_writing/final_article.md",
                     "sha256": state.final_article_sha256 or sha256_file(article)},
         "materials": materials, "claims": claims,
         "asset_approvals": [
-            {"asset_id": aid, "approval_id": rec["approval_id"],
-             "approved_scope": "single_asset", "approved_by": rec["approved_by"],
-             "approved_at": rec["approved_at"], "evidence": rec["approval_evidence_sha256"]}
-            for aid, rec in sorted(approvals["single_asset"].items())],
+            {field: rec[field] for field in sorted(_STABLE_SINGLE_ASSET_FIELDS)}
+            for _, rec in sorted(approvals["single_asset"].items())],
         "config": {
-            "upload_mode": "wechat_audit" if ctx.network_mode == "fake_live" else "wechat_image_host",
-            "network_mode": "offline_fixture" if ctx.network_mode == "fake_live" else "live",
-            "max_images_per_material": 3, "max_total_images": 8,
+            "upload_mode": (
+                "wechat_audit" if ctx.network_mode in ("fake_live", "integration")
+                else "wechat_image_host"
+            ),
+            "network_mode": (
+                "offline_fixture" if ctx.network_mode in ("fake_live", "integration")
+                else "live"
+            ),
+            "max_images_per_material": int(ctx_env.get("WXGZH_MEDIA_MAX_PER_MATERIAL", 8)),
+            "max_total_images": int(ctx_env.get("WXGZH_MEDIA_MAX_TOTAL", 8)),
             "allow_unknown_license_for_publish": False,
         },
         "provenance": {"canonical_registry_sha256": sha256_file(reg_p),
@@ -350,16 +465,37 @@ def _build_media_request(ctx, sd: Path, state) -> Path:
                        "verified_material_count": verified_material_count,
                        "copyright_approvals_bound": approvals["count"]},
     }
-    req_path = sd / "media_request.json"
+    req_path = sd / (
+        "media_discovery_request.json" if phase == "discover"
+        else "media_continuation_request.json"
+    )
     req_path.write_text(json.dumps(req, ensure_ascii=False, indent=2, sort_keys=True),
                         encoding="utf-8", newline="\n")
+    if getattr(ctx, "skills_home", None) or (getattr(ctx, "env", {}) or {}).get(
+            "WXGZH_FIXED_MEDIA_ROOT"):
+        validation = _validate_with_fixed_media(ctx, req_path)
+        (sd / f"{phase}_request_validation.json").write_text(
+            json.dumps(validation, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8", newline="\n",
+        )
     return req_path
 
 
-def _entry_args(ctx, stage: str, sd: Path, state, req_path: Path | None) -> list:
+def _entry_args(
+    ctx, stage: str, sd: Path, state, req_path: Path | None, *,
+    media_phase: str = "discover", discovery_manifest: Path | None = None,
+) -> list:
     rd = Path(ctx.run_dir)
     if stage == "media_enrichment":
-        return ["--request", str(req_path), "--output-dir", str(sd)]
+        phase_dir = sd / media_phase
+        args = ["--phase", media_phase, "--request", str(req_path),
+                "--output-dir", str(phase_dir)]
+        fixture_html = (getattr(ctx, "env", {}) or {}).get("WXGZH_MEDIA_FIXTURE_DIR")
+        if fixture_html:
+            args.extend(["--fixture-dir", fixture_html])
+        if media_phase == "continue":
+            args.extend(["--discovery-manifest", str(discovery_manifest)])
+        return args
     if stage == "gzh_design":
         return ["--article", str(_frozen_article(ctx)),
                 "--bindings", str(rd / "media_enrichment" / "article_image_bindings.json"),
@@ -369,9 +505,10 @@ def _entry_args(ctx, stage: str, sd: Path, state, req_path: Path | None) -> list
 
 def _validator_args(stage: str, sd: Path, req_path: Path | None) -> list:
     if stage == "media_enrichment":
-        return ["--manifest", str(sd / "media_manifest.json"),
+        continue_dir = sd / "continue"
+        return ["--manifest", str(continue_dir / "media_manifest.json"),
                 "--request", str(req_path),
-                "--bindings", str(sd / "article_image_bindings.json")]
+                "--bindings", str(continue_dir / "article_image_bindings.json")]
     if stage == "gzh_design":
         return [str(sd / "final.html")]  # validate_gzh_html.py takes a positional path
     return []
@@ -381,13 +518,9 @@ def _subprocess(ctx, stage, sd, expected, state):
     entry, validator = EM.resolve_entry(stage, ctx.network_mode, ctx.skills_home)
     req_path = None
     if stage == "media_enrichment":
-        try:
-            req_path = _build_media_request(ctx, sd, state)
-        except MediaRequestError as e:
-            return [], {"exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
-                        "entrypoint_path": None, "entrypoint_sha256": None,
-                        "media_request_failed": str(e),
-                        "entry_run": {"exit_code": 2, "stderr": f"FAIL_CLOSED: {e}"}}
+        if ctx.network_mode == "fake_live":
+            return _media_fake_live(ctx, sd, expected, state, entry, validator)
+        return _media_two_phase(ctx, sd, expected, state, entry, validator)
     run = run_script(entry, _entry_args(ctx, stage, sd, state, req_path), timeout=300)
     meta = {"exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
@@ -403,6 +536,179 @@ def _subprocess(ctx, stage, sd, expected, state):
     return outputs, meta
 
 
+def _media_fake_live(ctx, sd, expected, state, entry, validator):
+    """Compatibility fake-live path; request still uses the fixed media contract."""
+    try:
+        request_path = _build_media_request(ctx, sd, state, phase="discover")
+    except MediaRequestError as exc:
+        return [], {
+            "exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
+            "entrypoint_path": str(entry),
+            "entrypoint_sha256": sha256_file(entry) if Path(entry).is_file() else None,
+            "media_request_failed": str(exc),
+            "entry_run": {"exit_code": 2, "stderr": f"FAIL_CLOSED: {exc}"},
+        }
+    run = run_script(
+        entry, ["--request", str(request_path), "--output-dir", str(sd)], timeout=300)
+    meta = {
+        "exec_kind": EM.SUBPROC, "invoked_entrypoint": str(entry),
+        "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
+        "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                      "elapsed": run["elapsed_seconds"],
+                      "stdout_sha256": run["stdout_sha256"],
+                      "stderr_sha256": run["stderr_sha256"],
+                      "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+    }
+    if run["exit_code"] == 0 and validator:
+        vr = run_script(
+            validator,
+            ["--manifest", str(sd / "media_manifest.json"),
+             "--request", str(request_path),
+             "--bindings", str(sd / "article_image_bindings.json")],
+            timeout=180,
+        )
+        meta["official_validator"] = _vresult(vr)
+    return [sd / name for name in expected if (sd / name).is_file()], meta
+
+
+def _media_two_phase(ctx, sd, expected, state, entry, validator):
+    """State-machine-owned media discover/continue execution.
+
+    First invocation runs discover and returns an explicit clean pause. Resume
+    requires a stable approval file bound to the frozen discovery manifest,
+    rebuilds and independently validates the continuation request, then invokes
+    continue and the official media validator. Final outputs are copied only
+    after both processes succeed.
+    """
+    discover_dir = sd / "discover"
+    continue_dir = sd / "continue"
+    frozen = discover_dir / "asset_discovery_manifest.json"
+    approval_file = sd / "copyright_approval.json"
+
+    try:
+        if not frozen.is_file():
+            request_path = _build_media_request(ctx, sd, state, phase="discover")
+            run = run_script(
+                entry,
+                _entry_args(ctx, "media_enrichment", sd, state, request_path,
+                            media_phase="discover"),
+                timeout=300,
+            )
+            events_path = discover_dir / "upload_events.json"
+            zero_upload = False
+            if events_path.is_file():
+                try:
+                    zero_upload = not json.loads(
+                        events_path.read_text(encoding="utf-8")).get("events", [])
+                except ValueError:
+                    zero_upload = False
+            meta = {
+                "exec_kind": EM.SUBPROC,
+                "invoked_entrypoint": str(entry),
+                "entrypoint_path": run["script_path"],
+                "entrypoint_sha256": run["script_sha256"],
+                "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                              "elapsed": run["elapsed_seconds"],
+                              "stdout_sha256": run["stdout_sha256"],
+                              "stderr_sha256": run["stderr_sha256"],
+                              "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+                "media_phase": "discover",
+                "discovery_zero_upload_events": zero_upload,
+            }
+            if run["exit_code"] != 0:
+                return [], meta
+            if not frozen.is_file() or not zero_upload:
+                meta["entry_run"]["exit_code"] = 2
+                meta["entry_run"]["stderr"] = (
+                    "FAIL_CLOSED: discovery manifest missing or upload events not empty")
+                return [], meta
+            meta["await_media_approval"] = True
+            meta["discovery_manifest"] = str(frozen)
+            meta["approval_file"] = str(approval_file)
+            return [], meta
+
+        if not approval_file.is_file():
+            return [], {
+                "exec_kind": EM.SUBPROC,
+                "invoked_entrypoint": str(entry),
+                "entrypoint_path": str(entry),
+                "entrypoint_sha256": sha256_file(entry),
+                "entry_run": {"exit_code": None, "stderr": ""},
+                "media_phase": "awaiting_approval",
+                "await_media_approval": True,
+                "discovery_manifest": str(frozen),
+                "approval_file": str(approval_file),
+            }
+
+        discovery = json.loads(frozen.read_text(encoding="utf-8"))
+        if discovery.get("discovery_manifest_sha256") != _canonical_discovery_sha(discovery):
+            raise MediaRequestError("frozen discovery manifest sha256 invalid")
+        approval_data = json.loads(approval_file.read_text(encoding="utf-8"))
+        stable = [a for a in approval_data.get("approvals", [])
+                  if a.get("approved_scope") == "single_asset"]
+        frozen_by_id = {a["asset_id"]: a for a in discovery.get("assets", [])}
+        for approval in stable:
+            if not _STABLE_SINGLE_ASSET_FIELDS.issubset(approval):
+                raise MediaRequestError("old single_asset approval rejected")
+            frozen_asset = frozen_by_id.get(approval.get("asset_id"))
+            if frozen_asset is None:
+                raise MediaRequestError("single_asset approval target missing from frozen manifest")
+            checks = {
+                **frozen_asset,
+                "discovery_manifest_sha256": discovery["discovery_manifest_sha256"],
+            }
+            for field in (
+                "asset_id", "material_id", "source_page_url", "resolved_original_url",
+                "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
+            ):
+                if approval.get(field) != checks.get(field):
+                    raise MediaRequestError(
+                        f"single_asset approval does not match frozen manifest: {field}")
+
+        request_path = _build_media_request(ctx, sd, state, phase="continue")
+        run = run_script(
+            entry,
+            _entry_args(ctx, "media_enrichment", sd, state, request_path,
+                        media_phase="continue", discovery_manifest=frozen),
+            timeout=300,
+        )
+        meta = {
+            "exec_kind": EM.SUBPROC,
+            "invoked_entrypoint": str(entry),
+            "entrypoint_path": run["script_path"],
+            "entrypoint_sha256": run["script_sha256"],
+            "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                          "elapsed": run["elapsed_seconds"],
+                          "stdout_sha256": run["stdout_sha256"],
+                          "stderr_sha256": run["stderr_sha256"],
+                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+            "media_phase": "continue",
+        }
+        if run["exit_code"] == 0 and validator:
+            vr = run_script(
+                validator,
+                _validator_args("media_enrichment", sd, request_path),
+                timeout=180,
+            )
+            meta["official_validator"] = _vresult(vr)
+            if vr["exit_code"] == 0:
+                for name in expected:
+                    source = continue_dir / name
+                    if source.is_file():
+                        (sd / name).write_bytes(source.read_bytes())
+        outputs = [sd / name for name in expected if (sd / name).is_file()]
+        return outputs, meta
+    except (OSError, ValueError, KeyError, TypeError, MediaRequestError) as exc:
+        return [], {
+            "exec_kind": EM.SUBPROC,
+            "invoked_entrypoint": str(entry),
+            "entrypoint_path": str(entry),
+            "entrypoint_sha256": sha256_file(entry),
+            "media_request_failed": str(exc),
+            "entry_run": {"exit_code": 2, "stderr": f"FAIL_CLOSED: {exc}"},
+        }
+
+
 def _wechat(ctx, stage, sd, expected, state):
     if not ctx.create_wechat_draft:
         return [], {"exec_kind": EM.WECHAT, "skipped": "create_wechat_draft=False"}
@@ -410,7 +716,7 @@ def _wechat(ctx, stage, sd, expected, state):
     html = Path(ctx.run_dir) / "gzh_design" / "final.html"
     args = ["--html", str(html), "--title", (state.topic or "wxgzh article")[:60],
             "--audit-dir", str(sd)]
-    if ctx.network_mode == "fake_live":
+    if ctx.network_mode in ("fake_live", "integration"):
         args.append("--dry-run")  # zero side effects; simulated batchget snapshots
     run = run_script(entry, args, timeout=300)
     meta = {"exec_kind": EM.WECHAT, "invoked_entrypoint": str(entry),

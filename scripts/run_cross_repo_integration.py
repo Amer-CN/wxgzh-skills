@@ -30,6 +30,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
+from wxgzh_pipeline.orchestrator import Orchestrator  # noqa: E402
+from wxgzh_pipeline.receipts import verify_receipt  # noqa: E402
 
 CLONE_TO_SKILL = {"super-writer": "super-writer", "zh-human-writing": "zh-human-writing",
                   "media-enrichment": "media-enrichment", "gzh-design-skill": "gzh-design"}
@@ -202,6 +204,127 @@ def _single_asset_e2e(skills_home: Path, staging: Path) -> dict:
     return res
 
 
+def _pipeline_media_state_machine_e2e(skills_home: Path, staging: Path) -> dict:
+    """Run the real Pipeline entry across discover/pause/continue/gzh/dry-run draft."""
+    from PIL import Image, ImageDraw
+
+    fixture_root = staging / "pipeline-media-fixture"
+    html_dir = fixture_root / "html"
+    image_dir = fixture_root / "images"
+    html_dir.mkdir(parents=True)
+    image_dir.mkdir(parents=True)
+    parts = ["<!doctype html><html><body><article><p>RX 580 integration.</p>"]
+    for i in range(1, 8):
+        name = f"rx580-{i}.png"
+        image = Image.new("RGB", (1000, 700), (245, 245, 245))
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((30 * i, 40, 30 * i + 220, 660),
+                       fill=((35 * i) % 255, (70 * i) % 255, (110 * i) % 255))
+        draw.ellipse((350, 55 * i, 950, 55 * i + 140),
+                     fill=((150 + 10 * i) % 255, (40 * i) % 255,
+                           (220 - 15 * i) % 255))
+        draw.text((400, 300), f"RX580-{i}", fill=(0, 0, 0))
+        image.save(image_dir / name, "PNG")
+        parts.append(
+            f'<img src="https://img.example-source.test/{name}" '
+            f'alt="rx580 figure {i}">')
+    parts.append("</article></body></html>")
+    (html_dir / "rx580-local-ai.html").write_text(
+        "".join(parts), encoding="utf-8")
+
+    env = dict(os.environ)
+    env.update({
+        "WXGZH_AIHOT_SKILL_DIR": str(skills_home / "aihot"),
+        "WXGZH_INTEGRATION_MATERIAL_ID": "M-001",
+        "WXGZH_MEDIA_FIXTURE_DIR": str(html_dir),
+        "WXGZH_MEDIA_MAX_PER_MATERIAL": "8",
+        "WXGZH_MEDIA_MAX_TOTAL": "8",
+    })
+    project = staging / "pipeline-state-machine"
+    orch = Orchestrator(
+        project_root=project, network_mode="integration",
+        skills_home=skills_home,
+        fixture_dir=REPO / "fixtures" / "fake_live_fixture",
+        env=env,
+    )
+    first = orch.run("integration media state machine")
+    result = {"first_status": first.get("status")}
+    if first.get("status") != "AWAITING_MEDIA_ASSET_APPROVAL":
+        result.update({"ok": False, "error": first})
+        return result
+    run_dir = Path(first["discovery_manifest"]).parents[2]
+    frozen_path = Path(first["discovery_manifest"])
+    frozen = json.loads(frozen_path.read_text(encoding="utf-8"))
+    assets = frozen.get("assets", [])
+    if len(assets) < 7:
+        result.update({"ok": False, "error": f"expected >=7 assets, got {len(assets)}"})
+        return result
+    approvals = []
+    for target in assets[:6]:
+        approval = dict(target)
+        approval.update({
+            "discovery_manifest_sha256": frozen["discovery_manifest_sha256"],
+            "approval_id": f"AP-{target['asset_id']}",
+            "approved_scope": "single_asset",
+            "approved_by": "integration-user",
+            "approved_at": "2026-07-29T00:00:00Z",
+            "approval_evidence_sha256": "e" * 64,
+        })
+        approvals.append(approval)
+    approval_path = Path(first["approval_file"])
+    approval_path.write_text(
+        json.dumps({"approvals": approvals}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    resumed = orch.resume(first["run_id"])
+    events = json.loads(
+        (run_dir / "media_enrichment" / "upload_events.json").read_text(encoding="utf-8"))
+    uploaded_ids = [item["asset_id"] for item in events.get("events", [])
+                      if item.get("status") == "success"]
+    manifest = json.loads(
+        (run_dir / "media_enrichment" / "media_manifest.json").read_text(encoding="utf-8"))
+    unapproved = {asset["asset_id"]: asset for asset in manifest["assets"]
+                  if asset["asset_id"] not in {a["asset_id"] for a in approvals}}
+    receipts = {}
+    for stage in ("media_enrichment", "gzh_design", "wechat_draft"):
+        ok, mismatches = verify_receipt(
+            run_dir, stage, skills_home=skills_home, network_mode="integration")
+        receipts[stage] = {"ok": ok, "mismatches": mismatches}
+    draft = json.loads(
+        (run_dir / "wechat_draft" / "draft_creation_result.json").read_text(encoding="utf-8"))
+    theme = json.loads(
+        (run_dir / "gzh_design" / "theme_identity_report.json").read_text(encoding="utf-8"))
+    result.update({
+        "run_id": first["run_id"],
+        "paused_before_gzh": first.get("gzh_design_executed") is False,
+        "paused_before_draft": first.get("wechat_draft_executed") is False,
+        "resume_status": resumed.get("status"),
+        "uploaded_asset_ids": uploaded_ids,
+        "unapproved_assets_not_uploaded": all(
+            (asset.get("upload") or {}).get("status") != "success"
+            for asset in unapproved.values()),
+        "uploaded_image_count": resumed.get("uploaded_image_count"),
+        "theme_identity": theme.get("THEME_IDENTITY"),
+        "draft_created": resumed.get("draft_created"),
+        "real_api_call": draft.get("real_api_call"),
+        "formally_published": draft.get("formally_published"),
+        "receipts": receipts,
+    })
+    result["ok"] = (
+        result["paused_before_gzh"] and result["paused_before_draft"]
+        and resumed.get("status") == "COMPLETE"
+        and len(uploaded_ids) == 6
+        and result["unapproved_assets_not_uploaded"]
+        and resumed.get("uploaded_image_count") == 6
+        and theme.get("THEME_IDENTITY") == "PASS"
+        and resumed.get("draft_created") is True
+        and draft.get("real_api_call") is False
+        and draft.get("formally_published") is False
+        and all(item["ok"] for item in receipts.values())
+    )
+    return result
+
+
 def _live_proof_theme(skills_home: Path, gzh_lock: dict, staging: Path) -> dict:
     """P0#1: run the REAL gzh render_article on a full 6-chapter article + image
     bindings, then run the REAL validate_theme_identity in live mode. Requires an
@@ -340,6 +463,13 @@ def main(argv=None) -> int:
     details["single_asset_e2e"] = sa
     record("single_asset_media_cli_e2e", sa.get("ok", False),
            json.dumps({k: v for k, v in sa.items() if k != "ok"}, ensure_ascii=False)[:300])
+
+    # ── hotfix6: real Pipeline media discover/pause/approve/resume E2E ──
+    pipeline_e2e = _pipeline_media_state_machine_e2e(skills_home, staging)
+    details["pipeline_media_state_machine_e2e"] = pipeline_e2e
+    record("pipeline_media_state_machine_e2e", pipeline_e2e.get("ok", False),
+           json.dumps({k: v for k, v in pipeline_e2e.items() if k != "ok"},
+                      ensure_ascii=False)[:500])
 
     # ── P0#1 live-proof: real render + real theme identity => must PASS ──
     theme = _live_proof_theme(skills_home, lock_skills.get("gzh-design", {}), staging)
