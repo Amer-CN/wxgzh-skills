@@ -1,5 +1,7 @@
 """Tests for SSRF: manual redirect, IPv4-mapped IPv6, comprehensive blocking."""
 
+import socket
+
 import pytest
 from media_enrichment.url_security import is_safe_url, _is_blocked_ip
 import ipaddress
@@ -104,11 +106,17 @@ class TestProtocolSecurity:
     def test_javascript_protocol_blocked(self):
         assert not is_safe_url("javascript:alert(1)").safe
 
-    def test_http_allowed(self):
-        assert is_safe_url("http://example.com/img.jpg").safe
-
-    def test_https_allowed(self):
-        assert is_safe_url("https://example.com/img.jpg").safe
+    @pytest.mark.parametrize("scheme", ["http", "https"])
+    def test_http_and_https_allowed_with_public_dns(self, monkeypatch, scheme):
+        # Hermetic protocol test: never depend on the host machine's DNS mapping
+        # for example.com (some environments map it to reserved 198.18.0.0/15).
+        monkeypatch.setattr(
+            socket, "getaddrinfo",
+            lambda *args, **kwargs: [
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("8.8.8.8", 0)),
+            ],
+        )
+        assert is_safe_url(f"{scheme}://example.com/img.jpg").safe
 
 
 class TestURLCredentials:

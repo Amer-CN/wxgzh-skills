@@ -130,7 +130,18 @@
           "numbers": {
             "type": "array",
             "items": {
-              "type": "string"
+              "oneOf": [
+                {"type": "string"},
+                {
+                  "type": "object",
+                  "required": ["value"],
+                  "properties": {
+                    "value": {"type": "number"},
+                    "unit": {"type": "string"}
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "chart_group": {

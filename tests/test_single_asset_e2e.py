@@ -196,6 +196,27 @@ class TestStableSingleAssetIdentityCli:
         _assert_no_upload(manifest, events)
         assert any("discovery manifest sha256 invalid" in e for e in manifest["errors"])
 
+    def test_no_repost_overrides_stable_single_asset_approval(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        html_path = fixtures / "html" / "single-asset-e2e.html"
+        html_path.write_text(
+            html_path.read_text(encoding="utf-8").replace(
+                "<article>", "<article><p>未经许可不得转载</p>", 1,
+            ),
+            encoding="utf-8",
+        )
+        result, _, manifest, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json")
+        assert result.returncode == 0, result.stdout + result.stderr
+        _assert_no_upload(manifest, events)
+        target = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        assert target["copyright_status"] == "restricted"
+        assert target["asset_approval_consumed"] is False
+        assert any("restricted/no-repost overrides" in reason for reason in target["reasons"])
+
     def test_exact_frozen_identity_uploads_only_target(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")

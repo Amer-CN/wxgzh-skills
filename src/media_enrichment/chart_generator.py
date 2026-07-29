@@ -84,8 +84,14 @@ class ChartGenerationResult:
 def extract_numbers_from_claim(claim: dict[str, Any]) -> list[tuple[str, float, str]]:
     """Extract numeric values from claim's numbers field."""
     results: list[tuple[str, float, str]] = []
-    for num_str in claim.get("numbers", []):
-        parsed = _parse_number_string(num_str)
+    for number in claim.get("numbers", []):
+        if isinstance(number, dict):
+            value = number.get("value")
+            unit = str(number.get("unit", ""))
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                results.append((f"{value}{unit}", float(value), unit))
+            continue
+        parsed = _parse_number_string(number)
         if parsed:
             results.append(parsed)
     return results
@@ -93,6 +99,8 @@ def extract_numbers_from_claim(claim: dict[str, Any]) -> list[tuple[str, float, 
 
 def _parse_number_string(s: str) -> tuple[str, float, str] | None:
     """Parse a number string into (raw, value, unit)."""
+    if not isinstance(s, str):
+        return None
     s = s.strip()
     if not s:
         return None

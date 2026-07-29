@@ -323,7 +323,15 @@ def main():
             approval = asset_approvals.get(asset.asset_id)
             frozen = approved_records.get(asset.asset_id)
             mismatches: list[str] = []
-            if approval is not None:
+
+            # hotfix6/hotfix4 approval precedence:
+            #   restricted/no-repost > material/source_url > stable single_asset > unknown.
+            # A stable approval may upgrade only an otherwise-unknown source asset;
+            # it can never override an explicit restricted/no-repost decision.
+            if approval is not None and asset.copyright_status == "restricted":
+                asset.reasons.append(
+                    "restricted/no-repost overrides single_asset approval")
+            elif approval is not None and asset.copyright_status != "known_allowed":
                 if not discovery_file_valid or frozen is None:
                     mismatches.append("discovery_manifest")
                 else:
@@ -369,19 +377,26 @@ def main():
                         "high" if classification.decision == "rejected" else "medium")
                     asset.reasons = (
                         classification.rejection_reasons or classification.relevance_reasons)
-                    if (asset.decision == "eligible"
-                            and asset.quality_status == "pass"
-                            and asset.relevance_status == "relevant"
-                            and asset.duplicate_of is None):
-                        upload_result = timed_upload(
-                            uploader, upload_events, local_path, asset.asset_id,
-                            copyright_status=asset.copyright_status,
-                        )
-                        asset.upload = {
-                            "mode": upload_mode, "status": upload_result.status,
-                            "remote_url": upload_result.remote_url,
-                            "response_sha256": upload_result.response_sha256,
-                        }
+
+            # Material/source_url approval is represented by the material's
+            # copyright_review.status=known_allowed and needs no per-asset approval.
+            # All approval modes still require a valid frozen discovery manifest
+            # in continue, plus the normal quality/relevance/dedup gates.
+            if (discovery_file_valid
+                    and asset.copyright_status == "known_allowed"
+                    and asset.decision == "eligible"
+                    and asset.quality_status == "pass"
+                    and asset.relevance_status == "relevant"
+                    and asset.duplicate_of is None):
+                upload_result = timed_upload(
+                    uploader, upload_events, local_path, asset.asset_id,
+                    copyright_status=asset.copyright_status,
+                )
+                asset.upload = {
+                    "mode": upload_mode, "status": upload_result.status,
+                    "remote_url": upload_result.remote_url,
+                    "response_sha256": upload_result.response_sha256,
+                }
 
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
@@ -407,7 +422,7 @@ def main():
                 # Discovery is strictly side-effect-free: do not even invoke a
                 # dry-run uploader or emit an upload-attempt event. Generated
                 # charts may be uploaded only in the explicit continue phase.
-                if args.phase == "continue":
+                if args.phase == "continue" and discovery_file_valid:
                     chart_upload_result = timed_upload(
                         uploader, upload_events, chart_result.chart_path, asset_id,
                         copyright_status="known_allowed",

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev7-hotfix4 (2026-07-29)
+
+- Restored material/source_url approval uploads in Continue while keeping stable single_asset approvals bound to the frozen discovery identity.
+- Enforced precedence `restricted/no-repost > material/source_url > stable single_asset > unknown`; no ordinary approval can bypass an explicit no-repost statement.
+- Added real offline CLI coverage for material, source_url, stable single_asset, no-repost, and unknown approval paths.
+- Added structured canonical claim-number objects to the request schema and chart parser so Pipeline can preserve upstream values verbatim.
+
 ## 0.1.0-dev7-hotfix3 (2026-07-28)
 
 - P0#3: replaced display-order-only single_asset approval with a two-phase discovery/continue contract bound to material, source page, resolved URL, content SHA256, stable asset identity, and the frozen discovery manifest SHA256.
