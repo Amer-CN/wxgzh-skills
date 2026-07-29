@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -296,6 +297,7 @@ def _validate_with_fixed_media(ctx, request_path: Path) -> dict:
     ctx_env = getattr(ctx, "env", {}) or {}
     media_root = Path(
         ctx_env.get("WXGZH_FIXED_MEDIA_ROOT")
+        or os.environ.get("WXGZH_FIXED_MEDIA_ROOT")
         or (Path(getattr(ctx, "skills_home", Path(__file__).resolve().parents[2]))
             / "media-enrichment")
     )
