@@ -29,15 +29,20 @@ def content_validate(ctx, sd: Path, state):
     if not rep.is_file():
         return 1, {"reason": "full_mode_validator_report.json missing"}, vpath, vsha
     data = json.loads(rep.read_text(encoding="utf-8"))
-    exit_code = int(data.get("exit", data.get("FULL_MODE_VALIDATOR_EXIT", 1)))
-    length_mode = data.get("length_mode")
-    fixed_medium = (length_mode == "medium" and data.get("target_visible_chars") == 3000
-                    and data.get("length_auto") is False)
-    ok = (exit_code == 0) and not fixed_medium
-    return (0 if ok else 1), {"FULL_MODE_VALIDATOR_EXIT": exit_code, "length_mode": length_mode,
-                              "fixed_medium_3000_forbidden": fixed_medium,
-                              "chapters": data.get("chapters"),
-                              "SUPER_WRITER": "PASS" if ok else "FAIL"}, vpath, vsha
+    exit_code = 0 if data.get("passed") is True else 1
+    length_mode = data.get("article_mode")
+    target = data.get("target_visible_chars")
+    fixed_medium = length_mode == "medium" and target == 3000 and data.get("policy_source") == "fixed_default"
+    ok = exit_code == 0 and not fixed_medium
+    return (0 if ok else 1), {
+        "FULL_MODE_VALIDATOR_EXIT": exit_code,
+        "length_mode": length_mode,
+        "target_visible_chars": target,
+        "fixed_medium_3000_forbidden": fixed_medium,
+        "official_report_bound": True,
+        "chapters": data.get("chapters"),
+        "SUPER_WRITER": "PASS" if ok else "FAIL",
+    }, vpath, vsha
 
 
 def post(ctx, sd, state, exit_code, report):

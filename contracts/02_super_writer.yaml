@@ -6,20 +6,19 @@ inputs:
   required: [deduplicated_items.json]
 outputs:
   required:
-    - generation-profile
-    - writing-brief
-    - material-readiness
-    - material-ingestion-report
-    - material-ledger
-    - evidence-map
-    - canonical_claim_registry
-    - core-card
-    - outline
-    - semantic-map
-    - article
-    - editor-report
-    - full_article_fact_inventory
-    - full_mode_validator_report
+    - generation-profile.yaml
+    - writing-brief.md
+    - material-readiness.yaml
+    - material-ingestion-report.json
+    - material-ledger.yaml
+    - evidence-map.md
+    - canonical_claim_registry.json
+    - core-card.md
+    - outline.md
+    - semantic-map.yaml
+    - article.md
+    - editor-report.md
+    - full_mode_validator_report.json
 gates:
   full_mode_validator_exit: 0
 forbidden: [fixed_medium_3000]

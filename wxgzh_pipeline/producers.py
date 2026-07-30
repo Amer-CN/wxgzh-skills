@@ -26,6 +26,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 from . import execmodel as EM
 from . import agent_handshake as AH
 from .state import sha256_file
@@ -33,7 +35,7 @@ from .subprocess_runner import run_script
 
 AGENT_INSTRUCTIONS = {
     "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
-    "super_writer": "Run Super Writer Material-Heavy Full Mode; FULL_MODE_VALIDATOR_EXIT must be 0.",
+    "super_writer": "Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK.",
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
 }
 
@@ -55,7 +57,8 @@ def produce(ctx, stage: str, state) -> tuple[list, dict]:
     sd = ctx.stage_dir(stage)
     expected = EM.EXPECTED_OUTPUTS[stage]
     if kind == EM.AGENT:
-        return _agent(ctx, stage, sd, expected, state)
+        agent_expected = EM.AGENT_EXPECTED_OUTPUTS[stage]
+        return _agent(ctx, stage, sd, expected, agent_expected, state)
     if kind == EM.SUBPROC:
         return _subprocess(ctx, stage, sd, expected, state)
     if kind == EM.WECHAT:
@@ -88,16 +91,62 @@ def _contract_sha(stage: str) -> str | None:
     return sha256_file(p) if p.is_file() else None
 
 
+def _super_writer_policy(sd: Path) -> dict:
+    """Load the declared length policy; never derive it from article length."""
+    profile = sd / "generation-profile.yaml"
+    try:
+        data = yaml.safe_load(profile.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"invalid generation-profile.yaml: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError("generation-profile.yaml top-level must be an object")
+    fields = ("article_mode", "target_visible_chars", "acceptable_min", "acceptable_max")
+    missing = [name for name in fields if data.get(name) in (None, "")]
+    if missing:
+        raise ValueError(f"generation-profile.yaml missing length policy: {missing}")
+    mode = data["article_mode"]
+    if not isinstance(mode, str):
+        raise ValueError("generation-profile.yaml article_mode must be a string")
+    values = {}
+    for name in fields[1:]:
+        value = data[name]
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"generation-profile.yaml {name} must be a positive integer")
+        values[name] = value
+    if not values["acceptable_min"] <= values["target_visible_chars"] <= values["acceptable_max"]:
+        raise ValueError("generation-profile.yaml requires min <= target <= max")
+    return {"article_mode": mode, **values}
+
+
 def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, list]]:
     """(skill, validator_rel, argv) for each OFFICIAL agent-stage validator."""
     rd = Path(ctx.run_dir)
     if stage == "super_writer":
+        policy = _super_writer_policy(sd)
+        length_args = [
+            "--article", str(sd / "article.md"),
+            "--outline", str(sd / "outline.md"),
+            "--full-mode",
+            "--generation-profile", str(sd / "generation-profile.yaml"),
+            "--brief", str(sd / "writing-brief.md"),
+            "--material-readiness", str(sd / "material-readiness.yaml"),
+            "--material-ledger", str(sd / "material-ledger.yaml"),
+            "--material-report", str(sd / "material-ingestion-report.json"),
+            "--evidence-map", str(sd / "evidence-map.md"),
+            "--core-card", str(sd / "core-card.md"),
+            "--semantic-map", str(sd / "semantic-map.yaml"),
+            "--editor-report", str(sd / "editor-report.md"),
+            "--article-mode", policy["article_mode"],
+            "--target-visible-chars", str(policy["target_visible_chars"]),
+            "--acceptable-min", str(policy["acceptable_min"]),
+            "--acceptable-max", str(policy["acceptable_max"]),
+            "--json",
+        ]
         return [
             ("super-writer", "scripts/material_ingestion.py",
              ["--ledger", str(sd / "material-ledger.yaml"),
-              "--output", str(sd / "material_ingestion_report.json")]),
-            ("super-writer", "scripts/validate_article_length.py",
-             ["--article", str(sd / "article.md"), "--full-mode"]),
+              "--output", str(sd / "material_ingestion_verification.json")]),
+            ("super-writer", "scripts/validate_article_length.py", length_args),
             ("super-writer", "scripts/validate_semantic_map.py",
              ["--article", str(sd / "article.md"),
               "--semantic-map", str(sd / "semantic-map.yaml")]),
@@ -115,18 +164,26 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
     return []
 
 
-def _agent(ctx, stage, sd, expected, state):
+def _agent(ctx, stage, sd, expected, agent_expected, state):
     upstream = _upstream_hashes(ctx, stage)
     identity = _skill_identity(ctx, stage)
     inputs = {"topic": state.topic, "frozen_article_sha256": state.final_article_sha256}
     AH.write_request(sd, stage, identity["skill_name"], AGENT_INSTRUCTIONS.get(stage, ""),
-                     expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
+                     agent_expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
                      stage_request_sha256=sha256_file(sd / "stage_request.json"),
                      skill_identity=identity, contract_sha256=_contract_sha(stage))
     if ctx.network_mode in ("fake_live", "integration"):
         agent = ctx.fake_agent or AH.FakeAgent(ctx.fixture_dir)
-        agent.fulfill(sd, stage, expected)
-    ok, hs = AH.verify_ack(sd, stage, expected, run_dir=ctx.run_dir)
+        try:
+            agent.fulfill(sd, stage, agent_expected)
+        except (OSError, ValueError, TypeError) as exc:
+            outputs = [sd / o for o in expected if (sd / o).is_file()]
+            return outputs, {"exec_kind": EM.AGENT,
+                             "handshake": {"HANDSHAKE": "FAIL", "reason": str(exc)},
+                             "handshake_failed": True,
+                             "invoked_entrypoint": f"agent_handshake:{stage}",
+                             "entrypoint_path": None, "entrypoint_sha256": None}
+    ok, hs = AH.verify_ack(sd, stage, agent_expected, run_dir=ctx.run_dir)
     outputs = [sd / o for o in expected if (sd / o).is_file()]
     meta = {"exec_kind": EM.AGENT, "handshake": hs,
             "invoked_entrypoint": f"agent_handshake:{stage}",
@@ -138,10 +195,40 @@ def _agent(ctx, stage, sd, expected, state):
 
     # P0#5 — REALLY execute the official sub-skill validators via subprocess.
     officials = []
-    for skill, rel, argv in _agent_validator_args(stage, ctx, sd):
+    try:
+        validators = _agent_validator_args(stage, ctx, sd)
+    except ValueError as exc:
+        validators = []
+        if stage == "super_writer":
+            validators = [
+                ("super-writer", "scripts/material_ingestion.py",
+                 ["--ledger", str(sd / "material-ledger.yaml"),
+                  "--output", str(sd / "material_ingestion_verification.json")]),
+                ("super-writer", "scripts/validate_semantic_map.py",
+                 ["--article", str(sd / "article.md"),
+                  "--semantic-map", str(sd / "semantic-map.yaml")]),
+            ]
+        officials.append({"path": None, "sha256": None, "command": [], "exit_code": 2,
+                          "stdout_sha256": hashlib.sha256(b"").hexdigest(),
+                          "stderr_sha256": hashlib.sha256(str(exc).encode("utf-8")).hexdigest(),
+                          "elapsed_seconds": 0.0, "error": str(exc)})
+    for skill, rel, argv in validators:
         script = EM.resolve_agent_validator(skill, rel, ctx.network_mode, ctx.skills_home)
         run = run_script(script, argv, timeout=180)
         officials.append(_vresult(run))
+        if stage == "super_writer" and rel == "scripts/validate_article_length.py":
+            try:
+                official_report = json.loads(run.get("stdout") or "{}")
+                agent_report = json.loads((sd / "full_mode_validator_report.json").read_text(encoding="utf-8"))
+                report_matches = agent_report == official_report
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                report_matches = False
+            if not report_matches:
+                run["exit_code"] = run["exit_code"] or 3
+                run["stderr"] = (run.get("stderr") or "") + "\nagent report != official validator JSON"
+                run["stderr_sha256"] = hashlib.sha256(run["stderr"].encode("utf-8")).hexdigest()
+                officials[-1] = _vresult(run)
+    outputs = [sd / o for o in expected if (sd / o).is_file()]
     meta["official_validators"] = officials
     if any(v["exit_code"] != 0 for v in officials):
         meta["official_validator_failed"] = [v for v in officials if v["exit_code"] != 0]

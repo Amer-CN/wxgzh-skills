@@ -62,8 +62,11 @@ def write_request(sd: Path, stage: str, skill: str, instructions: str,
         f"# Agent handshake — {stage}\n\nSkill: `{skill}`\n\n{instructions}\n\n"
         f"Produce these files in this directory, then write `{ACK_FILE}`:\n"
         + "".join(f"- `{o}`\n" for o in expected_outputs)
-        + "\nThe ACK token binds the request bytes + upstream input hashes + the "
-        "produced file hashes; any post-ACK edit invalidates the handshake.\n",
+        + "\nWrite the ACK with the supported command:\n\n"
+        + f"```bash\npython -m wxgzh_pipeline.ack_cli --stage-dir \"{sd}\"\n```\n\n"
+        + "The command reads this request; do not repeat stage or outputs. The ACK token "
+        "binds the request bytes + upstream input hashes + the produced file hashes; "
+        "any post-ACK edit invalidates the handshake.\n",
         encoding="utf-8", newline="\n")
     return req
 
@@ -89,12 +92,42 @@ def _token_from_disk(sd: Path, stage: str, expected_outputs) -> tuple[str | None
 def write_ack(sd: Path, stage: str, expected_outputs, agent_id: str = "agent") -> dict:
     sd = Path(sd)
     t, req = _token_from_disk(sd, stage, expected_outputs)
-    produced = {o: sha256_file(sd / o) for o in expected_outputs if (sd / o).is_file()}
+    if not req:
+        raise ValueError(f"{REQUEST_FILE} missing or unreadable")
+    if req.get("stage") != stage:
+        raise ValueError(f"request stage mismatch: {req.get('stage')!r} != {stage!r}")
+    if list(req.get("expected_outputs") or []) != list(expected_outputs):
+        raise ValueError("expected_outputs must come from the request file unchanged")
+    missing = [o for o in expected_outputs if not (sd / o).is_file()]
+    if missing:
+        raise FileNotFoundError(f"missing expected outputs: {missing}")
+    produced = {o: sha256_file(sd / o) for o in expected_outputs}
     ack = {"run_id": req.get("run_id"), "stage": stage, "agent_id": agent_id,
            "produced_files": sorted(produced), "produced_hashes": produced,
            "handshake_token": t}
     atomic_write_json(sd / ACK_FILE, ack)
     return ack
+
+
+def write_ack_from_request(sd: Path, agent_id: str = "agent") -> dict:
+    """Validated public entry: derive stage and outputs only from the request."""
+    sd = Path(sd)
+    reqp = sd / REQUEST_FILE
+    if not reqp.is_file():
+        raise FileNotFoundError(f"request file not found: {reqp}")
+    try:
+        req = json.loads(reqp.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid request JSON: {exc}") from exc
+    stage = req.get("stage")
+    expected = req.get("expected_outputs")
+    if not isinstance(stage, str) or not stage:
+        raise ValueError("request stage must be a non-empty string")
+    if sd.name != stage:
+        raise ValueError(f"stage directory name mismatch: {sd.name!r} != {stage!r}")
+    if not isinstance(expected, list) or not expected or not all(isinstance(x, str) and x for x in expected):
+        raise ValueError("request expected_outputs must be a non-empty string list")
+    return write_ack(sd, stage, expected, agent_id=agent_id)
 
 
 def verify_ack(sd: Path, stage: str, expected_outputs,
@@ -135,9 +168,10 @@ class FakeAgent:
         sd = Path(sd)
         src = self.fixture_dir / stage / "outputs"
         if src.is_dir():
-            for p in sorted(src.rglob("*")):
+            for rel in expected_outputs:
+                p = src / rel
                 if p.is_file():
-                    target = sd / p.relative_to(src)
+                    target = sd / rel
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(p, target)
         return write_ack(sd, stage, expected_outputs, agent_id="fake-agent")

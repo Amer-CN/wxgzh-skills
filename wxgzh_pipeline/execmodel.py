@@ -49,10 +49,25 @@ STAGE_SKILL = {
 }
 
 # Contract outputs each stage must produce into its stage dir (enforced).
+SUPER_WRITER_AGENT_OUTPUTS = [
+    "generation-profile.yaml", "writing-brief.md", "material-readiness.yaml",
+    "material-ingestion-report.json", "material-ledger.yaml", "evidence-map.md",
+    "canonical_claim_registry.json", "core-card.md", "outline.md",
+    "semantic-map.yaml", "article.md", "editor-report.md",
+    "full_mode_validator_report.json",
+]
+
+AGENT_EXPECTED_OUTPUTS = {
+    "aihot": ["raw_items.json", "deduplicated_items.json", "fetch_log.json"],
+    "super_writer": SUPER_WRITER_AGENT_OUTPUTS,
+    "zh_human_writing": ["final_article.md", "fidelity_report.json"],
+}
+
 EXPECTED_OUTPUTS = {
     "aihot": ["raw_items.json", "deduplicated_items.json", "fetch_log.json"],
-    "super_writer": ["article.md", "outline.md", "canonical_claim_registry.json",
-                     "full_mode_validator_report.json"],
+    # The report is agent-written from the official CLI and handshake-bound;
+    # Pipeline reruns that CLI and requires exact semantic agreement.
+    "super_writer": SUPER_WRITER_AGENT_OUTPUTS,
     "zh_human_writing": ["final_article.md", "fidelity_report.json"],
     "media_enrichment": ["media_manifest.json", "article_image_bindings.json",
                          "upload_events.json"],

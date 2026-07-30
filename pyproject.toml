@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wxgzh-pipeline"
-version = "0.1.0-dev1"
+version = "0.1.0.dev2+hotfix7"
 description = "WeChat 公众号 orchestration skill — one-line 发文 to draft, sequential 6-stage pipeline over installed sub-skills"
 requires-python = ">=3.9"
 dependencies = [
@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 wxgzh-pipeline = "wxgzh_pipeline.cli:main"
+wxgzh-pipeline-ack = "wxgzh_pipeline.ack_cli:main"
 
 [tool.setuptools]
 packages = ["wxgzh_pipeline", "wxgzh_pipeline.stages"]

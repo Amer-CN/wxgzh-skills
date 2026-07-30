@@ -17,7 +17,7 @@ import pytest
 from conftest import load_validator, FAKE_FIXTURE
 from wxgzh_pipeline import STAGES, secrets as SEC
 from wxgzh_pipeline import agent_handshake as AH
-from wxgzh_pipeline.execmodel import EXPECTED_OUTPUTS, STAGE_EXEC, AGENT
+from wxgzh_pipeline.execmodel import AGENT_EXPECTED_OUTPUTS, EXPECTED_OUTPUTS, STAGE_EXEC, AGENT
 from wxgzh_pipeline.state import load_state
 from wxgzh_pipeline.receipts import load_receipt, receipt_valid, verify_receipt
 
@@ -51,7 +51,7 @@ def test_agent_handshake(orch):
         sd = rd / stage
         assert (sd / "agent_handshake_request.json").is_file()
         assert (sd / "agent_handshake.json").is_file()
-        ok, rep = AH.verify_ack(sd, stage, EXPECTED_OUTPUTS[stage])
+        ok, rep = AH.verify_ack(sd, stage, AGENT_EXPECTED_OUTPUTS[stage])
         assert ok and rep["HANDSHAKE"] == "PASS"
     # tamper an agent output AFTER the ack -> token no longer matches
     sd = rd / "aihot"
