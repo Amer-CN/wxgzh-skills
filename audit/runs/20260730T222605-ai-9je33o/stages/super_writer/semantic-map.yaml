@@ -22,6 +22,8 @@ blocks:
       exact_text: 传统安全工具的边界相对清楚。
     payload:
       text: 传统安全工具的边界相对清楚。
+      heading_text: 一、当安全工具开始自己行动
+      section_index: 1
     evidence_ids: [ev-001, ev-003, ev-004]
     preserve_exactly: false
     formatter_candidates: [chapter-title, paragraph]
@@ -34,6 +36,8 @@ blocks:
       exact_text: AI进入安全攻防后，最容易出现的误区，是把一个漂亮分数理解成通用能力。
     payload:
       text: AI进入安全攻防后，最容易出现的误区，是把一个漂亮分数理解成通用能力。
+      heading_text: 二、能力不是一个分数
+      section_index: 2
     evidence_ids: [ev-002, ev-005, ev-008]
     preserve_exactly: false
     formatter_candidates: [chapter-title, paragraph]
@@ -46,6 +50,8 @@ blocks:
       exact_text: 如果AI智能体可以持续执行任务，那么它在企业系统里就越来越像一种“非人类身份”。
     payload:
       text: 如果AI智能体可以持续执行任务，那么它在企业系统里就越来越像一种“非人类身份”。
+      heading_text: 三、身份治理成为新边界
+      section_index: 3
     evidence_ids: [ev-006, ev-007, ev-009]
     preserve_exactly: false
     formatter_candidates: [chapter-title, paragraph]
@@ -58,6 +64,8 @@ blocks:
       exact_text: 面对这一轮变化，企业不必先追逐一个“最强安全模型”，而应先检查自己的基础控制是否能约束智能体。
     payload:
       text: 面对这一轮变化，企业不必先追逐一个“最强安全模型”，而应先检查自己的基础控制是否能约束智能体。
+      heading_text: 四、企业现在该补什么
+      section_index: 4
     evidence_ids: [ev-001, ev-003, ev-007, ev-008]
     preserve_exactly: false
     formatter_candidates: [chapter-title, paragraph]

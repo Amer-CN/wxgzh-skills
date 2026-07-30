@@ -1,6 +1,6 @@
 {
   "elapsed_seconds": 0.0,
-  "ended_at": "2026-07-30T14:32:14Z",
+  "ended_at": "2026-07-30T15:31:17Z",
   "entrypoint_path": null,
   "entrypoint_sha256": null,
   "input_files": [
@@ -19,7 +19,7 @@
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260730T222605-ai-9je33o\\aihot\\fetch_log.json"
   ],
   "output_hashes": {
-    "deduplicated_items.json": "becb90057cf8b03a320727da0d7f108de8656631e2e8c71d32b94fe71b2333f2",
+    "deduplicated_items.json": "da08958a9e0c2b7e316390fdc7f972734be3cb3eac882bb108b93f5925d2bd96",
     "fetch_log.json": "25c7144e1cf0c0d1c6ee8e04d95185b4728fc6f9193cee7f81bab944fe6ca80c",
     "raw_items.json": "5c3b0f039e01cf316105e8b1b0df1609c394aa0d8f9bcfb40637c73dc492fd1c"
   },
@@ -34,7 +34,7 @@
   "skill_root_sha256": null,
   "skill_version": null,
   "stage": "aihot",
-  "started_at": "2026-07-30T14:32:14Z",
+  "started_at": "2026-07-30T15:31:17Z",
   "validator_exit_code": 0,
   "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\wxgzh-pipeline\\validators\\validate_stage_receipt.py",
   "validator_sha256": "a33eb9f37cbc8519dc54e5058231f3621c85b83cd77e521aeac7a16f2b603abe"

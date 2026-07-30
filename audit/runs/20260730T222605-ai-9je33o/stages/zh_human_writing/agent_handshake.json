@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent1",
+  "handshake_token": "1c4b5771754b395bbad7d39046cfeabda282143fba6eccfab755da6ec6c4386a",
+  "produced_files": [
+    "fidelity_report.json",
+    "final_article.md"
+  ],
+  "produced_hashes": {
+    "fidelity_report.json": "4f3d39b361518ebb2e5d31cdb12e757319c3ee4d5eaafc55af7507924e601588",
+    "final_article.md": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386"
+  },
+  "run_id": "20260730T222605-ai-9je33o",
+  "stage": "zh_human_writing"
+}

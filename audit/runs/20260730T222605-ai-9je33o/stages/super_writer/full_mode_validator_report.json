@@ -1,5 +1,5 @@
 {
-  "passed": false,
+  "passed": true,
   "length_status": "within_range",
   "article_mode": "medium",
   "cjk_chars": 2011,
@@ -17,15 +17,6 @@
     {"title": "四、企业现在该补什么", "weight": 0.262, "budget": 571, "actual_chars": 566, "deviation": 0.009}
   ],
   "duplicate_findings": [],
-  "errors": [
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-1' role 'article_section' missing required payload field 'heading_text'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-1' role 'article_section' missing required payload field 'section_index'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-2' role 'article_section' missing required payload field 'heading_text'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-2' role 'article_section' missing required payload field 'section_index'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-3' role 'article_section' missing required payload field 'heading_text'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-3' role 'article_section' missing required payload field 'section_index'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-4' role 'article_section' missing required payload field 'heading_text'",
-    "ERROR: semantic-map.yaml semantic validator: ERROR: block 'sec-4' role 'article_section' missing required payload field 'section_index'"
-  ],
+  "errors": [],
   "warnings": []
 }

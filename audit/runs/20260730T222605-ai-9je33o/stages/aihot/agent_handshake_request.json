@@ -6,7 +6,7 @@
     "fetch_log.json"
   ],
   "inputs": {
-    "frozen_article_sha256": null,
+    "frozen_article_sha256": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386",
     "topic": "AI智能体正在重写网络安全攻防"
   },
   "instructions": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
