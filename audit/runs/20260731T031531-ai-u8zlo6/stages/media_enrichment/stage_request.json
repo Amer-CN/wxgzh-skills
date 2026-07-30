@@ -1,0 +1,20 @@
+{
+  "config": {
+    "BODY_IMAGES_MIN": 6,
+    "BODY_IMAGES_TARGET": 8,
+    "COPYRIGHT_POLICY": "ALLOW_UNLESS_EXPLICITLY_PROHIBITED",
+    "USER_BLANKET_APPROVAL": true,
+    "manifest_single_writer": true,
+    "no_orchestrator_bypass": true,
+    "source_url_first": true,
+    "upload_serial": true
+  },
+  "inputs": {
+    "final_article": "../zh_human_writing/final_article.md",
+    "final_article_sha256": "750c56de75a1c542a301264d20efaa8fc6c7be1d550a71dd455fbddbca98af21"
+  },
+  "network_mode": "live",
+  "run_id": "20260731T031531-ai-u8zlo6",
+  "skill_name": "media-enrichment",
+  "stage": "media_enrichment"
+}

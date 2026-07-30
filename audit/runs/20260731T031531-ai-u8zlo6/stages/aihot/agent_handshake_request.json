@@ -1,0 +1,24 @@
+{
+  "contract_sha256": "fdf276c8b411f9eaf685ba683707f9e2e0ce87fee96048634447fcab4a1dc8a3",
+  "expected_outputs": [
+    "raw_items.json",
+    "deduplicated_items.json",
+    "fetch_log.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": null,
+    "topic": "AI智能体正在重写网络安全攻防"
+  },
+  "instructions": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
+  "kind": "agent_handshake",
+  "run_id": "20260731T031531-ai-u8zlo6",
+  "skill": "aihot",
+  "skill_identity": {
+    "skill_name": "aihot",
+    "skill_root_sha256": null,
+    "skill_version": null
+  },
+  "stage": "aihot",
+  "stage_request_sha256": "d53ea50fdba05b47a13d81c96f3285754face35326fbdff938e9f1383ca719f0",
+  "upstream_hashes": {}
+}

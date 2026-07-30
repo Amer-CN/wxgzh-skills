@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "medium",
+  "cjk_chars": 1740,
+  "latin_words": 72,
+  "visible_chars_no_whitespace": 2273,
+  "paragraphs": 23,
+  "sections": 5,
+  "target_visible_chars": 1885,
+  "acceptable_min": 1800,
+  "acceptable_max": 2500,
+  "section_budgets": [
+    {"title":"一、安全工具正在变成行动者","weight":0.264,"budget":497,"actual_chars":497,"deviation":0.0},
+    {"title":"二、身份会成为新的安全边界","weight":0.291,"budget":548,"actual_chars":549,"deviation":0.002},
+    {"title":"三、只在模型外面加一道过滤已经不够","weight":0.204,"budget":384,"actual_chars":385,"deviation":0.003},
+    {"title":"四、企业应该先补四项基础控制","weight":0.241,"budget":454,"actual_chars":454,"deviation":0.0}
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}

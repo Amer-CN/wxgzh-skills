@@ -1,0 +1,1732 @@
+{
+  "assets": [
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-001",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_normal.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_normal.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-002",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/card_img/2082316514892668928/hlE3U-ag?format=jpg&name=orig",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/card_img/2082316514892668928/hlE3U-ag?format=jpg&name=orig",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-003",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_normal.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_normal.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-004",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_normal.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_normal.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-005",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/tweet_video_thumb/HOWcIvcWMAAVxwi.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/tweet_video_thumb/HOWcIvcWMAAVxwi.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-006",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_normal.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_normal.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-007",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=medium",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=medium",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-008",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_mini.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_mini.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-009",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_bigger.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_bigger.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-010",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_x96.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_x96.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-011",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_reasonably_small.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_reasonably_small.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-012",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_200x200.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_200x200.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-013",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_400x400.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075819673263001600/pj1vyX6I_400x400.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-014",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_mini.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_mini.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-015",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_bigger.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_bigger.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-016",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_x96.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_x96.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-017",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_reasonably_small.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_reasonably_small.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-018",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_200x200.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_200x200.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-019",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_400x400.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075290056084844544/rbW_BzIG_400x400.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-020",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_mini.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_mini.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-021",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_bigger.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_bigger.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-022",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_x96.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_x96.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-023",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_reasonably_small.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_reasonably_small.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-024",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_200x200.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_200x200.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-025",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_400x400.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2077181974762942464/absf3ae4_400x400.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-026",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_mini.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_mini.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-027",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_bigger.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_bigger.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-028",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_x96.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_x96.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-029",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_reasonably_small.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_reasonably_small.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-030",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_200x200.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_200x200.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-031",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_400x400.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/profile_images/2075546952041717760/XkXN2jDT_400x400.jpg",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-032",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=small",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=small",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-033",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=large",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolves to blocked IP: 198.18.0.5 for hostname pbs.twimg.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://pbs.twimg.com/media/HOYGMeoXYAACIFh?format=webp&name=large",
+      "sha256": null,
+      "source_page_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    }
+  ],
+  "created_at": "2026-07-30T19:54:19Z",
+  "errors": [
+    "Failed to fetch page for M-02: URL security check failed: DNS resolves to blocked IP: 198.18.0.7 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-03: URL security check failed: DNS resolves to blocked IP: 198.18.0.7 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-04: URL security check failed: DNS resolves to blocked IP: 198.18.0.7 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-05: URL security check failed: DNS resolves to blocked IP: 198.18.0.7 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-06: URL security check failed: DNS resolves to blocked IP: 198.18.0.7 for hostname aihot.virxact.com"
+  ],
+  "gate": {
+    "input_contract_pass": false,
+    "provenance_complete": true,
+    "publish_allowed": false,
+    "secrets_detected": false,
+    "security_checks_pass": false
+  },
+  "input": {
+    "article_sha256": "750c56de75a1c542a301264d20efaa8fc6c7be1d550a71dd455fbddbca98af21",
+    "claims_total": 6,
+    "materials_total": 6,
+    "request_sha256": "f7c746ceebeec51fde612830385b643288652812638b74ebfab4ba0c96a4b820"
+  },
+  "run_id": "20260731T031531-ai-u8zlo6",
+  "schema_version": "1.0",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "summary": {
+    "candidates_discovered": 33,
+    "downloads_succeeded": 0,
+    "eligible_assets": 0,
+    "exact_duplicates_removed": 0,
+    "generated_charts": 0,
+    "pages_fetched": 1,
+    "pages_requested": 6,
+    "perceptual_duplicates_removed": 0,
+    "rejected_assets": 33,
+    "review_required_assets": 0,
+    "uploaded_assets": 0
+  },
+  "warnings": [
+    "M-02: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.6 for hostname cloud.google.com)",
+    "M-03: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.8 for hostname techcrunch.com)",
+    "M-04: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.9 for hostname www.ithome.com)",
+    "M-05: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.8 for hostname techcrunch.com)",
+    "M-06: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.9 for hostname www.ithome.com)",
+    "No claims with numbers — no charts generated"
+  ]
+}
