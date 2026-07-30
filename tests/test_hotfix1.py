@@ -7,9 +7,14 @@
 - P0#6  AI HOT existence is really checked (NOT_INSTALLED => live FAIL_CLOSED)
 - P0#9  reinstall from the PR trees => live doctor skill verification PASS
 """
+import hashlib
+import importlib.util
 import json
 import os
 import shutil
+import subprocess
+import sys
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -18,6 +23,7 @@ from conftest import SKILL_ROOT
 from wxgzh_pipeline import execmodel as EM
 from wxgzh_pipeline import producers as PR
 from wxgzh_pipeline import skill_discovery as SD
+from wxgzh_pipeline.skill_discovery import InstallReceiptError
 
 
 # ---------- P0#3: tamper + resume ----------
@@ -203,3 +209,125 @@ def test_reinstall_from_pr_trees_doctor_pass(tmp_path):
     ok, disc = SD.verify_all(staging, lock, env={"WXGZH_AIHOT_SKILL_DIR": str(aihot_dir)})
     problems = {k: v for k, v in disc.items() if not v["ok"]}
     assert ok, f"reinstalled PR trees must verify against the lock: {problems}"
+
+
+# ---------- OBS-26: real Portable Installer preserves Pipeline release include ----------
+
+WORKFLOW_REL = Path(".github/workflows/ci.yml")
+WORKFLOW_SIZE = 6173
+WORKFLOW_SHA256 = "751294ac42db62b6a045a5aaa298c1eca1ad527ef30ffff6bef2fceb9401375d"
+LOCKED_HEADS = {
+    "super-writer": "1e58d01e38346018886ab1ad6a183228263eae49",
+    "zh-human-writing": "0c8962f354e9acc73f29bc57a8b328fc98695a10",
+    "media-enrichment": "cedf92ca45b0cdb7e010d489e9da67dd28ef6e59",
+    "gzh-design-skill": "0007d7e6a4493aab59070d9c31dcde83830302fd",
+}
+LOCKED_REPOS = {
+    "super-writer": "https://github.com/Amer-CN/super-writer.git",
+    "zh-human-writing": "https://github.com/Amer-CN/zh-human-writing.git",
+    "media-enrichment": "https://github.com/Amer-CN/media-enrichment.git",
+    "gzh-design-skill": "https://github.com/Amer-CN/gzh-design-skill.git",
+}
+
+
+def _portable_skill_sources(tmp_path: Path) -> Path:
+    clones = tmp_path / "locked-clones"
+    clones.mkdir()
+    explicit = Path(os.environ["WXGZH_SUBSKILL_CLONES"]) if os.environ.get(
+        "WXGZH_SUBSKILL_CLONES") else None
+    preexisting = {
+        "super-writer": os.environ.get("WXGZH_REAL_SUPER_WRITER_ROOT"),
+        "media-enrichment": os.environ.get("WXGZH_FIXED_MEDIA_ROOT"),
+    }
+    for source_name, commit in LOCKED_HEADS.items():
+        install_name = "gzh-design" if source_name == "gzh-design-skill" else source_name
+        dst = clones / install_name
+        src = ((explicit / source_name) if explicit else None) or preexisting.get(source_name)
+        if src and Path(src).is_dir():
+            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        else:
+            subprocess.run(["git", "clone", "--quiet", LOCKED_REPOS[source_name], str(dst)], check=True)
+        subprocess.run(["git", "-C", str(dst), "checkout", "--quiet", commit], check=True)
+    return clones
+
+
+def _count_release_tree(root: Path) -> tuple[int, int]:
+    files = [p for p in root.rglob("*")
+             if p.is_file() and "__pycache__" not in p.parts and p.suffix.lower() != ".pyc"]
+    dirs = [p for p in root.rglob("*") if p.is_dir() and "__pycache__" not in p.parts]
+    return len(files), len(dirs)
+
+
+def _load_installer_module():
+    path = SKILL_ROOT / "scripts" / "install.py"
+    spec = importlib.util.spec_from_file_location("hotfix7r4_installer", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_portable_installer_preserves_pipeline_release_include(tmp_path):
+    clones = _portable_skill_sources(tmp_path)
+    for lock_name, meta in SD.load_lock(SKILL_ROOT)["skills"].items():
+        if meta.get("kind") == "agent_invoked_skill":
+            continue
+        source = clones / lock_name
+        actual = subprocess.run(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        assert actual == meta["full_commit_sha"]
+
+    out_dir = tmp_path / "out"
+    staging = tmp_path / "build-staging"
+    build = subprocess.run([
+        sys.executable, str(SKILL_ROOT / "scripts/build_portable_bundle.py"),
+        "--out", str(out_dir), "--skills-home", str(clones), "--staging", str(staging),
+    ], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    assert build.returncode == 0, build.stdout + build.stderr
+    extract = tmp_path / "bundle-extract"
+    with zipfile.ZipFile(Path(json.loads(build.stdout)["bundle_zip"])) as archive:
+        archive.extractall(extract)
+    bundle = extract / "portable-bundle"
+    target = tmp_path / "installed-skills"
+    install = subprocess.run([
+        sys.executable, str(bundle / "installer/install.py"), "--target", str(target),
+    ], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    assert install.stdout.strip(), (
+        f"installer emitted no JSON (exit={install.returncode})\nstdout={install.stdout}\nstderr={install.stderr}")
+    result = json.loads(install.stdout)
+    assert install.returncode == 0, install.stdout + install.stderr
+    assert result["ok"] is True
+
+    installed_pipeline = target / "wxgzh-pipeline"
+    workflow = installed_pipeline / WORKFLOW_REL
+    data = workflow.read_bytes()
+    assert data == (bundle / "wxgzh-pipeline" / WORKFLOW_REL).read_bytes()
+    assert data == (SKILL_ROOT / WORKFLOW_REL).read_bytes()
+    assert len(data) == WORKFLOW_SIZE
+    assert hashlib.sha256(data).hexdigest() == WORKFLOW_SHA256
+    assert _count_release_tree(installed_pipeline)[0] == 130
+    assert _count_release_tree(target) == (662, 101)
+    assert len(list((target / ".install-receipts").glob("*.json"))) == 4
+    for name in ("super-writer", "zh-human-writing", "media-enrichment", "gzh-design"):
+        assert not (target / name / ".github").exists()
+
+    shipped_test = subprocess.run([
+        sys.executable, "-m", "pytest",
+        "tests/test_hotfix7_live_handshake.py::test_integration_workflow_fails_closed_after_tee",
+        "-q", "-o", "addopts=",
+    ], cwd=installed_pipeline, capture_output=True, text=True,
+       encoding="utf-8", errors="replace")
+    assert shipped_test.returncode == 0, shipped_test.stdout + shipped_test.stderr
+
+    installer = _load_installer_module()
+    missing = tmp_path / "negative-missing"
+    shutil.copytree(installed_pipeline, missing,
+                    ignore=shutil.ignore_patterns(".github", "__pycache__", "*.pyc"))
+    with pytest.raises(InstallReceiptError, match="release workflow missing"):
+        installer.verify_pipeline_release_include(installed_pipeline, missing)
+    tampered = tmp_path / "negative-tampered"
+    shutil.copytree(installed_pipeline, tampered,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    (tampered / WORKFLOW_REL).write_bytes(data + b"\n# tampered\n")
+    with pytest.raises(InstallReceiptError, match="release workflow hash mismatch"):
+        installer.verify_pipeline_release_include(installed_pipeline, tampered)

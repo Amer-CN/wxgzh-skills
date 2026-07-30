@@ -23,9 +23,8 @@ from wxgzh_pipeline import __version__            # noqa: E402
 from wxgzh_pipeline import paths as P             # noqa: E402
 from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
 from wxgzh_pipeline import secrets as SEC         # noqa: E402
-from wxgzh_pipeline.zipping import copy_tree, deterministic_zip  # noqa: E402
-
-PIPELINE_RELEASE_INCLUDES = (".github/workflows/ci.yml",)
+from wxgzh_pipeline.zipping import (  # noqa: E402
+    PIPELINE_RELEASE_INCLUDES, copy_tree, deterministic_zip)
 
 EXPECTED_PIPELINE_FILE_COUNT = 130
 EXPECTED_MANIFEST_FILE_COUNT = 665

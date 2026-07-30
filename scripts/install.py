@@ -37,7 +37,21 @@ from wxgzh_pipeline import __version__  # noqa: E402
 from wxgzh_pipeline import paths as P  # noqa: E402
 from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
 from wxgzh_pipeline.skill_discovery import InstallReceiptError  # noqa: E402
-from wxgzh_pipeline.zipping import copy_tree  # noqa: E402
+from wxgzh_pipeline.zipping import PIPELINE_RELEASE_INCLUDES, copy_tree  # noqa: E402
+
+
+def verify_pipeline_release_include(source_pipeline: Path, installed_pipeline: Path) -> dict:
+    rel = Path(PIPELINE_RELEASE_INCLUDES[0])
+    source = Path(source_pipeline) / rel
+    installed = Path(installed_pipeline) / rel
+    if not source.is_file() or not installed.is_file():
+        raise InstallReceiptError("wxgzh-pipeline: release workflow missing")
+    source_bytes = source.read_bytes()
+    installed_bytes = installed.read_bytes()
+    if installed_bytes != source_bytes:
+        raise InstallReceiptError("wxgzh-pipeline: release workflow hash mismatch")
+    return {"path": rel.as_posix(), "size": len(installed_bytes),
+            "sha256": hashlib.sha256(installed_bytes).hexdigest()}
 
 
 def _find_source() -> tuple[Path, Path | None, Path | None]:
@@ -250,6 +264,7 @@ def install(
             Path(skills_src) if skills_src is not None else None,
         )
         source_proofs: dict[str, tuple[str, str, str]] = {}
+        pipeline_source = next(source for name, source, _ in sources if name == "wxgzh-pipeline")
         for name, source, meta in sources:
             action = {
                 "skill": name, "src": str(source), "dst": str(target / name),
@@ -290,7 +305,12 @@ def install(
         backups_dir.mkdir(parents=True)
         try:
             for name, source, _ in sources:
-                copy_tree(source, staging_home / name)
+                includes = PIPELINE_RELEASE_INCLUDES if name == "wxgzh-pipeline" else ()
+                copy_tree(source, staging_home / name, include_paths=includes)
+            pipeline_workflow = Path(PIPELINE_RELEASE_INCLUDES[0])
+            staged_workflow = staging_home / "wxgzh-pipeline" / pipeline_workflow
+            source_workflow = pipeline_source / pipeline_workflow
+            verify_pipeline_release_include(pipeline_source, staging_home / "wxgzh-pipeline")
 
             for action in plan:
                 name = action["skill"]
@@ -352,6 +372,8 @@ def install(
 
             final_lock = {"lock_version": lock.get("lock_version"), "skills": lock_skills}
             final_ok, final_verify = SD.verify_all(target, final_lock)
+            pipeline_release_include = verify_pipeline_release_include(
+                pipeline_source, target / "wxgzh-pipeline")
             if not final_ok or set(final_verify) != expected_skills:
                 _rollback_switch(target, switched, backups, receipts_backup)
                 raise InstallReceiptError("post-switch verify_all failed; rolled back")
@@ -380,6 +402,7 @@ def install(
                 "hash_verification": {
                     name: final_verify[name].get("ok") for name in sorted(expected_skills)
                 },
+                "pipeline_release_include": pipeline_release_include,
                 "note": "installer never runs an article / uploads images / creates a draft",
             }
         finally:

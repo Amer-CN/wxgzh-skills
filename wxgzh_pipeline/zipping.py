@@ -17,6 +17,7 @@ EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
 FORBIDDEN_NAMES = {".env"}
 FORBIDDEN_SUFFIXES = {".zip"}
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
+PIPELINE_RELEASE_INCLUDES = (".github/workflows/ci.yml",)
 
 
 def _skip(p: Path, include_paths=()) -> bool:

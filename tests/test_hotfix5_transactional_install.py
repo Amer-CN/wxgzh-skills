@@ -46,6 +46,9 @@ def _bundle(tmp_path: Path):
     pipeline = bundle / "wxgzh-pipeline"
     pipeline.mkdir(parents=True)
     (pipeline / "SKILL.md").write_text("pipeline", encoding="utf-8")
+    workflow = pipeline / ".github" / "workflows" / "ci.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_bytes((SKILL_ROOT / ".github" / "workflows" / "ci.yml").read_bytes())
     proofs = {}
     lock_skills = {}
     for index, name in enumerate(sorted(SKILLS), 1):

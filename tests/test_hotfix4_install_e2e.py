@@ -58,6 +58,9 @@ def _mk_bundle(tmp_path: Path) -> tuple[Path, dict]:
     bundle = tmp_path / "bundle"
     (bundle / "wxgzh-pipeline").mkdir(parents=True)
     (bundle / "wxgzh-pipeline" / "SKILL.md").write_text("# stub\n", encoding="utf-8")
+    workflow = bundle / "wxgzh-pipeline" / ".github" / "workflows" / "ci.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_bytes((SKILL_ROOT / ".github" / "workflows" / "ci.yml").read_bytes())
     g = bundle / "locked-skills" / "gzh-design"
     (g / "scripts").mkdir(parents=True)
     (g / "VERSION").write_text("version: v-test\n", encoding="utf-8")
