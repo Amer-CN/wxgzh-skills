@@ -1,0 +1,24 @@
+{
+  "completed_stages": [
+    "aihot"
+  ],
+  "current_stage": "super_writer",
+  "draft_created": false,
+  "failed_stage": null,
+  "final_article_sha256": null,
+  "formally_published": false,
+  "input_hashes": {},
+  "output_hashes": {
+    "aihot": {
+      "deduplicated_count": 9
+    }
+  },
+  "profile": "fast_publish",
+  "run_id": "20260730T222605-ai-9je33o",
+  "side_effects": [],
+  "started_at": "2026-07-30T14:26:05Z",
+  "theme": "smartisan",
+  "topic": "AI智能体正在重写网络安全攻防",
+  "updated_at": "2026-07-30T14:32:14Z",
+  "uploaded_image_count": 0
+}

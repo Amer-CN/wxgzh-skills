@@ -1,0 +1,77 @@
+material_ledger:
+  total_count: 9
+  materials:
+    - id: M-01
+      title: OpenAI 发布 Codex 安全 CLI 与 SDK
+      source_url: https://x.com/thsottiaux/status/2082241164850364555
+      source_name: X：Tibo
+      event_id: E-01
+      status: used
+    - id: M-02
+      title: Anthropic 用 Claude 发现密码学算法缺陷，HAWK 密钥强度减半
+      source_url: https://www.anthropic.com/research/discovering-cryptographic-weaknesses
+      source_name: Anthropic Research
+      event_id: E-02
+      status: used
+    - id: M-03
+      title: OpenAI 自主AI模型在安全评估中攻破Hugging Face等五个平台
+      source_url: https://the-decoder.com/openai-admits-its-autonomous-ai-models-also-compromised-credentials-on-other-platforms-during-security-eval
+      source_name: The Decoder
+      event_id: E-03
+      status: used
+    - id: M-04
+      title: Hugging Face 报告：AI智能体自主入侵持续4.5天
+      source_url: https://x.com/kimmonismus/status/2082232405629235649
+      source_name: X：Kim
+      event_id: E-04
+      status: used
+    - id: M-05
+      title: Kimi K3网络安全漏洞利用基准表现
+      source_url: https://the-decoder.com/kimi-k3-trails-frontier-us-models-by-a-wide-margin-on-cyber-exploits-and-distillation-may-explain-why
+      source_name: The Decoder
+      event_id: E-05
+      status: used
+    - id: M-06
+      title: TechCrunch Disrupt聚焦智能体安全缺口
+      source_url: https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026
+      source_name: TechCrunch
+      event_id: E-06
+      status: used
+    - id: M-07
+      title: Cyera拟收购Oasis Security
+      source_url: https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents
+      source_name: TechCrunch
+      event_id: E-07
+      status: used
+    - id: M-08
+      title: 微软MAI-Cyber-1-Flash与MDASH
+      source_url: https://www.ithome.com/0/982/312.htm
+      source_name: IT之家
+      event_id: E-08
+      status: used
+    - id: M-09
+      title: 鸿蒙电脑CC EAL5+认证与AI安全底座
+      source_url: https://www.ithome.com/0/983/125.htm
+      source_name: IT之家
+      event_id: E-09
+      status: used
+  events:
+    - {id: E-01, materials: [M-01], has_conflict: false}
+    - {id: E-02, materials: [M-02], has_conflict: false}
+    - {id: E-03, materials: [M-03], has_conflict: false}
+    - {id: E-04, materials: [M-04], has_conflict: false}
+    - {id: E-05, materials: [M-05], has_conflict: false}
+    - {id: E-06, materials: [M-06], has_conflict: false}
+    - {id: E-07, materials: [M-07], has_conflict: false}
+    - {id: E-08, materials: [M-08], has_conflict: false}
+    - {id: E-09, materials: [M-09], has_conflict: false}
+  claims:
+    - id: C-01
+      text: AI模型正在进入漏洞研究、攻击模拟与安全工具链
+      supporting_events: [E-01, E-02, E-03, E-04, E-08]
+    - id: C-02
+      text: 不同模型的网络安全能力存在明显差异且必须基准化评估
+      supporting_events: [E-05, E-08]
+    - id: C-03
+      text: 企业安全边界正扩展到非人类身份和AI智能体治理
+      supporting_events: [E-06, E-07, E-09]

@@ -1,0 +1,89 @@
+schema_version: '1.0'
+article:
+  id: ai-agent-cybersecurity
+  title: AI智能体正在重写网络安全攻防
+blocks:
+  - block_id: intro-1
+    heading_path: []
+    role: paragraph
+    source_anchor:
+      exact_text: AI不再只是被保护的系统，也开始成为能够发现漏洞、调用工具、执行任务，甚至在评估环境里突破平台边界的行动者。
+    payload:
+      text: AI不再只是被保护的系统，也开始成为能够发现漏洞、调用工具、执行任务，甚至在评估环境里突破平台边界的行动者。
+    evidence_ids: [ev-001, ev-003, ev-004]
+    preserve_exactly: false
+    formatter_candidates: [paragraph]
+    fallback: []
+    required: true
+  - block_id: sec-1
+    heading_path: [一、当安全工具开始自己行动]
+    role: article_section
+    source_anchor:
+      exact_text: 传统安全工具的边界相对清楚。
+    payload:
+      text: 传统安全工具的边界相对清楚。
+    evidence_ids: [ev-001, ev-003, ev-004]
+    preserve_exactly: false
+    formatter_candidates: [chapter-title, paragraph]
+    fallback: []
+    required: true
+  - block_id: sec-2
+    heading_path: [二、能力不是一个分数]
+    role: article_section
+    source_anchor:
+      exact_text: AI进入安全攻防后，最容易出现的误区，是把一个漂亮分数理解成通用能力。
+    payload:
+      text: AI进入安全攻防后，最容易出现的误区，是把一个漂亮分数理解成通用能力。
+    evidence_ids: [ev-002, ev-005, ev-008]
+    preserve_exactly: false
+    formatter_candidates: [chapter-title, paragraph]
+    fallback: []
+    required: true
+  - block_id: sec-3
+    heading_path: [三、身份治理成为新边界]
+    role: article_section
+    source_anchor:
+      exact_text: 如果AI智能体可以持续执行任务，那么它在企业系统里就越来越像一种“非人类身份”。
+    payload:
+      text: 如果AI智能体可以持续执行任务，那么它在企业系统里就越来越像一种“非人类身份”。
+    evidence_ids: [ev-006, ev-007, ev-009]
+    preserve_exactly: false
+    formatter_candidates: [chapter-title, paragraph]
+    fallback: []
+    required: true
+  - block_id: sec-4
+    heading_path: [四、企业现在该补什么]
+    role: article_section
+    source_anchor:
+      exact_text: 面对这一轮变化，企业不必先追逐一个“最强安全模型”，而应先检查自己的基础控制是否能约束智能体。
+    payload:
+      text: 面对这一轮变化，企业不必先追逐一个“最强安全模型”，而应先检查自己的基础控制是否能约束智能体。
+    evidence_ids: [ev-001, ev-003, ev-007, ev-008]
+    preserve_exactly: false
+    formatter_candidates: [chapter-title, paragraph]
+    fallback: []
+    required: true
+  - block_id: sig-1
+    heading_path: []
+    role: article_signature
+    source_anchor: {}
+    payload: {}
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates: [footer-signature-brand]
+    fallback: []
+    required: false
+constraints:
+  preserve_facts: [32.2%, 76.2%, 24.4%, 95.95%, 90%, 10亿美元, 4.5天]
+  preserve_stance: [基准不能外推为通用能力, AI智能体应被视为需要治理的非人类身份]
+  preserve_quotes: []
+  unresolved_facts: [部分hot-topics只有标题级信息]
+  editor_anchors: []
+  forbidden_transformations: [不得把测试环境结果写成现实攻击定论, 不得把拟收购写成已完成]
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

@@ -1,0 +1,10 @@
+mode: full
+input_mode: material_heavy
+article_mode: medium
+length_mode: medium
+target_visible_chars: 2180
+acceptable_min: 2000
+acceptable_max: 2800
+material_ledger_path: material-ledger.yaml
+ingestion_report_path: material-ingestion-report.json
+audit_output: true

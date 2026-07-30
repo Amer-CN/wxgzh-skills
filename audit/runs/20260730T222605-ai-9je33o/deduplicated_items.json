@@ -1,0 +1,102 @@
+[
+  {
+    "id": "cms5a9tpy00utro7c9bw0s295",
+    "title": "OpenAI 发布 Codex 安全 CLI 与 SDK",
+    "summary": null,
+    "source": {"name": "X：Tibo (@thsottiaux)"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295", "original": "https://x.com/thsottiaux/status/2082241164850364555"},
+    "sourceCount": 8,
+    "signalCount": 6,
+    "latestAt": "2026-07-29T11:55:36.798Z",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms4xiiu3039froa1hrbb2jba",
+    "title": "Anthropic 用 Claude 发现密码学算法缺陷，HAWK 密钥强度减半",
+    "summary": null,
+    "source": {"name": "Anthropic：Research（发表成果 · 网页）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms4xiiu3039froa1hrbb2jba", "original": "https://www.anthropic.com/research/discovering-cryptographic-weaknesses"},
+    "sourceCount": 9,
+    "signalCount": 2,
+    "latestAt": "2026-07-30T01:05:13.769Z",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms6bt0tk01ulrotze69gtgvn",
+    "title": "OpenAI 自主AI模型在安全评估中攻破Hugging Face等五个平台",
+    "summary": null,
+    "source": {"name": "The Decoder：AI News（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms6bt0tk01ulrotze69gtgvn", "original": "https://the-decoder.com/openai-admits-its-autonomous-ai-models-also-compromised-credentials-on-other-platforms-during-security-eval"},
+    "sourceCount": 8,
+    "signalCount": 0,
+    "latestAt": "2026-07-29T20:27:07.169Z",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms59994300kcro7c5155buny",
+    "title": "Hugging Face 报告：AI 智能体自主入侵持续 4.5 天",
+    "summary": null,
+    "source": {"name": "X：Kim (@kimmonismus)"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms59994300kcro7c5155buny", "original": "https://x.com/kimmonismus/status/2082232405629235649"},
+    "sourceCount": 7,
+    "signalCount": 0,
+    "latestAt": "2026-07-29T19:56:43.297Z",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cmryrih7804c9rolge6wdk3v8",
+    "title": "Kimi K3 在网络安全漏洞利用测试中大幅落后美国前沿模型，知识蒸馏或为原因",
+    "summary": "英国AI安全研究所与美国AI标准与创新中心联合评估显示，Kimi K3在ExploitBench得分32.2%，美国领先模型为76.2%。",
+    "source": {"name": "The Decoder：AI News（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cmryrih7804c9rolge6wdk3v8", "original": "https://the-decoder.com/kimi-k3-trails-frontier-us-models-by-a-wide-margin-on-cyber-exploits-and-distillation-may-explain-why"},
+    "publishedAt": "2026-07-24T09:48:32.000Z",
+    "discoveredAt": "2026-07-24T09:53:12.325Z",
+    "selected": true,
+    "query_origin": "items:selected:q=AI安全"
+  },
+  {
+    "id": "cms6lhleg06ourohzls7gb1hk",
+    "title": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位",
+    "summary": "议程将探讨需从基础设施重建的智能体安全。",
+    "source": {"name": "TechCrunch：AI（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk", "original": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"},
+    "publishedAt": "2026-07-29T21:16:39.000Z",
+    "discoveredAt": "2026-07-29T21:26:44.431Z",
+    "selected": false,
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5cgsgp01osro7cbxt8b2wq",
+    "title": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求",
+    "summary": "数据安全公司Cyera计划以约10亿美元收购专注非人类身份和AI智能体安全的Oasis Security。",
+    "source": {"name": "TechCrunch：AI（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms5cgsgp01osro7c9bw0s295", "original": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents"},
+    "publishedAt": "2026-07-29T00:09:05.000Z",
+    "discoveredAt": "2026-07-29T00:26:24.250Z",
+    "selected": false,
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms3yedcz040qro82up1ya5bf",
+    "title": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash",
+    "summary": "微软发布MAI-Cyber-1-Flash，CyberGym成功率95.95%；接入MDASH后可处理约90%的网络安全任务。另有两个X信号报告同一事件，去重合并。",
+    "source": {"name": "IT之家（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf", "original": "https://www.ithome.com/0/982/312.htm"},
+    "publishedAt": "2026-07-28T00:59:36.000Z",
+    "discoveredAt": "2026-07-28T01:04:49.287Z",
+    "selected": false,
+    "duplicate_ids": ["cms3jb9vz00dmroiy63upwy4b", "cms3iitej002grobn3kqeyjgu", "cms3h61yj0019roth0lej5m4z"],
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5suoi10selrobkfvb0mwoe",
+    "title": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个",
+    "summary": "鸿蒙电脑通过CC EAL5+认证，聚焦智能体安全、金融安全与企业办公安全。",
+    "source": {"name": "IT之家（RSS）"},
+    "links": {"aihot": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe", "original": "https://www.ithome.com/0/983/125.htm"},
+    "publishedAt": "2026-07-29T07:59:54.000Z",
+    "discoveredAt": "2026-07-29T08:05:03.105Z",
+    "selected": false,
+    "query_origin": "items:all:q=智能体安全"
+  }
+]

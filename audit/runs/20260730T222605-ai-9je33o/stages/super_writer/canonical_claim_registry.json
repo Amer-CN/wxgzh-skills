@@ -1,0 +1,7 @@
+{
+  "claims": [
+    {"claim_id": "C-01", "claim": "AI模型已进入漏洞研究、安全工具、攻击模拟等环节。", "evidence_ids": ["ev-001", "ev-002", "ev-003", "ev-004", "ev-008"], "boundary": "must_attribute"},
+    {"claim_id": "C-02", "claim": "网络安全能力必须按具体基准和任务评价，不能从单项测试外推。", "evidence_ids": ["ev-005", "ev-008"], "boundary": "can_assert"},
+    {"claim_id": "C-03", "claim": "企业正在把AI智能体视为需要独立治理的非人类身份。", "evidence_ids": ["ev-006", "ev-007", "ev-009"], "boundary": "must_qualify"}
+  ]
+}

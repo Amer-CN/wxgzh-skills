@@ -1,0 +1,77 @@
+{
+  "skill": "aihot",
+  "skill_version": "1.2.1",
+  "topic": "AI智能体正在重写网络安全攻防",
+  "queries": [
+    {
+      "url": "https://aihot.virxact.com/api/v1/hot-topics",
+      "mode": "hot-topics",
+      "http_status": 200,
+      "returned_count": 5,
+      "adopted_count": 4,
+      "note": "current-hot route required by SKILL.md; four directly related security topics adopted"
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=selected&q=AI%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "mode": "selected",
+      "q": "AI安全",
+      "window": "7d",
+      "limit": 10,
+      "started_at": "2026-07-30T14:04:24.168948+00:00",
+      "completed_at": "2026-07-30T14:04:30.348514+00:00",
+      "http_status": 200,
+      "returned_count": 1
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=selected&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "mode": "selected",
+      "q": "智能体安全",
+      "window": "7d",
+      "limit": 10,
+      "started_at": "2026-07-30T14:04:56.454402+00:00",
+      "completed_at": "2026-07-30T14:04:58.255771+00:00",
+      "http_status": 200,
+      "returned_count": 0
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=all&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "mode": "all",
+      "q": "智能体安全",
+      "window": "7d",
+      "limit": 10,
+      "http_status": null,
+      "returned_count": null,
+      "error": "urllib.error.URLError: SSL EOF occurred in violation of protocol",
+      "transient_network_error": true
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=all&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "mode": "all",
+      "q": "智能体安全",
+      "window": "7d",
+      "limit": 10,
+      "http_status": null,
+      "returned_count": null,
+      "error": "fetch failed",
+      "transient_network_error": true
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=all&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "mode": "all",
+      "q": "智能体安全",
+      "window": "7d",
+      "limit": 10,
+      "attempt": 1,
+      "started_at": "2026-07-30T14:24:47.898238+00:00",
+      "completed_at": "2026-07-30T14:24:53.277034+00:00",
+      "http_status": 200,
+      "returned_count": 7,
+      "transient_network_error": false
+    }
+  ],
+  "total_raw_items": 12,
+  "total_deduplicated": 9,
+  "duplicates_removed": 3,
+  "dedup_note": "Three additional MAI-Cyber-1-Flash/MDASH reports merged into the primary IT之家 item.",
+  "no_unkeyed_global_items_used": true
+}

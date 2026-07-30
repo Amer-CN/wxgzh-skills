@@ -1,0 +1,16 @@
+{
+  "agent_id": "agent1",
+  "handshake_token": "1ab9776724658890c38a94b885b4712c629779709356989891965791adae9926",
+  "produced_files": [
+    "deduplicated_items.json",
+    "fetch_log.json",
+    "raw_items.json"
+  ],
+  "produced_hashes": {
+    "deduplicated_items.json": "becb90057cf8b03a320727da0d7f108de8656631e2e8c71d32b94fe71b2333f2",
+    "fetch_log.json": "25c7144e1cf0c0d1c6ee8e04d95185b4728fc6f9193cee7f81bab944fe6ca80c",
+    "raw_items.json": "5c3b0f039e01cf316105e8b1b0df1609c394aa0d8f9bcfb40637c73dc492fd1c"
+  },
+  "run_id": "20260730T222605-ai-9je33o",
+  "stage": "aihot"
+}

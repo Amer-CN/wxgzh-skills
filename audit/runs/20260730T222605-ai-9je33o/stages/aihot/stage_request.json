@@ -1,0 +1,12 @@
+{
+  "config": {
+    "responsibility": "fetch/aggregate/dedup; no article; no image inventory"
+  },
+  "inputs": {
+    "topic": "AI智能体正在重写网络安全攻防"
+  },
+  "network_mode": "live",
+  "run_id": "20260730T222605-ai-9je33o",
+  "skill_name": "aihot",
+  "stage": "aihot"
+}
