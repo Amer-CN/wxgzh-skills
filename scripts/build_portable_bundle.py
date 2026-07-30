@@ -24,7 +24,8 @@ from wxgzh_pipeline import paths as P             # noqa: E402
 from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
 from wxgzh_pipeline import secrets as SEC         # noqa: E402
 from wxgzh_pipeline.zipping import (  # noqa: E402
-    PIPELINE_RELEASE_INCLUDES, copy_tree, deterministic_zip)
+    PIPELINE_RELEASE_EXCLUDES, PIPELINE_RELEASE_INCLUDES,
+    copy_tree, deterministic_zip)
 
 EXPECTED_PIPELINE_FILE_COUNT = 130
 EXPECTED_MANIFEST_FILE_COUNT = 665
@@ -136,7 +137,8 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     # 1. orchestrator skill. Include the exact CI workflow because a shipped
     # regression test reads it; all other .github content remains excluded.
     copy_tree(SKILL_ROOT, bundle / "wxgzh-pipeline",
-              include_paths=PIPELINE_RELEASE_INCLUDES)
+              include_paths=PIPELINE_RELEASE_INCLUDES,
+              exclude_paths=PIPELINE_RELEASE_EXCLUDES)
     # 2. installer
     (bundle / "installer").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(SKILL_ROOT / "scripts" / "install.py", bundle / "installer" / "install.py")
@@ -192,7 +194,8 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     bundle_zip = out_dir / f"wxgzh-pipeline-portable-bundle-v{__version__}.zip"
     skill_sha = deterministic_zip(
         SKILL_ROOT, skill_zip, arc_prefix="wxgzh-pipeline",
-        include_paths=PIPELINE_RELEASE_INCLUDES)
+        include_paths=PIPELINE_RELEASE_INCLUDES,
+        exclude_paths=PIPELINE_RELEASE_EXCLUDES)
     bundle_sha = deterministic_zip(
         bundle, bundle_zip, arc_prefix="portable-bundle",
         include_paths=("wxgzh-pipeline/.github/workflows/ci.yml",))

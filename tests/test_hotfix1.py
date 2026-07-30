@@ -24,7 +24,8 @@ from wxgzh_pipeline import execmodel as EM
 from wxgzh_pipeline import producers as PR
 from wxgzh_pipeline import skill_discovery as SD
 from wxgzh_pipeline.skill_discovery import InstallReceiptError
-from wxgzh_pipeline.zipping import PIPELINE_RELEASE_INCLUDES, _skip
+from wxgzh_pipeline.zipping import (
+    PIPELINE_RELEASE_EXCLUDES, PIPELINE_RELEASE_INCLUDES, _skip)
 
 
 # ---------- P0#3: tamper + resume ----------
@@ -286,7 +287,8 @@ def test_portable_installer_preserves_pipeline_release_include(tmp_path):
             continue
         rel = Path(os.fsdecode(raw))
         source = SKILL_ROOT / rel
-        if source.is_file() and not _skip(rel, PIPELINE_RELEASE_INCLUDES):
+        if source.is_file() and not _skip(
+                rel, PIPELINE_RELEASE_INCLUDES, PIPELINE_RELEASE_EXCLUDES):
             destination = clean_source / rel
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
