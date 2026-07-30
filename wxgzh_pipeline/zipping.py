@@ -19,7 +19,11 @@ FORBIDDEN_SUFFIXES = {".zip"}
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
 
 
-def _skip(p: Path) -> bool:
+def _skip(p: Path, include_paths=()) -> bool:
+    p = Path(p)
+    included = {Path(item).as_posix() for item in include_paths}
+    if p.as_posix() in included:
+        return False
     if any(part in EXCLUDE_DIRS for part in p.parts):
         return True
     if p.suffix.lower() in EXCLUDE_SUFFIXES or p.suffix.lower() in FORBIDDEN_SUFFIXES:
@@ -29,11 +33,11 @@ def _skip(p: Path) -> bool:
     return False
 
 
-def copy_tree(src: Path, dst: Path) -> int:
+def copy_tree(src: Path, dst: Path, include_paths=()) -> int:
     src, dst = Path(src), Path(dst)
     n = 0
     for p in sorted(src.rglob("*")):
-        if p.is_file() and not _skip(p.relative_to(src)):
+        if p.is_file() and not _skip(p.relative_to(src), include_paths):
             target = dst / p.relative_to(src)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(p, target)
@@ -41,13 +45,14 @@ def copy_tree(src: Path, dst: Path) -> int:
     return n
 
 
-def deterministic_zip(src_dir: Path, out_zip: Path, arc_prefix: str = "") -> str:
+def deterministic_zip(src_dir: Path, out_zip: Path, arc_prefix: str = "", include_paths=()) -> str:
     """Create a reproducible zip of src_dir; return its sha256."""
     src_dir = Path(src_dir)
     out_zip = Path(out_zip)
     if out_zip.exists():
         out_zip.unlink()
-    files = sorted(p for p in src_dir.rglob("*") if p.is_file() and not _skip(p.relative_to(src_dir)))
+    files = sorted(p for p in src_dir.rglob("*")
+                   if p.is_file() and not _skip(p.relative_to(src_dir), include_paths))
     with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED) as z:
         for p in files:
             arcname = (Path(arc_prefix) / p.relative_to(src_dir)).as_posix() if arc_prefix \

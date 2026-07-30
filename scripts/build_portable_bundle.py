@@ -9,9 +9,12 @@ zipping and fails the build on any credential-form hit.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
+import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -22,11 +25,92 @@ from wxgzh_pipeline import skill_discovery as SD  # noqa: E402
 from wxgzh_pipeline import secrets as SEC         # noqa: E402
 from wxgzh_pipeline.zipping import copy_tree, deterministic_zip  # noqa: E402
 
+PIPELINE_RELEASE_INCLUDES = (".github/workflows/ci.yml",)
+
+EXPECTED_PIPELINE_FILE_COUNT = 130
+EXPECTED_MANIFEST_FILE_COUNT = 665
+EXPECTED_BUNDLE_ZIP_FILE_COUNT = 666
+
 INSTALL_MD = {
     "INSTALL_WINDOWS.md": "# 安装（Windows）\n\n```powershell\npython installer\\install.py --dry-run\npython installer\\install.py   # 实际安装\npython .agents\\skills\\wxgzh-pipeline\\scripts\\doctor.py --offline\n```\n\n复制 config.example.env 为项目根 .env 填入 WECHAT_APP_ID/WECHAT_APP_SECRET。\n日常：`发文：<选题>`。\n",
     "INSTALL_MACOS.md": "# 安装（macOS）\n\n```bash\npython3 installer/install.py --dry-run\npython3 installer/install.py\npython3 .agents/skills/wxgzh-pipeline/scripts/doctor.py --offline\n```\n\ncp config.example.env <项目根>/.env 并填入凭据。日常：`发文：<选题>`。\n",
     "INSTALL_LINUX.md": "# 安装（Linux）\n\n```bash\npython3 installer/install.py --dry-run\npython3 installer/install.py\npython3 .agents/skills/wxgzh-pipeline/scripts/doctor.py --offline\n```\n\ncp config.example.env <项目根>/.env 并填入凭据。日常：`发文：<选题>`。\n",
 }
+
+
+def _zip_file_map(z: zipfile.ZipFile, prefix: str) -> dict:
+    result = {}
+    for info in z.infolist():
+        if info.is_dir() or not info.filename.startswith(prefix):
+            continue
+        rel = info.filename[len(prefix):]
+        data = z.read(info.filename)
+        result[rel] = {"size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+    return result
+
+
+def _run_shipped_workflow_test(root: Path) -> dict:
+    command = [sys.executable, "-m", "pytest",
+               "tests/test_hotfix7_live_handshake.py::test_integration_workflow_fails_closed_after_tee",
+               "-q", "-o", "addopts="]
+    proc = subprocess.run(command, cwd=root, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace")
+    if proc.returncode != 0:
+        raise SystemExit(f"shipped workflow test failed in {root}:\n{proc.stdout}\n{proc.stderr}")
+    return {"command": command, "exit_code": proc.returncode,
+            "stdout": proc.stdout.strip(), "stderr": proc.stderr.strip()}
+
+
+def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Path) -> dict:
+    """Fail closed unless both release archives are self-consistent."""
+    workflow_rel = ".github/workflows/ci.yml"
+    skill_prefix = "wxgzh-pipeline/"
+    bundle_pipeline_prefix = "portable-bundle/wxgzh-pipeline/"
+    with zipfile.ZipFile(skill_zip) as skill_z, zipfile.ZipFile(bundle_zip) as bundle_z:
+        skill_tree = _zip_file_map(skill_z, skill_prefix)
+        bundle_tree = _zip_file_map(bundle_z, bundle_pipeline_prefix)
+        if skill_tree != bundle_tree:
+            raise SystemExit("pipeline ZIP tree differs from portable bundle pipeline tree")
+        if len(skill_tree) != EXPECTED_PIPELINE_FILE_COUNT:
+            raise SystemExit(f"unexpected pipeline file count: {len(skill_tree)}")
+        sw = skill_z.read(skill_prefix + workflow_rel)
+        bw = bundle_z.read(bundle_pipeline_prefix + workflow_rel)
+        source = (SKILL_ROOT / workflow_rel).read_bytes()
+        if not (sw == bw == source):
+            raise SystemExit("CI workflow bytes differ between source and release archives")
+        manifest = json.loads(bundle_z.read("portable-bundle/MANIFEST.json"))
+        if manifest.get("file_count") != EXPECTED_MANIFEST_FILE_COUNT:
+            raise SystemExit(f"unexpected manifest file_count: {manifest.get('file_count')}")
+        bundle_files = [i for i in bundle_z.infolist() if not i.is_dir()]
+        if len(bundle_files) != EXPECTED_BUNDLE_ZIP_FILE_COUNT:
+            raise SystemExit(f"unexpected bundle ZIP file count: {len(bundle_files)}")
+        manifest_paths = {item["path"] for item in manifest.get("files", [])}
+        workflow_manifest_path = "wxgzh-pipeline/" + workflow_rel
+        if workflow_manifest_path not in manifest_paths:
+            raise SystemExit("portable MANIFEST does not cover CI workflow")
+        manifest_errors = []
+        for item in manifest["files"]:
+            data = bundle_z.read("portable-bundle/" + item["path"])
+            if len(data) != item["size"] or hashlib.sha256(data).hexdigest() != item["sha256"]:
+                manifest_errors.append(item["path"])
+        if manifest_errors:
+            raise SystemExit(f"portable MANIFEST mismatch: {manifest_errors}")
+        skill_z.extractall(extract_root / "skill")
+        bundle_z.extractall(extract_root / "bundle")
+    skill_test = _run_shipped_workflow_test(extract_root / "skill" / "wxgzh-pipeline")
+    bundle_test = _run_shipped_workflow_test(
+        extract_root / "bundle" / "portable-bundle" / "wxgzh-pipeline")
+    return {
+        "pipeline_file_count": len(skill_tree),
+        "manifest_file_count": manifest["file_count"],
+        "bundle_zip_file_count": len(bundle_files),
+        "workflow_size": len(source),
+        "workflow_sha256": hashlib.sha256(source).hexdigest(),
+        "pipeline_trees_equal": True,
+        "manifest_verified": True,
+        "skill_zip_test": skill_test,
+        "bundle_zip_test": bundle_test,
+    }
 
 
 def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
@@ -50,8 +134,10 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     bundle = staging / "portable-bundle"
     bundle.mkdir(parents=True)
 
-    # 1. orchestrator skill
-    copy_tree(SKILL_ROOT, bundle / "wxgzh-pipeline")
+    # 1. orchestrator skill. Include the exact CI workflow because a shipped
+    # regression test reads it; all other .github content remains excluded.
+    copy_tree(SKILL_ROOT, bundle / "wxgzh-pipeline",
+              include_paths=PIPELINE_RELEASE_INCLUDES)
     # 2. installer
     (bundle / "installer").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(SKILL_ROOT / "scripts" / "install.py", bundle / "installer" / "install.py")
@@ -91,7 +177,6 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
         raise SystemExit(f"secrets detected in bundle: {scan['hits']}")
 
     # 6. bundle MANIFEST
-    import hashlib
     files = []
     for p in sorted(bundle.rglob("*")):
         if p.is_file() and p.name != "MANIFEST.json":
@@ -106,11 +191,17 @@ def build(out_dir: Path, skills_home: Path, staging: Path) -> dict:
     # 7. zips (reproducible)
     skill_zip = out_dir / f"wxgzh-pipeline-v{__version__}.zip"
     bundle_zip = out_dir / f"wxgzh-pipeline-portable-bundle-v{__version__}.zip"
-    skill_sha = deterministic_zip(SKILL_ROOT, skill_zip, arc_prefix="wxgzh-pipeline")
-    bundle_sha = deterministic_zip(bundle, bundle_zip, arc_prefix="portable-bundle")
+    skill_sha = deterministic_zip(
+        SKILL_ROOT, skill_zip, arc_prefix="wxgzh-pipeline",
+        include_paths=PIPELINE_RELEASE_INCLUDES)
+    bundle_sha = deterministic_zip(
+        bundle, bundle_zip, arc_prefix="portable-bundle",
+        include_paths=("wxgzh-pipeline/.github/workflows/ci.yml",))
+    artifact_check = verify_release_artifacts(skill_zip, bundle_zip, staging / "artifact-check")
     return {"skill_zip": str(skill_zip), "skill_zip_sha256": skill_sha,
             "bundle_zip": str(bundle_zip), "bundle_zip_sha256": bundle_sha,
-            "locked_skill_file_counts": locked_counts, "secrets_detected": False}
+            "locked_skill_file_counts": locked_counts, "secrets_detected": False,
+            "artifact_check": artifact_check}
 
 
 def main(argv=None):
