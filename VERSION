@@ -1,5 +1,5 @@
-version: 0.1.0-dev2-hotfix7R
-previous_version: 0.1.0-dev2-hotfix7
+version: 0.1.0-dev2-hotfix7R2
+previous_version: 0.1.0-dev2-hotfix7R
 status: development
 release_date: 2026-07-30
 kind: orchestrator

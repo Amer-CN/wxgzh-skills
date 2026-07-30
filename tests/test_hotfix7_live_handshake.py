@@ -18,7 +18,7 @@ from wxgzh_pipeline.ack_cli import main as ack_main
 from wxgzh_pipeline.execmodel import AGENT_EXPECTED_OUTPUTS, SUPER_WRITER_AGENT_OUTPUTS
 from wxgzh_pipeline import producers as P
 
-from conftest import FAKE_FIXTURE
+from conftest import FAKE_FIXTURE, SKILL_ROOT
 
 LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
     "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92"
@@ -262,3 +262,15 @@ def test_pipeline_rejects_agent_report_different_from_official(tmp_path, skills_
     out = orch.run("report mismatch")
     assert out["status"] == "STAGE_FAILED"
     assert out["failed_stage"] == "super_writer"
+
+
+def test_integration_workflow_fails_closed_after_tee():
+    workflow = (SKILL_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "WXGZH_FIXED_MEDIA_ROOT: ${{ github.workspace }}/clones/media-enrichment" in workflow
+    assert "WXGZH_REAL_SUPER_WRITER_ROOT: ${{ github.workspace }}/clones/super-writer" in workflow
+    assert 'git -C "$WXGZH_FIXED_MEDIA_ROOT" rev-parse HEAD' in workflow
+    assert 'git -C "$WXGZH_REAL_SUPER_WRITER_ROOT" rev-parse HEAD' in workflow
+    assert "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92" in workflow
+    assert "set -o pipefail" in workflow
+    assert "pytest_rc=${PIPESTATUS[0]}" in workflow
+    assert 'exit "$pytest_rc"' in workflow

@@ -101,19 +101,39 @@ jobs:
           exit $rc
       - name: Cross-repo pytest (no SKIP allowed for cross-repo tests)
         env:
+          WXGZH_FIXED_MEDIA_ROOT: ${{ github.workspace }}/clones/media-enrichment
           WXGZH_SUBSKILL_CLONES: ${{ github.workspace }}/clones
           WXGZH_REAL_SKILLS_HOME: ${{ github.workspace }}/clones
+          WXGZH_REAL_SUPER_WRITER_ROOT: ${{ github.workspace }}/clones/super-writer
         working-directory: wxgzh-pipeline
         run: |
+          test "$(git -C "$WXGZH_FIXED_MEDIA_ROOT" rev-parse HEAD)" = "cedf92ca45b0cdb7e010d489e9da67dd28ef6e59"
+          test "$(git -C "$WXGZH_REAL_SUPER_WRITER_ROOT" rev-parse HEAD)" = "1e58d01e38346018886ab1ad6a183228263eae49"
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p = Path("${{ github.workspace }}/clones/super-writer/scripts/validate_article_length.py")
+          actual = hashlib.sha256(p.read_bytes()).hexdigest()
+          expected = "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92"
+          if actual != expected:
+              raise SystemExit(f"validator sha256 mismatch: {actual} != {expected}")
+          print(f"validator_sha256={actual}")
+          PY
+          set +e
+          set -o pipefail
           python -m pytest \
             tests/test_hotfix1.py \
             tests/test_hotfix7_live_handshake.py::test_cross_repo_real_full_mode_long_pass \
             tests/test_hotfix7_live_handshake.py::test_cross_repo_medium_overlong_uses_declared_policy \
             tests/test_hotfix7_live_handshake.py::test_cross_repo_missing_full_mode_artifact_fails \
             -q -o addopts='' -rs 2>&1 | tee out.txt
-          # In integration, every named cross-repo test MUST run; any SKIP fails.
+          pytest_rc=${PIPESTATUS[0]}
+          set -e
           if grep -q "SKIPPED" out.txt; then
-            echo "cross-repo tests were SKIPPED (must run in integration job)"; exit 1; fi
+            echo "cross-repo tests were SKIPPED (must run in integration job)"
+            exit 1
+          fi
+          exit "$pytest_rc"
       - name: Upload integration result
         if: always()
         uses: actions/upload-artifact@v4
