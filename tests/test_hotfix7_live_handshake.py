@@ -1,7 +1,9 @@
 """hotfix7 regressions for OBS-22 and OBS-23."""
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -18,7 +20,29 @@ from wxgzh_pipeline import producers as P
 
 from conftest import FAKE_FIXTURE
 
-REAL_SUPER_WRITER = Path("F:/AIXM/wxgzh/.agents/skills/super-writer")
+LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
+    "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92"
+)
+
+
+def _real_super_writer_root() -> Path:
+    explicit = os.environ.get("WXGZH_REAL_SUPER_WRITER_ROOT")
+    if explicit:
+        root = Path(explicit)
+    else:
+        skills_home = os.environ.get("WXGZH_REAL_SKILLS_HOME")
+        if not skills_home:
+            raise AssertionError(
+                "set WXGZH_REAL_SUPER_WRITER_ROOT or WXGZH_REAL_SKILLS_HOME"
+            )
+        root = Path(skills_home) / "super-writer"
+    validator = root / "scripts" / "validate_article_length.py"
+    assert validator.is_file(), f"locked Super Writer validator missing: {validator}"
+    actual = hashlib.sha256(validator.read_bytes()).hexdigest()
+    assert actual == LOCKED_SUPER_WRITER_VALIDATOR_SHA256, (
+        f"locked Super Writer validator sha256 mismatch: {actual}"
+    )
+    return root
 
 
 def _request(sd: Path, stage="aihot", outputs=None, run_dir=None):
@@ -116,7 +140,7 @@ def test_super_writer_validator_command_has_complete_full_mode_paths(tmp_path):
     assert argv[argv.index("--target-visible-chars") + 1] == "5000"
 
 
-def test_super_writer_policy_missing_or_actual_length_self_proof_rejected(tmp_path):
+def test_super_writer_policy_reads_declared_profile_without_article_inference(tmp_path):
     sd = tmp_path / "super_writer"
     sd.mkdir()
     with pytest.raises(ValueError):
@@ -138,8 +162,8 @@ def _real_validator(stage_dir: Path, mode="long", target=4512, minimum=4500, max
     for flag, value in (("--article-mode", mode), ("--target-visible-chars", target),
                         ("--acceptable-min", minimum), ("--acceptable-max", maximum)):
         argv[argv.index(flag) + 1] = str(value)
-    return subprocess.run([sys.executable, "-X", "utf8",
-                           str(REAL_SUPER_WRITER / "scripts/validate_article_length.py"), *argv],
+    validator = _real_super_writer_root() / "scripts" / "validate_article_length.py"
+    return subprocess.run([sys.executable, "-X", "utf8", str(validator), *argv],
                           capture_output=True, text=True, encoding="utf-8")
 
 

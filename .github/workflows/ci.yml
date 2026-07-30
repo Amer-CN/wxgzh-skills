@@ -26,6 +26,12 @@ jobs:
           repository: Amer-CN/media-enrichment
           ref: cedf92ca45b0cdb7e010d489e9da67dd28ef6e59
           path: fixed-media
+      - name: Checkout Super Writer at locked commit
+        uses: actions/checkout@v4
+        with:
+          repository: Amer-CN/super-writer
+          ref: 1e58d01e38346018886ab1ad6a183228263eae49
+          path: fixed-super-writer
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -36,6 +42,7 @@ jobs:
       - name: Run hermetic tests (fake_live — no real WeChat side effects)
         env:
           WXGZH_FIXED_MEDIA_ROOT: ${{ github.workspace }}/fixed-media
+          WXGZH_REAL_SUPER_WRITER_ROOT: ${{ github.workspace }}/fixed-super-writer
         run: python -m pytest tests -q
 
   integration:
@@ -98,9 +105,13 @@ jobs:
           WXGZH_REAL_SKILLS_HOME: ${{ github.workspace }}/clones
         working-directory: wxgzh-pipeline
         run: |
-          python -m pytest tests/test_hotfix1.py -q -o addopts='' -rs 2>&1 | tee out.txt
-          # In the integration job WXGZH_SUBSKILL_CLONES + WXGZH_REAL_SKILLS_HOME
-          # are set, so every cross-repo test MUST run — any SKIP is a failure (P0#7).
+          python -m pytest \
+            tests/test_hotfix1.py \
+            tests/test_hotfix7_live_handshake.py::test_cross_repo_real_full_mode_long_pass \
+            tests/test_hotfix7_live_handshake.py::test_cross_repo_medium_overlong_uses_declared_policy \
+            tests/test_hotfix7_live_handshake.py::test_cross_repo_missing_full_mode_artifact_fails \
+            -q -o addopts='' -rs 2>&1 | tee out.txt
+          # In integration, every named cross-repo test MUST run; any SKIP fails.
           if grep -q "SKIPPED" out.txt; then
             echo "cross-repo tests were SKIPPED (must run in integration job)"; exit 1; fi
       - name: Upload integration result
