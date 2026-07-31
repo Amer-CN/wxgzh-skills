@@ -30,6 +30,7 @@ import yaml
 
 from . import execmodel as EM
 from . import agent_handshake as AH
+from . import secrets as SEC
 from .state import sha256_file
 from .subprocess_runner import run_script
 
@@ -660,6 +661,18 @@ def _media_fake_live(ctx, sd, expected, state, entry, validator):
     return [sd / name for name in expected if (sd / name).is_file()], meta
 
 
+def _media_subprocess_env(ctx) -> dict:
+    """Use the exact credential source doctor validates: process/context env,
+    then project .env as setdefault. Values are passed only to the subprocess."""
+    env = dict(os.environ)
+    env.update(getattr(ctx, "env", {}) or {})
+    dotenv = Path(ctx.run_dir).parents[2] / ".env"
+    if dotenv.is_file():
+        for key, value in SEC.parse_env_file(dotenv).items():
+            env.setdefault(key, value)
+    return env
+
+
 def _media_two_phase(ctx, sd, expected, state, entry, validator):
     """State-machine-owned media discover/continue execution.
 
@@ -681,7 +694,7 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 entry,
                 _entry_args(ctx, "media_enrichment", sd, state, request_path,
                             media_phase="discover"),
-                timeout=300,
+                timeout=300, env=_media_subprocess_env(ctx),
             )
             events_path = discover_dir / "upload_events.json"
             zero_upload = False
@@ -759,7 +772,7 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
             entry,
             _entry_args(ctx, "media_enrichment", sd, state, request_path,
                         media_phase="continue", discovery_manifest=frozen),
-            timeout=300,
+            timeout=300, env=_media_subprocess_env(ctx),
         )
         meta = {
             "exec_kind": EM.SUBPROC,
