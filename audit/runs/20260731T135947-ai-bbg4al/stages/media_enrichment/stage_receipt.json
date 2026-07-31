@@ -1,8 +1,8 @@
 {
   "elapsed_seconds": 3.0,
-  "ended_at": "2026-07-31T10:38:32Z",
+  "ended_at": "2026-07-31T15:20:59Z",
   "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
-  "entrypoint_sha256": "0f86838f57b02eb0d970404a072609d7bf4fa98e807f0f64d67607df7a0dedbd",
+  "entrypoint_sha256": "7ff4caa8a1ffffc14d2fbe1bc18b3b3cd7367e50c0b6fe3535200ea6000e34c4",
   "input_files": [
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\stage_request.json",
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md",
@@ -42,7 +42,7 @@
       "--bindings",
       "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
     ],
-    "elapsed_seconds": 0.693,
+    "elapsed_seconds": 0.8,
     "exit_code": 1,
     "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
     "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
@@ -57,8 +57,8 @@
   ],
   "output_hashes": {
     "article_image_bindings.json": "7ec632d8893e97842da4a1d3b806c08b36078b544d7d189901b3480aab337a76",
-    "media_manifest.json": "54c8aec921e85aef4bd7097ce351ed6b4002aa784f4dae60d0cc2ed6ac311aac",
-    "upload_events.json": "8d9c9f62cfb4cd4fe6266af36fda04c69b9e007c15a8d88d1cce9ea9ab3d439b"
+    "media_manifest.json": "5c00adfd6007cf0137e9e734deb662dabff2ac85affb8a9646425bfd809c66de",
+    "upload_events.json": "61ecbc79b5eb44ecdfd4548472a024bd2922af81f819b55941787fe48be8e410"
   },
   "side_effects": [
     {
@@ -68,10 +68,10 @@
   ],
   "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
   "skill_name": "media-enrichment",
-  "skill_root_sha256": "e982b757f37050b0a92cbb4378b106a4f3637224ad3de4abc8b3389e6196a4f7",
+  "skill_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
   "skill_version": "0.1.0-dev7-hotfix4",
   "stage": "media_enrichment",
-  "started_at": "2026-07-31T10:38:29Z",
+  "started_at": "2026-07-31T15:20:56Z",
   "validator_exit_code": 1,
   "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
   "validator_sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af"

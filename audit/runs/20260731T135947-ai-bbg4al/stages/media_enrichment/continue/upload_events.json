@@ -6,19 +6,35 @@
       "asset_id": "A-003",
       "mode": "wechat_image_host",
       "status": "failed",
-      "started_at": "2026-07-31T10:38:31Z",
-      "ended_at": "2026-07-31T10:38:31Z",
-      "start_monotonic": 5966.937,
-      "end_monotonic": 5966.937
+      "started_at": "2026-07-31T15:20:58Z",
+      "ended_at": "2026-07-31T15:20:58Z",
+      "start_monotonic": 22913.89,
+      "end_monotonic": 22913.89,
+      "http_status": null,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": null,
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": null
     },
     {
       "asset_id": "A-004",
       "mode": "wechat_image_host",
       "status": "failed",
-      "started_at": "2026-07-31T10:38:31Z",
-      "ended_at": "2026-07-31T10:38:31Z",
-      "start_monotonic": 5966.937,
-      "end_monotonic": 5966.937
+      "started_at": "2026-07-31T15:20:58Z",
+      "ended_at": "2026-07-31T15:20:58Z",
+      "start_monotonic": 22913.89,
+      "end_monotonic": 22913.89,
+      "http_status": null,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": null,
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": null
     }
   ]
 }

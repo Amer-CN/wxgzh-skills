@@ -830,3 +830,353 @@ draft_id=不存在
 ```
 
 本地/代码副作用：创建原Skill完整备份；修改media-enrichment的1个runtime文件与1个测试文件；更新Pipeline锁文件中media条目的root/entry哈希；创建补丁审计与RUN审计。未删除文件、未修改其他Skill、未修改Pipeline代码、未绕过安全检查。
+
+
+---
+
+# 档17 · 微信错误观测与显式批准硬上限
+
+## 34. 动手前备份
+
+```text
+backup=F:/AIXM/wxgzh/.agents/skills-backup/pre-obs44-obs46-20260731
+media_source_files=116
+media_source_dirs=14
+media_backup_files=116
+media_backup_dirs=14
+pipeline_source_files=159
+pipeline_source_dirs=45
+pipeline_backup_files=159
+pipeline_backup_dirs=45
+result=PASS
+```
+
+档16备份`media-enrichment-pre-obs42-20260731`仍保留，未删除。
+
+## 35. 追问一书面回答
+
+### A1
+
+material/source_url级上传路径是改前已有行为，不是档16补丁新引入。改前物证代码位于备份`media-enrichment-pre-obs42-20260731/scripts/run_media_enrichment.py`第381-399行：
+
+```python
+# Material/source_url approval is represented by the material's
+# copyright_review.status=known_allowed and needs no per-asset approval.
+if (discovery_file_valid
+        and asset.copyright_status == "known_allowed"
+        and asset.decision == "eligible"
+        and asset.quality_status == "pass"
+        and asset.relevance_status == "relevant"
+        and asset.duplicate_of is None):
+    upload_result = timed_upload(...)
+```
+
+### A2
+
+存在输入组合让`upload_candidate_ids`大于`copyright_approval.json`资产数。一个known_allowed素材可包含多张冻结资产，而single_asset批准可以只有2条甚至0条。
+
+### A3
+
+已增加硬上限：若`len(upload_candidate_ids) > len(asset_approvals)`，写入builder error、清空候选、零上传并非零退出。material/source_url状态不再能扩大显式single_asset批准集合。
+
+## 36. 追问二与OBS-45
+
+确认：**修复后，若源站在 discover 完成之后才加上“禁止转载”声明，continue 已无法感知并仍会上传冻结字节。**
+
+登记：`OBS-45(中) 源站在discover后新增禁止转载声明，continue无法感知。`
+
+按审核者要求不为此改代码。
+
+## 37. 阶段A微信只读诊断
+
+```text
+token_method=GET
+endpoint=https://api.weixin.qq.com/cgi-bin/token
+upload_method=POST
+endpoint=https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=<REDACTED>
+token_cache=none
+token_scope=local variable per upload
+public_egress_ip=212.135.214.6
+```
+
+响应体在`uploader.py`的`data = resp.json()`进入内存；原实现失败时压入`UploadResult.error`，但`timed_upload()`只记录status和时间，因此HTTP状态、errcode、errmsg在事件层丢失。
+
+凭据审计：
+
+```text
+WECHAT_APP_ID=<REDACTED>; visible=false; length=0; prefix4=null
+WECHAT_APP_SECRET=<REDACTED>; visible=false; length=0; prefix4=null
+```
+
+未写入appid、secret或access_token明文。
+
+## 38. 阶段B观测补丁
+
+每条upload event新增：
+
+```text
+http_status
+wechat_errcode
+wechat_errmsg
+request_elapsed_seconds
+endpoint_path
+request_attempt_index
+media_id
+url
+```
+
+token不会进入事件。接口路径、判定逻辑、成功条件、重试次数均未改变。
+
+media全量测试：
+
+```text
+284 passed
+6 skipped
+0 failed
+elapsed=30.51s
+```
+
+旧material/source_url测试更新为：没有显式single_asset批准时必须失败闭合、零上传。这是六条安全属性第2、3条的收紧。
+
+## 39. 六条安全属性
+
+1. 本地文件SHA必须与冻结清单逐字一致，不一致即拒绝、不可降级。  
+2. 只能上传copyright_approval.json显式批准的资产。  
+3. 上传候选数量不能超过批准条数；超出即错误退出。  
+4. URL安全检查未放宽或跳过。  
+5. 批准合同、manifest SHA、approval_mismatches和稳定身份均未放宽。  
+6. 没有新增自动批准路径；restricted优先级保留。  
+
+## 40. 阶段C补丁归档与重锁
+
+```text
+audit/skill-patches/obs44-obs46/diagnosis.md
+audit/skill-patches/obs44-obs46/changes.diff
+audit/skill-patches/obs44-obs46/safety-checklist.md
+audit/skill-patches/obs44-obs46/files-changed.md
+commit=dd880c04839f776d101e884ad6b1867b8734b1e1
+```
+
+官方锁方式仍为`compute_root_sha()`和`_file_sha()`：
+
+```text
+media.skill_root_sha256=a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4
+media.entrypoint_sha256=4e0810510b17490c41eb6a892723ab60846820ad8ef7f894a2e0de3d8f7b901c
+runtime_manifest_sha256=172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996
+runtime_file_count=57
+```
+
+Doctor完整输出：
+
+```json
+{
+  "wxgzh_pipeline_version": "0.1.0-dev2-hotfix7R4",
+  "project_root": "F:\\AIXM\\wxgzh",
+  "skills_home": "F:\\AIXM\\wxgzh\\.agents\\skills",
+  "network_mode": "live",
+  "skills_locked_ok": true,
+  "skills": {
+    "super-writer": {
+      "skill_name": "super-writer",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\super-writer",
+      "exists": true,
+      "locked_version": "0.3.2-rc1",
+      "current_version": "0.3.2-rc1",
+      "locked_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "current_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "file_count": 50,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "zh-human-writing": {
+      "skill_name": "zh-human-writing",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+      "exists": true,
+      "locked_version": "0.1.0",
+      "current_version": "0.1.0",
+      "locked_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "current_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "file_count": 53,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "media-enrichment": {
+      "skill_name": "media-enrichment",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+      "exists": true,
+      "locked_version": "0.1.0-dev7-hotfix4",
+      "current_version": "0.1.0-dev7-hotfix4",
+      "locked_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
+      "current_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
+      "file_count": 57,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "gzh-design": {
+      "skill_name": "gzh-design",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+      "exists": true,
+      "locked_version": "v2026.07.18-hammer.1",
+      "current_version": "v2026.07.18-hammer.1",
+      "locked_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "current_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "file_count": 76,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "aihot": {
+      "skill_name": "aihot",
+      "kind": "agent_invoked_skill",
+      "exists": true,
+      "registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+      "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+      "live_pipeline_allowed": true,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "ok": true,
+      "note": "external dependency (卡兹克); capability checked for real (registration + output contract); never copied/modified/republished"
+    }
+  },
+  "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+  "LIVE_PIPELINE_ALLOWED": true,
+  "aihot_registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+  "aihot_checked_locations": [
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\aihot",
+    "C:\\Users\\Admin\\.agents\\skills\\aihot"
+  ],
+  "wechat_config_present": true,
+  "wechat_credential_detail": {
+    "WECHAT_APP_ID_nonempty": true,
+    "WECHAT_APP_SECRET_nonempty": true
+  },
+  "wechat_required": true,
+  "project_writable": true,
+  "FAIL_CLOSED": false,
+  "doctor": "PASS"
+}
+```
+
+## 41. 阶段D唯一一次上传尝试
+
+完整upload_events：
+
+```json
+{
+  "schema_version": "1.0",
+  "serial": true,
+  "events": [
+    {
+      "asset_id": "A-003",
+      "mode": "wechat_image_host",
+      "status": "failed",
+      "started_at": "2026-07-31T15:20:58Z",
+      "ended_at": "2026-07-31T15:20:58Z",
+      "start_monotonic": 22913.89,
+      "end_monotonic": 22913.89,
+      "http_status": null,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": null,
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": null
+    },
+    {
+      "asset_id": "A-004",
+      "mode": "wechat_image_host",
+      "status": "failed",
+      "started_at": "2026-07-31T15:20:58Z",
+      "ended_at": "2026-07-31T15:20:58Z",
+      "start_monotonic": 22913.89,
+      "end_monotonic": 22913.89,
+      "http_status": null,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": null,
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": null
+    }
+  ]
+}
+```
+
+判定：
+
+```text
+attempt_rounds=1
+assets=[A-003,A-004]
+third_asset=false
+successful_uploads=0
+wechat_errcode=null
+wechat_errmsg=null
+http_status=null
+endpoint_path=null
+media_id=null
+```
+
+两条事件均在HTTP请求前失败。只读检查确认当前执行环境没有暴露`WECHAT_APP_ID`和`WECHAT_APP_SECRET`给上传器（长度均0），因此没有调用token或uploadimg接口，无法取得微信errcode。
+
+该失败属于环境配置问题，不是网络抖动；按档17阻断项10停机，没有第二轮。
+
+## 42. 阶段E/F未执行
+
+```text
+body_images_min_code_change=NOT_EXECUTED
+body_images_min_effective=6(default unchanged)
+pipeline_full_tests=NOT_EXECUTED
+gzh_design=NOT_STARTED
+wechat_draft=NOT_STARTED
+draft_id=null
+```
+
+阶段E只有阶段D两图均success时才授权。由于上传失败，未修改`validate_media_bindings.py`，未进入排版或草稿。
+
+## 43. OBS与异常
+
+- OBS-42：冻结本地字节修复保持有效。  
+- OBS-43：continue三产物根目录镜像保持有效。  
+- OBS-44：至少6图合同冲突仍存在，但本档阶段E未获执行条件。  
+- OBS-45：discover后新增禁止转载声明无法感知。  
+- OBS-46：旧upload_events缺少微信错误观测；本档已补字段。本次实际证明失败发生在HTTP前，字段为null。  
+
+## 44. 实际不可逆副作用
+
+```text
+档17微信上传尝试=2（单轮×A-003/A-004）
+档17实际HTTP微信请求=0
+档17上传成功=0
+档17新增微信素材=0
+media_id=0
+草稿创建=0
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+```
+
+本地副作用：创建档17前备份；修改media-enrichment continue硬上限、uploader观测字段及对应测试；更新media锁；创建补丁与RUN审计。没有删除文件、没有上传图片成功、没有创建草稿。
+
+最终状态：
+
+```text
+STATUS=BLOCKED_PRE_HTTP_WECHAT_CREDENTIALS_NOT_VISIBLE
+WECHAT_ERRCODE=null
+UPLOADED_COUNT=0
+DRAFT_ID=null
+```

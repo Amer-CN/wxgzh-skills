@@ -1,0 +1,98 @@
+{
+  "wxgzh_pipeline_version": "0.1.0-dev2-hotfix7R4",
+  "project_root": "F:\\AIXM\\wxgzh",
+  "skills_home": "F:\\AIXM\\wxgzh\\.agents\\skills",
+  "network_mode": "live",
+  "skills_locked_ok": true,
+  "skills": {
+    "super-writer": {
+      "skill_name": "super-writer",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\super-writer",
+      "exists": true,
+      "locked_version": "0.3.2-rc1",
+      "current_version": "0.3.2-rc1",
+      "locked_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "current_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "file_count": 50,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "zh-human-writing": {
+      "skill_name": "zh-human-writing",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+      "exists": true,
+      "locked_version": "0.1.0",
+      "current_version": "0.1.0",
+      "locked_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "current_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "file_count": 53,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "media-enrichment": {
+      "skill_name": "media-enrichment",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+      "exists": true,
+      "locked_version": "0.1.0-dev7-hotfix4",
+      "current_version": "0.1.0-dev7-hotfix4",
+      "locked_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
+      "current_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
+      "file_count": 57,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "gzh-design": {
+      "skill_name": "gzh-design",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+      "exists": true,
+      "locked_version": "v2026.07.18-hammer.1",
+      "current_version": "v2026.07.18-hammer.1",
+      "locked_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "current_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "file_count": 76,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "aihot": {
+      "skill_name": "aihot",
+      "kind": "agent_invoked_skill",
+      "exists": true,
+      "registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+      "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+      "live_pipeline_allowed": true,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "ok": true,
+      "note": "external dependency (卡兹克); capability checked for real (registration + output contract); never copied/modified/republished"
+    }
+  },
+  "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+  "LIVE_PIPELINE_ALLOWED": true,
+  "aihot_registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+  "aihot_checked_locations": [
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\aihot",
+    "C:\\Users\\Admin\\.agents\\skills\\aihot"
+  ],
+  "wechat_config_present": true,
+  "wechat_credential_detail": {
+    "WECHAT_APP_ID_nonempty": true,
+    "WECHAT_APP_SECRET_nonempty": true
+  },
+  "wechat_required": true,
+  "project_writable": true,
+  "FAIL_CLOSED": false,
+  "doctor": "PASS"
+}
