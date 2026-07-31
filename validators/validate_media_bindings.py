@@ -26,7 +26,11 @@ def _exact_wechat_url(url: str) -> bool:
     return p.scheme == "https" and p.hostname in MMBIZ_HOSTS
 
 
-def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dict]:
+def validate(media_manifest: str | Path, bindings: str | Path,
+             body_images_min: int = MIN_BODY_IMAGES,
+             body_images_min_source: str = "default") -> tuple[int, dict]:
+    if not isinstance(body_images_min, int) or isinstance(body_images_min, bool) or body_images_min < 1:
+        raise ValueError("body_images_min must be an integer >= 1")
     man = json.loads(Path(media_manifest).read_text(encoding="utf-8"))
     bnd = json.loads(Path(bindings).read_text(encoding="utf-8"))
     by_id = {a["asset_id"]: a for a in man.get("assets", []) if a.get("decision") == "eligible"}
@@ -48,15 +52,18 @@ def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dic
             problems.append(f"{aid}: binding sha256 != manifest sha256")
     count = len(body)
     report = {
-        "body_image_count": count, "min_required": MIN_BODY_IMAGES, "target": TARGET_BODY_IMAGES,
-        "min_met": count >= MIN_BODY_IMAGES, "target_met": count >= TARGET_BODY_IMAGES,
+        "body_image_count": count, "min_required": body_images_min,
+        "body_images_min_source": body_images_min_source,
+        "target": TARGET_BODY_IMAGES,
+        "min_met": count >= body_images_min, "target_met": count >= TARGET_BODY_IMAGES,
         "target_not_met_is_warning": True, "problems": problems,
         "all_bindings_consistent": not problems,
     }
-    ok = (count >= MIN_BODY_IMAGES) and (count <= 8) and not problems
+    ok = (count >= body_images_min) and (count <= 8) and not problems
     report["MEDIA_BINDINGS"] = "PASS" if ok else "FAIL"
-    if count < MIN_BODY_IMAGES:
-        report["blocking_reason"] = "fewer than 6 bound images — MUST NOT upload"
+    if count < body_images_min:
+        report["blocking_reason"] = (
+            f"fewer than {body_images_min} bound images — MUST NOT upload")
     return (0 if ok else 1), report
 
 
@@ -64,8 +71,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--media-manifest", required=True)
     ap.add_argument("--bindings", required=True)
+    ap.add_argument("--body-images-min", type=int, default=MIN_BODY_IMAGES)
     a = ap.parse_args(argv)
-    code, report = validate(a.media_manifest, a.bindings)
+    code, report = validate(a.media_manifest, a.bindings,
+                            body_images_min=a.body_images_min,
+                            body_images_min_source="--body-images-min" if "--body-images-min" in (argv or sys.argv) else "default")
     print(json.dumps(report, ensure_ascii=False))
     return code
 

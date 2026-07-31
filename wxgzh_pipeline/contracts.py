@@ -174,6 +174,10 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
             body = bnd.get("body_images", [])
             counts = c.get("counts", {})
             cmin = counts.get("BODY_IMAGES_MIN", 6)
+            validation_config = sd / "validation_config.json"
+            if validation_config.is_file():
+                config = json.loads(validation_config.read_text(encoding="utf-8"))
+                cmin = config.get("body_images_min", cmin)
             chk("body_images_min", len(body) >= cmin, f"{len(body)} < {cmin}")
             per = c.get("per_bound_image", {})
             host = per.get("remote_url_host", "mmbiz.qpic.cn")
@@ -207,7 +211,9 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
                     chk("upload_events_present", False, "upload_events.json missing")
                 else:
                     events = json.loads(ev_p.read_text(encoding="utf-8")).get("events", [])
-                    ordered = sorted(events, key=lambda e: e.get("start_monotonic", 0))
+                    ordered = sorted(
+                        (e for e in events if e.get("status") != "skipped_already_uploaded"),
+                        key=lambda e: e.get("start_monotonic", 0))
                     overlap = any(ordered[i + 1].get("start_monotonic", 0) < ordered[i].get("end_monotonic", 0)
                                   for i in range(len(ordered) - 1))
                     chk("upload_no_overlap", not overlap, "parallel/overlapping uploads detected")

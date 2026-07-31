@@ -43,7 +43,17 @@ def content_validate(ctx, sd: Path, state):
     if not man.is_file() or not bnd.is_file():
         return 1, {"reason": "media_manifest.json or article_image_bindings.json missing"}, vpath, vsha
     mod = load_validator("validate_media_bindings")
-    code, report = mod.validate(man, bnd)
+    config_path = sd / "validation_config.json"
+    body_images_min = 6
+    body_images_min_source = "default"
+    if config_path.is_file():
+        import json
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        body_images_min = config.get("body_images_min", 6)
+        body_images_min_source = str(config_path)
+    code, report = mod.validate(
+        man, bnd, body_images_min=body_images_min,
+        body_images_min_source=body_images_min_source)
     # depends-on-freeze: bindings must reference the frozen article sha
     if state.final_article_sha256:
         txt = bnd.read_text(encoding="utf-8")
