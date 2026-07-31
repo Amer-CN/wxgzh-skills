@@ -1,0 +1,233 @@
+{
+  "candidate_rows": [
+    {
+      "asset_id": "A-001",
+      "source_domain": "www.anthropic.com",
+      "image_domain": "www-cdn.anthropic.com",
+      "image_url": "https://www-cdn.anthropic.com/images/4zrzovbb/website/d3dd09ad16c68461dc3fb01df5e84cf7ccafda6c-1000x1000.svg",
+      "width": 0,
+      "height": 0,
+      "mime_type": "image/svg+xml",
+      "format": "svg+xml",
+      "file_size": 13263,
+      "sha256": "c397f44118a2dc07c07e1b70b3f976ed21cca8353e321f93a8f24f168a45577f",
+      "copyright_status": "unknown",
+      "copyright_risk": "medium",
+      "decision": "review_required",
+      "reasons": [
+        "SVG images are not directly publishable as photos",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ]
+    },
+    {
+      "asset_id": "A-002",
+      "source_domain": "www.anthropic.com",
+      "image_domain": "www.anthropic.com",
+      "image_url": "https://www.anthropic.com/api/opengraph-illustration?name=Hand Lock&backgroundColor=heather",
+      "width": 1900,
+      "height": 1000,
+      "mime_type": "image/png",
+      "format": "png",
+      "file_size": 76767,
+      "sha256": "a83ca5f045dfea5198d6cc35711155ae32da68e479993721e8152c2c86e8d6b8",
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "social share card / link preview image (extraction_method=og:image) — not rendered in page body"
+      ]
+    },
+    {
+      "asset_id": "A-003",
+      "source_domain": "cloud.google.com",
+      "image_domain": "storage.googleapis.com",
+      "image_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png",
+      "width": 1024,
+      "height": 559,
+      "mime_type": "image/png",
+      "format": "png",
+      "file_size": 606786,
+      "sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
+      "copyright_status": "unknown",
+      "copyright_risk": "medium",
+      "decision": "review_required",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ]
+    },
+    {
+      "asset_id": "A-004",
+      "source_domain": "cloud.google.com",
+      "image_domain": "storage.googleapis.com",
+      "image_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png",
+      "width": 700,
+      "height": 394,
+      "mime_type": "image/png",
+      "format": "png",
+      "file_size": 229157,
+      "sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
+      "copyright_status": "unknown",
+      "copyright_risk": "medium",
+      "decision": "review_required",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ]
+    },
+    {
+      "asset_id": "A-005",
+      "source_domain": "cloud.google.com",
+      "image_domain": "storage.googleapis.com",
+      "image_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-700x700.jpg",
+      "width": 700,
+      "height": 344,
+      "mime_type": "image/jpeg",
+      "format": "jpeg",
+      "file_size": 17155,
+      "sha256": "8e2aa5872a1a73e6750e4aa7d7b91ca3bcba0cf9c47ad03a6aaaada1454e3bd8",
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "dimensions 700x344 below minimum 640x360"
+      ]
+    },
+    {
+      "asset_id": "A-006",
+      "source_domain": "cloud.google.com",
+      "image_domain": "www.gstatic.com",
+      "image_url": "https://www.gstatic.com/cgc/super_cloud_gradient.png",
+      "width": null,
+      "height": null,
+      "mime_type": null,
+      "format": null,
+      "file_size": null,
+      "sha256": null,
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: www.gstatic.com"
+      ]
+    },
+    {
+      "asset_id": "A-007",
+      "source_domain": null,
+      "image_domain": "storage.googleapis.com",
+      "image_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-2600x2600.jpg",
+      "width": null,
+      "height": null,
+      "mime_type": null,
+      "format": null,
+      "file_size": null,
+      "sha256": "e2705ad8fd017aa4dbab1f230e41d25dfb426d5f3b58554840493dd648b3ce15",
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "perceptual hash distance 0 with A-005"
+      ]
+    },
+    {
+      "asset_id": "A-008",
+      "source_domain": "techcrunch.com",
+      "image_domain": "techcrunch.com",
+      "image_url": "https://techcrunch.com/wp-content/uploads/2026/05/tc-lockup-hp.svg",
+      "width": 0,
+      "height": 0,
+      "mime_type": "image/svg+xml",
+      "format": "svg+xml",
+      "file_size": 3212,
+      "sha256": "376f83cfdfc05c8b4f7b668b38266b3687136391cb35fe4685af1d56f0d2fa81",
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "context indicates logo/brandmark"
+      ]
+    },
+    {
+      "asset_id": "A-009",
+      "source_domain": "techcrunch.com",
+      "image_domain": "techcrunch.com",
+      "image_url": "https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg",
+      "width": 0,
+      "height": 0,
+      "mime_type": "image/svg+xml",
+      "format": "svg+xml",
+      "file_size": 389,
+      "sha256": "26ddc3f8a8a2427b8e3ab0987e35aa802e6369d17836f1e4b242cc0ca85e32b7",
+      "copyright_status": "unknown",
+      "copyright_risk": "high",
+      "decision": "rejected",
+      "reasons": [
+        "URL matches logo/brandmark pattern: https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg"
+      ]
+    },
+    {
+      "asset_id": "A-010",
+      "source_domain": "techcrunch.com",
+      "image_domain": "techcrunch.com",
+      "image_url": "https://techcrunch.com/wp-content/uploads/2026/07/TechCrunch-Disrupt-2026-Stage-Generic-Assets-AI-Crop.jpg?w=1024",
+      "width": 1024,
+      "height": 535,
+      "mime_type": "image/jpeg",
+      "format": "jpeg",
+      "file_size": 100794,
+      "sha256": "3381ff4e4f06874660a8150cff02474949c64e238b33f06d83327ea99e80254b",
+      "copyright_status": "unknown",
+      "copyright_risk": "medium",
+      "decision": "review_required",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ]
+    }
+  ],
+  "candidate_count": 10,
+  "image_domain_distribution": {
+    "www-cdn.anthropic.com": 1,
+    "www.anthropic.com": 1,
+    "storage.googleapis.com": 4,
+    "www.gstatic.com": 1,
+    "techcrunch.com": 3
+  },
+  "source_page_distribution": {
+    "www.anthropic.com": 2,
+    "cloud.google.com": 4,
+    "null": 1,
+    "techcrunch.com": 3
+  },
+  "summary": {
+    "candidates_discovered": 39,
+    "downloads_succeeded": 9,
+    "eligible_assets": 0,
+    "exact_duplicates_removed": 0,
+    "generated_charts": 0,
+    "pages_fetched": 3,
+    "pages_requested": 3,
+    "perceptual_duplicates_removed": 1,
+    "rejected_assets": 6,
+    "review_required_assets": 4,
+    "uploaded_assets": 0
+  },
+  "gate": {
+    "input_contract_pass": true,
+    "provenance_complete": true,
+    "publish_allowed": false,
+    "secrets_detected": false,
+    "security_checks_pass": true
+  },
+  "warnings": [
+    "No claims with numbers — no charts generated",
+    "max_total_images (8) reached — skipping M-04",
+    "max_total_images (8) reached — skipping M-05",
+    "max_total_images (8) reached — skipping M-06",
+    "max_total_images (8) reached — stopping discovery"
+  ],
+  "errors": [],
+  "frozen_manifest_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\asset_discovery_manifest.json",
+  "frozen_file_sha256": "3b114e123caec5448d74d8668d66a157234952942a6e2b1cdb453a7686f97e03",
+  "embedded_sha256": "e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d"
+}

@@ -1,0 +1,59 @@
+{
+  "note": "independent post-discovery read-only HTTP audit; official CLI exposes only total discovery duration",
+  "results": [
+    {
+      "material_id": "M-01",
+      "domain": "www.anthropic.com",
+      "url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+      "http_status": 200,
+      "sample_bytes": 65536,
+      "elapsed_seconds": 1.859,
+      "error": null
+    },
+    {
+      "material_id": "M-02",
+      "domain": "cloud.google.com",
+      "url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "http_status": 200,
+      "sample_bytes": 65536,
+      "elapsed_seconds": 1.688,
+      "error": null
+    },
+    {
+      "material_id": "M-03",
+      "domain": "techcrunch.com",
+      "url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "http_status": 200,
+      "sample_bytes": 65536,
+      "elapsed_seconds": 10.25,
+      "error": null
+    },
+    {
+      "material_id": "M-04",
+      "domain": "www.ithome.com",
+      "url": "https://www.ithome.com/0/983/125.htm",
+      "http_status": 200,
+      "sample_bytes": 23134,
+      "elapsed_seconds": 0.141,
+      "error": null
+    },
+    {
+      "material_id": "M-05",
+      "domain": "techcrunch.com",
+      "url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents",
+      "http_status": 200,
+      "sample_bytes": 65536,
+      "elapsed_seconds": 1.984,
+      "error": null
+    },
+    {
+      "material_id": "M-06",
+      "domain": "www.ithome.com",
+      "url": "https://www.ithome.com/0/982/312.htm",
+      "http_status": 200,
+      "sample_bytes": 22775,
+      "elapsed_seconds": 0.172,
+      "error": null
+    }
+  ]
+}

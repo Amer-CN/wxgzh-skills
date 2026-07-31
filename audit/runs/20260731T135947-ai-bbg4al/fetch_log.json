@@ -1,0 +1,25 @@
+{
+  "topic": "AI智能体正在重写网络安全攻防",
+  "queries": [
+    {
+      "url": "https://aihot.virxact.com/api/v1/hot-topics",
+      "http_status": 200,
+      "returned_count": 5,
+      "adopted_count": 1
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=selected&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "http_status": 200,
+      "returned_count": 0
+    },
+    {
+      "url": "https://aihot.virxact.com/api/v1/items?mode=all&q=%E6%99%BA%E8%83%BD%E4%BD%93%E5%AE%89%E5%85%A8&window=7d&limit=10",
+      "http_status": 200,
+      "returned_count": 8
+    }
+  ],
+  "total_raw_items": 9,
+  "total_deduplicated": 6,
+  "duplicates_removed": 3,
+  "workaround_OBS_31": "source_url copied from links.original; aihot_permalink copied from links.aihot"
+}

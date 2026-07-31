@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "medium",
+  "cjk_chars": 1726,
+  "latin_words": 54,
+  "visible_chars_no_whitespace": 2186,
+  "paragraphs": 25,
+  "sections": 5,
+  "target_visible_chars": 1818,
+  "acceptable_min": 1750,
+  "acceptable_max": 2400,
+  "section_budgets": [
+    {"title":"一、能力越接近行动，边界越重要","weight":0.307,"budget":559,"actual_chars":559,"deviation":0.0},
+    {"title":"二、智能体首先是一种非人类身份","weight":0.253,"budget":459,"actual_chars":459,"deviation":0.0},
+    {"title":"三、安全要从模型层延伸到基础设施","weight":0.185,"budget":337,"actual_chars":337,"deviation":0.0},
+    {"title":"四、企业现在应先补哪些控制","weight":0.255,"budget":462,"actual_chars":463,"deviation":0.002}
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}
