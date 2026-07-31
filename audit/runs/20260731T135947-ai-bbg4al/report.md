@@ -550,3 +550,283 @@ media_id=不存在
 ```
 
 实际新增的本地可逆文件：`approval_evidence.md`、`copyright_approval.json`及continue审计产物。没有发生任何微信写入副作用。
+
+
+---
+
+# 阶段13 · 档16 · media-enrichment解冻修复与RUN恢复报告
+
+## 24. 原始Skill备份
+
+```text
+source=F:/AIXM/wxgzh/.agents/skills/media-enrichment
+backup=F:/AIXM/wxgzh/.agents/skills-backup/media-enrichment-pre-obs42-20260731
+source_files=95
+source_dirs=12
+backup_files=95
+backup_dirs=12
+backup_result=PASS
+```
+
+备份在任何代码修改前完成，未删除或覆盖。
+
+## 25. 六项只读定位结论
+
+1. Continue入口：`media-enrichment/scripts/run_media_enrichment.py::main()`，由`--phase continue`进入。  
+2. 原重抓路径：原代码对discover/continue共用materials循环，依次调用`fetch_page → extract_images → decode_proxy_url → download_image`，再把新鲜结果与冻结manifest比对。  
+3. Discover图片落盘：`media_enrichment/discover/images/`；下载器以内容SHA-256命名，常规格式保留扩展名。  
+4. 冻结映射：`asset_discovery_manifest.json`提供asset_id、material、URL、asset SHA和稳定身份；同目录`media_manifest.json`以asset_id提供`local_path`与图片元数据。  
+5. 稳定身份：`sha256(material_id + "
+" + source_page_url + "
+" + resolved_original_url + "
+" + asset_sha256)`。  
+6. 产物落盘：Skill写入传入的output_dir；Pipeline给continue传`media_enrichment/continue/`，阶段合同却在`media_enrichment/`根读取3项required outputs，造成OBS-43。  
+
+Discover确实持久化图片，因此修复方案成立。
+
+## 26. 改动文件与SHA
+
+| 文件 | 改前SHA-256 | 改后SHA-256 |
+|---|---|---|
+| `media-enrichment/scripts/run_media_enrichment.py` | `824de0a4677f60cacfa74c096bdab4d180857539b7f556473446ac55f6efb0e3` | `0f86838f57b02eb0d970404a072609d7bf4fa98e807f0f64d67607df7a0dedbd` |
+| `media-enrichment/tests/test_single_asset_e2e.py` | `07de60bf7be20fc2d64e6e3cd4b838fb3d43653fc9486b484c4b63d749f902b8` | `c758dd627fb931034d4f60368b667c882363452e0b7994d64f76db3522c4c69a` |
+| `wxgzh-pipeline/skills.lock.json` | `ff64e8ae3b5e80e2c45a5a86e8945c223ac6b1b6ca823a41a2d7b8fc45eef53b` | `c3f9a4ce07921e9ce5271faec92723bae4b90861af835c42cf3c0a72d8a3f16c` |
+
+完整diff与诊断已在恢复RUN前提交：
+
+```text
+audit/skill-patches/obs42-media-enrichment/changes.diff
+audit/skill-patches/obs42-media-enrichment/diagnosis.md
+audit/skill-patches/obs42-media-enrichment/safety-checklist.md
+audit/skill-patches/obs42-media-enrichment/files-changed.md
+patch_commit=aa32198f79b60bd2dbde4b050979158fc54a75b0
+relock_commit=4c6416d1b79531171bdf259b8db3c33b56b5e485
+```
+
+## 27. 最小修复结果
+
+- OBS-42：continue不再抓源站，只读取冻结manifest同目录discover manifest与`images/`本地文件；
+- OBS-43：continue/保留规范产物，并将3项required outputs字节镜像到阶段根；
+- Discover路径行为未改；
+- 未修改函数签名或公共CLI；
+- 未修改其他Skill；
+- Pipeline代码未改，只有被授权的锁文件字段更新。
+
+## 28. 六条安全属性确认
+
+1. **本地SHA强校验**：实际文件SHA与冻结asset SHA不一致即builder error、非零退出、零上传；有专用篡改测试。  
+2. **仅批准资产**：当前RUN single_asset集合只含A-003/A-004；未批准资产不进入pending uploads。  
+3. **数量不超过批准数**：single_asset遍历批准ID集合；本轮事件中不存在第三资产。  
+4. **URL安全不放宽**：冻结resolved URL仍执行`is_safe_url(require_dns=True)`。  
+5. **批准合同不放宽**：input contract、冻结manifest SHA、`approval_mismatches`与稳定身份均保留。  
+6. **无自动批准路径**：unknown不自动批准；restricted/no-repost保持最高优先级。  
+
+测试过程发现并修复了当前request材料绑定缺失和restricted优先级回归。最终：
+
+```text
+283 passed, 6 skipped
+```
+
+## 29. 重新锁定与doctor
+
+官方锁算法：`wxgzh_pipeline.skill_discovery.compute_root_sha()`，只统计runtime文件，排除tests/cache/VCS元数据，对文本换行标准化。入口文件另由`_file_sha()`锁定。
+
+```text
+media.skill_root_sha256=e982b757f37050b0a92cbb4378b106a4f3637224ad3de4abc8b3389e6196a4f7
+media.entrypoint_sha256=c99d5f505f8c9bc2aca064546ff91ffcae64a9667af00beb3121fe16d47a4641
+runtime_manifest_sha256=172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996
+runtime_file_count=57
+```
+
+完整doctor输出保存于`audit/runs/20260731T135947-ai-bbg4al/doctor-output.json`：
+
+```json
+{
+  "wxgzh_pipeline_version": "0.1.0-dev2-hotfix7R4",
+  "project_root": "F:\\AIXM\\wxgzh",
+  "skills_home": "F:\\AIXM\\wxgzh\\.agents\\skills",
+  "network_mode": "live",
+  "skills_locked_ok": true,
+  "skills": {
+    "super-writer": {
+      "skill_name": "super-writer",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\super-writer",
+      "exists": true,
+      "locked_version": "0.3.2-rc1",
+      "current_version": "0.3.2-rc1",
+      "locked_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "current_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+      "file_count": 50,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "zh-human-writing": {
+      "skill_name": "zh-human-writing",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+      "exists": true,
+      "locked_version": "0.1.0",
+      "current_version": "0.1.0",
+      "locked_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "current_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+      "file_count": 53,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "media-enrichment": {
+      "skill_name": "media-enrichment",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+      "exists": true,
+      "locked_version": "0.1.0-dev7-hotfix4",
+      "current_version": "0.1.0-dev7-hotfix4",
+      "locked_root_sha256": "e982b757f37050b0a92cbb4378b106a4f3637224ad3de4abc8b3389e6196a4f7",
+      "current_root_sha256": "e982b757f37050b0a92cbb4378b106a4f3637224ad3de4abc8b3389e6196a4f7",
+      "file_count": 57,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "gzh-design": {
+      "skill_name": "gzh-design",
+      "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+      "exists": true,
+      "locked_version": "v2026.07.18-hammer.1",
+      "current_version": "v2026.07.18-hammer.1",
+      "locked_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "current_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+      "file_count": 76,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "missing_files": [],
+      "ok": true
+    },
+    "aihot": {
+      "skill_name": "aihot",
+      "kind": "agent_invoked_skill",
+      "exists": true,
+      "registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+      "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+      "live_pipeline_allowed": true,
+      "version_ok": true,
+      "hash_ok": true,
+      "entrypoints_ok": true,
+      "ok": true,
+      "note": "external dependency (卡兹克); capability checked for real (registration + output contract); never copied/modified/republished"
+    }
+  },
+  "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+  "LIVE_PIPELINE_ALLOWED": true,
+  "aihot_registration": "C:\\Users\\Admin\\.agents\\skills\\aihot\\registration.json",
+  "aihot_checked_locations": [
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\aihot",
+    "C:\\Users\\Admin\\.agents\\skills\\aihot"
+  ],
+  "wechat_config_present": true,
+  "wechat_credential_detail": {
+    "WECHAT_APP_ID_nonempty": true,
+    "WECHAT_APP_SECRET_nonempty": true
+  },
+  "wechat_required": true,
+  "project_writable": true,
+  "FAIL_CLOSED": false,
+  "doctor": "PASS"
+}
+```
+
+## 30. RUN恢复与upload_events
+
+补丁生效后，A-003/A-004均：
+
+- 从discover持久化路径读取；
+- SHA与冻结清单一致；
+- approval consumed=true；
+- copyright_status=known_allowed；
+- decision=eligible；
+- 无identity mismatch；
+- 没有第三资产上传事件。
+
+但微信上传连续两次均失败，第二次完整事件为：
+
+```json
+{
+  "schema_version": "1.0",
+  "serial": true,
+  "events": [
+    {
+      "asset_id": "A-003",
+      "mode": "wechat_image_host",
+      "status": "failed",
+      "started_at": "2026-07-31T10:38:31Z",
+      "ended_at": "2026-07-31T10:38:31Z",
+      "start_monotonic": 5966.937,
+      "end_monotonic": 5966.937
+    },
+    {
+      "asset_id": "A-004",
+      "mode": "wechat_image_host",
+      "status": "failed",
+      "started_at": "2026-07-31T10:38:31Z",
+      "ended_at": "2026-07-31T10:38:31Z",
+      "start_monotonic": 5966.937,
+      "end_monotonic": 5966.937
+    }
+  ]
+}
+```
+
+两次均恰好2条事件、A-003/A-004各一次、status=failed、remote_url=null、media_id不存在。现有upload_events结构未记录上传器error字段，因此无法从审计产物获得微信返回的具体错误码；未编造错误原因。
+
+## 31. 新阻断OBS-44
+
+Pipeline的`validate_media_bindings.py`固定要求：
+
+```text
+body_images_min >= 6
+```
+
+本次审核只批准并授权上传2张图片。即使两张上传成功，正文绑定数最多2，仍无法通过`0/2 < 6`门禁。修改该门禁需要改Pipeline代码，超出本档授权；上传额外4张则违反“只允许A-003/A-004”。因此不能绕过。
+
+最终状态：
+
+```text
+STATUS=BLOCKED_WECHAT_UPLOAD_FAILED_AND_MIN6_CONTRACT_CONFLICT
+media_continue=FAILED
+successful_uploads=0
+media_ids=0
+gzh_design=NOT_STARTED
+gzh_design_ACK=不存在
+wechat_draft=NOT_STARTED
+draft_id=不存在
+```
+
+## 32. 各阶段耗时
+
+- Skill备份：单次本地复制并核对；
+- media完整测试：34.76s，283 passed/6 skipped；
+- doctor：9s；
+- 修复后首次RUN恢复：后台句柄过期，产物时间显示上传尝试于09:37:24Z；
+- 第二次RUN恢复：15s，上传尝试于10:38:31Z；
+- gzh-design与wechat_draft未执行。
+
+## 33. 实际副作用声明
+
+```text
+微信上传尝试=4（2轮×2资产）
+微信上传成功=0
+微信media_id=0
+成功写入微信素材库=0
+草稿创建=0
+发布=0
+群发=0
+定时发送=0
+```
+
+本地/代码副作用：创建原Skill完整备份；修改media-enrichment的1个runtime文件与1个测试文件；更新Pipeline锁文件中media条目的root/entry哈希；创建补丁审计与RUN审计。未删除文件、未修改其他Skill、未修改Pipeline代码、未绕过安全检查。
