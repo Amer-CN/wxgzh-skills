@@ -1,0 +1,15 @@
+{
+  "config": {
+    "GZH_THEME": "smartisan",
+    "THEME_FALLBACK_ALLOWED": false,
+    "THEME_NAME": "锤子风格"
+  },
+  "inputs": {
+    "final_article": "../zh_human_writing/final_article.md",
+    "media_bindings": "../media_enrichment/article_image_bindings.json"
+  },
+  "network_mode": "live",
+  "run_id": "20260731T135947-ai-bbg4al",
+  "skill_name": "gzh-design",
+  "stage": "gzh_design"
+}

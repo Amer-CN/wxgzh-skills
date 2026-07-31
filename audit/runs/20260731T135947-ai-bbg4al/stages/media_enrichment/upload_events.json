@@ -35,6 +35,42 @@
       "request_attempt_index": 1,
       "media_id": null,
       "url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbcBGdmCK5iaicoXibgakZgB6aG4KsDVxNI4nf9vzlnVNyfUYc25CZ0x8iaBoic1Clueicib3j7xgd522Juv6agicDw6ztQO0KSLqxGiaXs/0?from=appmsg"
+    },
+    {
+      "asset_id": "A-003",
+      "mode": "wechat_image_host",
+      "status": "skipped_already_uploaded",
+      "started_at": "2026-07-31T18:18:03Z",
+      "ended_at": "2026-07-31T18:18:06Z",
+      "start_monotonic": 33539.546,
+      "end_monotonic": 33541.875,
+      "http_status": 200,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": "/cgi-bin/media/uploadimg",
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbfWzLmlKbZL4CYX31xZ4icCCu90CqiaAS1CyUgj67fvEoxY50Nl6xY28UV2RHpEzyanXxPaicgbst8uJDQaqteUTmL3aiazMdyDgI/0?from=appmsg",
+      "source_event": "existing_success_event"
+    },
+    {
+      "asset_id": "A-004",
+      "mode": "wechat_image_host",
+      "status": "skipped_already_uploaded",
+      "started_at": "2026-07-31T18:18:06Z",
+      "ended_at": "2026-07-31T18:18:07Z",
+      "start_monotonic": 33541.875,
+      "end_monotonic": 33542.875,
+      "http_status": 200,
+      "wechat_errcode": null,
+      "wechat_errmsg": null,
+      "request_elapsed_seconds": 0.0,
+      "endpoint_path": "/cgi-bin/media/uploadimg",
+      "request_attempt_index": 1,
+      "media_id": null,
+      "url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbcBGdmCK5iaicoXibgakZgB6aG4KsDVxNI4nf9vzlnVNyfUYc25CZ0x8iaBoic1Clueicib3j7xgd522Juv6agicDw6ztQO0KSLqxGiaXs/0?from=appmsg",
+      "source_event": "existing_success_event"
     }
   ]
 }

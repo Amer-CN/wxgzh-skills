@@ -1275,4 +1275,91 @@ draft_id=null
 实际状态：`STATUS=BLOCKED_MIN_IMAGES_SECOND_CONTRACT_AND_NO_SAFE_RESUME_PATH`。
 
 档18最终不能创建草稿，不是因为上传失败，而是因为已成功上传后，Pipeline仍有第二层未授权可改的最小图片数合同，且重新resume会重复上传。
+
+---
+
+# 档19 · 第二层最小图片数、上传幂等与草稿首次失败
+
+## 53. 自检与备份
+
+档16冻结字节、档17观测/批准上限、档18凭据同源/token缓存均存在。备份`pre-obs53-20260801`成功：media源/备份均116文件14目录，Pipeline源/备份均181文件46目录。未清理任何物证或pytest目录。
+
+## 54. 阶段A定位
+
+- `contracts.py:168-177`从合同YAML的`counts.BODY_IMAGES_MIN`读取，默认6；`STAGE_CONFIG`定义于`stages/media_enrichment.py:11-15`。
+- `validate_media_bindings.py:13,29-66`原硬编码6；调用入口为`stages/media_enrichment.py:39-54`。
+- `orchestrator.py:158-195,197-224`对失败阶段重跑producer，原无免上传复验分支。
+- media continue原先只写upload_events，上传前从不读取。
+- 未发现第三层最小图片数执行校验。
+
+## 55. 显式配置全文
+
+```json
+{
+  "approval_id": "AP-20260731T1449-INDEPENDENT-REVIEW-001",
+  "body_images_min": 2,
+  "default_value": 6,
+  "reason": "候选池仅 4 张待审查资产,审核者批准 2 张,凑不出 6 张",
+  "set_by": "independent_reviewer"
+}
 ```
+
+validator与contracts读取同一文件；缺失回落6；小于1拒绝；validator报告实际值与来源。contracts除BODY_IMAGES_MIN取值外其他校验未改。
+
+## 56. OBS-53幂等护栏
+
+continue先读已有事件。仅当资产已有`success`且URL为合法微信托管URL时，在完成冻结SHA、批准、数量上限、URL安全、稳定身份等全部校验后复用URL，并追加`skipped_already_uploaded`；原success事件保留，failed事件不复用。
+
+本次恢复结果：
+
+```text
+UPLOADIMG_CALLS_THIS_STAGE=0
+A-003=skipped_already_uploaded; URL与档18逐字一致
+A-004=skipped_already_uploaded; URL与档18逐字一致
+third_asset=false
+body_images_count=2
+body_images_min_effective=2
+body_images_min_source=media_enrichment/validation_config.json
+```
+
+## 57. 测试、锁与doctor
+
+- media：289 passed，6 skipped，0 failed。
+- Pipeline：142 passed，1 skipped，12 failed；12项均由安全删除保护拒绝测试内部unlink/rmtree，或OBS-52临时夹具缺`.git`引起；档19新增配置测试未失败。
+- 直接min规则断言PASS：默认6、显式2、0/负数拒绝。
+- 官方锁算法：`compute_root_sha`、`compute_runtime_manifest_sha`、`_file_sha`。
+- media root=`0d8aea2169cec17c4e9f95af66b6b4da3c532554a0a316fe3fb604bd0b7ab3a3`；entry=`2d877a93b37658bb5b2e247827952a86abe11fff5a9c148024238dd0cccd979f`；manifest=`172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996`；count=57。
+- doctor：skills_locked_ok=true、wechat_config_present=true、FAIL_CLOSED=false、doctor=PASS。
+- OBS-51说明：doctor证据为重建证据，来源为本次会话已返回的完整doctor输出；没有声称是原始重定向文件。
+
+## 58. 排版与草稿
+
+media合同PASS。gzh_design正式执行成功：`status=success`、`CONTRACT=PASS`、`THEME_IDENTITY=PASS`、`OFFICIAL_GZH_CALL=true`；其`stage_receipt.json`即ACK，文件已归档。
+
+wechat_draft首次且唯一一次入口执行返回exit 1，仅生成`stage_request.json`，未生成`draft_creation_result.json`，故`draft_id=null`，微信后台无可见草稿位置。按阻断项17未作第二次尝试。
+
+## 59. 七条安全属性
+
+1. 冻结本地SHA不一致即拒绝。
+2. 仅上传copyright_approval.json明确批准资产。
+3. 上传数不超过批准数。
+4. URL安全检查未放宽。
+5. 批准合同/稳定身份未放宽。
+6. 无自动批准路径。
+7. 已有success资产本轮uploadimg调用为0，复用前仍完整校验。
+
+## 60. 实际不可逆副作用
+
+```text
+累计微信图片托管=2（档18已产生）
+本档新增uploadimg=0
+本档新增草稿=0
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+```
+
+图片来源:Google Cloud 官方博客
+
+最终状态：`BLOCKED_WECHAT_DRAFT_FIRST_ATTEMPT_FAILED_NO_RETRY`。

@@ -149,7 +149,7 @@
       "upload": {
         "mode": "wechat_image_host",
         "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbfWzLmlKbZL4CYX31xZ4icCCu90CqiaAS1CyUgj67fvEoxY50Nl6xY28UV2RHpEzyanXxPaicgbst8uJDQaqteUTmL3aiazMdyDgI/0?from=appmsg",
-        "response_sha256": "c6961d375ad6887b9437932606e9f3b0f3db84e4e89a0f77258804efa7934b5f",
+        "response_sha256": null,
         "status": "success"
       },
       "width": 1024
@@ -200,7 +200,7 @@
       "upload": {
         "mode": "wechat_image_host",
         "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbcBGdmCK5iaicoXibgakZgB6aG4KsDVxNI4nf9vzlnVNyfUYc25CZ0x8iaBoic1Clueicib3j7xgd522Juv6agicDw6ztQO0KSLqxGiaXs/0?from=appmsg",
-        "response_sha256": "440fb4894e918055811b76325d7dea4c8a4a8e6c51c4242e049dbd44f0554244",
+        "response_sha256": null,
         "status": "success"
       },
       "width": 700
@@ -513,7 +513,7 @@
       "width": 1024
     }
   ],
-  "created_at": "2026-07-31T18:18:07Z",
+  "created_at": "2026-07-31T19:24:02Z",
   "errors": [],
   "gate": {
     "input_contract_pass": true,

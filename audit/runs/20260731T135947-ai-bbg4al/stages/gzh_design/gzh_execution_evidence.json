@@ -1,0 +1,30 @@
+{
+  "command": [
+    "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+    "-X",
+    "utf8",
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+    "--article",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md",
+    "--bindings",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\article_image_bindings.json",
+    "--output-dir",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\gzh_design",
+    "--theme",
+    "smartisan"
+  ],
+  "component_source_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\generate_hammer_upgrade_samples.py",
+  "entry_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+  "entry_sha256": "e40237269265b63af73860bd9ef81b34a9e1b7bb80af59f3ebef4947baa5c095",
+  "exit_code": 0,
+  "install_receipt_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
+  "install_receipt_repository_url": "https://github.com/Amer-CN/gzh-design-skill",
+  "install_receipt_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+  "install_source_commit": "0007d7e6a4493aab59070d9c31dcde83830302fd",
+  "installed_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+  "installed_runtime_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
+  "mode": "live",
+  "official_gzh_call": true,
+  "render_entry_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+  "simulated": false
+}

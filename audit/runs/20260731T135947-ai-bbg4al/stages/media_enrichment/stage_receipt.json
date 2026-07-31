@@ -1,8 +1,8 @@
 {
-  "elapsed_seconds": 5.0,
-  "ended_at": "2026-07-31T18:18:07Z",
+  "elapsed_seconds": 2.0,
+  "ended_at": "2026-07-31T19:24:03Z",
   "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
-  "entrypoint_sha256": "79117b7e32a2b1cfe0505fe6f626db45ee504b78c06671af02bd26ad66cde57c",
+  "entrypoint_sha256": "a346dc9c0603756f9c1629857e34cdd68f441fb350d21c7d5cd78eac65cec034",
   "input_files": [
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\stage_request.json",
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md",
@@ -42,7 +42,7 @@
       "--bindings",
       "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
     ],
-    "elapsed_seconds": 0.68,
+    "elapsed_seconds": 0.74,
     "exit_code": 0,
     "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
     "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
@@ -56,9 +56,9 @@
     "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\upload_events.json"
   ],
   "output_hashes": {
-    "article_image_bindings.json": "50868a2f3eb91fdc062684100f1af5a5e67b0a80261a78cfd1da175cc23a0213",
-    "media_manifest.json": "925828a74a9f551f4adc7eb04b365c702de3e8713d889af697e885e55f77ec92",
-    "upload_events.json": "e6e818cb7eca077ba1339894a9caa3b85e0dd55d4c6bc86a2693c50abaa5e82f"
+    "article_image_bindings.json": "2c2769a78ed8b61f0f8dea910ec06ec000fb15897d2222e4023c478971eaaa0c",
+    "media_manifest.json": "4d821f210377675fea537d3aabe3201e53ed6bc8aaa83432ad65427a0f879e0b",
+    "upload_events.json": "88287e782b1157993552a6673cc2078e39b05ef76dc7fe007ed823e06696d97a"
   },
   "side_effects": [
     {
@@ -68,11 +68,11 @@
   ],
   "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
   "skill_name": "media-enrichment",
-  "skill_root_sha256": "1dab61844d364f2ca401b0516a6a118cfa80a9b14c9f29379d0a76ab5149953b",
+  "skill_root_sha256": "0d8aea2169cec17c4e9f95af66b6b4da3c532554a0a316fe3fb604bd0b7ab3a3",
   "skill_version": "0.1.0-dev7-hotfix4",
   "stage": "media_enrichment",
-  "started_at": "2026-07-31T18:18:02Z",
-  "validator_exit_code": 1,
+  "started_at": "2026-07-31T19:24:01Z",
+  "validator_exit_code": 0,
   "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
   "validator_sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af"
 }

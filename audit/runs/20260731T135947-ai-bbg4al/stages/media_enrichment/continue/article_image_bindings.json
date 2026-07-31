@@ -19,7 +19,7 @@
         "position": "after"
       },
       "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbfWzLmlKbZL4CYX31xZ4icCCu90CqiaAS1CyUgj67fvEoxY50Nl6xY28UV2RHpEzyanXxPaicgbst8uJDQaqteUTmL3aiazMdyDgI/0?from=appmsg",
-      "response_sha256": "c6961d375ad6887b9437932606e9f3b0f3db84e4e89a0f77258804efa7934b5f",
+      "response_sha256": null,
       "sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
       "upload_mode": "wechat_image_host"
     },
@@ -40,7 +40,7 @@
         "position": "after"
       },
       "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSbcBGdmCK5iaicoXibgakZgB6aG4KsDVxNI4nf9vzlnVNyfUYc25CZ0x8iaBoic1Clueicib3j7xgd522Juv6agicDw6ztQO0KSLqxGiaXs/0?from=appmsg",
-      "response_sha256": "440fb4894e918055811b76325d7dea4c8a4a8e6c51c4242e049dbd44f0554244",
+      "response_sha256": null,
       "sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
       "upload_mode": "wechat_image_host"
     }
