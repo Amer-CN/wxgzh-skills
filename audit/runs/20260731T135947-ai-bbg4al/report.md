@@ -352,3 +352,201 @@ wechat_draft产物=不存在
 ```
 
 阶段12实际操作仅包括：读取冻结manifest、读取合同和测试样例、复核哈希、更新Git审计报告。没有发生任何微信写操作。
+
+
+---
+
+# 阶段12 · 档15R · 批准证据补齐与media continue阻断报告
+
+## 17. approval_evidence.md
+
+RUN路径：
+
+```text
+F:/AIXM/wxgzh/.temp/wxgzh-pipeline/20260731T135947-ai-bbg4al/media_enrichment/approval_evidence.md
+```
+
+Git路径：`audit/runs/20260731T135947-ai-bbg4al/stages/media_enrichment/approval_evidence.md`
+
+计算命令：
+
+```text
+python -c "from pathlib import Path; import hashlib; print(hashlib.sha256(Path('approval_evidence.md').read_bytes()).hexdigest())"
+```
+
+结果：
+
+```text
+approval_evidence_sha256=06321c8e58f28e4a4052b3a354d9db01beac8e80565ee995e23ecd07ede307e5
+```
+
+完整正文：
+
+```text
+-----BEGIN APPROVAL EVIDENCE-----
+approval_id: AP-20260731T1449-INDEPENDENT-REVIEW-001
+approved_by: independent_reviewer
+approved_at: 2026-07-31T14:49:00+08:00
+run_id: 20260731T135947-ai-bbg4al
+frozen_file_sha256: 3b114e123caec5448d74d8668d66a157234952942a6e2b1cdb453a7686f97e03
+embedded_sha256: e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d
+
+APPROVED ASSETS (2):
+A-003 sha256=418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+A-004 sha256=5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c
+
+REJECTED BY REVIEWER (2):
+A-001 reason=vector graphic unsuitable for article body
+A-010 reason=event promotional material with third-party brandmark
+
+UPHELD DISCOVERY REJECTIONS (6):
+A-002 A-005 A-006 A-007 A-008 A-009
+
+ATTRIBUTION REQUIRED:
+图片来源:Google Cloud 官方博客
+
+SCOPE:
+upload_to_wechat_material_library=allowed
+create_draft=allowed
+publish=forbidden
+mass_send=forbidden
+scheduled_send=forbidden
+-----END APPROVAL EVIDENCE-----
+```
+
+## 18. copyright_approval.json
+
+RUN路径：
+
+```text
+F:/AIXM/wxgzh/.temp/wxgzh-pipeline/20260731T135947-ai-bbg4al/media_enrichment/copyright_approval.json
+```
+
+Git路径：`audit/runs/20260731T135947-ai-bbg4al/stages/media_enrichment/copyright_approval.json`
+
+```text
+sha256=457e8a88a46100efb3a31be01df68827f224813431a3527e66a644e4495108aa
+```
+
+完整内容：
+
+```json
+{
+  "approvals": [
+    {
+      "approval_evidence_sha256": "06321c8e58f28e4a4052b3a354d9db01beac8e80565ee995e23ecd07ede307e5",
+      "approval_id": "AP-20260731T1449-INDEPENDENT-REVIEW-001",
+      "approved_at": "2026-07-31T14:49:00+08:00",
+      "approved_by": "independent_reviewer",
+      "approved_scope": "single_asset",
+      "asset_id": "A-003",
+      "asset_identity_sha256": "ab1f59153db7eac712690c0018b113c6373c2fe3eb4f3d45ae0419687eb5cd2c",
+      "asset_sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
+      "discovery_manifest_sha256": "e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d",
+      "material_id": "M-02",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    },
+    {
+      "approval_evidence_sha256": "06321c8e58f28e4a4052b3a354d9db01beac8e80565ee995e23ecd07ede307e5",
+      "approval_id": "AP-20260731T1449-INDEPENDENT-REVIEW-001",
+      "approved_at": "2026-07-31T14:49:00+08:00",
+      "approved_by": "independent_reviewer",
+      "approved_scope": "single_asset",
+      "asset_id": "A-004",
+      "asset_identity_sha256": "353e242b00d7c0c4f0038770d1e6d096ef99a2b4c07fadd9646d13e680dabaa3",
+      "asset_sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
+      "discovery_manifest_sha256": "e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d",
+      "material_id": "M-02",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    }
+  ]
+}
+```
+
+Pipeline正式`_load_copyright_approvals`校验：`count=2`，`single_asset=[A-003,A-004]`。continuation request中的`asset_approvals`也只有这两项，无第三资产。
+
+## 19. media continue两次尝试
+
+### 第一次
+
+- 恢复命令显式设置`REAL_WECHAT_TEST_ALLOWED=true`；所有发布、群发、merge、cleanup开关为false；
+- 执行约59秒；
+- media entry生成continue产物，但官方validator exit 1，Pipeline未复制顶层3项输出；
+- `upload_events=[]`，实际上传0；
+- A-003稳定身份不匹配：`fresh_asset_identity_sha256`、`fresh_asset_sha256`、`fresh_resolved_original_url`、`fresh_source_page_url`；
+- A-004稳定身份不匹配：上述4项加`fresh_material_id`；
+- 两项批准均`asset_approval_consumed=false`；
+- Anthropic源还出现一次TLS EOF。
+
+### 第二次
+
+按网络瞬时错误规则等待5秒后重试，执行约56秒。结果与第一次完全相同：
+
+- `upload_events=[]`；
+- A-003仍为相同4项身份不匹配；
+- A-004仍为相同5项身份不匹配；
+- 批准未消费；
+- 上传0；
+- official validator仍exit 1；
+- Pipeline顶层media输出仍未生成。
+
+第二次完整upload_events：
+
+```json
+{
+  "schema_version": "1.0",
+  "serial": true,
+  "events": []
+}
+```
+
+没有任何微信`media_id`，因此也不存在每图上传耗时。报告不编造不存在的ID或耗时。
+
+## 20. 阻断判定
+
+两次尝试之间错误清单、数量、批准消费状态和上传事件完全一致，未消除任何已知问题，触发：
+
+```text
+STATUS=BLOCKED_MEDIA_CONTINUE_NO_PROGRESS_ASSET_IDENTITY_DRIFT
+阻断项=同一阶段连续两次尝试之间毫无进展
+```
+
+冻结manifest未修改；批准文件仍严格绑定原冻结A-003/A-004。continue重新抓取源页面时资产编号/URL/字节发生漂移，安全合同正确拒绝，未尝试绕过、替换或上传新鲜抓取的其他图片。
+
+## 21. gzh_design与wechat_draft
+
+```text
+gzh_design=NOT_STARTED
+gzh_design_ACK=不存在
+wechat_draft=NOT_STARTED
+draft_id=不存在
+media_id=不存在
+后台可见位置=不适用（未创建草稿）
+```
+
+由于media阶段未完成，未跳过阶段顺序，未创建排版握手或草稿。
+
+## 22. 15R异常与OBS
+
+- OBS-31/OBS-32仍为历史WORKAROUND，代码未修复；
+- OBS-41：本轮没有套用任何历史结构模板；批准文件直接从当前冻结manifest机械生成；
+- 新观察OBS-42：media continue会重新发现并重新编号资产，而非直接消费冻结资产；源页面抓取/回退变化会使同一`asset_id`指向不同资产，导致稳定身份批准无法消费；
+- official validator失败是continue产物无法达到媒体合同门禁的结果，Pipeline未复制顶层输出；
+- 两次均零上传，未出现第三图片。
+
+## 23. 阶段12实际不可逆副作用
+
+```text
+微信素材上传=0
+微信media_id=不存在
+草稿创建=0
+草稿ID=不存在
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+```
+
+实际新增的本地可逆文件：`approval_evidence.md`、`copyright_approval.json`及continue审计产物。没有发生任何微信写入副作用。

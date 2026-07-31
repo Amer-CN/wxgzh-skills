@@ -1,0 +1,70 @@
+{
+  "assets": [
+    {
+      "asset_id": "A-009",
+      "asset_identity_sha256": "34621af67e2808999bc7ef76393411f5281a8d0c06460c0d5315e947f8aa27ed",
+      "asset_sha256": "225a2482df41a9a7e6f3504adb63f34b52c5625cae219fafd3c4c8130e2f5059",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/themes/tc-24/dist/svg/tc-logo.svg",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-035",
+      "asset_identity_sha256": "494c35e97fa88f404a3b2d97d1c1a11c4111237601fe3362697f97af24eaace9",
+      "asset_sha256": "28adbdbc522926fa1990b79dae3ece722dc45f19c81b6a7e044cd3170d70b8d3",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2026/07/techcrunch-disrupt-2026-ai-stage.jpg?w=1200",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-006",
+      "asset_identity_sha256": "606e1811817b1a64519eceddf4b2e18d5ef4e9146d4b16d96222a165ea46aa67",
+      "asset_sha256": "3381ff4e4f06874660a8150cff02474949c64e238b33f06d83327ea99e80254b",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2026/07/TechCrunch-Disrupt-2026-Stage-Generic-Assets-AI-Crop.jpg?w=1024",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-005",
+      "asset_identity_sha256": "6f021a766aa76b2a7165244adc5a915822b3978c95aa71f71b353a52739bb94e",
+      "asset_sha256": "26ddc3f8a8a2427b8e3ab0987e35aa802e6369d17836f1e4b242cc0ca85e32b7",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-004",
+      "asset_identity_sha256": "a0c45cc2f32642cc33eefaf178b69fe8d9b82be8e9bda70fceb1afa53f955796",
+      "asset_sha256": "376f83cfdfc05c8b4f7b668b38266b3687136391cb35fe4685af1d56f0d2fa81",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2026/05/tc-lockup-hp.svg",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-003",
+      "asset_identity_sha256": "a0fd51695d145e450997698fb59aee350e650cf825af6ca2b4e267c26464c37a",
+      "asset_sha256": "c407d94d3b56f277b3478b9635f9d66043d58d9d06978c98f7c232df91dc9284",
+      "material_id": "M-02",
+      "resolved_original_url": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk/opengraph-image-1az256?75c8895f7ec1441b",
+      "source_page_url": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk"
+    },
+    {
+      "asset_id": "A-008",
+      "asset_identity_sha256": "b055f37643fe2820d3c4b02ef430115a769b41da5bf6c8970c8814d59be2e70b",
+      "asset_sha256": "0d64ea9b1d151c0be624011ba5398b04a75099b060189aa4e55990726a072d4b",
+      "material_id": "M-03",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2025/04/Disrupt2026-Color.png",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "asset_id": "A-002",
+      "asset_identity_sha256": "fc2b48e1bb17a7b5160bb0217066eafea2bb1117e83030fe7c74834a698dc7d7",
+      "asset_sha256": "5bd2fb489a8f4d9c3b2be16de0bf38a2c87272a4d7c8222fff907c3e2398eaf6",
+      "material_id": "M-01",
+      "resolved_original_url": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp/opengraph-image-1az256?75c8895f7ec1441b",
+      "source_page_url": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp"
+    }
+  ],
+  "discovery_manifest_sha256": "300fe1f1e009fbe541c03bf96375bc2f6de9d4ee1b8dbeabd6dd9b67359b9a4d",
+  "schema_version": "1.0"
+}

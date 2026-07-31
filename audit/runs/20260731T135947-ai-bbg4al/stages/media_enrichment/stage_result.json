@@ -1,0 +1,190 @@
+{
+  "errors": [
+    {
+      "contract": {
+        "CONTRACT": "FAIL",
+        "checks": {
+          "current_root_matches_lock": {
+            "detail": "installed root sha != locked",
+            "ok": true
+          },
+          "current_version_matches_lock": {
+            "detail": "0.1.0-dev7-hotfix4 != 0.1.0-dev7-hotfix4",
+            "ok": true
+          },
+          "frozen_article_hash": {
+            "detail": "frozen sha mismatch want=5a71680fbce5 cur=5a71680fbce5",
+            "ok": true
+          },
+          "locked_commit_present": {
+            "detail": "media-enrichment full_commit_sha not locked",
+            "ok": true
+          },
+          "locked_version_present": {
+            "detail": "media-enrichment version not locked",
+            "ok": true
+          },
+          "must_run_after_verified": {
+            "detail": "zh_human_writing receipt invalid: []",
+            "ok": true
+          },
+          "no_banned_side_effects": {
+            "detail": "banned side-effects: set()",
+            "ok": true
+          },
+          "official_entry_present": {
+            "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+            "ok": true
+          },
+          "official_validator_present": {
+            "detail": "validator F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+            "ok": true
+          },
+          "order_matches": {
+            "detail": "4 != 4",
+            "ok": true
+          },
+          "real_inputs_present": {
+            "detail": "missing inputs []",
+            "ok": true
+          },
+          "required_outputs_present": {
+            "detail": "missing ['media_manifest.json', 'article_image_bindings.json', 'upload_events.json']",
+            "ok": false
+          },
+          "stage_matches": {
+            "detail": "media_enrichment != media_enrichment",
+            "ok": true
+          }
+        },
+        "contract_file": "04_media_enrichment.yaml",
+        "must_run_after": "zh_human_writing",
+        "problems": [
+          "required_outputs_present: missing ['media_manifest.json', 'article_image_bindings.json', 'upload_events.json']"
+        ],
+        "required_outputs": [
+          "media_manifest.json",
+          "article_image_bindings.json",
+          "upload_events.json"
+        ],
+        "stage": "media_enrichment"
+      },
+      "official_validator_failed": {
+        "command": [
+          "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+          "-X",
+          "utf8",
+          "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+          "--manifest",
+          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\media_manifest.json",
+          "--request",
+          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
+          "--bindings",
+          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
+        ],
+        "elapsed_seconds": 0.892,
+        "exit_code": 1,
+        "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+        "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "2870ee1d80c25a827dbbb9f57c1e817e6e05c605e53f56d78d211efeaea35f46"
+      },
+      "reason": "media_manifest.json or article_image_bindings.json missing"
+    }
+  ],
+  "outputs": {},
+  "run_id": "20260731T135947-ai-bbg4al",
+  "stage": "media_enrichment",
+  "status": "failed",
+  "validator_report": {
+    "contract": {
+      "CONTRACT": "FAIL",
+      "checks": {
+        "current_root_matches_lock": {
+          "detail": "installed root sha != locked",
+          "ok": true
+        },
+        "current_version_matches_lock": {
+          "detail": "0.1.0-dev7-hotfix4 != 0.1.0-dev7-hotfix4",
+          "ok": true
+        },
+        "frozen_article_hash": {
+          "detail": "frozen sha mismatch want=5a71680fbce5 cur=5a71680fbce5",
+          "ok": true
+        },
+        "locked_commit_present": {
+          "detail": "media-enrichment full_commit_sha not locked",
+          "ok": true
+        },
+        "locked_version_present": {
+          "detail": "media-enrichment version not locked",
+          "ok": true
+        },
+        "must_run_after_verified": {
+          "detail": "zh_human_writing receipt invalid: []",
+          "ok": true
+        },
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "official_entry_present": {
+          "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+          "ok": true
+        },
+        "official_validator_present": {
+          "detail": "validator F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "4 != 4",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing ['media_manifest.json', 'article_image_bindings.json', 'upload_events.json']",
+          "ok": false
+        },
+        "stage_matches": {
+          "detail": "media_enrichment != media_enrichment",
+          "ok": true
+        }
+      },
+      "contract_file": "04_media_enrichment.yaml",
+      "must_run_after": "zh_human_writing",
+      "problems": [
+        "required_outputs_present: missing ['media_manifest.json', 'article_image_bindings.json', 'upload_events.json']"
+      ],
+      "required_outputs": [
+        "media_manifest.json",
+        "article_image_bindings.json",
+        "upload_events.json"
+      ],
+      "stage": "media_enrichment"
+    },
+    "official_validator_failed": {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+        "--manifest",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\media_manifest.json",
+        "--request",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
+        "--bindings",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
+      ],
+      "elapsed_seconds": 0.892,
+      "exit_code": 1,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+      "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2870ee1d80c25a827dbbb9f57c1e817e6e05c605e53f56d78d211efeaea35f46"
+    },
+    "reason": "media_manifest.json or article_image_bindings.json missing"
+  }
+}

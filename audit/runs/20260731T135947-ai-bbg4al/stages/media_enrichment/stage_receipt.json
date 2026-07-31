@@ -1,0 +1,70 @@
+{
+  "elapsed_seconds": 43.0,
+  "ended_at": "2026-07-31T07:19:34Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "entrypoint_sha256": "824de0a4677f60cacfa74c096bdab4d180857539b7f556473446ac55f6efb0e3",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\aihot\\deduplicated_items.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_discovery_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\asset_discovery_manifest.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\copyright_approval.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover_request_validation.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue_request_validation.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\aihot\\deduplicated_items.json": "0d8f91066b91a4aa4bc2fbccde66ac7d25210b74574f45f4381f48d28d3ed336",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue_request_validation.json": "250d870d0403cb262541a8fdcab87691d75bc9e115da500007555424e81d85e7",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\copyright_approval.json": "457e8a88a46100efb3a31be01df68827f224813431a3527e66a644e4495108aa",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\asset_discovery_manifest.json": "3b114e123caec5448d74d8668d66a157234952942a6e2b1cdb453a7686f97e03",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover_request_validation.json": "a284d39067ce8134c52f851a1b953a4b3ac0a90ca92a2c9a4c9e3d68a9f63e77",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json": "30a8b02b8a501564243562cf0084a9f24b8c1cb78356269c1dcf759323d311cf",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_discovery_request.json": "93d5e2251add99202e943b98f528030218af02f752cb7d26fb3499918365fdaa",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\stage_request.json": "19bbd13a594aea47e8a5c6354e46ebc054e70454d5b4f05715eeb72e57454c8c",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\canonical_claim_registry.json": "413df2bc2dd0555da79de90709f95029f6e34819743d8741273707e1a011ee0f",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md": "5a71680fbce596224341f31414afe9eb07f356c03a1443946731c0a90f0f0b6f"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "network_mode": "live",
+  "official_validator": {
+    "command": [
+      "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "-X",
+      "utf8",
+      "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+      "--manifest",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\media_manifest.json",
+      "--request",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
+      "--bindings",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
+    ],
+    "elapsed_seconds": 0.892,
+    "exit_code": 1,
+    "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+    "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "2870ee1d80c25a827dbbb9f57c1e817e6e05c605e53f56d78d211efeaea35f46"
+  },
+  "official_validators": [],
+  "output_files": [],
+  "output_hashes": {},
+  "side_effects": [
+    {
+      "detail": "serial uploadimg to mmbiz.qpic.cn",
+      "type": "wechat_image_upload"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+  "skill_name": "media-enrichment",
+  "skill_root_sha256": "b82574698376d1c8e011846db51ce3946e2ada2ffe11ed8e208072c16a7bd2f2",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "stage": "media_enrichment",
+  "started_at": "2026-07-31T07:18:51Z",
+  "validator_exit_code": 1,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+  "validator_sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af"
+}
