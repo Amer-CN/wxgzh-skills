@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import re
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,6 +23,49 @@ SKILL_ROOT = Path(__file__).resolve().parents[2]
 
 class StageError(Exception):
     pass
+
+
+_SENSITIVE_ARG = re.compile(
+    r"(?i)(access[_-]?token|app[_-]?secret|secret|password|authorization|api[_-]?key)")
+_SENSITIVE_QUERY = re.compile(
+    r"(?i)(access_token|wechat_app_secret|app_secret|secret|appsecret|password|api_key)"
+    r"([\"']?\s*[:=]\s*[\"']?)([^&\s,}\"']+)")
+
+
+def _scrub_text(value) -> str:
+    return _SENSITIVE_QUERY.sub(r"\1\2<REDACTED>", str(value or ""))
+
+
+def _scrub_argv(argv) -> list[str]:
+    result = []
+    hide_next = False
+    for raw in argv or []:
+        item = str(raw)
+        if hide_next:
+            result.append("<REDACTED>")
+            hide_next = False
+        elif item.startswith("--") and "=" in item:
+            key, value = item.split("=", 1)
+            result.append(f"{key}=<REDACTED>" if _SENSITIVE_ARG.search(key) else _scrub_text(item))
+        else:
+            result.append(_scrub_text(item))
+            hide_next = item.startswith("--") and bool(_SENSITIVE_ARG.search(item))
+    return result
+
+
+def _write_stage_failure(sd: Path, stage: str, entry_run: dict, entry_path) -> None:
+    command = entry_run.get("command") or []
+    atomic_write_json(sd / "stage_failure.json", {
+        "stage": stage,
+        "entry": str(entry_path or ""),
+        "exit_code": entry_run.get("exit_code"),
+        "stdout_tail": _scrub_text(entry_run.get("stdout", "")[-2000:]),
+        "stderr_tail": _scrub_text(entry_run.get("stderr", "")[-2000:]),
+        "request_elapsed_seconds": entry_run.get(
+            "elapsed_seconds", entry_run.get("elapsed")),
+        "argv": _scrub_argv(command),
+        "recorded_at": now(),
+    })
 
 
 class StageAwait(Exception):
@@ -126,7 +170,10 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
             raise StageError(f"{stage}: agent handshake verification failed: {meta.get('handshake')}")
         er = meta.get("entry_run")
         if er and er.get("exit_code") not in (0, None):
-            raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
+            _write_stage_failure(sd, stage, er, meta.get("entrypoint_path"))
+            raise StageError(
+                f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): "
+                f"{_scrub_text(er.get('stderr'))}")
         if stage == "gzh_design":
             official = ctx.network_mode in ("live", "integration")
             ev = {"simulated": not official, "mode": ctx.network_mode,

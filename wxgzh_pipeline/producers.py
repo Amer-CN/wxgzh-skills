@@ -616,9 +616,11 @@ def _subprocess(ctx, stage, sd, expected, state):
             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
                           "elapsed": run["elapsed_seconds"],
+                          "elapsed_seconds": run["elapsed_seconds"],
                           "stdout_sha256": run["stdout_sha256"],
                           "stderr_sha256": run["stderr_sha256"],
-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""}}
+                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
+                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
     if validator:
         vr = run_script(validator, _validator_args(stage, sd, req_path), timeout=180)
         meta["official_validator"] = _vresult(vr)
@@ -645,9 +647,11 @@ def _media_fake_live(ctx, sd, expected, state, entry, validator):
         "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
         "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
                       "elapsed": run["elapsed_seconds"],
+                      "elapsed_seconds": run["elapsed_seconds"],
                       "stdout_sha256": run["stdout_sha256"],
                       "stderr_sha256": run["stderr_sha256"],
-                      "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+                      "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
+                      "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
     }
     if run["exit_code"] == 0 and validator:
         vr = run_script(
@@ -711,9 +715,11 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 "entrypoint_sha256": run["script_sha256"],
                 "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
                               "elapsed": run["elapsed_seconds"],
+                              "elapsed_seconds": run["elapsed_seconds"],
                               "stdout_sha256": run["stdout_sha256"],
                               "stderr_sha256": run["stderr_sha256"],
-                              "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+                              "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
+                              "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
                 "media_phase": "discover",
                 "discovery_zero_upload_events": zero_upload,
             }
@@ -781,9 +787,11 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
             "entrypoint_sha256": run["script_sha256"],
             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
                           "elapsed": run["elapsed_seconds"],
+                          "elapsed_seconds": run["elapsed_seconds"],
                           "stdout_sha256": run["stdout_sha256"],
                           "stderr_sha256": run["stderr_sha256"],
-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
+                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
+                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
             "media_phase": "continue",
         }
         if run["exit_code"] == 0 and validator:
@@ -824,8 +832,10 @@ def _wechat(ctx, stage, sd, expected, state):
     meta = {"exec_kind": EM.WECHAT, "invoked_entrypoint": str(entry),
             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                          "elapsed_seconds": run["elapsed_seconds"],
                           "stdout_sha256": run["stdout_sha256"],
                           "stderr_sha256": run["stderr_sha256"],
-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""}}
+                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
+                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
     outputs = [sd / o for o in expected if (sd / o).is_file()]
     return outputs, meta
