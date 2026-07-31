@@ -49,11 +49,11 @@
       "full_commit_sha": "cedf92ca45b0cdb7e010d489e9da67dd28ef6e59",
       "source_tree_sha": "c2b914a2cbe3ca8880d0b4b7525cc8adc7a5ce68",
       "skill_version": "0.1.0-dev7-hotfix4",
-      "skill_root_sha256": "e982b757f37050b0a92cbb4378b106a4f3637224ad3de4abc8b3389e6196a4f7",
+      "skill_root_sha256": "a8500e7ecc4b1b34e285340198a066ed1fa7e3484200346c373d0aa58498e8e4",
       "runtime_manifest_sha256": "172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996",
       "runtime_file_count": 57,
       "entrypoint": "scripts/run_media_enrichment.py",
-      "entrypoint_sha256": "c99d5f505f8c9bc2aca064546ff91ffcae64a9667af00beb3121fe16d47a4641",
+      "entrypoint_sha256": "4e0810510b17490c41eb6a892723ab60846820ad8ef7f894a2e0de3d8f7b901c",
       "validator": "scripts/validate_media_manifest.py",
       "validator_sha256": "9192fcd6d698782be83fa0ac48f19189cc5c72f8de8cf673a97f36a0d7913725",
       "required_files": [
