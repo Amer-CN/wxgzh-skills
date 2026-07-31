@@ -213,3 +213,142 @@ copyright_approval.json=不存在
 ```
 
 未上传图片、未创建草稿、未发布/群发、未生成批准文件、未修改Skill或Pipeline代码、未删除文件、未绕过URL安全检查。
+
+---
+
+# 阶段12 · 档15 · 媒体批准合同阻断追加报告
+
+## 11. 冻结清单双哈希复核
+
+复核对象：
+
+```text
+F:\AIXM\wxgzh\.temp\wxgzh-pipeline\20260731T135947-ai-bbg4al\media_enrichment\discover\asset_discovery_manifest.json
+```
+
+复核结果：
+
+```text
+file_sha256=3b114e123caec5448d74d8668d66a157234952942a6e2b1cdb453a7686f97e03
+expected_file_sha256=3b114e123caec5448d74d8668d66a157234952942a6e2b1cdb453a7686f97e03
+embedded_sha256=e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d
+expected_embedded_sha256=e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d
+result=PASS
+frozen_assets=8
+```
+
+## 12. copyright_approval.json合同核验
+
+只读核验了以下正式实现：
+
+- `media-enrichment/src/media_enrichment/input_contract.py`；
+- `media-enrichment/src/media_enrichment/asset_approval.py`；
+- `wxgzh_pipeline/producers.py`中的`_STABLE_SINGLE_ASSET_FIELDS`及`_load_copyright_approvals`；
+- 官方单资产批准测试样例。
+
+`approved_scope=single_asset`的每条批准记录必须完整包含以下12个非空字段：
+
+```text
+asset_id
+material_id
+source_page_url
+resolved_original_url
+asset_sha256
+asset_identity_sha256
+discovery_manifest_sha256
+approval_id
+approved_scope
+approved_by
+approved_at
+approval_evidence_sha256
+```
+
+其中4个SHA字段必须是64位十六进制；`asset_identity_sha256`还必须等于以下稳定身份计算结果：
+
+```text
+sha256(material_id + "\n" + source_page_url + "\n" + resolved_original_url + "\n" + asset_sha256)
+```
+
+## 13. 可从冻结清单与裁决取得的批准字段
+
+### A-003
+
+```text
+asset_id=A-003
+material_id=M-02
+source_page_url=https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents
+resolved_original_url=https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png
+asset_sha256=418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+asset_identity_sha256=ab1f59153db7eac712690c0018b113c6373c2fe3eb4f3d45ae0419687eb5cd2c
+discovery_manifest_sha256=e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d
+approved_scope=single_asset
+approved_by=independent_reviewer
+source_annotation=图片来源:Google Cloud 官方博客
+```
+
+### A-004
+
+```text
+asset_id=A-004
+material_id=M-02
+source_page_url=https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents
+resolved_original_url=https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png
+asset_sha256=5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c
+asset_identity_sha256=353e242b00d7c0c4f0038770d1e6d096ef99a2b4c07fadd9646d13e680dabaa3
+discovery_manifest_sha256=e950c03f3ed6f6cabe4cd2f27b2227e8b19aff8085c9cc350ab0df2b9e89136d
+approved_scope=single_asset
+approved_by=independent_reviewer
+source_annotation=图片来源:Google Cloud 官方博客
+```
+
+## 14. 无法合法取得的必填字段
+
+以下合同必填字段既不在冻结清单中，也未由档15裁决提供：
+
+```text
+approval_id
+approved_at
+approval_evidence_sha256
+```
+
+关键阻断字段是`approval_evidence_sha256`：
+
+- 正式合同只要求它为64位SHA-256；
+- 当前Skill/Pipeline没有定义批准证据正文、规范化格式或哈希生成算法；
+- 测试中的`"e" * 64`是测试夹具，不是真实批准证据；
+- 不能自行把用户指令、当前时间或任意文本假定为正式批准证据；
+- 不能用随机/占位哈希换取合同通过。
+
+`approval_id`和`approved_at`虽然测试样例存在命名和时间格式惯例，但用户明确要求：合同字段若无法从冻结清单或裁决中取得，必须停机，不得自行编造。因此也未生成。
+
+## 15. 阻断裁决
+
+```text
+STATUS=BLOCKED_BEFORE_MEDIA_CONTINUE_APPROVAL_CONTRACT_INCOMPLETE
+copyright_approval.json=未创建
+media_continue=未执行
+upload_events=保持原发现阶段空数组
+uploaded_images=0
+gzh_design=未开始
+wechat_draft=未开始
+```
+
+未输出所谓“完整批准文件”，因为缺失必填值时生成文件即构成编造批准字段，并会违反阻断项3、5及档15第三节明确要求。
+
+## 16. 阶段12实际副作用声明
+
+```text
+微信图片上传=0
+微信素材media_id=不存在
+草稿创建=0
+草稿ID=不存在
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+copyright_approval.json=不存在
+gzh_design产物=不存在
+wechat_draft产物=不存在
+```
+
+阶段12实际操作仅包括：读取冻结manifest、读取合同和测试样例、复核哈希、更新Git审计报告。没有发生任何微信写操作。
