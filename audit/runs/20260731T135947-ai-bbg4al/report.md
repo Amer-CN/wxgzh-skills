@@ -1179,4 +1179,100 @@ STATUS=BLOCKED_PRE_HTTP_WECHAT_CREDENTIALS_NOT_VISIBLE
 WECHAT_ERRCODE=null
 UPLOADED_COUNT=0
 DRAFT_ID=null
+
+---
+
+# 档18 · OBS-47 凭据来源统一、Token缓存与单轮上传结果
+
+## 45. 第0节自检与备份
+
+```text
+formal_version=0.1.0-dev2-hotfix7R4
+obs42_freeze_patch=present
+obs46_observability_and_approval_limit=present
+pre_obs47_backup=F:/AIXM/wxgzh/.agents/skills-backup/pre-obs47-20260801
+media_backup=116 files / 14 dirs
+pipeline_backup=159 files / 45 dirs
+historical_evidence_dirs=untouched
+```
+
+## 46. 阶段A诊断与A1-A6
+
+- A1 doctor来源：`wxgzh_pipeline/orchestrator.py:110-115`先复制进程环境，再从`F:/AIXM/wxgzh/.env`用`SEC.parse_env_file`和`setdefault`补入；`secrets.py:52-60`检查两个字段非空且非占位。
+- A2 上传器原来源：`media-enrichment/src/media_enrichment/uploader.py:191-193`只读`os.environ`；`_get_access_token()`使用实例字段。
+- A3 修复前不同：doctor验证“进程环境 + 项目.env”局部字典，Pipeline `producers.py:758-776`未把该合并字典传给media子进程；修复后`_media_subprocess_env()`将同一来源传入discover/continue子进程，doctor未反向修改。
+- A4 doctor来源`F:/AIXM/wxgzh/.env`：APP_ID存在、长度18；APP_SECRET存在、长度32；不记录明文、前缀或后缀。
+- A5未触发；来源非空。
+- A6根因是子进程环境未继承doctor的局部合并字典。
+
+Token修复：uploader实例内存缓存`_access_token`，单RUN两张图复用一次；不落盘、不进入report、events或日志。
+
+## 47. 网络路径
+
+```text
+.NET api.weixin.qq.com = 120.233.18.202, 120.232.65.161, 112.53.42.235, 112.60.20.154
+Python api.weixin.qq.com = 120.233.18.202
+fake-ip-hit = false
+current_egress_ip = 185.217.5.28
+stage17_egress_ip = 212.135.214.6
+```
+
+## 48. 测试与锁
+
+- media全量：`286 passed, 6 skipped, 0 failed`；
+- Pipeline全量：除1个portable-installer测试外全部通过；该测试失败原因是测试夹具复制目录缺少`.git`，随后对锁定commit执行checkout失败；不是凭据修复断言失败。
+- OBS47直接凭据同源断言：`PASS`。pytest重试因安全删除保护被用户拒绝，未再重试或删除临时目录。
+- 官方锁算法：`compute_root_sha()`、`compute_runtime_manifest_sha()`、`_file_sha()`。
+- media新root：`1dab61844d364f2ca401b0516a6a118cfa80a9b14c9f29379d0a76ab5149953b`；entry：`a54deef36cefd952cffa88c404858948150e383636a74ac7f996fe791aa9541e`；manifest保持`172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996`；count=57。
+- Pipeline runtime root：`bc5009621c4b0ffeebaf19f239d27c7ea38805ab0cf934379b6358e195c8843a`。
+- skills.lock改前SHA：`9de36f1605554192e9c937c2a8c09c79720f2ffb0d609d48c723a66eaed92dc4`；改后SHA：`668dd8e689331c795a27aa45217ec12b8b67af4ebe1edc152a2fd579150530f3`。
+- doctor：`skills_locked_ok=true`、`EXTERNAL_DEPENDENCY_AIHOT=INSTALLED`、`LIVE_PIPELINE_ALLOWED=true`、`wechat_config_present=true`、`FAIL_CLOSED=false`、`doctor=PASS`。完整脱敏输出见`doctor-output-stage18.json`。
+
+## 49. 阶段E单轮上传
+
+只执行一次media continue，未重跑discover。清单只有A-003/A-004，无第三资产。
+
+```json
+{
+  "A-003": {"status":"success","http_status":200,"errcode":null,"errmsg":null,"elapsed":1.422,"endpoint":"/cgi-bin/media/uploadimg","media_id":null,"url":"https://mmbiz.qpic.cn/..."},
+  "A-004": {"status":"success","http_status":200,"errcode":null,"errmsg":null,"elapsed":1.0,"endpoint":"/cgi-bin/media/uploadimg","media_id":null,"url":"https://mmbiz.qpic.cn/..."}
+}
+```
+
+微信`uploadimg`返回URL而非media_id，因此media_id为null是接口实际返回形态。成功上传数=2，正文绑定数=2，错误码为空。
+
+## 50. 阶段F/G阻断
+
+阶段E成功后发现：
+
+- `validate_media_bindings.py:13`默认`MIN_BODY_IMAGES=6`；
+- `contracts.py:175-177`另有独立`counts.BODY_IMAGES_MIN`默认6校验；
+- 阶段E失败输出明确为`body_image_count=2`, `min_required=6`。
+
+要让Pipeline通过，不能只改validator；还必须接线第二层合同，超出本档“仅限validate_media_bindings.py中body_images_min”的授权边界。另一个不可接受方案是重新resume media producer，因为会再次调用微信上传造成重复不可逆副作用；手工改state/receipt则是伪造回执。故未修改body_images_min、未重传、未进入gzh_design、未创建草稿。
+
+## 51. OBS与异常
+
+- OBS-47：doctor与上传器凭据来源已统一；doctor绿灯与上传器读取同源。
+- OBS-48：出口IP不稳定，当前`185.217.5.28`不同于档17`212.135.214.6`；token单RUN已缓存。
+- OBS-49：批准数量硬上限使material级路径失效，按审核者主动收紧不修。
+- OBS-50：本次未执行作废指令；档18第0节自检优先级生效。
+- 安全删除保护异常：一次Pipeline pytest清理及一次doctor保存命令触发历史临时垃圾目录清理拒绝；未删除任何文件，未重试等价清理。
+
+## 52. 实际副作用
+
+```text
+成功微信上传调用=2
+成功写入微信图片托管=2（A-003/A-004）
+media_id=0（接口返回URL）
+draft_id=null
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+```
+
+实际状态：`STATUS=BLOCKED_MIN_IMAGES_SECOND_CONTRACT_AND_NO_SAFE_RESUME_PATH`。
+
+档18最终不能创建草稿，不是因为上传失败，而是因为已成功上传后，Pipeline仍有第二层未授权可改的最小图片数合同，且重新resume会重复上传。
 ```

@@ -4,12 +4,12 @@
       "MEDIA_BINDINGS": "FAIL",
       "all_bindings_consistent": true,
       "blocking_reason": "fewer than 6 bound images — MUST NOT upload",
-      "body_image_count": 0,
+      "body_image_count": 2,
       "contract": {
         "CONTRACT": "FAIL",
         "checks": {
           "body_images_min": {
-            "detail": "0 < 6",
+            "detail": "2 < 6",
             "ok": false
           },
           "current_root_matches_lock": {
@@ -88,7 +88,7 @@
         "contract_file": "04_media_enrichment.yaml",
         "must_run_after": "zh_human_writing",
         "problems": [
-          "body_images_min: 0 < 6"
+          "body_images_min: 2 < 6"
         ],
         "required_outputs": [
           "media_manifest.json",
@@ -99,26 +99,6 @@
       },
       "min_met": false,
       "min_required": 6,
-      "official_validator_failed": {
-        "command": [
-          "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
-          "-X",
-          "utf8",
-          "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
-          "--manifest",
-          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\media_manifest.json",
-          "--request",
-          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
-          "--bindings",
-          "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
-        ],
-        "elapsed_seconds": 0.8,
-        "exit_code": 1,
-        "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
-        "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
-        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout_sha256": "5dc8ad40b4d3bd33912088298e4ee144e25fd418e349da653753b2bf988fd802"
-      },
       "problems": [],
       "references_frozen_article_sha": true,
       "target": 8,
@@ -127,9 +107,9 @@
     }
   ],
   "outputs": {
-    "article_image_bindings.json": "7ec632d8893e97842da4a1d3b806c08b36078b544d7d189901b3480aab337a76",
-    "media_manifest.json": "5c00adfd6007cf0137e9e734deb662dabff2ac85affb8a9646425bfd809c66de",
-    "upload_events.json": "61ecbc79b5eb44ecdfd4548472a024bd2922af81f819b55941787fe48be8e410"
+    "article_image_bindings.json": "50868a2f3eb91fdc062684100f1af5a5e67b0a80261a78cfd1da175cc23a0213",
+    "media_manifest.json": "925828a74a9f551f4adc7eb04b365c702de3e8713d889af697e885e55f77ec92",
+    "upload_events.json": "e6e818cb7eca077ba1339894a9caa3b85e0dd55d4c6bc86a2693c50abaa5e82f"
   },
   "run_id": "20260731T135947-ai-bbg4al",
   "stage": "media_enrichment",
@@ -138,12 +118,12 @@
     "MEDIA_BINDINGS": "FAIL",
     "all_bindings_consistent": true,
     "blocking_reason": "fewer than 6 bound images — MUST NOT upload",
-    "body_image_count": 0,
+    "body_image_count": 2,
     "contract": {
       "CONTRACT": "FAIL",
       "checks": {
         "body_images_min": {
-          "detail": "0 < 6",
+          "detail": "2 < 6",
           "ok": false
         },
         "current_root_matches_lock": {
@@ -222,7 +202,7 @@
       "contract_file": "04_media_enrichment.yaml",
       "must_run_after": "zh_human_writing",
       "problems": [
-        "body_images_min: 0 < 6"
+        "body_images_min: 2 < 6"
       ],
       "required_outputs": [
         "media_manifest.json",
@@ -233,26 +213,6 @@
     },
     "min_met": false,
     "min_required": 6,
-    "official_validator_failed": {
-      "command": [
-        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
-        "-X",
-        "utf8",
-        "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
-        "--manifest",
-        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\media_manifest.json",
-        "--request",
-        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\media_continuation_request.json",
-        "--bindings",
-        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\continue\\article_image_bindings.json"
-      ],
-      "elapsed_seconds": 0.8,
-      "exit_code": 1,
-      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
-      "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
-      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "stdout_sha256": "5dc8ad40b4d3bd33912088298e4ee144e25fd418e349da653753b2bf988fd802"
-    },
     "problems": [],
     "references_frozen_article_sha": true,
     "target": 8,

@@ -1,0 +1,26 @@
+{
+  "wxgzh_pipeline_version": "0.1.0-dev2-hotfix7R4",
+  "project_root": "F:/AIXM/wxgzh",
+  "skills_home": "F:/AIXM/wxgzh/.agents/skills",
+  "network_mode": "live",
+  "skills_locked_ok": true,
+  "media_enrichment": {
+    "locked_root_sha256": "1dab61844d364f2ca401b0516a6a118cfa80a9b14c9f29379d0a76ab5149953b",
+    "current_root_sha256": "1dab61844d364f2ca401b0516a6a118cfa80a9b14c9f29379d0a76ab5149953b",
+    "version_ok": true,
+    "hash_ok": true,
+    "entrypoints_ok": true,
+    "ok": true
+  },
+  "EXTERNAL_DEPENDENCY_AIHOT": "INSTALLED",
+  "LIVE_PIPELINE_ALLOWED": true,
+  "wechat_config_present": true,
+  "wechat_credential_detail": {
+    "WECHAT_APP_ID_nonempty": true,
+    "WECHAT_APP_SECRET_nonempty": true
+  },
+  "wechat_required": true,
+  "project_writable": true,
+  "FAIL_CLOSED": false,
+  "doctor": "PASS"
+}
