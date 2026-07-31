@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+    "-X",
+    "utf8",
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+    "--html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\gzh_design\\final.html",
+    "--title",
+    "AI智能体正在重写网络安全攻防",
+    "--audit-dir",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\wechat_draft"
+  ],
+  "entry": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "exit_code": 1,
+  "recorded_at": "2026-07-31T21:08:50Z",
+  "request_elapsed_seconds": 2.076,
+  "stage": "wechat_draft",
+  "stderr_tail": "",
+  "stdout_tail": "── 发布前安全摘要 ──\n  HTML 路径:                    F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\gzh_design\\final.html\n  raw_file_sha256:              5962fc7a10e303dfc3e33b835a3ef0e83eb4b75f12f6a6c0ff49cec108df6800\n  normalized_content_sha256:    5962fc7a10e303dfc3e33b835a3ef0e83eb4b75f12f6a6c0ff49cec108df6800\n  CJK count:                    1773\n  span leaf count:              82\n  literal_unicode:              0\n  cn-quoted attrs:              0\n  validator ERROR:              0\n  validator WARN:               0\n  publish ERROR:                0\n  publish WARNING:              0\n  预检通过 ✅（ERROR=0, WARNING=0）\n  outgoing 门禁通过 ✅（无字面量 \\uXXXX、含 CJK、HTML 完整、JSON 往返一致）\n错误: 创建草稿失败 [40007] invalid media_id hint: [cGqAPa023644-1] rid: 6a6d0f4c-421f718d-2a6d5a2b\n"
+}

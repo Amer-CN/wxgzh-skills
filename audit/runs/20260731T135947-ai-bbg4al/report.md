@@ -1363,3 +1363,99 @@ wechat_draft首次且唯一一次入口执行返回exit 1，仅生成`stage_requ
 图片来源:Google Cloud 官方博客
 
 最终状态：`BLOCKED_WECHAT_DRAFT_FIRST_ATTEMPT_FAILED_NO_RETRY`。
+
+---
+
+# 档20R · 通用失败观测与草稿真实根因
+
+## 61. 更正、自检与备份
+
+确认档20的OBS-55、OBS-57撤回：`skill_name=gzh-design`是执行Skill/锁身份映射，Pipeline按stage分发；真实RUN中`gzh_design/final.html`存在且请求路径一致。未修改路由或HTML路径。
+
+档16/17/18/19四类补丁只读自检均成立。备份`pre-obs56-20260801`成功：Pipeline源与备份均181文件、46目录；统计包含46个pyc/cache文件，排除后135文件。未删除、移动、复用任何历史物证或pytest目录。
+
+## 62. OBS-56失败观测修复
+
+通用`execute_stage`非零子进程路径在抛`StageError`前写`stage_failure.json`，字段包括stage、entry、exit_code、stdout_tail、stderr_tail、request_elapsed_seconds、脱敏argv、recorded_at。stdout和stderr均记录；query、键值和参数形式的token/secret均脱敏。
+
+不改变成功条件、路由、输入路径、合同、receipt或异常传播；成功路径不写失败文件。
+
+测试：
+
+```text
+OBS56定向=3 passed
+media=289 passed, 6 skipped, 0 failed
+Pipeline=144 passed, 1 skipped, 13 failed
+```
+
+Pipeline的13项均为safe-delete保护或OBS-52缺`.git`夹具；本档最终定向3项独立通过。
+
+## 63. 阶段C封面验证
+
+- `publish_wechat_draft.py:519-531`的`--cover/--thumb-media-id`均非argparse必填。
+- `545-549`只校验已传入的cover；`574-577`有`--audit-dir`即进入audit；`579-582`缺封面exit只作用于非audit模式。
+- `create_draft:239-253`始终写`thumb_media_id`；无默认值/占位。
+- `producers.py:818-827`只传`--html/--title/--audit-dir`，没有cover或thumb id。
+- 微信官方`draft/add`文档：`article_type=news`时`thumb_media_id`必填，且必须为永久MediaID；当前脚本未传article_type，默认news。
+
+第1次尝试前结论为`证据不足`：官方/代码证明news需要封面，但历史真实错误不可取得，预检也可能先失败。因此尝试前条件封面授权未生效，没有上传封面。
+
+## 64. 锁与doctor
+
+官方方式复算`compute_root_sha()`、`compute_runtime_manifest_sha()`和锁定entrypoint SHA；super-writer、zh-human-writing、media-enrichment、gzh-design的root/manifest/count全部match。
+
+本档只改Pipeline自身；`skills.lock.json`只锁外部Skill，因此无需修改，前后SHA均为：
+
+```text
+a9e07ef42017cff225158466213253baf1155f34a7c2f1bdaf62a87dbbc751d6
+```
+
+Doctor完整返回：`skills_locked_ok=true`、`wechat_config_present=true`、`project_writable=true`、`FAIL_CLOSED=false`、`doctor=PASS`。本次为会话直接返回证据，没有重建doctor文件。
+
+## 65. 第1次草稿尝试与真实错误
+
+只恢复wechat_draft；前五阶段receipt全部有效，未重跑discover/media/gzh_design，uploadimg调用0。
+
+`stage_failure-stage20r-attempt1.json`：
+
+```text
+exit_code=1
+request_elapsed_seconds=2.076
+stderr_tail=""
+wechat_errcode=40007
+wechat_errmsg=invalid media_id hint: [cGqAPa023644-1] rid: 6a6d0f4c-421f718d-2a6d5a2b
+endpoint_path=/cgi-bin/draft/add
+```
+
+stdout原文证明：HTML raw/normalized SHA均为`5962fc7a...df6800`；CJK=1773、leaf=82、validator ERROR/WARN=0、publish ERROR/WARNING=0，预检和outgoing门禁均PASS；随后`draft/add`返回`40007 invalid media_id`。
+
+综合官方文档、代码和本次运行：封面是news草稿必填项，空`thumb_media_id`是本次失败根因。但档20R的F-2/阻断项16明确将40007列为环境类错误，必须停机交用户；因此没有启用封面上传动作，也没有第2次草稿尝试。
+
+## 66. 八条安全属性
+
+1. 冻结本地SHA校验未改。
+2. 仅批准资产上传规则未改。
+3. 批准数量上限未改。
+4. URL安全检查未改。
+5. 批准合同加载/校验未改。
+6. 未新增自动批准路径。
+7. 本档uploadimg调用0，历史success未重传。
+8. cover素材上传0；不存在需要复用的cover success事件，也未绕过幂等要求。
+
+## 67. 实际不可逆副作用
+
+```text
+累计微信正文图片托管=2（档18）
+本档新增uploadimg=0
+本档material/add_material=0
+本档草稿尝试=1
+本档新增草稿=0
+发布/群发/定时/预览群发=0
+删除素材=0
+```
+
+无WORKAROUND。微信后台无新增草稿，draft_id=null。
+
+图片来源:Google Cloud 官方博客
+
+最终状态：`BLOCKED_WECHAT_40007_INVALID_MEDIA_ID_NO_COVER_UPLOAD_NO_RETRY`。
