@@ -245,6 +245,68 @@ class TestStableSingleAssetIdentityCli:
         _assert_no_upload(continued, events)
         assert any("frozen sha256 mismatch" in e for e in continued["errors"])
 
+    def test_existing_success_event_skips_reupload_and_reuses_url(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        request = _write_request(tmp_path, [approval])
+        phase_out = tmp_path / "idempotent" / "continue"
+        cmd = [
+            sys.executable, "-X", "utf8",
+            str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
+            "--request", str(request), "--output-dir", str(phase_out),
+            "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
+            "--discovery-manifest", str(out / "asset_discovery_manifest.json"),
+        ]
+        first = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
+        assert first.returncode == 0, first.stdout + first.stderr
+        first_events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
+        first_url = next(e["url"] for e in first_events if e["status"] == "success")
+        second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
+        assert second.returncode == 0, second.stdout + second.stderr
+        events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
+        assert sum(e["status"] == "success" for e in events) == 1
+        skipped = [e for e in events if e["status"] == "skipped_already_uploaded"]
+        assert len(skipped) == 1 and skipped[0]["url"] == first_url
+
+    def test_existing_success_does_not_bypass_frozen_file_sha(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, manifest, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        request = _write_request(tmp_path, [approval])
+        phase_out = tmp_path / "tamper-after-success" / "continue"
+        cmd = [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
+               "--request", str(request), "--output-dir", str(phase_out),
+               "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
+               "--discovery-manifest", str(out / "asset_discovery_manifest.json")]
+        assert subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180).returncode == 0
+        target = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        Path(target["local_path"]).write_bytes(b"tampered-after-success")
+        second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
+        assert second.returncode != 0
+        continued = json.loads((phase_out / "media_manifest.json").read_text(encoding="utf-8"))
+        assert any("frozen sha256 mismatch" in e for e in continued["errors"])
+
+    def test_failed_event_is_not_reused(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        request = _write_request(tmp_path, [approval])
+        phase_out = tmp_path / "failed-event" / "continue"
+        phase_out.mkdir(parents=True)
+        (phase_out / "upload_events.json").write_text(
+            json.dumps({"schema_version":"1.0","serial":True,"events":[
+                {"asset_id":"A-001","status":"failed","url":None}]}), encoding="utf-8")
+        cmd = [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
+               "--request", str(request), "--output-dir", str(phase_out),
+               "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
+               "--discovery-manifest", str(out / "asset_discovery_manifest.json")]
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
+        assert result.returncode == 0, result.stdout + result.stderr
+        events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
+        assert any(e.get("status") == "success" for e in events)
+        assert not any(e.get("status") == "skipped_already_uploaded" for e in events)
+
     def test_continue_mirrors_required_outputs_to_stage_root(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")

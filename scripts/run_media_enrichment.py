@@ -26,7 +26,9 @@ from media_enrichment.image_inspector import inspect_image
 from media_enrichment.image_deduplicator import deduplicate_asset, DedupState
 from media_enrichment.image_classifier import classify_image
 from media_enrichment.chart_generator import build_chart_specs, generate_chart
-from media_enrichment.uploader import create_uploader, scan_for_secrets, timed_upload
+from media_enrichment.uploader import (
+    create_uploader, normalize_wechat_url, scan_for_secrets, timed_upload,
+)
 from media_enrichment.placement_planner import find_anchors
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
 from media_enrichment.asset_approval import (
@@ -90,6 +92,21 @@ def main():
     upload_mode = "dry_run" if args.phase == "discover" else requested_upload_mode
     # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
     upload_events: list = []
+    existing_upload_events: dict[str, dict] = {}
+    if args.phase == "continue":
+        events_path = output_dir / "upload_events.json"
+        if events_path.is_file():
+            try:
+                prior_events = json.loads(
+                    events_path.read_text(encoding="utf-8")).get("events", [])
+                upload_events.extend(prior_events)
+                for event in prior_events:
+                    if (event.get("status") == "success"
+                            and event.get("url")
+                            and normalize_wechat_url(event.get("url"))):
+                        existing_upload_events[event["asset_id"]] = event
+            except (OSError, ValueError, TypeError):
+                builder.errors.append("existing upload_events.json is invalid")
 
     # Validate upload_mode. Discovery is side-effect-free regardless of request.
     try:
@@ -512,19 +529,46 @@ def main():
                     and asset.quality_status == "pass"
                     and asset.relevance_status == "relevant"
                     and asset.duplicate_of is None):
-                upload_result = timed_upload(
-                    uploader, upload_events, local_path, asset.asset_id,
-                    copyright_status=asset.copyright_status,
-                )
-                asset.upload = {
-                    "mode": upload_mode, "status": upload_result.status,
-                    "remote_url": upload_result.remote_url,
-                    "response_sha256": upload_result.response_sha256,
-                }
-                if upload_result.status != "success":
-                    builder.errors.append(
-                        f"upload failed for {asset.asset_id}: "
-                        f"{upload_result.error or 'no success response'}")
+                prior = existing_upload_events.get(asset.asset_id)
+                if prior is not None:
+                    asset.upload = {
+                        "mode": prior.get("mode", upload_mode),
+                        "status": "success",
+                        "remote_url": prior["url"],
+                        "response_sha256": prior.get("response_sha256"),
+                    }
+                    upload_events.append({
+                        "asset_id": asset.asset_id,
+                        "mode": prior.get("mode", upload_mode),
+                        "status": "skipped_already_uploaded",
+                        "started_at": prior.get("started_at"),
+                        "ended_at": prior.get("ended_at"),
+                        "start_monotonic": prior.get("start_monotonic"),
+                        "end_monotonic": prior.get("end_monotonic"),
+                        "http_status": prior.get("http_status"),
+                        "wechat_errcode": prior.get("wechat_errcode"),
+                        "wechat_errmsg": prior.get("wechat_errmsg"),
+                        "request_elapsed_seconds": 0.0,
+                        "endpoint_path": prior.get("endpoint_path"),
+                        "request_attempt_index": prior.get("request_attempt_index"),
+                        "media_id": prior.get("media_id"),
+                        "url": prior["url"],
+                        "source_event": "existing_success_event",
+                    })
+                else:
+                    upload_result = timed_upload(
+                        uploader, upload_events, local_path, asset.asset_id,
+                        copyright_status=asset.copyright_status,
+                    )
+                    asset.upload = {
+                        "mode": upload_mode, "status": upload_result.status,
+                        "remote_url": upload_result.remote_url,
+                        "response_sha256": upload_result.response_sha256,
+                    }
+                    if upload_result.status != "success":
+                        builder.errors.append(
+                            f"upload failed for {asset.asset_id}: "
+                            f"{upload_result.error or 'no success response'}")
 
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
