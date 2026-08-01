@@ -1,0 +1,147 @@
+{
+  "article": {
+    "path": "../zh_human_writing/final_article.md",
+    "sha256": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576"
+  },
+  "asset_approvals": [],
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "claim_text": "Anthropic 调查发现 Claude 模型在网络安全评估中入侵三家组织生产基础设施",
+      "material_id": "M-01",
+      "source_excerpt": "",
+      "source_url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals"
+    },
+    {
+      "claim_id": "C-02",
+      "claim_text": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+      "material_id": "M-02",
+      "source_excerpt": "Google Cloud 宣布 AlloyDB 推出 IAM 群组认证（预览版），允许安全团队通过最多 200 个 Google Groups 管理数据库访问。该功能支持 AI 智能体传递用户群组身份至数据库层，实现表级授权与精确审计，并统一了 Cloud SQL 与 AlloyDB 的访问控制策略。",
+      "source_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    },
+    {
+      "claim_id": "C-03",
+      "claim_text": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位",
+      "material_id": "M-03",
+      "source_excerpt": "TechCrunch Disrupt 2026将于10月13-15日在旧金山Moscone Center举办AI Stage，由Google for Startups呈现。议程将探讨模型商品化下的AI产品定价、需从基础设施重建的智能体安全，以及AI原生市场策略。",
+      "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "claim_id": "C-04",
+      "claim_text": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个",
+      "material_id": "M-04",
+      "source_excerpt": "华为鸿蒙电脑成为国内首个整机、OS、芯片全链路通过 CC EAL5+ 认证的 PC 产品。其搭载的鸿蒙系统也是首个通过国测 II 级的电脑 OS，依托星盾安全架构与原生 AI 安全底座，聚焦智能体安全、金融安全、企业办公安全三大核心场景。",
+      "source_url": "https://www.ithome.com/0/983/125.htm"
+    },
+    {
+      "claim_id": "C-05",
+      "claim_text": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求",
+      "material_id": "M-05",
+      "source_excerpt": "数据安全公司 Cyera 宣布签署意向书，以约 10 亿美元（大部分现金加部分股票）收购专注于非人类身份（主要是 AI 智能体）安全的 Oasis Security。Oasis 成立于 2022 年，已从 Accel、Craft Ventures 等融资约 1.95 亿美元。",
+      "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents"
+    },
+    {
+      "claim_id": "C-06",
+      "claim_text": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash",
+      "material_id": "M-06",
+      "source_excerpt": "微软发布首个网络安全 AI 模型 MAI-Cyber-1-Flash，在 CyberGym 基准测试中取得 95.95% 的成功率。该模型接入多智能体安全系统 MDASH，可处理约 90% 的网络安全任务，与 GPT-5.4 的组合成本比此前配置降低近 50%。",
+      "source_url": "https://www.ithome.com/0/982/312.htm"
+    }
+  ],
+  "config": {
+    "allow_unknown_license_for_publish": false,
+    "max_images_per_material": 8,
+    "max_total_images": 8,
+    "network_mode": "live",
+    "upload_mode": "wechat_image_host"
+  },
+  "materials": [
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms859a0e01k4roeqf9u8mvnp",
+      "material_id": "M-01",
+      "selected_claim_ids": [
+        "C-01"
+      ],
+      "source_url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+      "title": "Anthropic 调查发现 Claude 模型在网络安全评估中入侵三家组织生产基础设施"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms7q9upv0q0gro2ev1apyhwk",
+      "material_id": "M-02",
+      "selected_claim_ids": [
+        "C-02"
+      ],
+      "source_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "title": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms6lhleg06ourohzls7gb1hk",
+      "material_id": "M-03",
+      "selected_claim_ids": [
+        "C-03"
+      ],
+      "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "title": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms5suoi10selrobkfvb0mwoe",
+      "material_id": "M-04",
+      "selected_claim_ids": [
+        "C-04"
+      ],
+      "source_url": "https://www.ithome.com/0/983/125.htm",
+      "title": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms5cgsgp01osro7cbxt8b2wq",
+      "material_id": "M-05",
+      "selected_claim_ids": [
+        "C-05"
+      ],
+      "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents",
+      "title": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms3yedcz040qro82up1ya5bf",
+      "material_id": "M-06",
+      "selected_claim_ids": [
+        "C-06"
+      ],
+      "source_url": "https://www.ithome.com/0/982/312.htm",
+      "title": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash"
+    }
+  ],
+  "provenance": {
+    "canonical_registry_sha256": "5ffd9bbeb8546449be7ee1d4d699574260c0e83fd3926a3a658b8b9c214d6abe",
+    "copyright_approvals_bound": 0,
+    "deduplicated_items_sha256": "747d2ba11aab109e735ee2f96564bcd3d6ac734357cf7bca9aef9ffa697e02c4",
+    "material_mapping_verified": true,
+    "verified_material_count": 6
+  },
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "schema_version": "1.0"
+}

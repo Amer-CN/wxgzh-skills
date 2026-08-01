@@ -1,0 +1,93 @@
+{
+  "elapsed_seconds": 1.0,
+  "ended_at": "2026-08-01T10:33:29Z",
+  "entrypoint_path": null,
+  "entrypoint_sha256": null,
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\full_mode_validator_report.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\article.md": "705093800f28ed953de1e0a6a743b71b965f63df8c370b71c606e248974823be",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\canonical_claim_registry.json": "5ffd9bbeb8546449be7ee1d4d699574260c0e83fd3926a3a658b8b9c214d6abe",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\full_mode_validator_report.json": "03cbff130860fb0fadd5a0f8eaa3437f94fdaf377c20e47fe66627d67a4bbbf3",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\stage_request.json": "b35ef7919072d145012b7987252c99cb05430e912f88c9f496572c060a0023e0"
+  },
+  "invoked_entrypoint": "agent_handshake:zh_human_writing",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.131,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+      "sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f84e862c223f5fea6685ff5236c3335b3c8d2c29730b286e98484bae03e7f5bb"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+        "--text",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.111,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+      "sha256": "c0ef34320947abc7821b9bc1974eb0cd6c4b96966b9c012be5361362880c9048",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f17c9b01bfc16e9bcad14d2644f90a3a2e99d3af63712f9787800c0f45128846"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.116,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+      "sha256": "849f68ed34b7e74f3b71db6adae9b2de150fb30b35d151bf093786991efe3772",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "c0f173e70a4ba927fb85731fe0fb950b26dbf439e1c7e784f94bb1829a3047fb"
+    }
+  ],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\fidelity_report.json"
+  ],
+  "output_hashes": {
+    "fidelity_report.json": "606336da507231b8efe8ca156b538f25408c9f1716fe08ba9aeeb961b16c6983",
+    "final_article.md": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576"
+  },
+  "side_effects": [],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+  "skill_name": "zh-human-writing",
+  "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+  "skill_version": "0.1.0",
+  "stage": "zh_human_writing",
+  "started_at": "2026-08-01T10:33:28Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+  "validator_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2"
+}

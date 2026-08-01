@@ -1,0 +1,24 @@
+{
+  "contract_sha256": "fdf276c8b411f9eaf685ba683707f9e2e0ce87fee96048634447fcab4a1dc8a3",
+  "expected_outputs": [
+    "raw_items.json",
+    "deduplicated_items.json",
+    "fetch_log.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": null,
+    "topic": "智能体时代的数据库身份安全"
+  },
+  "instructions": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
+  "kind": "agent_handshake",
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "skill": "aihot",
+  "skill_identity": {
+    "skill_name": "aihot",
+    "skill_root_sha256": null,
+    "skill_version": null
+  },
+  "stage": "aihot",
+  "stage_request_sha256": "87c9b568f3d3ce9c23675c0ec115ec34a59c0fd3016d274440cbbfa287ff89dd",
+  "upstream_hashes": {}
+}

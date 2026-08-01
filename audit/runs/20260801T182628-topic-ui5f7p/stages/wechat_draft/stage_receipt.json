@@ -1,0 +1,49 @@
+{
+  "elapsed_seconds": 8.0,
+  "ended_at": "2026-08-01T12:16:27Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "entrypoint_sha256": "bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\wechat_draft\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\final.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\final_runtime.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\article_image_bindings.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\theme_identity_report.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\final.html": "d244d2711c7a840bfeaa9c137fe73eef509c0df82b4a71acf714ee770dd9df9e",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\final_runtime.html": "4d8afb17274abd9227775d0623ee4f34754ff3289aa166abeef2f27ae0af9c36",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\gzh_design\\theme_identity_report.json": "73cea37e13615d7a7c7e981afd1f97ab0abbba8547b0d6a73b006c3d5d1c7a23",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\article_image_bindings.json": "bdc45e429b25cab37fd28d3a1464c30b29a386d6bb0d7e942ffebe8e90054e9b",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\wechat_draft\\stage_request.json": "e12452492144f2fb1d45e17bb11c8c91da6970be49fbe9b3b592bb4eb151befe"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\wechat_draft\\draft_before.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\wechat_draft\\draft_after.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\wechat_draft\\draft_creation_result.json"
+  ],
+  "output_hashes": {
+    "draft_after.json": "32c904d53daf438b97135e3aa51d94482c80f1f728a5df8d235ab7a3ee06d96c",
+    "draft_before.json": "50fd16ef8ac67c7a4a381730faad66b2cc0667e85c96c79e2567e1691bc1bd5d",
+    "draft_creation_result.json": "e01483dab26c5bf5123aefbcb0cebcdd81d1ef590a36e9d3b5ddd463c8728e8f"
+  },
+  "side_effects": [
+    {
+      "detail": "single draft/add; cover add_material; no publish",
+      "type": "wechat_draft_add"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+  "skill_name": "gzh-design",
+  "skill_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+  "skill_version": "v2026.07.18-hammer.1",
+  "stage": "wechat_draft",
+  "started_at": "2026-08-01T12:16:19Z",
+  "validator_exit_code": 1,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "validator_sha256": "bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934"
+}

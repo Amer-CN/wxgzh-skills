@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent",
+  "handshake_token": "d18a6f1231421e230d119c308cf897f9756b494998934a48d42fb2b69d734107",
+  "produced_files": [
+    "fidelity_report.json",
+    "final_article.md"
+  ],
+  "produced_hashes": {
+    "fidelity_report.json": "606336da507231b8efe8ca156b538f25408c9f1716fe08ba9aeeb961b16c6983",
+    "final_article.md": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576"
+  },
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "stage": "zh_human_writing"
+}

@@ -1,0 +1,9 @@
+RUN_ID=20260801T182628-topic-ui5f7p
+STAGE=wechat_draft
+STATUS=STAGE_FAILED
+exit_code=1
+stdout=STAGE_FAILED / failed_stage=wechat_draft / RESUME_EXIT=1 (see stage_result.json for validator_report)
+stderr=(empty)
+recorded_at=2026-08-01T12:19:39Z
+root_cause=media_id desensitization collision (first-8-char [REDACTED]) breaks NEW_DRAFT_COUNT uniqueness check; draft itself was created (before=1 after=2 delta=1), no draft deleted.
+

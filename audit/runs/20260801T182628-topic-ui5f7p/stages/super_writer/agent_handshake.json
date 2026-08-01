@@ -1,0 +1,36 @@
+{
+  "agent_id": "agent",
+  "handshake_token": "05d78336786581d47c9abf2b1abe32bb21f509ad5d32132f290007acbc7c895e",
+  "produced_files": [
+    "article.md",
+    "canonical_claim_registry.json",
+    "core-card.md",
+    "editor-report.md",
+    "evidence-map.md",
+    "full_mode_validator_report.json",
+    "generation-profile.yaml",
+    "material-ingestion-report.json",
+    "material-ledger.yaml",
+    "material-readiness.yaml",
+    "outline.md",
+    "semantic-map.yaml",
+    "writing-brief.md"
+  ],
+  "produced_hashes": {
+    "article.md": "705093800f28ed953de1e0a6a743b71b965f63df8c370b71c606e248974823be",
+    "canonical_claim_registry.json": "5ffd9bbeb8546449be7ee1d4d699574260c0e83fd3926a3a658b8b9c214d6abe",
+    "core-card.md": "ef9e000570aaa904bc6974c8e78af163a5dfc76e884a43812a980b506d70cfbb",
+    "editor-report.md": "85f077da6a6480bb2dd4e2c6906eea4171a56bb39ca7ce92cfff6e3167e3ee25",
+    "evidence-map.md": "59cfe9431705a0f3dba0cb21771b425c421b865389fe86b4f4e274d6045903cc",
+    "full_mode_validator_report.json": "03cbff130860fb0fadd5a0f8eaa3437f94fdaf377c20e47fe66627d67a4bbbf3",
+    "generation-profile.yaml": "576c36e593f627fa7df826fa9afdf4d8ed1bcd38c2336bc925ee8f393ff03913",
+    "material-ingestion-report.json": "ba6a61972441ed40818629f31febf96d2e82bc12c2a1964a8198304f23e68bdb",
+    "material-ledger.yaml": "74e8c209e7c5030723690987429e6c89ef13fff4720fa3f179c79b8804aa3612",
+    "material-readiness.yaml": "fd8a63b9d7dc069bb5610af78cb06c5df72c792ebd7dd7bad09f344fb9c60d2a",
+    "outline.md": "9e1f88a32619b26d92c9cf86210d9e6d6e8a35c9fb908a3f8ab6c546d763da51",
+    "semantic-map.yaml": "a7a1803bd2e5d8927e9f6c581ce6a714434a3ce5f3aac989297f56a1e4c49ad2",
+    "writing-brief.md": "ebe025f0882464c2914bdd3e980de795ba2ca4441d97876c2a34d02d56d5651a"
+  },
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "stage": "super_writer"
+}
