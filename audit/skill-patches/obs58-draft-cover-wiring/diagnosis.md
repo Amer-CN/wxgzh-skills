@@ -38,3 +38,21 @@ The intended choice was `--cover`: Pipeline would pass only the verified frozen 
 6. Stage 21 simultaneously requires only `wechat_draft`, forbids modifying/forging receipts and forbids rerunning other stages.
 
 Therefore there is no permitted execution path. Continuing would require weakening receipt verification, rewriting a receipt, or rerunning gzh_design. All are forbidden. This triggers blocker 23 (“internal contradiction; obey stricter requirement and stop”).
+
+---
+
+# Stage 21R follow-up — Pipeline-only path remains blocked
+
+Stage 21R correctly removes the requirement to edit gzh-design, so the prior root/receipt contradiction is resolved. The five patch checks pass; Git is clean; the current `gzh_design` receipt verifies PASS with zero mismatches. The gzh publisher SHA is `bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934` and lock-file SHA is `a9e07ef42017cff225158466213253baf1155f34a7c2f1bdaf62a87dbbc751d6`.
+
+However, the required Pipeline-only cover idempotency contract cannot be implemented with the existing child-process output:
+
+1. `publish_wechat_draft.py:163-180` returns the permanent cover `media_id` only from the in-process `upload_cover()` function.
+2. `run_audit_mode():481-489` stores that value only in local variable `thumb`, then passes it to `create_draft()`.
+3. It does not print or persist `thumb` or the cover response.
+4. `draft_creation_result.json:494-502` stores `result_media`, which is the new **draft** media_id truncated to eight characters plus `[REDACTED]`; it is not the cover media_id.
+5. The parent Pipeline therefore cannot truthfully write the required `cover_upload_event.json.media_id`, and cannot later switch to `--thumb-media-id <existing cover media_id>`.
+
+Implementing the requirement would need one of the following, all forbidden by Stage 21R: edit gzh-design to expose the cover id, fabricate/guess the event, or add a separate material lookup/upload path beyond the authorized existing `--cover` flow. This triggers blocker 25 (internal contradiction; obey the stricter requirement and stop).
+
+No Pipeline source, gzh-design source, lock, receipt, test, doctor run, cover upload, draft attempt or other WeChat call was performed under Stage 21R.

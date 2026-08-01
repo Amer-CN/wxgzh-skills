@@ -1525,3 +1525,58 @@ approved_scope=single_asset
 图片来源:Google Cloud 官方博客
 
 最终状态：`BLOCKED_INSTRUCTION_CONTRADICTION_GZH_RUNTIME_RECEIPT_ROOT`。
+
+---
+
+# 档21R · Pipeline侧封面幂等输出不可取得阻断
+
+## 71. 更正与绝对边界
+
+档21R撤销修改gzh-design的要求，旧的root/receipt冲突因此解除。五项补丁自检通过；Pipeline Git基线干净；`gzh_design` receipt在本档开始时PASS、零mismatch。
+
+严格遵守：gzh-design零字节改动、skills.lock零改动、已完成receipt零改动、root校验零放宽、允许范围仅Pipeline。基线：
+
+```text
+gzh publish_wechat_draft.py sha256=bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934
+skills.lock.json sha256=a9e07ef42017cff225158466213253baf1155f34a7c2f1bdaf62a87dbbc751d6
+gzh_design receipt=PASS
+mismatches=[]
+```
+
+## 72. 新阻断项25
+
+仅Pipeline侧无法满足B-3要求：
+
+1. gzh脚本`upload_cover()`取得永久封面`media_id`后，只return给同进程调用者。
+2. `run_audit_mode:481-489`仅把它存在局部变量`thumb`，随即传给`create_draft()`。
+3. 脚本不打印、不落盘`thumb`或cover API响应。
+4. `draft_creation_result.json`中的`media_id`是新建草稿ID，且只保留前8位加`[REDACTED]`，不是封面素材ID。
+5. Pipeline子进程结束后无法取得真实封面media_id，因此不能如实写`cover_upload_event.json.media_id`，也不能在下次改传`--thumb-media-id <已有封面ID>`完成幂等复用。
+
+继续只能选择：修改gzh-design输出封面ID、伪造/猜测事件、或新增超出既有`--cover`路径的素材查询/上传实现。三者均违反档21R绝对边界或安全属性。命中阻断项25，服从更严格要求停止。
+
+## 73. 九条属性与副作用
+
+1. 冻结SHA未改。
+2. 显式批准未改。
+3. 数量上限未改。
+4. URL安全未改。
+5. 批准合同未改。
+6. 无自动批准路径。
+7. uploadimg调用0。
+8. 未伪造cover事件，material/add_material调用0。
+9. A-003未下载、裁剪或重编码。
+
+没有源码、测试、锁、receipt、路由、HTML路径变更；没有运行doctor或全量测试，因为无代码变更；没有进入D/E。
+
+```text
+累计uploadimg图片=2
+本档永久封面素材=0
+本档草稿尝试=0
+本档新增草稿=0
+发布/群发/定时/预览群发=0
+```
+
+图片来源:Google Cloud 官方博客
+
+最终状态：`BLOCKED_PIPELINE_CANNOT_OBSERVE_COVER_MEDIA_ID_WITHOUT_GZH_CHANGE`。
