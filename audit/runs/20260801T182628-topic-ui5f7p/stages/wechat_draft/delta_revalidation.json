@@ -1,0 +1,91 @@
+{
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "obs": "OBS-62R offline revalidation",
+  "validator": "F:\\AIXM\\wxgzh\\repos\\wxgzh-pipeline\\validators\\validate_draft_delta.py",
+  "validator_sha256": "428ad6ee0e0e6f383a09325763ee82a46b92bd7612f4c1ce51c744daa1c77f5f",
+  "method": "pure offline; no WeChat API; read-only on archived snapshots",
+  "cases": [
+    {
+      "id": "RUN-20260801T182628-topic-ui5f7p",
+      "expected": "PASS",
+      "exit_code": 0,
+      "note": "real run: 1->2 drafts, both items share desensitized media_id Y3aIagws[REDACTED]; identity by update_time only",
+      "report": {
+        "BEFORE_TOTAL": 1,
+        "AFTER_TOTAL": 2,
+        "NEW_DRAFT_COUNT": 1,
+        "AFTER_eq_BEFORE_plus_1": true,
+        "UPDATE_TIME_SUBSET": true,
+        "OLD_DRAFTS_PRESERVED": true,
+        "NEW_UPDATE_TIME_COUNT": 1,
+        "NEW_DRAFT_UNIQUE": true,
+        "CREATION_RESULT": "PASS",
+        "CREATION_RESULT_FLAGS": {
+          "deleted_any": false,
+          "formally_published": false,
+          "mass_send": false,
+          "scheduled": false
+        },
+        "DRAFT_DELTA": "PASS"
+      }
+    },
+    {
+      "id": "RUN-20260731T135947-ai-bbg4al",
+      "expected": "PASS",
+      "exit_code": 0,
+      "note": "real run: 0->1 drafts, creation flags all false",
+      "report": {
+        "BEFORE_TOTAL": 0,
+        "AFTER_TOTAL": 1,
+        "NEW_DRAFT_COUNT": 1,
+        "AFTER_eq_BEFORE_plus_1": true,
+        "UPDATE_TIME_SUBSET": true,
+        "OLD_DRAFTS_PRESERVED": true,
+        "NEW_UPDATE_TIME_COUNT": 1,
+        "NEW_DRAFT_UNIQUE": true,
+        "CREATION_RESULT": "PASS",
+        "CREATION_RESULT_FLAGS": {
+          "deleted_any": false,
+          "formally_published": false,
+          "mass_send": false,
+          "scheduled": false
+        },
+        "DRAFT_DELTA": "PASS"
+      }
+    },
+    {
+      "id": "SYNTHETIC-delete-one-create-one",
+      "expected": "FAIL",
+      "exit_code": 1,
+      "note": "2->2: update_time 2000 deleted, 3000 added; flags clean -> FAIL must come from delta logic",
+      "report": {
+        "BEFORE_TOTAL": 2,
+        "AFTER_TOTAL": 2,
+        "NEW_DRAFT_COUNT": 0,
+        "AFTER_eq_BEFORE_plus_1": false,
+        "UPDATE_TIME_SUBSET": false,
+        "OLD_DRAFTS_PRESERVED": false,
+        "NEW_UPDATE_TIME_COUNT": 1,
+        "NEW_DRAFT_UNIQUE": true,
+        "CREATION_RESULT": "PASS",
+        "CREATION_RESULT_FLAGS": {
+          "deleted_any": false,
+          "formally_published": false,
+          "mass_send": false,
+          "scheduled": false
+        },
+        "DRAFT_DELTA": "FAIL"
+      }
+    }
+  ],
+  "summary": {
+    "expected_pass": 2,
+    "expected_fail": 1,
+    "actual": [
+      0,
+      0,
+      1
+    ],
+    "all_matched": true
+  }
+}
