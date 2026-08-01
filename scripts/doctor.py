@@ -27,11 +27,17 @@ def main(argv=None):
     ap.add_argument("--lock-path", default=None,
                     help="verify against this skills.lock.json copy instead of "
                          "the repo root one (sandbox/test hook; production uses repo root)")
+    ap.add_argument("--repo-root", default=None,
+                    help="OBS-68: repo worktree for installed-pipeline comparison "
+                         "(env WXGZH_REPO_ROOT also accepted; absent => SKIPPED_NO_REPO WARN)")
     a = ap.parse_args(argv)
+    import os
+    repo_root = a.repo_root or os.environ.get("WXGZH_REPO_ROOT") or None
     orch = Orchestrator(project_root=a.project_root,
                         skills_home=Path(a.skills_home) if a.skills_home else None,
                         network_mode="offline_fixture" if a.offline else "live",
-                        lock_path=Path(a.lock_path) if a.lock_path else None)
+                        lock_path=Path(a.lock_path) if a.lock_path else None,
+                        repo_root=Path(repo_root) if repo_root else None)
     ok, report = orch.doctor(require_wechat=a.require_wechat or None)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if ok else 1

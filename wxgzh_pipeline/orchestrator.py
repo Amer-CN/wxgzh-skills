@@ -36,11 +36,15 @@ FAKE_LIVE_FIXTURE = SKILL_ROOT / "fixtures" / "fake_live_fixture"
 class Orchestrator:
     def __init__(self, project_root=None, network_mode="offline_fixture",
                  fixture_dir=None, env=None, skills_home=None,
-                 lock_path: Path | None = None):
+                 lock_path: Path | None = None,
+                 repo_root: Path | None = None):
         self.env = dict(env) if env is not None else None
         _env = self.env if self.env is not None else None
         self.project_root = P.resolve_project_root(project_root, env=_env)
         self.skills_home = Path(skills_home) if skills_home else P.skills_home(self.project_root, env=_env)
+        # OBS-68: repo worktree for installed-pipeline comparison; None => doctor
+        # reports SKIPPED_NO_REPO (WARN only, never an error).
+        self.repo_root = Path(repo_root) if repo_root else None
         if network_mode not in ("offline_fixture", "fake_live", "integration", "live"):
             raise ValueError(f"unsupported network_mode: {network_mode}")
         self.network_mode = network_mode
@@ -143,6 +147,15 @@ class Orchestrator:
             ok = ok and live_pipeline_allowed
         report["FAIL_CLOSED"] = not ok
         report["doctor"] = "PASS" if ok else "FAIL"
+        # OBS-68/69 (档42): detection-only WARN section. Never changes `ok`.
+        from . import observability as OBS
+        installed_lock = self.skills_home / "wxgzh-pipeline" / "skills.lock.json"
+        repo_lock = (self.repo_root / "skills.lock.json" if self.repo_root else None)
+        report["observability"] = {
+            "OBS_69_LOCK_MATCH": OBS.check_lock_consistency(installed_lock, repo_lock),
+            "OBS_68_PIPELINE_MATCH": OBS.check_pipeline_consistency(
+                self.skills_home / "wxgzh-pipeline", self.repo_root),
+        }
         return ok, report
 
     def _context(self, run_dir: Path, disc: dict, create_draft: bool) -> StageContext:
