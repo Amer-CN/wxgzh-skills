@@ -376,3 +376,58 @@ def test_full_write_roundtrip_byte_fidelity(tmp_path, monkeypatch):
                                       "--reason": "change value back", "--apply": None}))
     assert rc == RELOCK.EXIT_OK
     assert lock_path.read_bytes() == fixture_bytes
+
+# ── 档29 Part 2: regression wiring after --apply ───────────────────────────
+def _make_changed_env(tmp_path):
+    """Env whose target skill gains one runtime file (all three fields change)."""
+    skills_home, lock_path, base = _make_env(tmp_path)
+    (skills_home / "gzh-design" / "scripts" / "extra.py").write_text("x\n", encoding="utf-8")
+    return skills_home, lock_path
+
+
+def test_apply_regression_pass_exits_ok(tmp_path, monkeypatch):
+    skills_home, lock_path = _make_changed_env(tmp_path)
+    _monkey_doctor(monkeypatch, [0, 0])
+    calls = {"n": 0}
+
+    def fake_regression():
+        calls["n"] += 1
+        return True, "ALL PASS"
+
+    monkeypatch.setattr(RELOCK, "run_regression", fake_regression)
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "reg ok", "--apply": None}))
+    assert rc == RELOCK.EXIT_OK
+    assert calls["n"] == 1
+    assert (tmp_path / "skills.lock.history.json").is_file()
+
+
+def test_apply_regression_fail_exits_6_lock_not_rolled_back(tmp_path, monkeypatch):
+    """Regression failure must NOT roll back the (already correct) new lock;
+    exit 6 with a human-decision message."""
+    skills_home, lock_path = _make_changed_env(tmp_path)
+    _monkey_doctor(monkeypatch, [0, 0])
+    monkeypatch.setattr(RELOCK, "run_regression", lambda: (False, "boom"))
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "reg fail", "--apply": None}))
+    assert rc == RELOCK.EXIT_REGRESSION_FAIL == 6
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    root_sha, _ = compute_root_sha(skills_home / "gzh-design")
+    assert lock["skills"]["gzh-design"]["skill_root_sha256"] == root_sha  # NOT rolled back
+    history = json.loads((tmp_path / "skills.lock.history.json").read_text(encoding="utf-8"))
+    assert len(history) == 1 and history[0]["doctor_result"] == "PASS"
+
+
+def test_apply_skip_regression_skips(tmp_path, monkeypatch):
+    skills_home, lock_path = _make_changed_env(tmp_path)
+    _monkey_doctor(monkeypatch, [0, 0])
+
+    def boom():
+        raise AssertionError("run_regression must not be called with --skip-regression")
+
+    monkeypatch.setattr(RELOCK, "run_regression", boom)
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design", "--reason": "skip",
+                                      "--apply": None,
+                                      "--skip-regression": None}))
+    assert rc == RELOCK.EXIT_OK
+    assert (tmp_path / "skills.lock.history.json").is_file()

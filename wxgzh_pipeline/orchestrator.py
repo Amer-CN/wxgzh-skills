@@ -35,7 +35,8 @@ FAKE_LIVE_FIXTURE = SKILL_ROOT / "fixtures" / "fake_live_fixture"
 
 class Orchestrator:
     def __init__(self, project_root=None, network_mode="offline_fixture",
-                 fixture_dir=None, env=None, skills_home=None):
+                 fixture_dir=None, env=None, skills_home=None,
+                 lock_path: Path | None = None):
         self.env = dict(env) if env is not None else None
         _env = self.env if self.env is not None else None
         self.project_root = P.resolve_project_root(project_root, env=_env)
@@ -47,7 +48,12 @@ class Orchestrator:
             self.fixture_dir = Path(fixture_dir)
         else:
             self.fixture_dir = FAKE_LIVE_FIXTURE if network_mode in ("fake_live", "integration") else DEFAULT_FIXTURE
-        self.lock = SD.load_lock(SKILL_ROOT)
+        # lock_path override (档29): lets doctor/verify check a SANDBOX lock
+        # copy instead of the repo root lock; None => repo root (production).
+        # NOTE: lock_path is the lock FILE path; SD.load_lock() expects a root
+        # dir, so the file is read directly here.
+        self.lock = (json.loads(Path(lock_path).read_text(encoding="utf-8"))
+                     if lock_path else SD.load_lock(SKILL_ROOT))
 
     # ---------- doctor ----------
     def _verify_skills_for_mode(self):

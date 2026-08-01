@@ -142,7 +142,8 @@ def _history_path() -> Path:
 
 
 def _find_upgrade_chain(skill_name: str, receipt_root: str,
-                        current_root: str) -> list[dict] | None:
+                        current_root: str,
+                        history_path: Path | None = None) -> list[dict] | None:
     """Trace a FULL chain of relock ledger records from receipt_root to
     current_root for the given skill (multi-hop allowed, 档28 P0-2).
 
@@ -153,8 +154,9 @@ def _find_upgrade_chain(skill_name: str, receipt_root: str,
         skill matches the receipt's skill_name
       - cycles are rejected; the chain must end EXACTLY at current_root
     Returns the ordered records (oldest -> newest) or None."""
+    ledger = history_path if history_path is not None else _history_path()
     try:
-        data = json.loads(_history_path().read_text(encoding="utf-8"))
+        data = json.loads(ledger.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     if not isinstance(data, list) or not data:
@@ -192,14 +194,16 @@ def _find_upgrade_chain(skill_name: str, receipt_root: str,
 
 
 def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None,
-                   network_mode: str | None = None) -> tuple[bool, list]:
+                   network_mode: str | None = None,
+                   history_path: Path | None = None) -> tuple[bool, list, dict]:
     """Tamper detection (P0#1/#2/#3). Starts with FULL structural validation
     (validate_receipt), then verifies identity + per-mode expectations, then
     recomputes EVERY recorded hash from disk. Empty receipts, deleted fields,
     deleted hash entries, and missing files are all FAIL — never a skip."""
     r = load_receipt(run_dir, stage)
     if not r:
-        return False, ["receipt missing or empty"]
+        return False, ["receipt missing or empty"], {"skill_root_state": "OK",
+                                                    "upgrade_entry_ids": []}
     mism = list(validate_receipt(r))  # structural first (P0#1)
     sd = Path(run_dir) / stage
 
@@ -288,7 +292,8 @@ def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None,
         cur, _ = compute_root_sha(skill_dir)
         if cur != r["skill_root_sha256"]:
             chain = _find_upgrade_chain(str(r.get("skill_name", "")),
-                                        str(r["skill_root_sha256"]), str(cur))
+                                        str(r["skill_root_sha256"]), str(cur),
+                                        history_path=history_path)
             if chain:
                 skill_root_state = "SKILL_UPGRADED"
                 upgrade_entry_ids = [rec["entry_id"] for rec in chain]

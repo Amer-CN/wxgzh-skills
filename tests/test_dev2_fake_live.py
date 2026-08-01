@@ -69,7 +69,7 @@ def test_receipt_tamper(orch):
     assert ok and mism == []
     man = rd / "media_enrichment" / "media_manifest.json"
     man.write_bytes(man.read_bytes() + b" ")  # tamper an output file
-    ok2, mism2 = verify_receipt(rd, "media_enrichment")
+    ok2, mism2, _ = verify_receipt(rd, "media_enrichment")
     assert not ok2 and any("media_manifest.json" in m for m in mism2)
 
 

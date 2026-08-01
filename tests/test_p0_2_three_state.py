@@ -243,3 +243,34 @@ def test_upgraded_chain_with_loop_noise(env):
     assert ok is True
     assert extra["skill_root_state"] == "SKILL_UPGRADED"
     assert extra["upgrade_entry_ids"] == ["e1", "e2", "e4"]
+
+# ── 档29: history_path 参数覆盖(沙箱台账;默认仍走仓库根台账) ─────────────
+def test_upgraded_via_history_path_param(tmp_path):
+    """Same single-hop chain, but resolved through the explicit history_path
+    argument instead of the repo-root ledger (sandbox drill support, 档29)."""
+    run_dir = tmp_path / "run"
+    skills_home = tmp_path / "skills_home"
+    ledger = tmp_path / "sandbox-ledger.json"
+    cur = _fake_tree(skills_home, "current")
+    _write_receipt(run_dir, skills_home / SKILL, "old" * 32)
+    ledger.write_text(json.dumps([_rec("e-sandbox-1", "old" * 32, cur)],
+                                 ensure_ascii=False, indent=2), encoding="utf-8")
+    ok, mism, extra = verify_receipt(run_dir, STAGE, skills_home=skills_home,
+                                     network_mode="live", history_path=ledger)
+    assert ok is True and not mism
+    assert extra["skill_root_state"] == "SKILL_UPGRADED"
+    assert extra["upgrade_entry_ids"] == ["e-sandbox-1"]
+
+
+def test_tampered_when_history_path_missing(tmp_path):
+    """Moving the sandbox ledger away must degrade to TAMPERED (档29 4b)."""
+    run_dir = tmp_path / "run"
+    skills_home = tmp_path / "skills_home"
+    missing = tmp_path / "no-such-ledger.json"
+    cur = _fake_tree(skills_home, "current")
+    _write_receipt(run_dir, skills_home / SKILL, "old" * 32)
+    ok, mism, extra = verify_receipt(run_dir, STAGE, skills_home=skills_home,
+                                     network_mode="live", history_path=missing)
+    assert ok is False
+    assert extra["skill_root_state"] == "TAMPERED"
+    assert extra["upgrade_entry_ids"] == []

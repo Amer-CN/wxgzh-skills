@@ -53,6 +53,7 @@ DEFAULT_LOCK = REPO_ROOT / "skills.lock.json"
 DEFAULT_HISTORY = REPO_ROOT / "skills.lock.history.json"
 DEFAULT_BACKUP_DIR = REPO_ROOT / "audit" / "upgrade-capability" / "lock-backups"
 DEFAULT_DOCTOR = REPO_ROOT / "scripts" / "doctor.py"
+DEFAULT_REGRESSION = REPO_ROOT / "scripts" / "upgrade_regression.py"
 
 # Exit codes
 EXIT_OK = 0
@@ -60,6 +61,7 @@ EXIT_USAGE = 2          # bad args / validation (reason, unknown skill, missing 
 EXIT_PRE_DOCTOR_FAIL = 3   # --apply refused: doctor FAIL_CLOSED before any write
 EXIT_POST_DOCTOR_FAIL = 4  # --apply rolled back: doctor FAIL after write
 EXIT_ROLLBACK_FAILED = 5   # rollback itself failed (state may be inconsistent)
+EXIT_REGRESSION_FAIL = 6  # lock updated OK but the upgrade regression did NOT pass
 
 _HASH_FIELDS = ("skill_root_sha256", "runtime_manifest_sha256", "runtime_file_count")
 
@@ -99,16 +101,42 @@ def load_history(path: Path) -> list:
     return data
 
 
-def run_doctor(project_root: Path | None) -> tuple[bool, str]:
-    """Run the real doctor with --require-wechat. Returns (passed, output)."""
+def run_doctor(project_root: Path | None, lock_path: Path | None = None,
+              skills_home: Path | None = None) -> tuple[bool, str]:
+    """Run the real doctor with --require-wechat. Returns (passed, output).
+
+    lock_path is forwarded to doctor --lock-path so a sandbox re-lock is
+    verified against the SAME lock copy that was just written (档29);
+    skills_home is forwarded to doctor --skills-home so the sandbox tree is
+    verified against the sandbox lock (档29)."""
     cmd = [sys.executable, str(DEFAULT_DOCTOR)]
     if project_root is not None:
         cmd += ["--project-root", str(project_root)]
+    if skills_home is not None:
+        cmd += ["--skills-home", str(skills_home)]
+    if lock_path is not None:
+        cmd += ["--lock-path", str(lock_path)]
     cmd.append("--require-wechat")
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, f"doctor invocation failed: {exc}"
+    output = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    return proc.returncode == 0, output
+
+
+def run_regression() -> tuple[bool, str]:
+    """Run the offline upgrade regression (scripts/upgrade_regression.py).
+
+    Returns (passed, output). The regression checks the REAL environment:
+    full pytest minus the explicit env-dependent exclusion list, relock
+    dry-run x4 (all 无变化) and doctor --require-wechat PASS."""
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(DEFAULT_REGRESSION)],
+            capture_output=True, text=True, timeout=900)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"upgrade regression invocation failed: {exc}"
     output = ((proc.stdout or "") + (proc.stderr or "")).strip()
     return proc.returncode == 0, output
 
@@ -278,6 +306,9 @@ def parse_args(argv):
                     help="change reason (required, must not be empty)")
     ap.add_argument("--apply", action="store_true",
                     help="write lock + ledger + doctor gate (default: dry-run)")
+    ap.add_argument("--skip-regression", action="store_true",
+                    help="skip the automatic upgrade regression after --apply "
+                         "(sandbox/debug scenarios)")
     # testability/override hooks (production defaults mirror doctor)
     ap.add_argument("--project-root", default=None)
     ap.add_argument("--skills-home", default=None)
@@ -296,8 +327,8 @@ def main(argv=None) -> int:
 
     project_root = P.resolve_project_root(args.project_root) if args.project_root else None
     resolved_root = project_root if project_root is not None else P.resolve_project_root(None)
-    skills_home = Path(args.skills_home) if args.skills_home else \
-        P.skills_home(resolved_root)
+    skills_home_override = Path(args.skills_home) if args.skills_home else None
+    skills_home = skills_home_override or P.skills_home(resolved_root)
     lock_path = Path(args.lock_path) if args.lock_path else DEFAULT_LOCK
     history_path = Path(args.history_path) if args.history_path else DEFAULT_HISTORY
     backup_dir = Path(args.backup_dir) if args.backup_dir else DEFAULT_BACKUP_DIR
@@ -338,7 +369,8 @@ def main(argv=None) -> int:
         return EXIT_OK
 
     # ── --apply ─────────────────────────────────────────────────────────────
-    passed, output = run_doctor(project_root)
+    passed, output = run_doctor(project_root, lock_path=lock_path,
+                                skills_home=skills_home_override)
     allowed, reasons = classify_gate(passed, output, {r["skill"] for r in changed_rows})
     if not allowed:
         _err("doctor gate refused --apply: " + "; ".join(reasons))
@@ -380,7 +412,8 @@ def main(argv=None) -> int:
     for rec in appended:
         print(f"ledger: {rec['entry_id']} ({rec['skill']})")
 
-    ok, output = run_doctor(project_root)
+    ok, output = run_doctor(project_root, lock_path=lock_path,
+                           skills_home=skills_home_override)
     if not ok:
         _err("doctor FAIL after re-lock — rolling back")
         if output:
@@ -389,6 +422,16 @@ def main(argv=None) -> int:
                          hist_existed, hist_bytes, EXIT_POST_DOCTOR_FAIL)
 
     print("doctor: PASS (post-relock)")
+    if not args.skip_regression:
+        reg_ok, reg_output = run_regression()
+        if not reg_ok:
+            _err("lock 已更新但回归未通过,需人工裁决 (lock was NOT rolled back)")
+            if reg_output:
+                print(reg_output)
+            return EXIT_REGRESSION_FAIL
+        print("regression: PASS (upgrade_regression.py)")
+    else:
+        print("regression: skipped (--skip-regression)")
     print("relock: OK")
     return EXIT_OK
 
