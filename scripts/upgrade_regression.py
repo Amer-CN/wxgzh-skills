@@ -26,51 +26,40 @@ LOCKED_SKILLS = ["super-writer", "zh-human-writing", "media-enrichment", "gzh-de
 # ── explicit env-dependent exclusion list (档29 Part 2) ─────────────────────
 # Every entry: exact node id + the missing environment it depends on.
 EXCLUDED_TESTS = [
-    # fake_live full-run / receipt-tamper / chapter-gate tests: need a
-    # media-enrichment checkout at <repo>/../media-enrichment
-    # (fixed media root with src/media_enrichment/input_contract.py)
-    "tests/test_dev2_fake_live.py::test_fake_live_six_stages",
-    "tests/test_dev2_fake_live.py::test_receipt_tamper",
-    "tests/test_dev2_fake_live.py::test_dynamic_chapter_gate",
-    "tests/test_hotfix1.py::test_resume_tamper_media_manifest_invalidates_media_and_later",
-    "tests/test_hotfix1.py::test_resume_tamper_upstream_article_invalidates_media_gzh_wechat",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[a_empty_object]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[b_del_input_hash]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[c_del_output_hash]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[d_del_entrypoint_sha]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[e_del_official_validators]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[f_validator_exit_1]",
-    "tests/test_hotfix2_receipt_tamper.py::test_receipt_tamper_fails_verify_and_resume[g_official_exit_1]",
-    "tests/test_hotfix2_receipt_tamper.py::test_wechat_gate_blocks_on_tampered_prior_receipt",
-    "tests/test_hotfix3_approved_scope.py::test_c_material_scope_only_that_material",
-    "tests/test_hotfix3_approved_scope.py::test_d_source_url_scope_no_inheritance",
-    "tests/test_hotfix3_approved_scope.py::test_e_unknown_scope_not_known_allowed",
-    "tests/test_hotfix3_approved_scope.py::test_bad_evidence_hash_ignored",
-    "tests/test_hotfix3_approved_scope.py::test_material_scope_missing_binding_ignored",
-    "tests/test_hotfix3_approved_scope.py::test_source_url_for_unknown_url_approves_nobody",
-    # portable installer: needs a git checkout context for the bundle build
+    # 档30/31 实测收敛:26 项环境缺失类已全部移除(media-enrichment sibling
+    # 已恢复到 F:\AIXM\wxgzh\repos\media-enrichment;hotfix7 3 项在设置
+    # WXGZH_REAL_SUPER_WRITER_ROOT(指向已安装 super-writer,validator sha 与
+    # 锁一致)后全部 PASS,该恢复条件已固化进 _child_env)。
+    # 仅剩 1 项:portable installer 的失败根因是代码/发布工程常量问题,
+    # 不是环境缺失(档30 判定;档31 保留):
+    #   scripts/build_portable_bundle.py 写死 EXPECTED_PIPELINE_FILE_COUNT=130
+    #   (commit 4163811 引入后未更新),当前 release 树实际 446 个文件 ->
+    #   `unexpected pipeline file count: 446`。
+    # 档31 授权范围禁止修改 build_portable_bundle.py,故该项保留并待
+    # 发布工程(或后续获授权的档)更新常量后移除;严禁通过扩大排除清单
+    # 掩盖真实回归。
     "tests/test_hotfix1.py::test_portable_installer_preserves_pipeline_release_include",
-    # live cross-repo handshake: need WXGZH_REAL_SUPER_WRITER_ROOT /
-    # WXGZH_REAL_SKILLS_HOME pointing at real skill checkouts
-    "tests/test_hotfix7_live_handshake.py::test_cross_repo_real_full_mode_long_pass",
-    "tests/test_hotfix7_live_handshake.py::test_cross_repo_medium_overlong_uses_declared_policy",
-    "tests/test_hotfix7_live_handshake.py::test_cross_repo_missing_full_mode_artifact_fails",
-    # full LIVE 6-stage pipeline runs (real agents + WeChat draft): never in
-    # an offline regression
-    "tests/test_pipeline.py::test_02_03_defaults_and_draft",
-    "tests/test_pipeline.py::test_08_no_stage_skip",
-    "tests/test_pipeline.py::test_10_resume_no_rerun",
-    "tests/test_pipeline.py::test_full_run_delivery",
 ]
 
 
-def _child_env() -> dict:
+def _child_env() -> tuple[dict, Path]:
+    """One canonical child environment shared by every subprocess step.
+
+    AGENT_SKILLS_HOME is popped (canonical project layout only) and
+    WXGZH_PROJECT_ROOT is pinned, so pytest, relock dry-runs and doctor all
+    resolve the SAME project/skills layout (档30: fixed the step_pytest
+    inconsistency that used raw os.environ instead of this env).
+    WXGZH_REAL_SUPER_WRITER_ROOT is injected when the installed super-writer
+    source (with the locked validator) exists (档31 hotfix7 recovery)."""
     sys.path.insert(0, str(REPO_ROOT))
     from wxgzh_pipeline import paths as P
     project_root = P.resolve_project_root(os.environ.get("WXGZH_PROJECT_ROOT"))
     env = dict(os.environ)
     env.pop("AGENT_SKILLS_HOME", None)  # canonical project layout only
     env["WXGZH_PROJECT_ROOT"] = str(project_root)
+    real_sw = project_root / ".agents" / "skills" / "super-writer"
+    if (real_sw / "scripts" / "validate_article_length.py").is_file():
+        env["WXGZH_REAL_SUPER_WRITER_ROOT"] = str(real_sw)
     return env, project_root
 
 
@@ -83,12 +72,12 @@ def _run(cmd, env=None, timeout=900) -> tuple[bool, str]:
     return proc.returncode == 0, ((proc.stdout or "") + (proc.stderr or "")).strip()
 
 
-def step_pytest() -> tuple[bool, str]:
+def step_pytest(env: dict) -> tuple[bool, str]:
     cmd = [sys.executable, "-m", "pytest", str(REPO_ROOT / "tests"),
            "-q", "-p", "no:cacheprovider"]
     for node in EXCLUDED_TESTS:
         cmd += ["--deselect", node]
-    ok, out = _run(cmd, env=dict(os.environ), timeout=900)
+    ok, out = _run(cmd, env=env, timeout=900)
     tail = "\n".join(out.splitlines()[-6:])
     return ok, f"pytest: {'PASS' if ok else 'FAIL'} " \
                f"({len(EXCLUDED_TESTS)} explicit deselects)\n{tail}"
@@ -120,7 +109,7 @@ def main() -> int:
     env, project_root = _child_env()
     print(f"upgrade_regression: project_root={project_root}")
     ok = True
-    for name, fn in (("pytest", step_pytest),
+    for name, fn in (("pytest", lambda: step_pytest(env)),
                      ("relock_dryruns", lambda: step_relock_dryruns(env, project_root)),
                      ("doctor", lambda: step_doctor(env, project_root))):
         step_ok, text = fn()
