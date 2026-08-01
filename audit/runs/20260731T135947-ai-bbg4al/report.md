@@ -1580,3 +1580,82 @@ mismatches=[]
 图片来源:Google Cloud 官方博客
 
 最终状态：`BLOCKED_PIPELINE_CANNOT_OBSERVE_COVER_MEDIA_ID_WITHOUT_GZH_CHANGE`。
+
+---
+
+# 档22-min · Pipeline侧封面接线与草稿成功
+
+## 74. 执行边界
+
+仅修改Pipeline `wxgzh_pipeline/producers.py`，未修改gzh-design、`skills.lock.json`、任何receipt、路由、HTML输入路径或已完成阶段。新增逻辑在live模式向既有gzh脚本追加：
+
+```text
+--cover F:/AIXM/wxgzh/.temp/wxgzh-pipeline/20260731T135947-ai-bbg4al/media_enrichment/discover/images/418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf.png
+```
+
+调用前固定SHA校验通过：
+
+```text
+418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+```
+
+### 安全门禁
+
+- 文件存在：PASS
+- SHA逐字一致：PASS
+- A-003已在前序批准文件中明确批准：PASS
+- 未重跑discover、批准文件、media、gzh_design：PASS
+- gzh-design脚本SHA保持：`bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934`
+- `skills.lock.json` SHA保持：`a9e07ef42017cff225158466213253baf1155f34a7c2f1bdaf62a87dbbc751d6`
+
+## 75. 唯一草稿尝试
+
+本档只恢复`wechat_draft`一次。前五阶段和本次草稿receipt全部复验PASS，mismatches均为空。
+
+执行结果：
+
+```text
+status=COMPLETE
+draft_created=true
+formally_published=false
+uploaded_image_count=2
+before_total=0
+after_total=1
+delta=1
+new_draft_count=1
+new_draft_unique=true
+old_drafts_preserved=true
+```
+
+草稿审计结果：
+
+```text
+draft_id=Y3aIagws[REDACTED]
+draft_id_policy=script only persists first 8 characters plus [REDACTED]
+title=AI智能体正在重写网络安全攻防
+content_sha256=5962fc7a10e303dfc3e33b835a3ef0e83eb4b75f12f6a6c0ff49cec108df6800
+```
+
+这是唯一一次草稿尝试；成功后立即停止，没有第2次调用。
+
+草稿在微信后台位置：公众号后台 → 内容与互动 → 草稿箱。状态为未发布。脚本产物只保留脱敏草稿ID，未将完整media_id写入仓库或报告。
+
+## 76. 副作用与安全属性
+
+```text
+累计正文图片托管=2（档18）
+本档新增uploadimg=0
+本档material/add_material=1（A-003）
+本档新增草稿=1
+发布=0
+群发=0
+定时发送=0
+预览群发=0
+删除素材=0
+```
+
+九条安全属性全部保持：冻结SHA、显式批准、数量上限、URL安全、批准合同、无自动批准、正文上传幂等、封面来源为本地批准冻结文件。
+
+图片来源:Google Cloud 官方博客
+
+最终状态：`COMPLETE_DRAFT_CREATED_ONE_ATTEMPT`。
