@@ -115,12 +115,131 @@ def main():
     # offline image "downloads" read from a sibling images/ fixture dir (no network)
     fixture_images_dir = Path(fixture_dir).parent / "images"
 
+    # OBS-42: continuation consumes the exact bytes persisted by discovery.
+    # It never re-fetches source pages or re-downloads approved assets.
+    if args.phase == "continue":
+        if not args.discovery_manifest:
+            builder.errors.append("continue phase requires --discovery-manifest")
+        else:
+            frozen_path = Path(args.discovery_manifest)
+            discover_manifest_path = frozen_path.parent / "media_manifest.json"
+            try:
+                approved_discovery = json.loads(frozen_path.read_text(encoding="utf-8"))
+                discovery_file_valid, _ = verify_discovery_manifest(approved_discovery)
+                if not discovery_file_valid:
+                    builder.errors.append(
+                        "approval_identity_mismatch: discovery manifest sha256 invalid")
+                discover_manifest = json.loads(
+                    discover_manifest_path.read_text(encoding="utf-8"))
+                discovered_assets = {
+                    item["asset_id"]: item for item in discover_manifest.get("assets", [])
+                }
+                discovered_asset_records = {
+                    asset_id: AssetRecord(**item)
+                    for asset_id, item in discovered_assets.items()
+                }
+                for record in discovered_asset_records.values():
+                    builder.add_asset(record)
+                frozen_records = {
+                    item["asset_id"]: item
+                    for item in approved_discovery.get("assets", [])
+                }
+                discovery_records.extend(approved_discovery.get("assets", []))
+                images_root = (frozen_path.parent / "images").resolve()
+                material_approved_ids = {
+                    asset_id for asset_id, frozen in frozen_records.items()
+                    if (materials_by_id.get(frozen["material_id"], {})
+                        .get("copyright_review", {}).get("status") == "known_allowed")
+                }
+                upload_candidate_ids = set(asset_approvals) | material_approved_ids
+
+                for asset_id in sorted(upload_candidate_ids):
+                    approval = asset_approvals.get(asset_id)
+                    frozen = frozen_records.get(asset_id)
+                    discovered = discovered_assets.get(asset_id)
+                    if frozen is None or discovered is None:
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} missing from frozen discovery")
+                        continue
+
+                    if approval is not None:
+                        mismatches = approval_mismatches(
+                            approval, frozen,
+                            approved_discovery["discovery_manifest_sha256"],
+                        )
+                        if mismatches:
+                            builder.errors.append(
+                                f"approval_identity_mismatch: {asset_id}: "
+                                + ", ".join(sorted(mismatches)))
+                            continue
+
+                    material = materials_by_id.get(frozen["material_id"])
+                    if (material is None
+                            or material.get("source_url") != frozen["source_page_url"]):
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} material/source changed")
+                        continue
+
+                    local_value = discovered.get("local_path")
+                    if not local_value:
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} missing discovery local_path")
+                        continue
+                    local_path = Path(local_value).resolve()
+                    if not local_path.is_relative_to(images_root) or not local_path.is_file():
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} local file outside discovery images")
+                        continue
+
+                    resolved_url = frozen["resolved_original_url"]
+                    sec_check = is_safe_url(
+                        resolved_url, require_dns=(network_mode == "live"))
+                    if not sec_check.safe:
+                        builder.errors.append(
+                            f"URL security: {asset_id}: {', '.join(sec_check.reasons)}")
+                        continue
+
+                    inspection = inspect_image(
+                        str(local_path), max_pixels=config.get("max_pixels", 40_000_000))
+                    if inspection.sha256 != frozen["asset_sha256"]:
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} frozen sha256 mismatch")
+                        continue
+                    identity_sha256 = stable_asset_identity(
+                        frozen["material_id"], frozen["source_page_url"],
+                        resolved_url, inspection.sha256,
+                    )
+                    if identity_sha256 != frozen["asset_identity_sha256"]:
+                        builder.errors.append(
+                            f"approval_identity_mismatch: {asset_id} stable identity mismatch")
+                        continue
+
+                    asset = discovered_asset_records[asset_id]
+                    asset.local_path = str(local_path)
+                    asset.sha256 = inspection.sha256
+                    asset.perceptual_hash = inspection.perceptual_hash
+                    asset.mime_type = inspection.mime_type
+                    asset.width = inspection.width
+                    asset.height = inspection.height
+                    asset.file_size = inspection.file_size
+                    asset.quality_status = "pass" if inspection.is_valid else "fail"
+                    asset.asset_identity_sha256 = identity_sha256
+                    if approval is None and asset.copyright_status != "restricted":
+                        asset.copyright_status = "known_allowed"
+                    pending_uploads.append((
+                        asset, str(local_path), inspection,
+                        discovered.get("extraction_method") or "img.src"))
+                    builder.downloads_succeeded += 1
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                builder.errors.append(
+                    f"approval_identity_mismatch: cannot load frozen discovery assets: {exc}")
+
     max_images_per_material = config.get("max_images_per_material", 3)
     max_total_images = config.get("max_total_images", 12)
     total_assets_added = 0
     asset_counter = 0
 
-    for mat in materials:
+    for mat in ([] if args.phase == "continue" else materials):
         material_id = mat["material_id"]
         permalink = mat.get("aihot_permalink", "")
         source_url = mat.get("source_url", "")
@@ -502,6 +621,12 @@ def main():
     with open(events_path, "w", encoding="utf-8") as f:
         json.dump({"schema_version": "1.0", "serial": True,
                    "events": upload_events}, f, ensure_ascii=False, indent=2)
+
+    # OBS-43: Pipeline's stage contract reads required outputs at the stage root,
+    # while two-phase execution keeps its canonical continue copies in continue/.
+    if args.phase == "continue" and output_dir.name == "continue":
+        for output_path in (manifest_path, bindings_path, events_path):
+            (output_dir.parent / output_path.name).write_bytes(output_path.read_bytes())
 
     print(f"\n[media-enrichment] Manifest: {manifest_path}")
     print(f"[media-enrichment] Bindings: {bindings_path}")

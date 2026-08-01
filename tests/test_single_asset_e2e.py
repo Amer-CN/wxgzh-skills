@@ -138,7 +138,7 @@ class TestStableSingleAssetIdentityCli:
             "remote_url": None, "response_sha256": None,
         } for a in charts)
 
-    def test_inserted_image_before_a001_does_not_transfer_approval(self, tmp_path):
+    def test_inserted_source_image_after_discovery_does_not_change_frozen_upload(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
@@ -150,13 +150,13 @@ class TestStableSingleAssetIdentityCli:
         result, _, manifest, _, events = _cli(
             tmp_path, fixtures, "continue", [approval],
             out / "asset_discovery_manifest.json")
-        assert result.returncode == 0
-        _assert_no_upload(manifest, events)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
         a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
-        assert "fresh_asset_sha256" in a1["approval_identity_mismatch"]
-        assert a1["copyright_status"] == "unknown"
+        assert a1["asset_approval_consumed"] is True
+        assert a1["sha256"] == approval["asset_sha256"]
 
-    def test_same_url_changed_content_does_not_upload(self, tmp_path):
+    def test_changed_source_bytes_after_discovery_do_not_replace_frozen_bytes(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
@@ -165,10 +165,10 @@ class TestStableSingleAssetIdentityCli:
         result, _, manifest, _, events = _cli(
             tmp_path, fixtures, "continue", [approval],
             out / "asset_discovery_manifest.json")
-        assert result.returncode == 0
-        _assert_no_upload(manifest, events)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
         a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
-        assert "fresh_asset_sha256" in a1["approval_identity_mismatch"]
+        assert a1["sha256"] == approval["asset_sha256"]
 
     def test_same_content_different_material_does_not_inherit(self, tmp_path):
         fixtures = _fixtures(tmp_path)
@@ -177,10 +177,9 @@ class TestStableSingleAssetIdentityCli:
         result, _, manifest, _, events = _cli(
             tmp_path, fixtures, "continue", [approval],
             out / "asset_discovery_manifest.json", material_id="M-002")
-        assert result.returncode == 0
+        assert result.returncode != 0
         _assert_no_upload(manifest, events)
-        a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
-        assert "fresh_material_id" in a1["approval_identity_mismatch"]
+        assert any("material/source changed" in e for e in manifest["errors"])
 
     def test_modified_discovery_manifest_does_not_upload(self, tmp_path):
         fixtures = _fixtures(tmp_path)
@@ -196,10 +195,8 @@ class TestStableSingleAssetIdentityCli:
         _assert_no_upload(manifest, events)
         assert any("discovery manifest sha256 invalid" in e for e in manifest["errors"])
 
-    def test_no_repost_overrides_stable_single_asset_approval(self, tmp_path):
+    def test_no_repost_detected_at_discovery_overrides_stable_approval(self, tmp_path):
         fixtures = _fixtures(tmp_path)
-        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
-        approval = _approval(frozen, "A-001")
         html_path = fixtures / "html" / "single-asset-e2e.html"
         html_path.write_text(
             html_path.read_text(encoding="utf-8").replace(
@@ -207,6 +204,8 @@ class TestStableSingleAssetIdentityCli:
             ),
             encoding="utf-8",
         )
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
         result, _, manifest, _, events = _cli(
             tmp_path, fixtures, "continue", [approval],
             out / "asset_discovery_manifest.json")
@@ -232,6 +231,36 @@ class TestStableSingleAssetIdentityCli:
         assert assets["A-001"]["upload"]["status"] == "success"
         assert assets["A-002"]["copyright_status"] == "unknown"
         assert assets["A-002"]["upload"]["status"] != "success"
+
+    def test_tampered_persisted_discovery_file_fails_closed(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, manifest, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        target = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
+        Path(target["local_path"]).write_bytes(b"tampered-discovery-bytes")
+        result, _, continued, _, events = _cli(
+            tmp_path, fixtures, "continue", [approval],
+            out / "asset_discovery_manifest.json")
+        assert result.returncode != 0
+        _assert_no_upload(continued, events)
+        assert any("frozen sha256 mismatch" in e for e in continued["errors"])
+
+    def test_continue_mirrors_required_outputs_to_stage_root(self, tmp_path):
+        fixtures = _fixtures(tmp_path)
+        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+        approval = _approval(frozen, "A-001")
+        request = _write_request(tmp_path, [approval])
+        phase_out = tmp_path / "stage" / "continue"
+        result = subprocess.run([
+            sys.executable, "-X", "utf8",
+            str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
+            "--request", str(request), "--output-dir", str(phase_out),
+            "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
+            "--discovery-manifest", str(out / "asset_discovery_manifest.json"),
+        ], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        assert result.returncode == 0, result.stdout + result.stderr
+        for name in ("media_manifest.json", "article_image_bindings.json", "upload_events.json"):
+            assert (phase_out / name).read_bytes() == (phase_out.parent / name).read_bytes()
 
 
 class TestStableApprovalContract:
