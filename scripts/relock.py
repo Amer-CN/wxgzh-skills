@@ -29,6 +29,18 @@ Safety:
     ledger and the backup file; never writes inside any locked skill tree
   - the ledger is append-only; rollback deletes only the records appended
     by THIS run
+
+--allow-required-files-removal (档33, default OFF):
+  - when OFF, behavior is byte-identical to 档28/29 (required_files untouched)
+  - when ON, --apply may REMOVE from a target skill's required_files exactly
+    the entries that are (a) missing on the installed tree AND (b) not the
+    skill's own lock-declared entry files (entrypoint/validator/render_entry/
+    component_source). Nothing is ever ADDED to required_files; a lock-declared
+    entry file that exists on the tree but is NOT covered by required_files is
+    reported and requires human decision (--apply refused, exit 2).
+  - ledger records always carry removed_required_files ([] when none removed);
+    the field is audit-only and does NOT participate in receipt chain tracing
+    (receipts.py chains on old_root_sha256 -> new_root_sha256 only).
 """
 from __future__ import annotations
 
@@ -142,8 +154,11 @@ def run_regression() -> tuple[bool, str]:
 
 
 def classify_gate(doctor_passed: bool, doctor_output: str,
-                  target_skills: set[str]) -> tuple[bool, list[str]]:
-    """Pre-apply doctor gate with reason classification (档28 Part 1).
+                  target_skills: set[str],
+                  allow_required_files_removal: bool = False,
+                  removable_req: dict[str, list[str]] | None = None,
+                  ) -> tuple[bool, list[str]]:
+    """Pre-apply doctor gate with reason classification (档28 Part 1 + 档33).
 
     doctor_passed=True                                   -> allowed
     Otherwise the ONLY allowed failure is the TARGET
@@ -152,7 +167,13 @@ def classify_gate(doctor_passed: bool, doctor_output: str,
         missing required files, credentials missing, project not writable,
         AI HOT capability missing)                     -> REFUSE (exit 3)
       - any NON-target skill with hash/version mismatch -> REFUSE (exit 3)
+    档33: with allow_required_files_removal=True, the TARGET's
+    entrypoints_ok=false is allowed ONLY when every missing required file is
+    one of the to-be-removed entries (removable_req[skill]); any other cause
+    (missing file not scheduled for removal, missing protected entry/validator
+    file, or any problem in a non-target skill) still refuses.
     Returns (allowed, reasons). reasons non-empty on refusal."""
+    removable = {k: set(v) for k, v in (removable_req or {}).items()}
     if doctor_passed:
         return True, []
     reasons: list[str] = []
@@ -180,17 +201,23 @@ def classify_gate(doctor_passed: bool, doctor_output: str,
         if entry.get("exists") is not True:
             reasons.append(f"{name}: skill directory missing")
             continue
+        removal_allowed_skill = False
         if entry.get("entrypoints_ok") is not True:
-            reasons.append(f"{name}: entrypoints_ok=false")
-            continue
-        if entry.get("missing_files"):
+            missing = set(entry.get("missing_files") or [])
+            if (allow_required_files_removal and name in target_skills
+                    and missing and missing <= removable.get(name, set())):
+                removal_allowed_skill = True
+            else:
+                reasons.append(f"{name}: entrypoints_ok=false")
+                continue
+        if entry.get("missing_files") and not removal_allowed_skill:
             reasons.append(f"{name}: missing required files {entry['missing_files']}")
             continue
         if name in target_skills:
             # re-lockable state: hash_ok=false and/or version_ok=false (档28 1b)
             if entry.get("hash_ok") is False or entry.get("version_ok") is False:
                 target_mismatch_seen = True
-            else:
+            elif not removal_allowed_skill:
                 reasons.append(f"{name}: target is fully healthy — failure must be elsewhere")
         else:
             if entry.get("hash_ok") is not True:
@@ -232,7 +259,8 @@ def select_targets(args, lock_skills: dict) -> list[str]:
     return [name]
 
 
-def build_rows(targets: list[str], lock_skills: dict, skills_home: Path) -> list[dict]:
+def build_rows(targets: list[str], lock_skills: dict, skills_home: Path,
+               allow_required_files_removal: bool = False) -> list[dict]:
     rows = []
     for name in targets:
         entry = lock_skills[name]
@@ -253,8 +281,28 @@ def build_rows(targets: list[str], lock_skills: dict, skills_home: Path) -> list
             "runtime_file_count": nfiles,
         }
         changed = any(old[k] != new[k] for k in _HASH_FIELDS)
-        rows.append({"skill": name, "skill_dir": str(skill_dir),
-                     "old": old, "new": new, "changed": changed})
+        row = {"skill": name, "skill_dir": str(skill_dir),
+               "old": old, "new": new, "changed": changed,
+               "remove_required_files": [], "uncovered_entries": []}
+        if allow_required_files_removal:
+            locked_req = entry.get("required_files")
+            if isinstance(locked_req, list):
+                # Lock-declared operational entry files are never removable:
+                # dropping them from required_files while absent would mask a
+                # broken install (档33 guard).
+                protected = {f for f in (entry.get("entrypoint"),
+                                         entry.get("validator"),
+                                         entry.get("render_entry"),
+                                         entry.get("component_source"))
+                             if isinstance(f, str) and f}
+                missing = [rf for rf in locked_req
+                           if not (skill_dir / rf).is_file()]
+                row["remove_required_files"] = [rf for rf in missing
+                                                if rf not in protected]
+                row["uncovered_entries"] = sorted(
+                    f for f in protected
+                    if (skill_dir / f).is_file() and f not in locked_req)
+        rows.append(row)
     return rows
 
 
@@ -267,6 +315,11 @@ def print_rows(rows: list[dict]) -> None:
             old, new = row["old"][key], row["new"][key]
             marker = "" if old == new else "  (CHANGED)"
             print(f"{label}: {old} -> {new}{marker}")
+        if row.get("remove_required_files"):
+            print(f"required_files removals: {row['remove_required_files']}")
+        if row.get("uncovered_entries"):
+            print(f"NOTE: required_files 未覆盖的新入口文件: "
+                  f"{row['uncovered_entries']} — 需人工裁决 (不会自动新增)")
         print(f"status: {'CHANGED' if row['changed'] else '无变化'}")
         print()
 
@@ -287,6 +340,7 @@ def append_history(history_path: Path, rows: list[dict], reason: str) -> list[di
             "old_file_count": row["old"]["runtime_file_count"],
             "new_file_count": row["new"]["runtime_file_count"],
             "reason": reason,
+            "removed_required_files": list(row.get("remove_required_files") or []),
             "recorded_at": now,
             "doctor_result": "PASS",
         }
@@ -309,6 +363,10 @@ def parse_args(argv):
     ap.add_argument("--skip-regression", action="store_true",
                     help="skip the automatic upgrade regression after --apply "
                          "(sandbox/debug scenarios)")
+    ap.add_argument("--allow-required-files-removal", action="store_true",
+                    help="档33: allow REMOVING required_files entries that are "
+                         "missing on the installed tree (removal ONLY — never "
+                         "adds; lock-declared entry/validator files are protected)")
     # testability/override hooks (production defaults mirror doctor)
     ap.add_argument("--project-root", default=None)
     ap.add_argument("--skills-home", default=None)
@@ -346,13 +404,18 @@ def main(argv=None) -> int:
         if not targets:
             _err("no lockable skills (all lock entries are agent-invoked)")
             return EXIT_USAGE
-        rows = build_rows(targets, lock_skills, skills_home)
+        rows = build_rows(targets, lock_skills, skills_home,
+                          args.allow_required_files_removal)
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         _err(str(exc))
         return EXIT_USAGE
 
     print_rows(rows)
     changed_rows = [r for r in rows if r["changed"]]
+    uncovered = [r for r in rows if r.get("uncovered_entries")]
+    for r in uncovered:
+        print(f"NOTE: {r['skill']}: required_files 未覆盖的新入口文件 "
+              f"{r['uncovered_entries']} — 需人工裁决 (relock 不会自动新增)")
 
     if not args.apply:
         n_changed = len(changed_rows)
@@ -364,6 +427,10 @@ def main(argv=None) -> int:
             print(f"dry-run: {n_total} skill(s) checked, 无变化 — nothing to write")
         return EXIT_OK
 
+    if uncovered:
+        _err("apply refused: required_files 未覆盖的新入口文件需人工裁决; nothing written")
+        return EXIT_USAGE
+
     if not changed_rows:
         print("apply: 无变化 — no backup, no write, no ledger record")
         return EXIT_OK
@@ -371,7 +438,10 @@ def main(argv=None) -> int:
     # ── --apply ─────────────────────────────────────────────────────────────
     passed, output = run_doctor(project_root, lock_path=lock_path,
                                 skills_home=skills_home_override)
-    allowed, reasons = classify_gate(passed, output, {r["skill"] for r in changed_rows})
+    allowed, reasons = classify_gate(
+        passed, output, {r["skill"] for r in changed_rows},
+        allow_required_files_removal=args.allow_required_files_removal,
+        removable_req={r["skill"]: r["remove_required_files"] for r in rows})
     if not allowed:
         _err("doctor gate refused --apply: " + "; ".join(reasons))
         if output:
@@ -398,6 +468,12 @@ def main(argv=None) -> int:
         for row in changed_rows:
             for key in _HASH_FIELDS:
                 lock["skills"][row["skill"]][key] = row["new"][key]
+            if args.allow_required_files_removal and row["remove_required_files"]:
+                req = lock["skills"][row["skill"]].get("required_files")
+                if isinstance(req, list):
+                    for rf in row["remove_required_files"]:
+                        while rf in req:
+                            req.remove(rf)
         # write_bytes (NOT write_text): Path.write_text translates "\n" to
         # "\r\n" on Windows, which would corrupt the CRLF template into
         # "\r\r\n" and break byte fidelity (档28 Part 2 test caught this).
@@ -409,6 +485,9 @@ def main(argv=None) -> int:
                          hist_existed, hist_bytes, EXIT_ROLLBACK_FAILED)
 
     print(f"backup: {backup_path}")
+    for row in changed_rows:
+        if row["remove_required_files"]:
+            print(f"required_files: {row['skill']}: removed {row['remove_required_files']}")
     for rec in appended:
         print(f"ledger: {rec['entry_id']} ({rec['skill']})")
 

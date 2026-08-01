@@ -105,13 +105,41 @@ def step_doctor(env, project_root) -> tuple[bool, str]:
     return ok, f"doctor --require-wechat: {verdict}"
 
 
+def step_validate_gzh_consistency(env, project_root) -> tuple[bool, str]:
+    """档33 anti-drift guard: Pipeline-side validate_gzh_html.py must be
+    byte-identical to the gzh-design installed copy.
+
+    P2 (gzh-design split) has NOT landed yet: the Pipeline side does not
+    contain the file, so this step SKIPS with an explicit reason — a missing
+    Pipeline-side file must never be mistaken for a PASS. Once P2 lands and
+    copies the file over, the comparison activates automatically."""
+    import hashlib
+    installed = project_root / ".agents" / "skills" / "gzh-design" / "scripts" / "validate_gzh_html.py"
+    pipeline_side = REPO_ROOT / "scripts" / "validate_gzh_html.py"
+    if not pipeline_side.is_file():
+        return True, ("validate_gzh_html cross-side: SKIP — Pipeline 侧尚不存在 "
+                      "scripts/validate_gzh_html.py (P2 未落地;防漂移守卫将在 "
+                      "P2 落地后自动生效)")
+    if not installed.is_file():
+        return False, ("validate_gzh_html cross-side: FAIL — gzh-design 安装侧 "
+                       "scripts/validate_gzh_html.py 缺失")
+    h_pipe = hashlib.sha256(pipeline_side.read_bytes()).hexdigest()
+    h_inst = hashlib.sha256(installed.read_bytes()).hexdigest()
+    if h_pipe != h_inst:
+        return False, (f"validate_gzh_html cross-side: FAIL — 两侧 sha256 不一致\n"
+                       f"  pipeline-side: {h_pipe}\n  gzh-design    : {h_inst}")
+    return True, f"validate_gzh_html cross-side: PASS ({h_pipe})"
+
+
 def main() -> int:
     env, project_root = _child_env()
     print(f"upgrade_regression: project_root={project_root}")
     ok = True
     for name, fn in (("pytest", lambda: step_pytest(env)),
                      ("relock_dryruns", lambda: step_relock_dryruns(env, project_root)),
-                     ("doctor", lambda: step_doctor(env, project_root))):
+                     ("doctor", lambda: step_doctor(env, project_root)),
+                     ("validate_gzh_consistency",
+                      lambda: step_validate_gzh_consistency(env, project_root))):
         step_ok, text = fn()
         print(text)
         ok = ok and step_ok
