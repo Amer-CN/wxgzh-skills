@@ -1459,3 +1459,69 @@ stdout原文证明：HTML raw/normalized SHA均为`5962fc7a...df6800`；CJK=1773
 图片来源:Google Cloud 官方博客
 
 最终状态：`BLOCKED_WECHAT_40007_INVALID_MEDIA_ID_NO_COVER_UPLOAD_NO_RETRY`。
+
+---
+
+# 档21 · 封面接线前自相矛盾阻断
+
+## 68. 自检、备份与阶段A
+
+档16/17/18/19/20R五项补丁只读自检均通过。创建`pre-obs58-20260801`备份：Pipeline源/备份均181文件、46目录（含46个pyc/cache，排除后135）；gzh-design源/备份均297文件、15目录（含2个pyc/cache，排除后295）。未清理任何目录。
+
+封面链路：`publish_wechat_draft.py:163-180`从本地文件读取封面，POST`/cgi-bin/material/add_material?type=image`的multipart media，成功取响应`media_id`；`--cover`与`--thumb-media-id`互斥。计划选择`--cover`，使gzh脚本内部拥有上传、事件和幂等复用。
+
+A-003冻结文件：
+
+```text
+path=F:/AIXM/wxgzh/.temp/wxgzh-pipeline/20260731T135947-ai-bbg4al/media_enrichment/discover/images/418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf.png
+actual_sha256=418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+manifest_sha256=418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+approval_sha256=418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf
+approved_scope=single_asset
+```
+
+三者逐字一致。没有网络重下载、裁剪或重编码。草稿脚本没有freepublish、masssend、定时发送或预览群发调用路径。
+
+## 69. 阻断项23
+
+档21要求修改`gzh-design/scripts/publish_wechat_draft.py`并重锁gzh-design，同时要求只执行wechat_draft、禁止改receipt或重跑其他阶段。两项无法同时成立：
+
+1. 官方runtime manifest包含`publish_wechat_draft.py`，runtime count=76；修改它必然改变gzh-design root。
+2. `receipts.py:222-228`对每个已完成live阶段重算整个sub-skill root，并与receipt记录比较。
+3. 当前`gzh_design` receipt验证PASS、mismatches为空；它记录的是修改前root。
+4. 修改并重锁后，该receipt必然报`skill_root_sha256 mismatch`，恢复将使gzh_design失效并重跑。
+5. 若避免重跑，只能放宽receipt校验或手工重写receipt，二者均被禁止。
+
+因此命中档21阻断项23：“指令内部出现自相矛盾，服从更严格要求并立即上报”。
+
+曾在正式Pipeline做过尚未提交的最小参数草案，发现冲突后已逐字撤回；正式、Git和pre-obs58备份中的`producers.py`SHA均为：
+
+```text
+129af865de658280485557bfec206550477b678d348e99292fe4e87fa69c43ec
+```
+
+未修改gzh-design，未修改锁，未修改receipt，未运行测试/doctor（无最终代码变更），未执行阶段D/E。
+
+## 70. 九条安全属性与副作用
+
+1. 冻结SHA规则未改。
+2. 显式批准规则未改。
+3. 批准数量上限未改。
+4. URL安全未改。
+5. 批准合同未改。
+6. 无自动批准路径。
+7. 本档uploadimg调用0。
+8. 本档封面素材上传0，未伪造cover事件。
+9. A-003未从网络下载、裁剪或重编码。
+
+```text
+累计uploadimg图片=2（档18）
+本档material/add_material=0
+本档新增草稿尝试=0
+本档新增草稿=0
+发布/群发/定时/预览群发=0
+```
+
+图片来源:Google Cloud 官方博客
+
+最终状态：`BLOCKED_INSTRUCTION_CONTRADICTION_GZH_RUNTIME_RECEIPT_ROOT`。
