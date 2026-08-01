@@ -191,6 +191,7 @@ class WechatImageHostUploader:
     def __init__(self):
         self.app_id = os.environ.get("WECHAT_APP_ID", "")
         self.app_secret = os.environ.get("WECHAT_APP_SECRET", "")
+        self._access_token: str | None = None
         self._last_token_observation = {
             "http_status": None, "wechat_errcode": None,
             "wechat_errmsg": None, "request_elapsed_seconds": 0.0,
@@ -198,6 +199,8 @@ class WechatImageHostUploader:
         }
 
     def _get_access_token(self) -> tuple[str, str]:
+        if self._access_token:
+            return self._access_token, ""
         if not self.app_id or not self.app_secret:
             return "", "WECHAT_APP_ID or WECHAT_APP_SECRET not set"
         try:
@@ -217,7 +220,8 @@ class WechatImageHostUploader:
                 "request_attempt_index": 1,
             }
             if "access_token" in data:
-                return data["access_token"], ""
+                self._access_token = data["access_token"]
+                return self._access_token, ""
             return "", _scrub_token(f"WeChat token error: {data.get('errmsg', 'unknown')}")
         except Exception as exc:
             return "", _scrub_token(f"token request failed: {exc}")

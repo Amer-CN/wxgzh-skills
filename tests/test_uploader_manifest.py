@@ -6,6 +6,7 @@ from pathlib import Path
 from media_enrichment.uploader import (
     DryRunUploader, MockUploader, sanitize_response, scan_for_secrets,
     create_uploader, _scrub_token, timed_upload, UploadResult,
+    WechatImageHostUploader,
 )
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
 
@@ -84,6 +85,34 @@ class TestUploadObservability:
         assert event["endpoint_path"] == "/cgi-bin/media/uploadimg"
         assert event["media_id"] is None
         assert "access_token" not in json.dumps(event)
+
+
+class TestCredentialSourceAndTokenCache:
+    def test_missing_credentials_fail_closed(self, monkeypatch):
+        monkeypatch.delenv("WECHAT_APP_ID", raising=False)
+        monkeypatch.delenv("WECHAT_APP_SECRET", raising=False)
+        result = WechatImageHostUploader().upload("missing.png", "A-003", "known_allowed")
+        assert result.status == "failed"
+        assert result.media_id is None
+
+    def test_token_cached_within_uploader_instance(self, monkeypatch):
+        import sys
+        from types import SimpleNamespace
+        monkeypatch.setenv("WECHAT_APP_ID", "wx-test-id")
+        monkeypatch.setenv("WECHAT_APP_SECRET", "test-secret")
+        calls = []
+        response = SimpleNamespace(
+            status_code=200,
+            json=lambda: {"access_token": "test-token-value"},
+        )
+        fake_requests = SimpleNamespace(
+            get=lambda *args, **kwargs: (calls.append(1) or response),
+        )
+        monkeypatch.setitem(sys.modules, "requests", fake_requests)
+        uploader = WechatImageHostUploader()
+        assert uploader._get_access_token() == ("test-token-value", "")
+        assert uploader._get_access_token() == ("test-token-value", "")
+        assert len(calls) == 1
 
 
 class TestSecretsSanitization:

@@ -521,6 +521,10 @@ def main():
                     "remote_url": upload_result.remote_url,
                     "response_sha256": upload_result.response_sha256,
                 }
+                if upload_result.status != "success":
+                    builder.errors.append(
+                        f"upload failed for {asset.asset_id}: "
+                        f"{upload_result.error or 'no success response'}")
 
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
