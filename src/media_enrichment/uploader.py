@@ -78,6 +78,14 @@ def timed_upload(uploader, events: list, local_path: str, asset_id: str,
         "started_at": started,
         "ended_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "start_monotonic": round(start_m, 6), "end_monotonic": round(end_m, 6),
+        "http_status": result.http_status,
+        "wechat_errcode": result.wechat_errcode,
+        "wechat_errmsg": result.wechat_errmsg,
+        "request_elapsed_seconds": result.request_elapsed_seconds,
+        "endpoint_path": result.endpoint_path,
+        "request_attempt_index": result.request_attempt_index,
+        "media_id": result.media_id,
+        "url": result.remote_url if result.status == "success" else None,
     })
     return result
 
@@ -92,6 +100,13 @@ class UploadResult:
     actual_mime: str = ""
     error: str = ""
     uploaded_at: str = ""
+    http_status: int | None = None
+    wechat_errcode: int | None = None
+    wechat_errmsg: str | None = None
+    request_elapsed_seconds: float = 0.0
+    endpoint_path: str | None = None
+    request_attempt_index: int = 1
+    media_id: str | None = None
 
 
 def sanitize_response(data: Any) -> Any:
@@ -176,6 +191,11 @@ class WechatImageHostUploader:
     def __init__(self):
         self.app_id = os.environ.get("WECHAT_APP_ID", "")
         self.app_secret = os.environ.get("WECHAT_APP_SECRET", "")
+        self._last_token_observation = {
+            "http_status": None, "wechat_errcode": None,
+            "wechat_errmsg": None, "request_elapsed_seconds": 0.0,
+            "endpoint_path": "/cgi-bin/token", "request_attempt_index": 1,
+        }
 
     def _get_access_token(self) -> tuple[str, str]:
         if not self.app_id or not self.app_secret:
@@ -184,8 +204,18 @@ class WechatImageHostUploader:
             import requests
             url = "https://api.weixin.qq.com/cgi-bin/token"
             params = {"grant_type": "client_credential", "appid": self.app_id, "secret": self.app_secret}
+            started = time.monotonic()
             resp = requests.get(url, params=params, timeout=10)
+            elapsed = round(time.monotonic() - started, 6)
             data = resp.json()
+            self._last_token_observation = {
+                "http_status": resp.status_code,
+                "wechat_errcode": data.get("errcode"),
+                "wechat_errmsg": data.get("errmsg"),
+                "request_elapsed_seconds": elapsed,
+                "endpoint_path": "/cgi-bin/token",
+                "request_attempt_index": 1,
+            }
             if "access_token" in data:
                 return data["access_token"], ""
             return "", _scrub_token(f"WeChat token error: {data.get('errmsg', 'unknown')}")
@@ -207,7 +237,9 @@ class WechatImageHostUploader:
         mime = detect_mime(local_path) if Path(local_path).exists() else ""
         token, err = self._get_access_token()
         if err:
-            return UploadResult(mode="wechat_image_host", status="failed", error=err, actual_mime=mime)
+            return UploadResult(
+                mode="wechat_image_host", status="failed", error=err,
+                actual_mime=mime, **self._last_token_observation)
 
         try:
             import requests
@@ -223,10 +255,21 @@ class WechatImageHostUploader:
                     (mime or "").split(";")[0].strip().lower(), ".png")
             with open(path, "rb") as f:
                 files = {"media": (upload_name, f, mime or "image/png")}
+                started = time.monotonic()
                 resp = requests.post(url, files=files, timeout=30)
+                elapsed = round(time.monotonic() - started, 6)
 
             data = resp.json()
             sanitized = sanitize_response(data)
+            observation = {
+                "http_status": resp.status_code,
+                "wechat_errcode": data.get("errcode"),
+                "wechat_errmsg": data.get("errmsg"),
+                "request_elapsed_seconds": elapsed,
+                "endpoint_path": "/cgi-bin/media/uploadimg",
+                "request_attempt_index": 1,
+                "media_id": data.get("media_id"),
+            }
 
             if "url" in data:
                 # dev2-hotfix2: WeChat must return a genuine image-host URL;
@@ -236,7 +279,7 @@ class WechatImageHostUploader:
                     return UploadResult(
                         mode="wechat_image_host", status="failed",
                         error=_scrub_token(f"upload returned non-WeChat-host url: {sanitize_response(data)}"),
-                        actual_mime=mime,
+                        actual_mime=mime, **observation,
                     )
                 resp_hash = hashlib.sha256(normalized.encode()).hexdigest()
                 return UploadResult(
@@ -244,18 +287,21 @@ class WechatImageHostUploader:
                     remote_url=normalized, response_sha256=resp_hash,
                     actual_mime=mime,
                     uploaded_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    **observation,
                 )
             else:
                 return UploadResult(
                     mode="wechat_image_host", status="failed",
                     error=_scrub_token(f"upload failed: {sanitized}"),
-                    actual_mime=mime,
+                    actual_mime=mime, **observation,
                 )
         except Exception as exc:
             return UploadResult(
                 mode="wechat_image_host", status="failed",
                 error=_scrub_token(f"upload error: {exc}"),
                 actual_mime=mime,
+                endpoint_path="/cgi-bin/media/uploadimg",
+                request_attempt_index=1,
             )
 
 

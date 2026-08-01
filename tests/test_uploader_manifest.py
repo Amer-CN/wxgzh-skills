@@ -5,7 +5,7 @@ import pytest
 from pathlib import Path
 from media_enrichment.uploader import (
     DryRunUploader, MockUploader, sanitize_response, scan_for_secrets,
-    create_uploader, _scrub_token,
+    create_uploader, _scrub_token, timed_upload, UploadResult,
 )
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
 
@@ -62,6 +62,28 @@ class TestTokenScrubbing:
         scrubbed = _scrub_token(text)
         assert "secret123" not in scrubbed
         assert "access_token=[REDACTED]" in scrubbed
+
+
+class TestUploadObservability:
+    def test_timed_upload_records_observation_fields_without_token(self):
+        class FakeUploader:
+            def upload(self, local_path, asset_id, copyright_status):
+                return UploadResult(
+                    mode="wechat_image_host", status="failed",
+                    http_status=401, wechat_errcode=40164,
+                    wechat_errmsg="invalid ip", request_elapsed_seconds=0.25,
+                    endpoint_path="/cgi-bin/media/uploadimg",
+                    request_attempt_index=1,
+                )
+        events = []
+        timed_upload(FakeUploader(), events, "unused.png", "A-003", "known_allowed")
+        event = events[0]
+        assert event["http_status"] == 401
+        assert event["wechat_errcode"] == 40164
+        assert event["wechat_errmsg"] == "invalid ip"
+        assert event["endpoint_path"] == "/cgi-bin/media/uploadimg"
+        assert event["media_id"] is None
+        assert "access_token" not in json.dumps(event)
 
 
 class TestSecretsSanitization:

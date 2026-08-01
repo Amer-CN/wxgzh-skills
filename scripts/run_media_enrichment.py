@@ -152,6 +152,11 @@ def main():
                         .get("copyright_review", {}).get("status") == "known_allowed")
                 }
                 upload_candidate_ids = set(asset_approvals) | material_approved_ids
+                if len(upload_candidate_ids) > len(asset_approvals):
+                    builder.errors.append(
+                        "approved upload candidate count exceeds explicit "
+                        "copyright approval asset count")
+                    upload_candidate_ids = set()
 
                 for asset_id in sorted(upload_candidate_ids):
                     approval = asset_approvals.get(asset_id)

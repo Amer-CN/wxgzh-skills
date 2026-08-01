@@ -131,7 +131,7 @@ def _discover_continue(tmp_path: Path, fixture: Path, request: Path):
     return continued, continue_out, continue_manifest, continue_events
 
 
-def test_material_approval_uploads_only_approved_material(tmp_path):
+def test_material_approval_without_explicit_asset_approval_fails_closed(tmp_path):
     fixture = tmp_path / "fixture"
     _make_fixture(fixture, "url-a", "material-a.png", (210, 40, 40))
     _make_fixture(fixture, "url-b", "material-b.png", (40, 40, 210))
@@ -140,15 +140,12 @@ def test_material_approval_uploads_only_approved_material(tmp_path):
         _material("M-002", "url-b"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert [e["asset_id"] for e in events["events"]] == ["A-001"]
-    assets = {a["material_ids"][0]: a for a in manifest["assets"] if a["asset_origin"] == "source"}
-    assert assets["M-001"]["upload"]["status"] == "success"
-    assert assets["M-002"]["upload"]["status"] != "success"
-    assert assets["M-002"]["copyright_status"] == "unknown"
+    assert result.returncode != 0
+    assert events["events"] == []
+    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
 
 
-def test_source_url_approval_does_not_inherit_to_other_url(tmp_path):
+def test_source_url_approval_without_explicit_asset_approval_fails_closed(tmp_path):
     fixture = tmp_path / "fixture"
     _make_fixture(fixture, "url-a", "url-a.png", (180, 80, 20))
     _make_fixture(fixture, "url-b", "url-b.png", (20, 160, 80))
@@ -157,14 +154,9 @@ def test_source_url_approval_does_not_inherit_to_other_url(tmp_path):
         _material("M-002", "url-b"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode == 0, result.stdout + result.stderr
-    uploaded = [e["asset_id"] for e in events["events"]]
-    assert uploaded == ["A-001"]
-    source_assets = [a for a in manifest["assets"] if a["asset_origin"] == "source"]
-    assert next(a for a in source_assets if a["material_ids"] == ["M-001"])["upload"]["status"] == "success"
-    url_b = next(a for a in source_assets if a["material_ids"] == ["M-002"])
-    assert url_b["upload"]["status"] != "success"
-    assert url_b["copyright_status"] == "unknown"
+    assert result.returncode != 0
+    assert events["events"] == []
+    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
 
 
 def test_no_repost_overrides_material_approval(tmp_path):
@@ -174,8 +166,9 @@ def test_no_repost_overrides_material_approval(tmp_path):
         _material("M-001", "blocked", "known_allowed", "material"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.returncode != 0
     assert events["events"] == []
+    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
     asset = next(a for a in manifest["assets"] if a["asset_origin"] == "source")
     assert asset["copyright_status"] == "restricted"
     assert asset["upload"]["status"] != "success"
