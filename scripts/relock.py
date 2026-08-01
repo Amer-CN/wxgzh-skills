@@ -83,10 +83,10 @@ def _serialize_lock(lock: dict, template_bytes: bytes) -> str:
     existing file so a real re-lock produces a minimal diff."""
     crlf = b"\r\n" in template_bytes
     text = json.dumps(lock, ensure_ascii=False, indent=2)
-    if crlf:
-        text = text.replace("\n", "\r\n")
     if not text.endswith("\n"):
         text += "\n"
+    if crlf:
+        text = text.replace("\n", "\r\n")
     return text
 
 
@@ -111,6 +111,71 @@ def run_doctor(project_root: Path | None) -> tuple[bool, str]:
         return False, f"doctor invocation failed: {exc}"
     output = ((proc.stdout or "") + (proc.stderr or "")).strip()
     return proc.returncode == 0, output
+
+
+def classify_gate(doctor_passed: bool, doctor_output: str,
+                  target_skills: set[str]) -> tuple[bool, list[str]]:
+    """Pre-apply doctor gate with reason classification (档28 Part 1).
+
+    doctor_passed=True                                   -> allowed
+    Otherwise the ONLY allowed failure is the TARGET
+    skill's hash_ok/version_ok mismatch (the state re-lock exists to fix):
+      - environmental problems (missing skill dir, entrypoints_ok=false,
+        missing required files, credentials missing, project not writable,
+        AI HOT capability missing)                     -> REFUSE (exit 3)
+      - any NON-target skill with hash/version mismatch -> REFUSE (exit 3)
+    Returns (allowed, reasons). reasons non-empty on refusal."""
+    if doctor_passed:
+        return True, []
+    reasons: list[str] = []
+    try:
+        report = json.loads(doctor_output)
+    except (ValueError, TypeError):
+        return False, ["doctor output not parseable as JSON"]
+    if not isinstance(report, dict):
+        return False, ["doctor output is not a JSON object"]
+    if report.get("FAIL_CLOSED") is not True:
+        return False, ["doctor report FAIL_CLOSED != true while exit code non-zero"]
+    if report.get("project_writable") is not True:
+        reasons.append("project_writable=false")
+    if report.get("wechat_config_present") is not True:
+        reasons.append("wechat_config_present=false (credentials missing)")
+    if report.get("LIVE_PIPELINE_ALLOWED") is not True:
+        reasons.append("LIVE_PIPELINE_ALLOWED=false (AI HOT capability missing)")
+    skills = report.get("skills")
+    if not isinstance(skills, dict) or not skills:
+        reasons.append("doctor report has no usable skills section")
+    target_mismatch_seen = False
+    for name, entry in (skills or {}).items():
+        if name == "aihot" or not isinstance(entry, dict):
+            continue
+        if entry.get("exists") is not True:
+            reasons.append(f"{name}: skill directory missing")
+            continue
+        if entry.get("entrypoints_ok") is not True:
+            reasons.append(f"{name}: entrypoints_ok=false")
+            continue
+        if entry.get("missing_files"):
+            reasons.append(f"{name}: missing required files {entry['missing_files']}")
+            continue
+        if name in target_skills:
+            # re-lockable state: hash_ok=false and/or version_ok=false (档28 1b)
+            if entry.get("hash_ok") is False or entry.get("version_ok") is False:
+                target_mismatch_seen = True
+            else:
+                reasons.append(f"{name}: target is fully healthy — failure must be elsewhere")
+        else:
+            if entry.get("hash_ok") is not True:
+                reasons.append(f"{name}: non-target skill hash_ok=false "
+                               f"(only the named target may be re-locked)")
+            if entry.get("version_ok") is not True:
+                reasons.append(f"{name}: non-target skill version_ok=false")
+    if reasons:
+        return False, reasons
+    if not target_mismatch_seen:
+        return False, ["doctor failed for an unclassified reason "
+                       "(no target hash/version mismatch to re-lock)"]
+    return True, []
 
 
 def compute_skill_hashes(skill_dir: Path) -> tuple[str | None, str | None, int]:
@@ -199,8 +264,8 @@ def append_history(history_path: Path, rows: list[dict], reason: str) -> list[di
         }
         history.append(rec)
         appended.append(rec)
-    history_path.write_text(
-        json.dumps(history, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    history_path.write_bytes(
+        (json.dumps(history, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     return appended
 
 
@@ -273,12 +338,17 @@ def main(argv=None) -> int:
         return EXIT_OK
 
     # ── --apply ─────────────────────────────────────────────────────────────
-    ok, output = run_doctor(project_root)
-    if not ok:
-        _err("doctor FAIL_CLOSED before any write — refusing --apply")
+    passed, output = run_doctor(project_root)
+    allowed, reasons = classify_gate(passed, output, {r["skill"] for r in changed_rows})
+    if not allowed:
+        _err("doctor gate refused --apply: " + "; ".join(reasons))
         if output:
             print(output)
         return EXIT_PRE_DOCTOR_FAIL
+    if passed:
+        print("doctor gate: PASS (pre-write)")
+    else:
+        print("doctor gate: allowed — target hash/version mismatch only (re-lockable state)")
 
     lock_bytes = lock_path.read_bytes()
     hist_existed = history_path.is_file()
@@ -296,8 +366,10 @@ def main(argv=None) -> int:
         for row in changed_rows:
             for key in _HASH_FIELDS:
                 lock["skills"][row["skill"]][key] = row["new"][key]
-        lock_path.write_text(
-            _serialize_lock(lock, lock_bytes), encoding="utf-8")
+        # write_bytes (NOT write_text): Path.write_text translates "\n" to
+        # "\r\n" on Windows, which would corrupt the CRLF template into
+        # "\r\r\n" and break byte fidelity (档28 Part 2 test caught this).
+        lock_path.write_bytes(_serialize_lock(lock, lock_bytes).encode("utf-8"))
         appended = append_history(history_path, changed_rows, reason)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         _err(f"write failed — attempting rollback: {exc}")

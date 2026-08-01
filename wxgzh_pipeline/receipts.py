@@ -136,6 +136,61 @@ def receipt_valid(run_dir: Path, stage: str) -> bool:
     return r is not None and not validate_receipt(r)
 
 
+def _history_path() -> Path:
+    """Upgrade ledger written by scripts/relock.py (P0-1, 档27)."""
+    return Path(__file__).resolve().parents[1] / "skills.lock.history.json"
+
+
+def _find_upgrade_chain(skill_name: str, receipt_root: str,
+                        current_root: str) -> list[dict] | None:
+    """Trace a FULL chain of relock ledger records from receipt_root to
+    current_root for the given skill (multi-hop allowed, 档28 P0-2).
+
+    Strict (any problem => None => TAMPERED):
+      - ledger missing / not a JSON array / empty / malformed -> None
+      - every hop must be a dict whose old_root_sha256 equals the previous
+        new_root_sha256, whose new_root_sha256 advances the chain, and whose
+        skill matches the receipt's skill_name
+      - cycles are rejected; the chain must end EXACTLY at current_root
+    Returns the ordered records (oldest -> newest) or None."""
+    try:
+        data = json.loads(_history_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, list) or not data:
+        return None
+    by_old: dict[str, list[dict]] = {}
+    for rec in data:
+        if not isinstance(rec, dict):
+            return None
+        old = rec.get("old_root_sha256")
+        new = rec.get("new_root_sha256")
+        if not isinstance(old, str) or not isinstance(new, str) or not old or not new:
+            return None
+        if not isinstance(rec.get("entry_id"), str) or not rec.get("entry_id"):
+            return None
+        if rec.get("skill") != skill_name:
+            continue
+        by_old.setdefault(old, []).append(rec)
+
+    def dfs(cur: str, path: list[dict], seen: set[str]):
+        if cur == current_root:
+            return path
+        if cur in seen:
+            return None  # cycle
+        seen.add(cur)
+        for rec in by_old.get(cur, []):
+            nxt = rec["new_root_sha256"]
+            if nxt == cur:
+                continue
+            found = dfs(nxt, path + [rec], seen)
+            if found is not None:
+                return found
+        return None
+
+    return dfs(receipt_root, [], set())
+
+
 def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None,
                    network_mode: str | None = None) -> tuple[bool, list]:
     """Tamper detection (P0#1/#2/#3). Starts with FULL structural validation
@@ -219,12 +274,30 @@ def verify_receipt(run_dir: Path, stage: str, skills_home: Path | None = None,
             elif sha256_file(Path(p)) != want:
                 mism.append("official_validator hash mismatch")
 
-    # sub-skill root sha (live only — installed skill must still match the receipt)
+    # sub-skill root sha (live only) — THREE-STATE (档28 P0-2):
+    #   OK            receipt root == installed root (normal resume)
+    #   SKILL_UPGRADED  mismatch, but a FULL relock chain (receipt -> current)
+    #                   exists in skills.lock.history.json; NOT a tamper, but the
+    #                   stage MUST be re-run; matched entry_ids are returned
+    #   TAMPERED      mismatch with no traceable chain -> strict FAIL (as before)
+    skill_root_state = "OK"
+    upgrade_entry_ids: list[str] = []
     if skills_home and r.get("network_mode") == "live" and r.get("skill_root_sha256"):
         from .skill_discovery import compute_root_sha
         skill_dir = Path(r.get("skill_dir") or (Path(skills_home) / r.get("skill_name", "")))
         cur, _ = compute_root_sha(skill_dir)
         if cur != r["skill_root_sha256"]:
-            mism.append("skill_root_sha256 mismatch (installed sub-skill changed)")
+            chain = _find_upgrade_chain(str(r.get("skill_name", "")),
+                                        str(r["skill_root_sha256"]), str(cur))
+            if chain:
+                skill_root_state = "SKILL_UPGRADED"
+                upgrade_entry_ids = [rec["entry_id"] for rec in chain]
+            else:
+                skill_root_state = "TAMPERED"
+                mism.append(
+                    "skill_root_sha256 mismatch (installed sub-skill changed; "
+                    "no full upgrade chain in skills.lock.history.json)")
 
-    return (not mism), mism
+    extra = {"skill_root_state": skill_root_state,
+             "upgrade_entry_ids": upgrade_entry_ids}
+    return (not mism), mism, extra

@@ -65,7 +65,7 @@ def test_agent_handshake(orch):
 def test_receipt_tamper(orch):
     out = orch.run("t")
     rd = Path(out["run_dir"])
-    ok, mism = verify_receipt(rd, "media_enrichment")
+    ok, mism, _ = verify_receipt(rd, "media_enrichment")
     assert ok and mism == []
     man = rd / "media_enrichment" / "media_manifest.json"
     man.write_bytes(man.read_bytes() + b" ")  # tamper an output file

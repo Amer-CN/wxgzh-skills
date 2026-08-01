@@ -169,9 +169,12 @@ class Orchestrator:
         for s in STAGES:
             if s not in st.completed_stages:
                 break
-            ok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home, network_mode=self.network_mode)
-            verify_reports[s] = {"ok": ok, "mismatches": mism}
-            if ok and broken is None:
+            ok, mism, extra = verify_receipt(run_dir, s, skills_home=self.skills_home,
+                                             network_mode=self.network_mode)
+            verify_reports[s] = {"ok": ok, "mismatches": mism, **extra}
+            # SKILL_UPGRADED: not a tamper (ok=True) but the stage MUST re-run
+            # (档28 P0-2); everything from here on is invalidated as well.
+            if ok and broken is None and extra.get("skill_root_state") != "SKILL_UPGRADED":
                 kept.append(s)
             elif broken is None:
                 broken = s
@@ -210,7 +213,8 @@ class Orchestrator:
             if stage == "wechat_draft":
                 bad = {}
                 for s in STAGES[:5]:
-                    vok, mism = verify_receipt(run_dir, s, skills_home=self.skills_home, network_mode=self.network_mode)
+                    vok, mism, _ = verify_receipt(run_dir, s, skills_home=self.skills_home,
+                                                  network_mode=self.network_mode)
                     if not vok:
                         bad[s] = mism
                 if bad or not create_wechat_draft:

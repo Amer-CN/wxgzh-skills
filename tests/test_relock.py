@@ -96,13 +96,33 @@ def _args(tmp_path, extra: dict | None = None) -> list[str]:
     return out
 
 
+def _doctor_report(rc, *, target="gzh-design", target_bad=False,
+                    non_target_bad=False, env_bad=False) -> dict:
+    """Doctor-style report used by the gate classifier (档28 Part 1)."""
+    skills = {}
+    for name in ("gzh-design", "super-writer"):
+        ok = not ((name == target and target_bad) or (name != target and non_target_bad))
+        skills[name] = {"exists": True, "version_ok": ok, "hash_ok": ok,
+                        "entrypoints_ok": True, "missing_files": [], "ok": ok}
+    return {
+        "FAIL_CLOSED": rc != 0,
+        "project_writable": not env_bad,
+        "wechat_config_present": not env_bad,
+        "LIVE_PIPELINE_ALLOWED": True,
+        "skills": skills,
+        "doctor": "PASS" if rc == 0 else "FAIL",
+    }
+
+
 def _monkey_doctor(monkeypatch, results):
+    """results: list of (rc, kwargs) — kwargs for _doctor_report (int == plain rc)."""
     calls = {"n": 0}
 
     def fake_run(cmd, **kwargs):
-        rc = results[min(calls["n"], len(results) - 1)]
+        item = results[min(calls["n"], len(results) - 1)]
+        rc, kw = (item, {}) if isinstance(item, int) else item
         calls["n"] += 1
-        return FakeProc(returncode=rc, stdout='{"doctor": "PASS" if rc == 0 else "FAIL"}')
+        return FakeProc(returncode=rc, stdout=json.dumps(_doctor_report(rc, **kw)))
 
     monkeypatch.setattr(RELOCK.subprocess, "run", fake_run)
     return calls
@@ -130,7 +150,7 @@ def test_apply_doctor_fail_rolls_back(tmp_path, monkeypatch):
                        encoding="utf-8")
     lock_before = lock_path.read_bytes()
     hist_before = history.read_bytes()
-    _monkey_doctor(monkeypatch, [0, 1])  # pre-gate PASS, post FAIL
+    _monkey_doctor(monkeypatch, [0, (1, {"target_bad": True})])  # pre PASS, post FAIL
     rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
                                       "--reason": "test rollback", "--apply": None}))
     assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
@@ -146,7 +166,7 @@ def test_apply_doctor_fail_rolls_back_created_history(tmp_path, monkeypatch):
         tmp_path, lock_values={"skill_root_sha256": "old" * 32,
                                "runtime_manifest_sha256": "old" * 32,
                                "runtime_file_count": 999})
-    _monkey_doctor(monkeypatch, [0, 1])
+    _monkey_doctor(monkeypatch, [0, (1, {"target_bad": True})])
     rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
                                       "--reason": "test rollback", "--apply": None}))
     assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
@@ -213,12 +233,63 @@ def test_apply_ledger_format(tmp_path, monkeypatch):
 
 # ── extra safety gates ──────────────────────────────────────────────────────
 def test_apply_refused_when_doctor_fail_closed(tmp_path, monkeypatch):
+    """Environmental failure (credentials) -> refuse, zero writes (档28 1a)."""
     skills_home, lock_path, _ = _make_env(
         tmp_path, lock_values={"skill_root_sha256": "old" * 32,
                                "runtime_manifest_sha256": "old" * 32,
                                "runtime_file_count": 999})
     before = _snapshot(tmp_path)
-    _monkey_doctor(monkeypatch, [1])  # pre-gate FAIL
+    _monkey_doctor(monkeypatch, [(1, {"env_bad": True})])  # pre-gate FAIL (env)
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "gate test", "--apply": None}))
+    assert rc == RELOCK.EXIT_PRE_DOCTOR_FAIL
+    assert _snapshot(tmp_path) == before
+
+
+def test_apply_refused_when_non_target_mismatch(tmp_path, monkeypatch):
+    """Non-target skill hash mismatch -> refuse (档28 1c)."""
+    skills_home, lock_path, _ = _make_env(
+        tmp_path, lock_values={"skill_root_sha256": "old" * 32,
+                               "runtime_manifest_sha256": "old" * 32,
+                               "runtime_file_count": 999})
+    before = _snapshot(tmp_path)
+    _monkey_doctor(monkeypatch, [(1, {"non_target_bad": True})])
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "gate test", "--apply": None}))
+    assert rc == RELOCK.EXIT_PRE_DOCTOR_FAIL
+    assert _snapshot(tmp_path) == before
+
+
+def test_apply_allowed_when_only_target_mismatch(tmp_path, monkeypatch):
+    """Only the TARGET's hash/version mismatch -> allowed (档28 1b)."""
+    skills_home, lock_path, base = _make_env(
+        tmp_path, lock_values={"skill_root_sha256": "old" * 32,
+                               "runtime_manifest_sha256": "old" * 32,
+                               "runtime_file_count": 999})
+    _monkey_doctor(monkeypatch, [(1, {"target_bad": True}), 0])  # gate allow, post PASS
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "relock after skill change",
+                                      "--apply": None}))
+    assert rc == RELOCK.EXIT_OK
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    assert lock["skills"]["gzh-design"]["skill_root_sha256"] == base["skill_root_sha256"]
+    history = json.loads((tmp_path / "skills.lock.history.json").read_text(encoding="utf-8"))
+    assert len(history) == 1 and history[0]["doctor_result"] == "PASS"
+
+
+def test_gate_refused_on_unparsable_doctor_output(tmp_path, monkeypatch):
+    skills_home, lock_path, _ = _make_env(
+        tmp_path, lock_values={"skill_root_sha256": "old" * 32,
+                               "runtime_manifest_sha256": "old" * 32,
+                               "runtime_file_count": 999})
+    before = _snapshot(tmp_path)
+    calls = {"n": 0}
+
+    def fake_run(cmd, **kwargs):
+        calls["n"] += 1
+        return FakeProc(returncode=1, stdout="not json at all")
+
+    monkeypatch.setattr(RELOCK.subprocess, "run", fake_run)
     rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
                                       "--reason": "gate test", "--apply": None}))
     assert rc == RELOCK.EXIT_PRE_DOCTOR_FAIL
@@ -263,3 +334,45 @@ def test_all_dry_run_skips_aihot(tmp_path):
     rc = RELOCK.main(_args(tmp_path, {"--all": None, "--reason": "x"}))
     assert rc == RELOCK.EXIT_OK
     assert _snapshot(tmp_path) == before
+
+
+# ── 档28 Part 2: serialization byte fidelity ───────────────────────────────
+def test_serialize_lock_reproduces_real_lock_bytes():
+    """Direct property check (read-only): the serializer must reproduce the
+    REAL skills.lock.json byte-for-byte (CRLF + trailing newline preserved)."""
+    real_bytes = (SKILL_ROOT / "skills.lock.json").read_bytes()
+    lock = json.loads(real_bytes.decode("utf-8"))
+    assert RELOCK._serialize_lock(lock, real_bytes).encode("utf-8") == real_bytes
+
+
+def test_full_write_roundtrip_byte_fidelity(tmp_path, monkeypatch):
+    """Fixture structurally identical to the real skills.lock.json; change one
+    value then change it back through the FULL --apply write path; final lock
+    bytes must equal the original fixture bytes (档28 Part 2)."""
+    skills_home, lock_path, computed = _make_env(tmp_path)
+    real_bytes = (SKILL_ROOT / "skills.lock.json").read_bytes()
+    fixture = json.loads(real_bytes.decode("utf-8"))
+    gzh = fixture["skills"]["gzh-design"]
+    gzh["skill_root_sha256"] = computed["skill_root_sha256"]
+    gzh["runtime_manifest_sha256"] = computed["runtime_manifest_sha256"]
+    gzh["runtime_file_count"] = computed["runtime_file_count"]
+    fixture_bytes = RELOCK._serialize_lock(fixture, real_bytes).encode("utf-8")
+    lock_path.write_bytes(fixture_bytes)
+    assert lock_path.read_bytes() == fixture_bytes
+
+    # round 1: tree gains one runtime file -> hashes change -> apply writes
+    extra = skills_home / "gzh-design" / "scripts" / "extra.py"
+    extra.write_text("x\n", encoding="utf-8")
+    _monkey_doctor(monkeypatch, [0, 0])
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "change one value", "--apply": None}))
+    assert rc == RELOCK.EXIT_OK
+    assert lock_path.read_bytes() != fixture_bytes
+
+    # round 2: tree restored -> hashes change back -> bytes == original
+    extra.unlink()
+    _monkey_doctor(monkeypatch, [0, 0])
+    rc = RELOCK.main(_args(tmp_path, {"--skill": "gzh-design",
+                                      "--reason": "change value back", "--apply": None}))
+    assert rc == RELOCK.EXIT_OK
+    assert lock_path.read_bytes() == fixture_bytes

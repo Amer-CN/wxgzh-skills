@@ -56,7 +56,7 @@ def test_receipt_tamper_fails_verify_and_resume(orch, case):
         _mutate(run_dir, stage, mut)
 
     # 1) verify_receipt must FAIL for the tampered stage
-    vok, mism = verify_receipt(run_dir, stage, network_mode="fake_live")
+    vok, mism, _ = verify_receipt(run_dir, stage, network_mode="fake_live")
     assert vok is False and mism, f"{case}: verify_receipt should FAIL"
 
     # 2) resume must NOT report ALREADY_COMPLETE; it invalidates from that stage

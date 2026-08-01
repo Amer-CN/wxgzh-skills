@@ -287,7 +287,7 @@ def _pipeline_media_state_machine_e2e(skills_home: Path, staging: Path) -> dict:
                   if asset["asset_id"] not in {a["asset_id"] for a in approvals}}
     receipts = {}
     for stage in ("media_enrichment", "gzh_design", "wechat_draft"):
-        ok, mismatches = verify_receipt(
+        ok, mismatches, _ = verify_receipt(
             run_dir, stage, skills_home=skills_home, network_mode="integration")
         receipts[stage] = {"ok": ok, "mismatches": mismatches}
     draft = json.loads(

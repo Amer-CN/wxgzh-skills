@@ -91,9 +91,9 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
     if must_after:
         if ctx is not None:
             from .receipts import verify_receipt
-            vok, vmism = verify_receipt(run_dir, must_after,
-                                        skills_home=getattr(ctx, "skills_home", None),
-                                        network_mode=getattr(ctx, "network_mode", None))
+            vok, vmism, _ = verify_receipt(run_dir, must_after,
+                                            skills_home=getattr(ctx, "skills_home", None),
+                                            network_mode=getattr(ctx, "network_mode", None))
             chk("must_run_after_verified", vok, f"{must_after} receipt invalid: {vmism[:2]}")
         else:
             chk("must_run_after_receipt", (run_dir / must_after / "stage_receipt.json").is_file(),
