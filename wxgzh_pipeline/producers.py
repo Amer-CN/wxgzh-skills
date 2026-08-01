@@ -826,6 +826,24 @@ def _wechat(ctx, stage, sd, expected, state):
     html = Path(ctx.run_dir) / "gzh_design" / "final.html"
     args = ["--html", str(html), "--title", (state.topic or "wxgzh article")[:60],
             "--audit-dir", str(sd)]
+    if ctx.network_mode == "live":
+        cover = (Path(ctx.run_dir) / "media_enrichment" / "discover" / "images" /
+                 "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf.png")
+        expected_cover_sha = "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf"
+        if not cover.is_file() or sha256_file(cover) != expected_cover_sha:
+            return [], {
+                "exec_kind": EM.WECHAT,
+                "invoked_entrypoint": str(entry),
+                "entrypoint_path": str(entry),
+                "entrypoint_sha256": sha256_file(entry),
+                "entry_run": {
+                    "exit_code": 2,
+                    "stdout": "",
+                    "stderr": "FAIL_CLOSED: A-003 frozen cover sha256 mismatch",
+                    "elapsed_seconds": 0.0,
+                },
+            }
+        args.extend(["--cover", str(cover)])
     if ctx.network_mode in ("fake_live", "integration"):
         args.append("--dry-run")  # zero side effects; simulated batchget snapshots
     run = run_script(entry, args, timeout=300)
