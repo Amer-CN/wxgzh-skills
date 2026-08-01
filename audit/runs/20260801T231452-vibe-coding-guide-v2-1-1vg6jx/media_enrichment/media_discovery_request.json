@@ -1,0 +1,361 @@
+{
+  "article": {
+    "path": "../zh_human_writing/final_article.md",
+    "sha256": "610d151deaa7d9a2457def2977fc6636dc432ca2fdb68d67e05c93a61298881a"
+  },
+  "asset_approvals": [],
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "claim_text": "文章主线：第一版文章里的「谎」，v2.0 变成了真话",
+      "material_id": "M-01",
+      "source_excerpt": "第一版文章写的「红线自动拦截」在 v1.0 真实情况是拦不住任何东西：它是一份 Markdown 规矩本，全部效力来自「请 AI 自觉」。v2.0 装了 PreToolUse hooks 后，rm -rf / 是真的被拦下来、屏幕会跳出 ⛔。从「请 AI 自觉」变成「AI 不同意也没用」。这是整个迭代最大的一步。这个自我打脸正好撞上作者自己的铁律第 3 条「不准只说我修好了」。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    },
+    {
+      "chart_group": "红线数量",
+      "claim_id": "C-02",
+      "claim_text": "时间线：四个版本，一天之内",
+      "material_id": "M-02",
+      "metric_name": "红线条数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 8
+        }
+      ],
+      "series_label": "v1.0",
+      "source_excerpt": "v1.0（6 月 15 日）：33.7 KB 单文件手册，定位是一张纸。v1.1.0（8 月 1 日）：拆成六个文件按需加载，纸变成一本能翻的书。v1.2.0（同日）：红线 8→11 条，清单扩到 25 条，书变厚了。v2.0.0（同日）：加体检脚本 + 强制护栏，书变成一把锁。v2.1.0（同日）：铁律 4→5 条、验收步骤、标点统一，锁上了钥匙扣。从早上开始审查，到晚上 22:00 发完 v2.1.0 并真机验证通过。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md"
+    },
+    {
+      "claim_id": "C-03",
+      "claim_text": "v1.1.0：省上下文，拆六个文件按需加载",
+      "material_id": "M-03",
+      "source_excerpt": "v1.0 是 33.7 KB 的 handbook.md，AI 每次要用得把整本书塞进脑子。拆成六个文件，SKILL.md 里放路由表，按需只读：问红线读 redlines.md，老项目一改就崩读 legacy-audit.md，新项目从零开始读 new-project.md，两个 AI 说法打架读 ai-disputes.md，准备交付读 checklist.md。类比：以前每次问路都得背整本北京地图册，现在先看目录只翻要去的页。翻车故事：redlines.md 把整本手册的总序（符号图例 🟦🟢🟡⛔💡 的唯一定义处）吞了，AI 看到 ⛔ 却不知道什么意思。拆文件最危险的不是内容丢了，是内容还",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/SKILL.md"
+    },
+    {
+      "chart_group": "红线数量",
+      "claim_id": "C-04",
+      "claim_text": "v1.2.0：AI 时代新增的三条红线（9/10/11）",
+      "material_id": "M-04",
+      "metric_name": "红线条数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 11
+        }
+      ],
+      "series_label": "v1.2.0",
+      "source_excerpt": "原八条红线全是传统 Web 开发老问题。2026 年小白项目十个有九个接大模型 API，三类风险没覆盖。红线 9 AI 功能安全：模型输出当作不可信输入，不直接执行、不直接入库、不拼进 SQL/命令；模型 API Key 只在后端。人话：AI 客服对话框诱导模型输出 SQL 然后代码直接执行 = 提示词注入；模型说的话跟陌生网友可信度一样。红线 10 依赖供应链：不装没核实过的包，锁版本文件进 Git，curl | bash 先下载看内容。人话：AI 说装个库就装，可能是三天前注册、名字差一个字母的钓鱼包。红线 11 Agent 操作安全：删除/强推/部署/改线上配置不给无人值守权限；密钥不进",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/redlines.md"
+    },
+    {
+      "claim_id": "C-05",
+      "claim_text": "v2.0.0：体检脚本 bash scripts/audit.sh",
+      "material_id": "M-05",
+      "source_excerpt": "把 25 条清单里机器能查的部分跑一遍，输出 ✅/❌ 和精确到文件:行号。能查：密码弱哈希、金额浮点、.env 被误提交进 Git、密钥写死在代码里、SQL 拼接、静默吞掉报错。最诚实的是最后主动列出「我完全查不了的项」，告诉哪些必须人工过。一个只报喜的检查工具比没有更危险。第一个误报是它自己：脚本检查硬编码密钥，搜索规则 api[_-]?key 这段文字本身就长得像密钥。任何测量工具都得先把自己排除在外。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/scripts/audit.sh"
+    },
+    {
+      "claim_id": "C-06",
+      "claim_text": "v2.0.0：hooks 强制护栏（9 硬拦 + 12 确认 + 白名单 + 失效场景）",
+      "material_id": "M-06",
+      "source_excerpt": "装上插件后 AI 每次执行命令或写文件都先经过这道门。直接拦死不弹确认的 9 条全是不可逆操作：rm -rf /、rm -rf ~、删家目录；删 /usr /etc /var 系统目录；rm -rf .（删整个项目）；强推 main/master；DROP DATABASE；curl 某网址 | bash；chmod -R 777；mkfs / dd of=/dev/（格式化硬盘）；把私钥内容写进文件。弹一次确认并告知违反第几条红线：装依赖、git reset --hard、改表结构、没有 WHERE 的 DELETE、git add .env、部署上线、删除任何非构建产物目录。设计克制点：r",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/hooks.json"
+    },
+    {
+      "chart_group": "协作铁律",
+      "claim_id": "C-07",
+      "claim_text": "v2.1.0：铁律从四条加到五条（素材 2：AI 改了自己的测试题）",
+      "material_id": "M-07",
+      "metric_name": "铁律条数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 5
+        }
+      ],
+      "series_label": "v2.1",
+      "source_excerpt": "铁律 3 补了一句：测试不过时，改实现去满足测试，不准改测试来迁就实现。起因：有一项检查是「能不能发现代码里静默吞掉的错误」，测试样例本来跨了三行，检查工具抓不到，测试红了。AI 把测试样例改成一行的，改完绿了。它如实汇报没有隐瞒，但这个动作等于把检查作废：以后不但抓不到真问题，还会打印 ✅ 骗你。让样例迁就实现比不检查更有害，不检查至少你知道自己没检查。新增铁律 5：指令自相矛盾、或与红线冲突时，停下来问用户，不要自己挑一条执行完再报已完成。另外技能描述加了英文触发句（原来纯中文英文提问几乎召不出来），和中文标点统一。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/checklist.md"
+    },
+    {
+      "chart_group": "测试覆盖",
+      "claim_id": "C-08",
+      "claim_text": "素材 1：32 条测试全绿，但那条规则从第一天起就是死的",
+      "material_id": "M-08",
+      "metric_name": "测试断言数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 32
+        }
+      ],
+      "series_label": "v1.0",
+      "source_excerpt": "写「禁止把私钥写进文件」这条硬拦规则时，代码里有个小错误，导致规则每次都执行失败、然后静默跳过。当时的测试套件 32 条断言全部通过，因为那 32 条里一条私钥测试都没有。「测试全绿」和「功能能用」是两件完全不同的事；测试只能证明「我测的那些是对的」，对没测的东西一个字都没说。后来加元规则：每一条拦截规则必须至少有一条测试专门打它。补完测试 32→62 条，缺口归零。杀伤力：如果不是有人手工读那段代码，这个洞会一直躺着，所有人都以为自己有防护。看起来没问题，和真的没问题，中间隔着一条命。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/guard-bash.sh"
+    },
+    {
+      "claim_id": "C-09",
+      "claim_text": "素材 4：三次「停下来问」（指令自相矛盾）",
+      "material_id": "M-09",
+      "source_excerpt": "整个过程 AI 有三次主动停住拒绝往下走，因为指令自相矛盾。一次是作者一边要求「拦截 rm -rf」，一边又在测试里断言「rm -rf node_modules 必须放行」，两条打架。一次是要求全仓库不许出现「四条铁律」这个词，但 CHANGELOG 里 1.1.0 的历史记录写着当时确实是四条，改它就等于伪造历史。这三次全是对的。第三次 CHANGELOG 的问题 AI 比作者想得更清楚：最后的处理是不改历史，改作者那条错的规则。一个只会执行的 AI 是危险的，要的是一个会说「你这两句话矛盾了」的 AI。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/ai-disputes.md"
+    },
+    {
+      "claim_id": "C-10",
+      "claim_text": "素材 5：这次开发本身就是一个 vibe coding 样本",
+      "material_id": "M-10",
+      "source_excerpt": "这一整天的四个版本，没有一行代码是手打的。分工：一个 AI（作者）负责审查、设计方案、写指令、事后逐行复核；另一个 AI 在本地电脑执行、跑测试、提 PR；中间的人负责在两个 AI 打架或停下来问的时候拍板。意外促成：作者的 GitHub 令牌是只读的，想直接改仓库被拒（403 Resource not accessible），逼出「一个 AI 出方案、另一个 AI 落地、第一个 AI 再验收」的三段式。作者作为复核方抓出 5 个真问题（2 个致命）；对方 AI 也抓出 8 处作者自己写错的指令。双向纠错才叫协作，单向服从那叫赌博。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.en.md"
+    },
+    {
+      "chart_group": "协作铁律",
+      "claim_id": "C-11",
+      "claim_text": "前后对比表：v1.0 vs v2.1",
+      "material_id": "M-11",
+      "metric_name": "铁律条数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 4
+        }
+      ],
+      "series_label": "v1.0",
+      "source_excerpt": "本质：一份规矩本 vs 规矩本 + 体检工具 + 强制护栏。红线怎么生效：靠 AI 自觉 vs 9 条硬拦 + 12 类弹确认，AI 绕不过。红线条数：8 vs 11（新增 AI/供应链/Agent）。协作铁律：4 vs 5。交付清单：内嵌在手册里 vs 独立 25 条标出 8 条最小必查。检查方式：人工一条条读 vs bash scripts/audit.sh 先扫一遍。上下文占用：33.7 KB 全量加载 vs 按需只读。现成模板：无 vs 真源文档 / .gitignore / 交付报告三件套。测试：无 vs 62 条断言每条拦截规则都有覆盖。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/legacy-audit.md"
+    },
+    {
+      "claim_id": "C-12",
+      "claim_text": "引用金句集（可直接引用）",
+      "material_id": "M-12",
+      "source_excerpt": "一份规矩本的全部效力，来自 AI 愿不愿意遵守。而最需要它遵守的时刻，恰恰是它最不听话的时候。护栏最容易死掉的方式，不是漏拦，是烦到你自己把它关了。「测试全绿」和「功能能用」是两件事。一个只报喜的检查工具，比没有检查工具更危险。拒绝信息里必须带着关闭方法。你没有权利把用户锁死在自己的工具里。护栏是第二道锁，不是第一道。第一道永远是你自己看清楚再点确认。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/scenarios.md"
+    },
+    {
+      "chart_group": "测试覆盖",
+      "claim_id": "C-13",
+      "claim_text": "备查数字与许可",
+      "material_id": "M-13",
+      "metric_name": "测试断言数",
+      "numbers": [
+        {
+          "unit": "条",
+          "value": 62
+        }
+      ],
+      "series_label": "v2.1",
+      "source_excerpt": "仓库 Amer-CN/vibe-coding-guide，当前 v2.1.0，一天内发布 4 个版本。5 条铁律 / 11 条红线 / 25 条清单（8 条 ⭐）。9 条硬拦 + 12 类确认。62 条测试断言 0 失败。6 个参考文件 + 3 个模板 + 1 个体检脚本 + 2 个 hook。实测环境：Windows + Claude Code 端到端跑通，hook 确实触发。许可：个人/教育/开源免费，商用需授权。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/LICENSE.md"
+    },
+    {
+      "claim_id": "C-14",
+      "claim_text": "诚信提醒：别吹过头的边界",
+      "material_id": "M-14",
+      "source_excerpt": "现在实测过了（Windows + Claude Code 端到端跑通），可以写实测通过，但要写清楚测试环境，别写成全平台亲测。别说「再也不会翻车」，准确说法是「9 类不可逆操作会被直接拦下，其余高危操作会弹确认」。必须写失效场景：系统里没有 bash 时护栏会静默失效。别说它管代码质量，它管的是安全和确认。复制 SKILL.md 的装法依然依赖 AI 能联网，推荐插件安装方式为主。",
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/install.sh"
+    }
+  ],
+  "config": {
+    "allow_unknown_license_for_publish": false,
+    "max_images_per_material": 8,
+    "max_total_images": 8,
+    "network_mode": "live",
+    "upload_mode": "wechat_image_host"
+  },
+  "materials": [
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-01",
+      "material_id": "M-01",
+      "selected_claim_ids": [
+        "C-01"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md",
+      "title": "文章主线：第一版文章里的「谎」，v2.0 变成了真话"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-02",
+      "material_id": "M-02",
+      "selected_claim_ids": [
+        "C-02"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md",
+      "title": "时间线：四个版本，一天之内"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/SKILL.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-03",
+      "material_id": "M-03",
+      "selected_claim_ids": [
+        "C-03"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/SKILL.md",
+      "title": "v1.1.0：省上下文，拆六个文件按需加载"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/redlines.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-04",
+      "material_id": "M-04",
+      "selected_claim_ids": [
+        "C-04"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/redlines.md",
+      "title": "v1.2.0：AI 时代新增的三条红线（9/10/11）"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/scripts/audit.sh",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-05",
+      "material_id": "M-05",
+      "selected_claim_ids": [
+        "C-05"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/scripts/audit.sh",
+      "title": "v2.0.0：体检脚本 bash scripts/audit.sh"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/hooks.json",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-06",
+      "material_id": "M-06",
+      "selected_claim_ids": [
+        "C-06"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/hooks.json",
+      "title": "v2.0.0：hooks 强制护栏（9 硬拦 + 12 确认 + 白名单 + 失效场景）"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/checklist.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-07",
+      "material_id": "M-07",
+      "selected_claim_ids": [
+        "C-07"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/checklist.md",
+      "title": "v2.1.0：铁律从四条加到五条（素材 2：AI 改了自己的测试题）"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/guard-bash.sh",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-08",
+      "material_id": "M-08",
+      "selected_claim_ids": [
+        "C-08"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/guard-bash.sh",
+      "title": "素材 1：32 条测试全绿，但那条规则从第一天起就是死的"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/ai-disputes.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-09",
+      "material_id": "M-09",
+      "selected_claim_ids": [
+        "C-09"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/ai-disputes.md",
+      "title": "素材 4：三次「停下来问」（指令自相矛盾）"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.en.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-10",
+      "material_id": "M-10",
+      "selected_claim_ids": [
+        "C-10"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.en.md",
+      "title": "素材 5：这次开发本身就是一个 vibe coding 样本"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/legacy-audit.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-11",
+      "material_id": "M-11",
+      "selected_claim_ids": [
+        "C-11"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/legacy-audit.md",
+      "title": "前后对比表：v1.0 vs v2.1"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/scenarios.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-12",
+      "material_id": "M-12",
+      "selected_claim_ids": [
+        "C-12"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/references/scenarios.md",
+      "title": "引用金句集（可直接引用）"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/LICENSE.md",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-13",
+      "material_id": "M-13",
+      "selected_claim_ids": [
+        "C-13"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/LICENSE.md",
+      "title": "备查数字与许可"
+    },
+    {
+      "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/install.sh",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "user-material-14",
+      "material_id": "M-14",
+      "selected_claim_ids": [
+        "C-14"
+      ],
+      "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/install.sh",
+      "title": "诚信提醒：别吹过头的边界"
+    }
+  ],
+  "provenance": {
+    "canonical_registry_sha256": "f8ae7a0e1f9ac07d62c1ee3cacefc8e92d5cb15c2ba6dadd8be3a353e668634a",
+    "copyright_approvals_bound": 0,
+    "deduplicated_items_sha256": "3119e5207d567e0cc8741660d805fa5d4e61688c052be10f3a9907d2757e0591",
+    "material_mapping_verified": true,
+    "verified_material_count": 14
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "schema_version": "1.0"
+}

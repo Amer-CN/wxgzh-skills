@@ -1,0 +1,27 @@
+{
+  "contract_sha256": "7a95c4f2798bf92225fe2e36eb584339c3d2ee67bb5e01be26f4b797c50a303d",
+  "expected_outputs": [
+    "final_article.md",
+    "fidelity_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": "610d151deaa7d9a2457def2977fc6636dc432ca2fdb68d67e05c93a61298881a",
+    "topic": "vibe-coding-guide v2.1 升级"
+  },
+  "instructions": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
+  "kind": "agent_handshake",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "skill": "zh-human-writing",
+  "skill_identity": {
+    "skill_name": "zh-human-writing",
+    "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+    "skill_version": "0.1.0"
+  },
+  "stage": "zh_human_writing",
+  "stage_request_sha256": "f46a0f955c1d45a3b0bd7f06677fdde3f0d526d3a17be0202d4a615bdd637cc0",
+  "upstream_hashes": {
+    "super_writer/article.md": "7ec3062cc989d2b26f511b91bc3711f72abd9684302244408510e714ec5f8290",
+    "super_writer/canonical_claim_registry.json": "ad00416fff91c403b16fc234717560f03bb9c0516fa2651a86faf76ca8962dcf",
+    "super_writer/full_mode_validator_report.json": "4ad5afb5131de3ff4fe073526bbd5cf2e517fb21f188590576a931e67f19be2d"
+  }
+}

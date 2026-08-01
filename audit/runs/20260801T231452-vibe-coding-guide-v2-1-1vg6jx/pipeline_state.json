@@ -1,0 +1,45 @@
+{
+  "completed_stages": [
+    "aihot",
+    "super_writer",
+    "zh_human_writing",
+    "media_enrichment",
+    "gzh_design",
+    "wechat_draft"
+  ],
+  "current_stage": null,
+  "draft_created": true,
+  "failed_stage": null,
+  "final_article_sha256": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1",
+  "formally_published": false,
+  "input_hashes": {},
+  "output_hashes": {
+    "aihot": {
+      "deduplicated_count": 18
+    },
+    "final_article_sha256": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1",
+    "gzh_design": {
+      "theme_identity": "PASS"
+    }
+  },
+  "profile": "fast_publish",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "side_effects": [
+    {
+      "real_upload": true,
+      "stage": "media_enrichment",
+      "uploaded_image_count": 6
+    },
+    {
+      "draft_created": true,
+      "formally_published": false,
+      "real_api": true,
+      "stage": "wechat_draft"
+    }
+  ],
+  "started_at": "2026-08-01T15:14:52Z",
+  "theme": "smartisan",
+  "topic": "vibe-coding-guide v2.1 升级",
+  "updated_at": "2026-08-01T16:14:11Z",
+  "uploaded_image_count": 6
+}

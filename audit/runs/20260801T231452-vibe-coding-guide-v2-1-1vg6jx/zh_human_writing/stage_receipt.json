@@ -1,0 +1,93 @@
+{
+  "elapsed_seconds": 0.0,
+  "ended_at": "2026-08-01T16:05:00Z",
+  "entrypoint_path": null,
+  "entrypoint_sha256": null,
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\full_mode_validator_report.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\article.md": "7ec3062cc989d2b26f511b91bc3711f72abd9684302244408510e714ec5f8290",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\canonical_claim_registry.json": "ad00416fff91c403b16fc234717560f03bb9c0516fa2651a86faf76ca8962dcf",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\full_mode_validator_report.json": "4ad5afb5131de3ff4fe073526bbd5cf2e517fb21f188590576a931e67f19be2d",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\stage_request.json": "f46a0f955c1d45a3b0bd7f06677fdde3f0d526d3a17be0202d4a615bdd637cc0"
+  },
+  "invoked_entrypoint": "agent_handshake:zh_human_writing",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.096,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+      "sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f84e862c223f5fea6685ff5236c3335b3c8d2c29730b286e98484bae03e7f5bb"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+        "--text",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.071,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+      "sha256": "c0ef34320947abc7821b9bc1974eb0cd6c4b96966b9c012be5361362880c9048",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f17c9b01bfc16e9bcad14d2644f90a3a2e99d3af63712f9787800c0f45128846"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.071,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+      "sha256": "849f68ed34b7e74f3b71db6adae9b2de150fb30b35d151bf093786991efe3772",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "6caf9347b919f321d04d70052e6a52d15241487939e785c8061d1c4c08557561"
+    }
+  ],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\fidelity_report.json"
+  ],
+  "output_hashes": {
+    "fidelity_report.json": "6907cfea2c20783478cb7ac06d32fc3b43dc9bcdf5e6ea58ed57c1159ddf6dd9",
+    "final_article.md": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1"
+  },
+  "side_effects": [],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+  "skill_name": "zh-human-writing",
+  "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+  "skill_version": "0.1.0",
+  "stage": "zh_human_writing",
+  "started_at": "2026-08-01T16:05:00Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+  "validator_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2"
+}

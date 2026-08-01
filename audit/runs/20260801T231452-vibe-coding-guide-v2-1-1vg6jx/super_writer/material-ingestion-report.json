@@ -1,0 +1,15 @@
+{
+  "total_materials": 18,
+  "total_events": 18,
+  "total_claims": 18,
+  "source_coverage": 1.0,
+  "event_coverage": 1.0,
+  "claim_coverage": 1.0,
+  "duplicates_removed": 0,
+  "conflicts_detected": 0,
+  "excluded_materials": [],
+  "uncovered_events": [],
+  "uncovered_claims": [],
+  "conflicts": [],
+  "duplicates": []
+}

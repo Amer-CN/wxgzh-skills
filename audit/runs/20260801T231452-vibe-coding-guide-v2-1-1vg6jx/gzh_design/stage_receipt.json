@@ -1,0 +1,58 @@
+{
+  "elapsed_seconds": 1.0,
+  "ended_at": "2026-08-01T16:05:10Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+  "entrypoint_sha256": "1fff39616201a503cea5d99225cdc44d49808e6a62e1f770794b8517d3cccd5a",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\article_image_bindings.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_manifest.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\stage_request.json": "28217fcb92dfa0c289e9cd07a39f149a20f2d6511e3b5230377ab9fc7fbeef67",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\article_image_bindings.json": "9be8eb3427e34d54b8a52c7a1eaebc5fae49ad01a208ee24f1f3132a4b041e64",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_manifest.json": "6a41d0d3ca7fb37b6e0db29aa21918cd7638d9baccdcfd58345cd6b7b3c20d81",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+  "network_mode": "live",
+  "official_validator": {
+    "command": [
+      "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "-X",
+      "utf8",
+      "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\validate_gzh_html.py",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final.html"
+    ],
+    "elapsed_seconds": 0.091,
+    "exit_code": 0,
+    "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\validate_gzh_html.py",
+    "sha256": "61b8e8ef1cc3adf62f9b3e207e7989b96e2e1b877c47d98e9a41a32b3433c6c2",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "85f69ec8eee2990b7476e8bc195e71e7d071e085d12c152b220dbcee66ca8422"
+  },
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final_runtime.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\component_usage_report.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\theme_identity_report.json"
+  ],
+  "output_hashes": {
+    "component_usage_report.json": "3556da6178273a5bb55f2499f4ca817a5d47fa9201dbafcc59124ea6e7476611",
+    "final.html": "2f749834e7f391e9673dd4710bfa6c95e006f2e5aa0f1ab357899a8c7afc9979",
+    "final_runtime.html": "8cf0eafe7a7a8f30215f0af7c5a9c76847f9da21ff12d62fd210caf356c4eb51",
+    "theme_identity_report.json": "a1f6f886a9cdccbcada146603124663eb754e405a75c3ebb16c3880856a888de"
+  },
+  "side_effects": [],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+  "skill_name": "gzh-design",
+  "skill_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+  "skill_version": "v2026.07.18-hammer.1",
+  "stage": "gzh_design",
+  "started_at": "2026-08-01T16:05:09Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\validate_gzh_html.py",
+  "validator_sha256": "61b8e8ef1cc3adf62f9b3e207e7989b96e2e1b877c47d98e9a41a32b3433c6c2"
+}

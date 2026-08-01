@@ -1,0 +1,90 @@
+{
+  "errors": [],
+  "outputs": {
+    "article.md": "7ec3062cc989d2b26f511b91bc3711f72abd9684302244408510e714ec5f8290",
+    "canonical_claim_registry.json": "ad00416fff91c403b16fc234717560f03bb9c0516fa2651a86faf76ca8962dcf",
+    "core-card.md": "68a36009327c284baf2321e9ec42fbb6427aab1606a86c30c28517e352811351",
+    "editor-report.md": "60afe68be955bf67b96b9507edd96bbccc1c8f5ec61e48d396f5dce0fcc5a47c",
+    "evidence-map.md": "b39fef231cfb31c523d26b66ef4213409ae16e868f66a87c1612e3b9601a8a04",
+    "full_mode_validator_report.json": "4ad5afb5131de3ff4fe073526bbd5cf2e517fb21f188590576a931e67f19be2d",
+    "generation-profile.yaml": "5825d9d9b631c788b920b5118e2aaa8107e36e29e55df005c00fbcc0c8eb80ef",
+    "material-ingestion-report.json": "db100678897f20d371eff8299a8550954ce67ff405a36c224f5e7fe83ca53dea",
+    "material-ledger.yaml": "c852016fc1bde1b9fb18898ad6d36cde7c43d462037867838e1de97be1c94daf",
+    "material-readiness.yaml": "663a5c69d2e67d466496532fd4475c250bef5b932435ab56381c6c2c49232814",
+    "outline.md": "a3f93d6e1364922b8f3b775065d2ab89302c8ea25f2b50f2d979b2990123160e",
+    "semantic-map.yaml": "eb3514a0dc37c78925223652c3527f3acb9de073f58f46aabaa3205faa3c4747",
+    "writing-brief.md": "c0cb8264ffcb01f2febc1a8a8b7bf217d82c9b134826c92bc9e23ea4f6b6c43d"
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage": "super_writer",
+  "status": "success",
+  "validator_report": {
+    "FULL_MODE_VALIDATOR_EXIT": 0,
+    "SUPER_WRITER": "PASS",
+    "chapters": null,
+    "contract": {
+      "CONTRACT": "PASS",
+      "checks": {
+        "current_root_matches_lock": {
+          "detail": "installed root sha != locked",
+          "ok": true
+        },
+        "current_version_matches_lock": {
+          "detail": "0.3.2-rc1 != 0.3.2-rc1",
+          "ok": true
+        },
+        "locked_commit_present": {
+          "detail": "super-writer full_commit_sha not locked",
+          "ok": true
+        },
+        "locked_version_present": {
+          "detail": "super-writer version not locked",
+          "ok": true
+        },
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "2 != 2",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing []",
+          "ok": true
+        },
+        "stage_matches": {
+          "detail": "super_writer != super_writer",
+          "ok": true
+        }
+      },
+      "contract_file": "02_super_writer.yaml",
+      "must_run_after": null,
+      "problems": [],
+      "required_outputs": [
+        "generation-profile.yaml",
+        "writing-brief.md",
+        "material-readiness.yaml",
+        "material-ingestion-report.json",
+        "material-ledger.yaml",
+        "evidence-map.md",
+        "canonical_claim_registry.json",
+        "core-card.md",
+        "outline.md",
+        "semantic-map.yaml",
+        "article.md",
+        "editor-report.md",
+        "full_mode_validator_report.json"
+      ],
+      "stage": "super_writer"
+    },
+    "fixed_medium_3000_forbidden": false,
+    "length_mode": "medium",
+    "official_report_bound": true,
+    "target_visible_chars": 3850
+  }
+}

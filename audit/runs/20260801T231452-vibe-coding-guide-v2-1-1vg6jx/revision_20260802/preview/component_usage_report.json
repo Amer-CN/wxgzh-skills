@@ -1,0 +1,20 @@
+{
+  "components": {
+    "chapter_title": 4,
+    "chapters": 4,
+    "cover_breaking": 1,
+    "fixed_signature": 1,
+    "footer_cta": 1,
+    "image_2a_standard": 5,
+    "image_media_text_card": 1,
+    "images": 6,
+    "oneliner_card": 1,
+    "paragraph": 45,
+    "toc_scroll": 1
+  },
+  "leaf_count": 118,
+  "theme": "hammer",
+  "theme_alias": "smartisan",
+  "validator_error_count": 0,
+  "validator_warning_count": 0
+}

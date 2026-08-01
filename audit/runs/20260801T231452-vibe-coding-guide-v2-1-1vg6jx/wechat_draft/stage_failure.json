@@ -1,0 +1,10 @@
+{
+  "argv": [],
+  "entry": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "exit_code": 2,
+  "recorded_at": "2026-08-01T16:05:10Z",
+  "request_elapsed_seconds": 0.0,
+  "stage": "wechat_draft",
+  "stderr_tail": "FAIL_CLOSED: A-003 frozen cover sha256 mismatch",
+  "stdout_tail": ""
+}

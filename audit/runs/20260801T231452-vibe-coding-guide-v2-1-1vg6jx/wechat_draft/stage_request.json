@@ -1,0 +1,14 @@
+{
+  "config": {
+    "authorization": "发文：<选题> is the explicit authorization",
+    "creates": "draft_only"
+  },
+  "inputs": {
+    "final_html": "../gzh_design/final.html",
+    "requires_all_prior_receipts_valid": true
+  },
+  "network_mode": "live",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "skill_name": "gzh-design",
+  "stage": "wechat_draft"
+}

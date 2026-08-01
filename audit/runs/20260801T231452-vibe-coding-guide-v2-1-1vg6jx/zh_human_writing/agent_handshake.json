@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent",
+  "handshake_token": "40780f0a715d04188d6f3052f29296a53e8c82ac534ef2ccbdae303890aa8825",
+  "produced_files": [
+    "fidelity_report.json",
+    "final_article.md"
+  ],
+  "produced_hashes": {
+    "fidelity_report.json": "6907cfea2c20783478cb7ac06d32fc3b43dc9bcdf5e6ea58ed57c1159ddf6dd9",
+    "final_article.md": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1"
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage": "zh_human_writing"
+}

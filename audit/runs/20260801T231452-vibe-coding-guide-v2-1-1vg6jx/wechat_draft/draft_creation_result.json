@@ -1,0 +1,16 @@
+{
+  "after_total": 3,
+  "before_total": 2,
+  "content_sha256": "2f749834e7f391e9673dd4710bfa6c95e006f2e5aa0f1ab357899a8c7afc9979",
+  "deleted_any": false,
+  "delta": 1,
+  "draft_only": true,
+  "formally_published": false,
+  "mass_send": false,
+  "media_id": "Y3aIagws[REDACTED]",
+  "raw_file_sha256": "2f749834e7f391e9673dd4710bfa6c95e006f2e5aa0f1ab357899a8c7afc9979",
+  "real_api_call": true,
+  "scheduled": false,
+  "simulated": false,
+  "title": "vibe-coding-guide v2.1 升级"
+}

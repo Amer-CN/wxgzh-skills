@@ -1,0 +1,16 @@
+{
+  "agent_id": "agent",
+  "handshake_token": "fec582a796e3a28b5f237a8e87fa4cdd89692f003c4aa75f6aeb605c7d5ebec3",
+  "produced_files": [
+    "deduplicated_items.json",
+    "fetch_log.json",
+    "raw_items.json"
+  ],
+  "produced_hashes": {
+    "deduplicated_items.json": "dfeeece01ae3ce1c3eacf4813175a1f735e56ad136c3392cbbf7de5d3af61009",
+    "fetch_log.json": "aa316d03837b398ac42ab562f13928fa9031e6e50db27300a3598a36bd08a5e3",
+    "raw_items.json": "ef327920c78660bc0caa820265d89891efab092121439f6abd12c8f14ff0f2c7"
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage": "aihot"
+}

@@ -1,0 +1,14 @@
+{
+  "config": {
+    "length": "auto_by_fact_density",
+    "mode": "material_heavy_full_mode"
+  },
+  "inputs": {
+    "deduplicated_items": "../aihot/deduplicated_items.json",
+    "topic": "vibe-coding-guide v2.1 升级"
+  },
+  "network_mode": "live",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "skill_name": "super-writer",
+  "stage": "super_writer"
+}

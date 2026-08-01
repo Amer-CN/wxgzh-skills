@@ -1,0 +1,49 @@
+{
+  "elapsed_seconds": 6.0,
+  "ended_at": "2026-08-01T16:14:11Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "entrypoint_sha256": "bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\wechat_draft\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final_runtime.html",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\article_image_bindings.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\theme_identity_report.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final.html": "2f749834e7f391e9673dd4710bfa6c95e006f2e5aa0f1ab357899a8c7afc9979",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\final_runtime.html": "8cf0eafe7a7a8f30215f0af7c5a9c76847f9da21ff12d62fd210caf356c4eb51",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\gzh_design\\theme_identity_report.json": "a1f6f886a9cdccbcada146603124663eb754e405a75c3ebb16c3880856a888de",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\article_image_bindings.json": "9be8eb3427e34d54b8a52c7a1eaebc5fae49ad01a208ee24f1f3132a4b041e64",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\wechat_draft\\stage_request.json": "bf5479903044a6f6361ec9b0e666892cb386bdf0bec639a45eba58b0034b3f48"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\wechat_draft\\draft_before.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\wechat_draft\\draft_after.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\wechat_draft\\draft_creation_result.json"
+  ],
+  "output_hashes": {
+    "draft_after.json": "a472047008e681bc6a059d7b6f6f924b82c426c01c55819849e715c59d6cb0b9",
+    "draft_before.json": "32c904d53daf438b97135e3aa51d94482c80f1f728a5df8d235ab7a3ee06d96c",
+    "draft_creation_result.json": "53671a40d9f983d737765bb06b5ae49c7479078c8bbeaa4ba4de1ab8abd26ee0"
+  },
+  "side_effects": [
+    {
+      "detail": "single draft/add; cover add_material; no publish",
+      "type": "wechat_draft_add"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design",
+  "skill_name": "gzh-design",
+  "skill_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+  "skill_version": "v2026.07.18-hammer.1",
+  "stage": "wechat_draft",
+  "started_at": "2026-08-01T16:14:05Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+  "validator_sha256": "bccf853820d7005a71b062e13f5b2ee9be984868866724d83f4626c01d0df934"
+}

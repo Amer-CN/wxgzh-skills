@@ -1,0 +1,56 @@
+{
+  "draft_created": true,
+  "final_article_sha256": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1",
+  "formally_published": false,
+  "manifest_sha256": "adb03a1f5f7ecdee0c840e66c49649b4852d11d70e8055e73a7d0dba55b0bc05",
+  "profile": "fast_publish",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage_timing": {
+    "aihot": 0.0,
+    "gzh_design": 1.0,
+    "media_enrichment": 9.0,
+    "super_writer": 0.0,
+    "wechat_draft": 6.0,
+    "zh_human_writing": 0.0
+  },
+  "stages": [
+    {
+      "elapsed_seconds": 0.0,
+      "has_receipt": true,
+      "stage": "aihot",
+      "validator_exit_code": 0
+    },
+    {
+      "elapsed_seconds": 0.0,
+      "has_receipt": true,
+      "stage": "super_writer",
+      "validator_exit_code": 0
+    },
+    {
+      "elapsed_seconds": 0.0,
+      "has_receipt": true,
+      "stage": "zh_human_writing",
+      "validator_exit_code": 0
+    },
+    {
+      "elapsed_seconds": 9.0,
+      "has_receipt": true,
+      "stage": "media_enrichment",
+      "validator_exit_code": 0
+    },
+    {
+      "elapsed_seconds": 1.0,
+      "has_receipt": true,
+      "stage": "gzh_design",
+      "validator_exit_code": 0
+    },
+    {
+      "elapsed_seconds": 6.0,
+      "has_receipt": true,
+      "stage": "wechat_draft",
+      "validator_exit_code": 0
+    }
+  ],
+  "topic": "vibe-coding-guide v2.1 升级",
+  "uploaded_image_count": 6
+}

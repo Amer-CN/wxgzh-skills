@@ -1,0 +1,38 @@
+{
+  "contract_sha256": "7609ea7c9b9a073a2636fe9c316b4a592efc81222454a0702650d1b92fbc111a",
+  "expected_outputs": [
+    "generation-profile.yaml",
+    "writing-brief.md",
+    "material-readiness.yaml",
+    "material-ingestion-report.json",
+    "material-ledger.yaml",
+    "evidence-map.md",
+    "canonical_claim_registry.json",
+    "core-card.md",
+    "outline.md",
+    "semantic-map.yaml",
+    "article.md",
+    "editor-report.md",
+    "full_mode_validator_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": "610d151deaa7d9a2457def2977fc6636dc432ca2fdb68d67e05c93a61298881a",
+    "topic": "vibe-coding-guide v2.1 升级"
+  },
+  "instructions": "Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK.",
+  "kind": "agent_handshake",
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "skill": "super-writer",
+  "skill_identity": {
+    "skill_name": "super-writer",
+    "skill_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+    "skill_version": "0.3.2-rc1"
+  },
+  "stage": "super_writer",
+  "stage_request_sha256": "e9cd1e52a9c006a50443a3efd40a5623be2035a4ca7e33de52f2ae8ad9d358c4",
+  "upstream_hashes": {
+    "aihot/deduplicated_items.json": "dfeeece01ae3ce1c3eacf4813175a1f735e56ad136c3392cbbf7de5d3af61009",
+    "aihot/fetch_log.json": "aa316d03837b398ac42ab562f13928fa9031e6e50db27300a3598a36bd08a5e3",
+    "aihot/raw_items.json": "ef327920c78660bc0caa820265d89891efab092121439f6abd12c8f14ff0f2c7"
+  }
+}
