@@ -1,0 +1,924 @@
+{
+  "count": 131,
+  "total_bytes": 61652119,
+  "total_files": 15397,
+  "items": [
+    {
+      "path": "F:\\AIXM\\wxgzh\\.pytest_cache",
+      "kind": "dir",
+      "size": 175132,
+      "files": 5,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_expand.py",
+      "kind": "file",
+      "size": 1549,
+      "files": 1,
+      "sha256": "f5cdb5c8dd0cf353e592de867b7333584d0b542a51c8fe9fb1be6734bac640d3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_o3.py",
+      "kind": "file",
+      "size": 3085,
+      "files": 1,
+      "sha256": "9c416f82ba2bf1bd366ca66a7b08995112397b2c3628e80712590d9d7019cbba"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_o4.py",
+      "kind": "file",
+      "size": 2228,
+      "files": 1,
+      "sha256": "85e787bf386c6c0715ac513f171a3249b005044a7ea12f86aaccfa8ddc2e9ab3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_outline.py",
+      "kind": "file",
+      "size": 5166,
+      "files": 1,
+      "sha256": "bb302afa48669f8136b8aa6aa6bc5a7c594811fb05298b40a7c47b2f798c57ce"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_outline2.py",
+      "kind": "file",
+      "size": 8668,
+      "files": 1,
+      "sha256": "ffc5a100519c50c6f88cc86c5a3dd4ce12a36680808d20493b65524ace181240"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_sw.py",
+      "kind": "file",
+      "size": 14593,
+      "files": 1,
+      "sha256": "c86e4a3231a5309481202045e302c6888ca017ab406aa13c7e8b35dd58213aba"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_sw2.py",
+      "kind": "file",
+      "size": 9855,
+      "files": 1,
+      "sha256": "ff68cdf3a287e17309681cabfc30094b4b36dda690bc0200a0b440d09b44e9eb"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_fix_sw3.py",
+      "kind": "file",
+      "size": 8811,
+      "files": 1,
+      "sha256": "d57fe266c3c3e550b6ea2afd2a160d8245bc67837a7948bb01fe4d3826f9eeaf"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_gen_ack_sw.py",
+      "kind": "file",
+      "size": 450,
+      "files": 1,
+      "sha256": "69dd1cb282231b887366a0076691dace5849610629cf643caf339ca4287cb07e"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_gen_sw.py",
+      "kind": "file",
+      "size": 20248,
+      "files": 1,
+      "sha256": "9d59c7b15cd8a92f0a7f20904675e89200ea2b08e2420b16db0a69c3aedc592f"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_gen_sw2.py",
+      "kind": "file",
+      "size": 35000,
+      "files": 1,
+      "sha256": "494809e7e368a6b58ac46cd636e8e362074bdbc7ef3770617947a803fe5f79bb"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\_hf4_audit.txt",
+      "kind": "file",
+      "size": 2600,
+      "files": 1,
+      "sha256": "7b0831323a14983af62ee25f3f4a0775cf83ba622d7401ab9a5d4d66a7a2a054"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\audit_materials.py",
+      "kind": "file",
+      "size": 12467,
+      "files": 1,
+      "sha256": "fa72e63db1d40bc3552c51673df4aa4338e3e49e9d24823fd2c4b1de19daa8f2"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\bump_media_version.py",
+      "kind": "file",
+      "size": 2205,
+      "files": 1,
+      "sha256": "4a08b5123fb553d791283827eedc4c5fc45e4204078696cda677b1b785eba74e"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\duplicate-groups.json",
+      "kind": "file",
+      "size": 1171,
+      "files": 1,
+      "sha256": "086866fd2bf24ed2131d03c2acc911bff2e6fea2ff745bda7d26d3e627b2d722"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\fix_quotes.py",
+      "kind": "file",
+      "size": 425,
+      "files": 1,
+      "sha256": "dcb45a56a420e96295303b3c384f4764977c2d325a4173404bb91540530642b7"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\fix_quotes2.py",
+      "kind": "file",
+      "size": 941,
+      "files": 1,
+      "sha256": "e8480aeea555083f84ddb2e1ae9d88345560e5c6406ccb4607ad2cbd6bdb942f"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\gen_audit_files.py",
+      "kind": "file",
+      "size": 6142,
+      "files": 1,
+      "sha256": "8bf9ae939640375619f5433c7a2c993f05279c6f11963a2431b3d0d1a2e106ed"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\gen_audit_v3.py",
+      "kind": "file",
+      "size": 4988,
+      "files": 1,
+      "sha256": "0accbca2a67c5c3d5b498b140b2cd32b68854921b66152974b1cebde6e197514"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\gen_html.py",
+      "kind": "file",
+      "size": 16664,
+      "files": 1,
+      "sha256": "30a8fe9c09903a43d0b0b11a97aba5bd08ab05541bfe126b2ef5c9166a00b539"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\gen_media_fixtures.py",
+      "kind": "file",
+      "size": 2133,
+      "files": 1,
+      "sha256": "6961763d67ad7b3c84a48a7fa9e9cf388b8479119023d989b84f7f356d5c6bc4"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\gen_traceability.py",
+      "kind": "file",
+      "size": 5270,
+      "files": 1,
+      "sha256": "20cef3de29d224851db11460da8a0b113fde11df7e9d4eac203c75423bcfeb40"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\get_hashes.py",
+      "kind": "file",
+      "size": 1040,
+      "files": 1,
+      "sha256": "61ce6bbd9d5b41c12bfedaa7eb2154fa938be7410dfb35d95fb8d9f375b856c4"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-integration-fix",
+      "kind": "dir",
+      "size": 7564,
+      "files": 1,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-integration-fix-final",
+      "kind": "dir",
+      "size": 7564,
+      "files": 1,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-final-explicit-basetemp",
+      "kind": "dir",
+      "size": 907443,
+      "files": 371,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-final-results.json",
+      "kind": "file",
+      "size": 272501,
+      "files": 1,
+      "sha256": "33a281d0f3b3c1005b0259d83a7abb2695af39f27f2f153816a76c9c2b855a05"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-pytest-results.zip",
+      "kind": "file",
+      "size": 25290,
+      "files": 1,
+      "sha256": "d6056b67bae082740336ca533165991ea6df1ae91aa8feced6d43b2b25cd2596"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-safety-final-basetemp",
+      "kind": "dir",
+      "size": 598506,
+      "files": 343,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-stable-final-basetemp",
+      "kind": "dir",
+      "size": 512024,
+      "files": 304,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-stable-final2-basetemp",
+      "kind": "dir",
+      "size": 571205,
+      "files": 306,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-stable-final3-basetemp",
+      "kind": "dir",
+      "size": 571205,
+      "files": 306,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-media-test-results.json",
+      "kind": "file",
+      "size": 272501,
+      "files": 1,
+      "sha256": "b71528ceef5bdb67ef76cf2c4e0d403609899d3c7684df482a9e75606281de30"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pipeline-final-full-basetemp",
+      "kind": "dir",
+      "size": 2607848,
+      "files": 1490,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pipeline-final-pytest",
+      "kind": "dir",
+      "size": 1182857,
+      "files": 610,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pipeline-full2-basetemp",
+      "kind": "dir",
+      "size": 2594277,
+      "files": 1474,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pipeline-install-final-basetemp",
+      "kind": "dir",
+      "size": 29325,
+      "files": 166,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pipeline-install-gates-basetemp",
+      "kind": "dir",
+      "size": 33491,
+      "files": 182,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pytest-media",
+      "kind": "dir",
+      "size": 800530,
+      "files": 339,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pytest-media-final",
+      "kind": "dir",
+      "size": 800698,
+      "files": 339,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pytest-pipeline",
+      "kind": "dir",
+      "size": 27355,
+      "files": 150,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix5-pytest-pipeline-2",
+      "kind": "dir",
+      "size": 27355,
+      "files": 150,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-ci-fix-basetemp",
+      "kind": "dir",
+      "size": 493599,
+      "files": 297,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-ci-fix2-basetemp",
+      "kind": "dir",
+      "size": 610273,
+      "files": 353,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-cross-repo-integration.json",
+      "kind": "file",
+      "size": 9091,
+      "files": 1,
+      "sha256": "737bc85324e4d97a3e7ff0cc2cd32b08764093b3ded98580991f9c7de8bc12bf"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-debug-run",
+      "kind": "dir",
+      "size": 37681,
+      "files": 33,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-debug-run2",
+      "kind": "dir",
+      "size": 66494,
+      "files": 39,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-debug-run3",
+      "kind": "dir",
+      "size": 94435,
+      "files": 48,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-doctor-project",
+      "kind": "dir",
+      "size": 0,
+      "files": 0,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-final-doctor-project",
+      "kind": "dir",
+      "size": 0,
+      "files": 0,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-final-light-basetemp",
+      "kind": "dir",
+      "size": 18359,
+      "files": 82,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-final-rollback-original.py",
+      "kind": "file",
+      "size": 27617,
+      "files": 1,
+      "sha256": "824de0a4677f60cacfa74c096bdab4d180857539b7f556473446ac55f6efb0e3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run",
+      "kind": "dir",
+      "size": 80005,
+      "files": 76,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run10",
+      "kind": "dir",
+      "size": 288582,
+      "files": 80,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run2",
+      "kind": "dir",
+      "size": 39002,
+      "files": 38,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run3",
+      "kind": "dir",
+      "size": 78004,
+      "files": 76,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run4",
+      "kind": "dir",
+      "size": 78003,
+      "files": 76,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run6",
+      "kind": "dir",
+      "size": 78005,
+      "files": 76,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run7",
+      "kind": "dir",
+      "size": 39003,
+      "files": 38,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run8",
+      "kind": "dir",
+      "size": 38954,
+      "files": 38,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-integration-run9",
+      "kind": "dir",
+      "size": 88357,
+      "files": 54,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-approval-basetemp",
+      "kind": "dir",
+      "size": 685393,
+      "files": 370,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-approval-basetemp2",
+      "kind": "dir",
+      "size": 685432,
+      "files": 370,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-final-full-basetemp",
+      "kind": "dir",
+      "size": 1083318,
+      "files": 471,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-final-full-results.json",
+      "kind": "file",
+      "size": 267031,
+      "files": 1,
+      "sha256": "f129176aa67cd263290fb1f0d0bba25f1e0a3399216cee96f36f75de6e4069df"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-full-basetemp",
+      "kind": "dir",
+      "size": 1083054,
+      "files": 471,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-full-results.json",
+      "kind": "file",
+      "size": 266723,
+      "files": 1,
+      "sha256": "0222fe30482bc8897c21381cb378c9fcb6ea91a925f9e37795300852202b8f55"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-probe3-basetemp",
+      "kind": "dir",
+      "size": 685315,
+      "files": 370,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-version-full-basetemp",
+      "kind": "dir",
+      "size": 1083408,
+      "files": 471,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-media-version-full-results.json",
+      "kind": "file",
+      "size": 269726,
+      "files": 1,
+      "sha256": "d2f20a15729169518896c71261ef5299fbe56799cb5391230c9408b1b8d9d788"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-failed3-basetemp",
+      "kind": "dir",
+      "size": 122047,
+      "files": 63,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-full-basetemp",
+      "kind": "dir",
+      "size": 3060180,
+      "files": 1578,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-full-results.json",
+      "kind": "file",
+      "size": 91184,
+      "files": 1,
+      "sha256": "536830ffb0528dec2517f87a5903909bfc14342d2bb537f882c34d2cfd30d043"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-full2-basetemp",
+      "kind": "dir",
+      "size": 3114110,
+      "files": 1595,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-full2-results.json",
+      "kind": "file",
+      "size": 80408,
+      "files": 1,
+      "sha256": "3c1a1478ad3ac9c06b6f6338e5d211ce66ba5ae2ad8800fb7c24f2fd5e2b392e"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-probe-basetemp",
+      "kind": "dir",
+      "size": 176422,
+      "files": 191,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-probe2-basetemp",
+      "kind": "dir",
+      "size": 189542,
+      "files": 203,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-probe3-basetemp",
+      "kind": "dir",
+      "size": 308392,
+      "files": 227,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-probe4-basetemp",
+      "kind": "dir",
+      "size": 422886,
+      "files": 263,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-probe5-basetemp",
+      "kind": "dir",
+      "size": 496656,
+      "files": 297,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-pipeline-targeted-basetemp",
+      "kind": "dir",
+      "size": 479073,
+      "files": 254,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\hotfix6-rollback-original-run_media_enrichment.py",
+      "kind": "file",
+      "size": 27617,
+      "files": 1,
+      "sha256": "824de0a4677f60cacfa74c096bdab4d180857539b7f556473446ac55f6efb0e3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_dl3",
+      "kind": "dir",
+      "size": 2347,
+      "files": 1,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_dl4",
+      "kind": "dir",
+      "size": 27350,
+      "files": 1,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_h3.json",
+      "kind": "file",
+      "size": 4135,
+      "files": 1,
+      "sha256": "7a6ede70370a92a925639fb09e42d3ffd4c130b3d7cd8ca298b2f349e71c14f6"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_h4.json",
+      "kind": "file",
+      "size": 7146,
+      "files": 1,
+      "sha256": "b313f415b36bfb6467a66c0638a9c6d9fb8a8952f5d24e1aead52b31eea242fc"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_local.json",
+      "kind": "file",
+      "size": 1579,
+      "files": 1,
+      "sha256": "035b98c222f0866b5f7a53ea2db97d2f0d4e8fc1fb2694c717a9e1c1303f7c97"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\integ_local_result.json",
+      "kind": "file",
+      "size": 1579,
+      "files": 1,
+      "sha256": "035b98c222f0866b5f7a53ea2db97d2f0d4e8fc1fb2694c717a9e1c1303f7c97"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw-full.json",
+      "kind": "file",
+      "size": 191733,
+      "files": 1,
+      "sha256": "718773932663135c1b314cd20ab44f7c9650df1d0e099911451770d02a2d9ae4"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw-full.md",
+      "kind": "file",
+      "size": 80132,
+      "files": 1,
+      "sha256": "215313ee7559952e924a953349fc38dd5a3fb850ae26b6c0e9cb23e8f175f1c4"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw-v2.json",
+      "kind": "file",
+      "size": 117712,
+      "files": 1,
+      "sha256": "7488b5a2fb3ffcbfbe1fdd41422ace04376e59a50d13da2694c491935553fc40"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw-v2.md",
+      "kind": "file",
+      "size": 50065,
+      "files": 1,
+      "sha256": "faeb130a9bc8ffead08198abe8523cb47084f2982b07df0010d9b1a131a3e822"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw-v3.json",
+      "kind": "file",
+      "size": 191984,
+      "files": 1,
+      "sha256": "d35c1d0d561ae4afbc0feb090265119575959ce6e051745650eab2362f085996"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw.json",
+      "kind": "file",
+      "size": 169643,
+      "files": 1,
+      "sha256": "a16ce2074d4e7c7cf1024bf7e09697c87816b0af96a1569f70f252b50cfc2993"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\k3-raw.md",
+      "kind": "file",
+      "size": 70576,
+      "files": 1,
+      "sha256": "be44fb56bef48a178158227349dc55bbdc44558dc6afb454aca4cd9d4b80df67"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\lastrun.txt",
+      "kind": "file",
+      "size": 13,
+      "files": 1,
+      "sha256": "8a1a655554cd591e1890811b93bd74e8e80bf4d6d204e3d8f72d4250c01464c9"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\liveproof_check.py",
+      "kind": "file",
+      "size": 2739,
+      "files": 1,
+      "sha256": "1eab913c160b7af426a4561f80d6963cb73c91de311c028bcdcba8b66a37f1d8"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\material-audit-report.md",
+      "kind": "file",
+      "size": 1908,
+      "files": 1,
+      "sha256": "6fc90f472f75916de8f7e539203aa11b1710e13da44c50812bef1d674b7e5ad3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\material-audit.json",
+      "kind": "file",
+      "size": 761,
+      "files": 1,
+      "sha256": "09edd98be3818a3fffe2e6b63337a49f85f8ee8fdbcd73befd7b8649111862fd"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\material-usage-map.csv",
+      "kind": "file",
+      "size": 26644,
+      "files": 1,
+      "sha256": "afe7fc8fd679a669c6eaa12ae7dc27add0543e2d47c1d5d756636f211c236f65"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\media-enrichment-v0.1.0-dev5.zip",
+      "kind": "file",
+      "size": 5423665,
+      "files": 1,
+      "sha256": "52887fc2f22afdf0cee09905767b3fcbc442d44007db4d97f75a7b7061d27afb"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\media-enrichment-v0.1.0-dev6-hotfix1.zip",
+      "kind": "file",
+      "size": 5439489,
+      "files": 1,
+      "sha256": "c17e41f43164ccd4f96c72ca394a0023cd670d6c12a99bdf97c19a5d3f8862da"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\media-enrichment-v0.1.0-dev6.zip",
+      "kind": "file",
+      "size": 5428272,
+      "files": 1,
+      "sha256": "84ce6241053ec3a7e366e15d74af815d02385277b90d8e5205aa46a660307a8e"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\media-enrichment-v0.1.0-dev7-hotfix1.zip",
+      "kind": "file",
+      "size": 5440005,
+      "files": 1,
+      "sha256": "2e83800ca57928a4113dea82294856559af3c856c5530050b5a713e80917780f"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\media-enrichment-v0.1.0-dev7.zip",
+      "kind": "file",
+      "size": 5435500,
+      "files": 1,
+      "sha256": "f29c152e8d849c1f36179805551cf3ccb3afe21eb2ece5e50065f46e4478344a"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_canon.txt",
+      "kind": "file",
+      "size": 464,
+      "files": 1,
+      "sha256": "3a78abf58674e2f60e6239172c8ae0af36eb17274343a7afea5781db84352668"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_full.txt",
+      "kind": "file",
+      "size": 462,
+      "files": 1,
+      "sha256": "088835c1e29a6e8aaae964b9806ba2841906d5a5660588b5600e7f4df3e0b070"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_host.txt",
+      "kind": "file",
+      "size": 464,
+      "files": 1,
+      "sha256": "86242cb3de2bf1945ad7b2fdaf9e08c0c4c295d088b98f1c96d3fdcea3429748"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_negative.txt",
+      "kind": "file",
+      "size": 708,
+      "files": 1,
+      "sha256": "07b70ee461805b3b17ee884059cb1f296f4120d2bd1d54e94a7fbfa1520c6944"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_out.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "e08f6410a752f88f7f0c8a17feb2a36a54adc3fdf17e1a816cb5af6b0f5c3df8"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\pytest_out2.txt",
+      "kind": "file",
+      "size": 381,
+      "files": 1,
+      "sha256": "fadf389fe7d6661a2c9b76b340385506e09b245144f77116f32fc97d9218ef7b"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\stage20r-media-results.txt",
+      "kind": "file",
+      "size": 438,
+      "files": 1,
+      "sha256": "fe0282f7eee8ae25552ed28aa6d802983a9ffb453fd3405e537ebc09c6f87a0d"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\stage20r-pipeline-results.txt",
+      "kind": "file",
+      "size": 49063,
+      "files": 1,
+      "sha256": "3b5b62dfc4190385a09abb91ab81e262e548dd9bb39708c402030a7a872a40ff"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_canon.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "55cf85556f9212aec3cf3688ddb048b901ad2536966113215358784c657a7532"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_fl.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "6ebed2952a4b894cf41fe3f033912ab2809f8670a405e433039e960465e4f5b8"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_full3.txt",
+      "kind": "file",
+      "size": 462,
+      "files": 1,
+      "sha256": "4c9fd945a43cc62b4020792da4555f70cd5d46f3b786aa82752e3beb42188012"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_full4.txt",
+      "kind": "file",
+      "size": 463,
+      "files": 1,
+      "sha256": "d648ecddb02122cf79d69548cf968c3e11455166e77e96cd8ab0af60f915f2c3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_h3.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "99afb92fd1dc34b5f443be3336cef93d8411e74063dde213264485b100e2a9c8"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_h4.txt",
+      "kind": "file",
+      "size": 4527,
+      "files": 1,
+      "sha256": "f87e0da87a03619077806ba3a7136813c7af87f6531adce8a4bca2df84ddae16"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_h4b.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "e4eb7d012bed80914e717542638eef59056bdfed334766873e845262c0da25c7"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_media_e2e.txt",
+      "kind": "file",
+      "size": 1375,
+      "files": 1,
+      "sha256": "9dff357ad5478bfe24d2b2d08ddb1eccb8677bd1a48298f7d4c6d5ac335a28f5"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_media_full.txt",
+      "kind": "file",
+      "size": 3685,
+      "files": 1,
+      "sha256": "1649b05da0f510b8a73d22b683242e911900734fadff8af78d52e0a359def093"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_media_full2.txt",
+      "kind": "file",
+      "size": 356,
+      "files": 1,
+      "sha256": "7c0dac7c64f52ef4f789c28b69267f84cd914cfa6f045b0487ec2bad424e03d4"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\t_theme.txt",
+      "kind": "file",
+      "size": 81,
+      "files": 1,
+      "sha256": "9bc07732774655b1306379117070a4e5d9449f4160ea5819a88f6a1521eea5c9"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\topic-clusters.json",
+      "kind": "file",
+      "size": 4499,
+      "files": 1,
+      "sha256": "816c9151a004515056da68dc52b5425db4326c01a706ccbe7914ccb8ec104cb3"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\verification-result.md",
+      "kind": "file",
+      "size": 493,
+      "files": 1,
+      "sha256": "fbfafdd23b975af4113fb4c150682122923476958d630c563bac66969837823b"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\verify_audit.py",
+      "kind": "file",
+      "size": 3926,
+      "files": 1,
+      "sha256": "5587da162a271ba74282d2c936374ba0e06ecf3b186f78b4a616979c371a831c"
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al",
+      "kind": "dir",
+      "size": 2966433,
+      "files": 98,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p",
+      "kind": "dir",
+      "size": 1464706,
+      "files": 84,
+      "sha256": null
+    },
+    {
+      "path": "F:\\AIXM\\wxgzh\\gzh-design-runtime-precheck",
+      "kind": "dir",
+      "size": 0,
+      "files": 1,
+      "sha256": null
+    }
+  ]
+}
