@@ -283,11 +283,6 @@ def main(argv=None) -> int:
           f"validator_errors={len(errors)}")
     return 0 if not errors else 1
 
-
-if __name__ == "__main__":
-    sys.exit(main())
-
-
 def _render_item(theme_key: str, item) -> str:
     """Render one body item (paragraph or fenced code block)."""
     if isinstance(item, str) or item.get("kind") != "code":
@@ -310,3 +305,7 @@ def _hammer_code_block(theme_key: str, text: str) -> str:
             f"font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;"
             f'line-height:1.7;color:{body};white-space:pre;overflow-x:auto;">'
             f'{H.s(text)}</pre></section>')
+
+if __name__ == "__main__":
+    sys.exit(main())
+
