@@ -16,7 +16,7 @@
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/531285650/gzh-design-skill.git ~/.reasonix/skills/gzh-design
+git clone https://github.com/Amer-CN/gzh-design-skill.git ~/.reasonix/skills/gzh-design
 
 cd ~/.reasonix/skills/gzh-design
 
@@ -26,7 +26,7 @@ python -m pip install -r requirements.txt
 ### Windows
 
 ```bash
-git clone https://github.com/531285650/gzh-design-skill.git f:/AIXM/wxgzh/.reasonix/skills/gzh-design
+git clone https://github.com/Amer-CN/gzh-design-skill.git f:/AIXM/wxgzh/.reasonix/skills/gzh-design
 
 cd f:/AIXM/wxgzh/.reasonix/skills/gzh-design
 
@@ -86,12 +86,12 @@ python scripts/publish_wechat_draft.py \
 ### 方式一：git clone
 
 ```bash
-git clone https://github.com/531285650/gzh-design-skill.git ~/.reasonix/skills/gzh-design
+git clone https://github.com/Amer-CN/gzh-design-skill.git ~/.reasonix/skills/gzh-design
 ```
 
 ### 方式二：从 Release 下载 ZIP
 
-从 [GitHub Release](https://github.com/531285650/gzh-design-skill/releases) 下载 `gzh-design-simplified-final-v2.zip`，解压到 skills 目录即可。
+从 [GitHub Release](https://github.com/Amer-CN/gzh-design-skill/releases) 下载 `gzh-design-simplified-final-v2.zip`，解压到 skills 目录即可。
 
 ## 许可证
 

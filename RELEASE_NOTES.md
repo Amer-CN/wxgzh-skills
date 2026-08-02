@@ -60,3 +60,12 @@
 ## 安装与恢复方式
 
 见 README.md。
+
+## v2026.07.18-hammer.1 追加变更（wxgzh-pipeline 集成侧，未改版本号）
+
+- **OBS-73 根治**:首个 `##` 之前、intro 第一行之后的段落不再被丢弃,作为正文段落渲染在第一个章节标题之前(顺序:封面 → 导语段落 → 章节标题 → 章节正文)。`intro` 字段语义不变,封面副标题与 oneliner 截断长度不变。
+- **fenced code block**:``` 围栏识别为代码块,渲染为可复制的 `<pre>`(内联样式:等宽字体、浅底、横向滚动、保留空白);不依赖 `<style>`/class;反引号不进入输出。
+
+## 与 wxgzh-pipeline 集成范围的如实说明
+
+本仓库 19 个高级组件(alert/quote/code-compare/media-text/gallery/long-image/resources/footnotes/dialogue/facts/decision/steps/compare/annotated-image/faq/timeline/checklist/case/cta)及其 `:::` 围栏语法面向通用排版入口;wxgzh-pipeline 的锤子(smartisan)渲染管线(`scripts/render_article.py` + `scripts/generate_hammer_upgrade_samples.py`)只使用以下组件子集:cover-breaking、toc-scroll、chapter-title、paragraph、oneliner-card、media-text、image-2a、fixed-signature、footer-cta(以及本次新增的单栏代码块)。高级组件不在该管线渲染路径内。
