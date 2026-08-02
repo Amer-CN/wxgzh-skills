@@ -83,6 +83,9 @@ def parse_article(md: str) -> dict:
     line is kept in intro_paras and rendered as body paragraphs before the first
     chapter title — no more silent dropping. `intro` itself is unchanged and
     still feeds the cover subtitle + oneliner.
+    问题 B: ``` fenced blocks are parsed as code items ({"kind": "code"}) and
+    are never merged into paragraph text. Paragraph items are
+    {"kind": "para", "text": ...}; code items preserve whitespace verbatim.
     """
     lines = md.replace("\r\n", "\n").split("\n")
     title = ""
@@ -90,8 +93,25 @@ def parse_article(md: str) -> dict:
     intro_paras: list[dict] = []
     chapters: list[dict] = []
     cur: dict | None = None
+    in_code = False
+    code_buf: list[str] = []
     for ln in lines:
         st = ln.strip()
+        if in_code:
+            if st.startswith("```"):
+                if cur is None:
+                    intro_paras.append({"kind": "code", "text": "\n".join(code_buf)})
+                else:
+                    cur["paras"].append({"kind": "code", "text": "\n".join(code_buf)})
+                code_buf = []
+                in_code = False
+            else:
+                code_buf.append(ln)
+            continue
+        if st.startswith("```"):
+            in_code = True
+            code_buf = []
+            continue
         if not title and st.startswith("# ") and not st.startswith("## "):
             title = st[2:].strip()
             continue
@@ -110,6 +130,11 @@ def parse_article(md: str) -> dict:
                 intro_paras.append({"kind": "para", "text": st})
             continue
         cur["paras"].append({"kind": "para", "text": st})
+    if in_code:  # unclosed fence: keep collected lines as a code item (lenient)
+        if cur is None:
+            intro_paras.append({"kind": "code", "text": "\n".join(code_buf)})
+        else:
+            cur["paras"].append({"kind": "code", "text": "\n".join(code_buf)})
     return {"title": title or "未命名", "intro": intro, "intro_paras": intro_paras,
             "chapters": chapters}
 def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, dict]:
@@ -139,7 +164,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     # OBS-73 (根治): intro paragraphs render BEFORE the first chapter title.
     # Order: cover -> intro paras -> chapter 1 title -> chapter body.
     for item in parsed.get("intro_paras") or []:
-        parts.append(H.hammer_para(theme_key, item["text"]))
+        parts.append(_render_item(theme_key, item))
         usage["paragraph"] += 1
 
     # distribute images across chapters: first image as media+text, rest as 2a.
@@ -151,7 +176,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
                                       en_label_for(ch["title"], i)))
         usage["chapter_title"] += 1
         for item in ch["paras"]:
-            parts.append(H.hammer_para(theme_key, item["text"]))
+            parts.append(_render_item(theme_key, item))
             usage["paragraph"] += 1
         for _ in range(per_chapter[i - 1]):
             if not img_queue:
@@ -261,3 +286,27 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def _render_item(theme_key: str, item) -> str:
+    """Render one body item (paragraph or fenced code block)."""
+    if isinstance(item, str) or item.get("kind") != "code":
+        text = item if isinstance(item, str) else item["text"]
+        return H.hammer_para(theme_key, text)
+    return _hammer_code_block(theme_key, item["text"])
+
+
+def _hammer_code_block(theme_key: str, text: str) -> str:
+    """Minimal single-column fenced code block (问题 B).
+
+    <pre> + inline styles only (WeChat requires inline styles; no <style>/class):
+    monospace font, light background, horizontal scroll, preserved whitespace.
+    Content stays real selectable text — never an image or look-alike element.
+    """
+    body = H.PALETTES[theme_key]["body_color"]
+    return (f'<section style="margin:0 20px 16px;">'
+            f'<pre style="margin:0;padding:14px 16px;background:#F5F3F0;'
+            f'border:1px solid #E8E2DA;border-radius:8px;'
+            f"font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;"
+            f'line-height:1.7;color:{body};white-space:pre;overflow-x:auto;">'
+            f'{H.s(text)}</pre></section>')

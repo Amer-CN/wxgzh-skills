@@ -71,3 +71,68 @@ class TestOBS73IntroParas:
         _, code, html = _render_md("# T\n\n短导语。\n\n## 一\n\n正文。\n")
         assert code == 0
         assert "短导语。" in html
+
+
+FENCED = """# 标题
+
+导语。
+
+## 第一章
+
+正文段落。
+
+```
+rm -rf /tmp/x
+git push --force origin main
+    indented line
+```
+
+结束段落。
+"""
+
+FENCED_INTRO = """# 标题
+
+导语。
+
+```
+deny: rm -rf /
+deny: DROP TABLE
+```
+
+## 第一章
+
+正文。
+"""
+
+
+class TestFencedCodeBlock:
+    def test_no_backticks_and_verbatim_code(self):
+        _, code, html = _render_md(FENCED)
+        assert code == 0
+        assert "```" not in html
+        assert "<pre" in html
+        assert "rm -rf /tmp/x" in html
+        assert "git push --force origin main" in html
+        assert "    indented line" in html  # indentation preserved verbatim
+
+    def test_code_block_passes_validate_gzh_html(self):
+        import validate_gzh_html as vh
+        td, code, html = _render_md(FENCED)
+        errors, warnings, leaf_count = vh.validate(html, "final.html")
+        assert errors == [], errors
+
+    def test_code_block_in_intro_region(self):
+        _, code, html = _render_md(FENCED_INTRO)
+        assert code == 0
+        assert "```" not in html
+        assert "deny: rm -rf /" in html
+        assert "deny: DROP TABLE" in html
+
+    def test_code_block_is_selectable_text_not_image(self):
+        _, _, html = _render_md(FENCED)
+        assert "<pre" in html and "<img" not in html.split("<pre", 1)[1].split("</pre>", 1)[0]
+
+    def test_unclosed_fence_lenient(self):
+        _, code, html = _render_md("# T\n\n导语。\n\n## 一\n\n```\ncode line\n")
+        assert code == 0
+        assert "code line" in html
