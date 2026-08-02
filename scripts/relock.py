@@ -45,19 +45,29 @@ Safety:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wxgzh_pipeline import paths as P  # noqa: E402
+from wxgzh_pipeline import secrets as SEC  # noqa: E402
 from wxgzh_pipeline.skill_discovery import (  # noqa: E402
+    _file_sha,
     compute_root_sha,
     compute_runtime_manifest_sha,
+)
+from wxgzh_pipeline.zipping import (  # noqa: E402
+    PIPELINE_RELEASE_EXCLUDES,
+    PIPELINE_RELEASE_INCLUDES,
+    copy_tree,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +86,16 @@ EXIT_ROLLBACK_FAILED = 5   # rollback itself failed (state may be inconsistent)
 EXIT_REGRESSION_FAIL = 6  # lock updated OK but the upgrade regression did NOT pass
 
 _HASH_FIELDS = ("skill_root_sha256", "runtime_manifest_sha256", "runtime_file_count")
+# 档44: fields that change with a real skill upgrade and are derived from the
+# source tree / remote witness. _FILE_HASH_FIELDS are recomputed from the
+# lock-declared file paths on the source tree; _SOURCE_FIELDS come from the
+# remote witness (full_commit_sha/source_tree_sha) and the source checkout
+# (branch). skill_version is deliberately NOT auto-derived (it is a declared
+# release string; bump it in the skill docs and re-lock the 3 hash fields only).
+_FILE_HASH_FIELDS = ("entrypoint_sha256", "validator_sha256",
+                     "render_entry_sha256", "component_source_sha256")
+_SOURCE_FIELDS = ("full_commit_sha", "source_tree_sha", "branch")
+_ALL_FIELDS = _HASH_FIELDS + _FILE_HASH_FIELDS + _SOURCE_FIELDS
 
 
 def _utc_compact() -> str:
@@ -240,6 +260,210 @@ def compute_skill_hashes(skill_dir: Path) -> tuple[str | None, str | None, int]:
     return root_sha, man_sha, int(nfiles)
 
 
+def _git_run(args, timeout=180):
+    """Run git; returns subprocess.CompletedProcess. Raises on OSError/Timeout."""
+    return subprocess.run(["git", *args], capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", timeout=timeout)
+
+
+def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
+                          expected_tree_sha: str | None = None) -> tuple[bool, str, dict]:
+    """OBS-74 remote-witness constraint (档44 Part 2 — the core safety design).
+
+    来由 (OBS-74): 四轮本地热修(obs42/43、obs44-46、obs47、obs53)曾长期只存在
+    于本地安装树、从未回流,skills.lock.json 的 root_sha256 长期指向无远端副本
+    的本地树;lock 的 full_commit_sha 因此与真实代码不一致。为了杜绝再次出现
+    「lock 指向无远端副本的树」,写 lock 之前必须完成三项远端见证:
+
+      a. 该 commit 在远端仓库真实存在(不是只在本地)     — git ls-remote
+      b. 远端该 commit 的树与 --source-tree 指向的本地树逐字一致
+                                                          — git tree sha 相等
+      c. 待写入 lock 的 source_tree_sha 等于远端实算值     — 显式断言
+
+    没有任何跳过远端验证的开关/环境变量/参数:网络不可用一律拒绝执行,不允许
+    降级为本地校验。错误信息明确指出哪一项未通过,并提示先 push 到远端。
+    """
+    def _fail(check, detail):
+        return (False,
+                f"远端见证 {check} 未通过: {detail}。升级前请先将改动 push 到远端。",
+                {})
+
+    # (a) remote existence — full ref listing (ls-remote treats a bare sha as a
+    # ref-name pattern and returns nothing; the commit must be reachable from a
+    # ref, i.e. actually pushed, not just present locally)
+    try:
+        ls = _git_run(["ls-remote", repo_url])
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"远端见证 (a) 失败: 网络不可用或无法访问远端 {repo_url}: {exc}", {}
+    if ls.returncode != 0 or source_commit not in ls.stdout.split():
+        return _fail("(a)", f"commit {source_commit} 在远端不存在 (ls-remote rc={ls.returncode})")
+
+    # (b) remote tree == local tree
+    try:
+        with tempfile.TemporaryDirectory(prefix="relock-witness-") as td:
+            td = Path(td)
+            setup_steps = (["-C", str(td), "init", "-q"],
+                           ["-C", str(td), "remote", "add", "origin", repo_url])
+            for step in setup_steps:
+                if _git_run(step).returncode != 0:
+                    return _fail("(b)", f"temp repo setup failed: {step}")
+            # mirror the SOURCE repo's core.autocrlf so CRLF/LF conversion on
+            # `git add` matches the original commit's blobs (same for
+            # .gitattributes below); otherwise a CRLF working tree would hash
+            # differently and (b) would false-negative.
+            autocrlf = ""
+            src_cfg = _git_run(["-C", str(source_tree), "config", "core.autocrlf"])
+            if src_cfg.returncode == 0:
+                autocrlf = src_cfg.stdout.strip()
+            if autocrlf:
+                if _git_run(["-C", str(td), "config", "core.autocrlf", autocrlf]).returncode != 0:
+                    return _fail("(b)", f"temp repo autocrlf mirror failed: {autocrlf}")
+            fetch = _git_run(["-C", str(td), "fetch", "--depth", "1", "origin", source_commit])
+            if fetch.returncode != 0:
+                return _fail("(b)", f"远端无法取回该 commit 的树: {fetch.stderr.strip()[:200]}")
+            rev = _git_run(["-C", str(td), "rev-parse", "FETCH_HEAD^{tree}"])  # temp repo itself
+            if rev.returncode != 0:
+                return _fail("(b)", f"无法解析远端树 sha: {rev.stderr.strip()[:200]}")
+            remote_tree = rev.stdout.strip()
+            # mirror the source repo's line-ending rules (if any) so CRLF/LF
+            # normalization matches the ORIGINAL commit (OBS-74 witness must
+            # compare like-for-like, not raw-platform bytes)
+            src_attrs = Path(source_tree) / ".gitattributes"
+            if src_attrs.is_file():
+                shutil.copyfile(src_attrs, td / ".gitattributes")
+            # Local tree = remote file set, content-compared via git tree sha.
+            # add -A honors the source .gitignore (junk like __pycache__ stays
+            # out); tracked-but-ignored commit files (e.g. *.png under a repo-
+            # wide ignore rule) are force-added BY NAME from the remote file
+            # list only, so the local tree can never silently miss them nor
+            # pick up stray local files.
+            remote_files = _git_run(
+                ["-C", str(td), "ls-tree", "-r", "-z", "--name-only", remote_tree])
+            if remote_files.returncode != 0:
+                return _fail("(b)", "无法列出远端树文件")
+            remote_set = {s for s in remote_files.stdout.split("\0") if s}
+            add = _git_run(["--git-dir", str(td / ".git"),
+                            "--work-tree", str(source_tree), "add", "-A"])
+            if add.returncode != 0:
+                return _fail("(b)", f"无法计算本地树: {add.stderr.strip()[:200]}")
+            force_add = []
+            for rel in sorted(remote_set):
+                if not (Path(source_tree) / rel).is_file():
+                    return _fail("(b)", f"本地 --source-tree 缺少远端树中的文件: {rel}")
+                chk = _git_run(["-C", str(source_tree), "--git-dir", str(td / ".git"),
+                                "ls-files", "--error-unmatch", "--", rel])
+                if chk.returncode != 0:
+                    force_add.append(rel)
+            if force_add:
+                fa = _git_run(["-C", str(source_tree), "--git-dir", str(td / ".git"),
+                               "add", "-f", "--", *force_add])
+                if fa.returncode != 0:
+                    return _fail("(b)", f"force-add 失败: {fa.stderr.strip()[:200]}")
+            local_set = {s for s in _git_run(
+                ["-C", str(td), "ls-files", "-z"]).stdout.split("\0") if s}
+            extra_local = sorted(local_set - remote_set)
+            if extra_local:
+                return _fail("(b)", f"本地树含远端没有的文件: {extra_local[:5]}")
+            wt = _git_run(["--git-dir", str(td / ".git"), "write-tree"])
+            if wt.returncode != 0:
+                return _fail("(b)", f"本地 write-tree 失败: {wt.stderr.strip()[:200]}")
+            local_tree = wt.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"远端见证 (b) 失败: 网络/IO 错误: {exc}", {}
+    if len(remote_tree) != 40 or len(local_tree) != 40:
+        return _fail("(b)", f"树 sha 非法: remote={remote_tree!r} local={local_tree!r}")
+    if local_tree != remote_tree:
+        return _fail("(b)", f"远端树 {remote_tree} 与本地树 {local_tree} 不一致")
+
+    # (c) the value to be written equals the remote-computed tree sha
+    if expected_tree_sha is not None and expected_tree_sha != remote_tree:
+        return _fail("(c)", f"待写入 source_tree_sha {expected_tree_sha} != 远端实算值 {remote_tree}")
+
+    return True, ("远端见证 PASS (a/b/c)", ""), {"remote_tree_sha": remote_tree,
+                                                  "remote_repo": repo_url}
+
+
+def _source_branch_of(source_tree: Path) -> str | None:
+    """Derive the branch name from a git checkout; None for non-git sources."""
+    if not (Path(source_tree) / ".git").exists():
+        return None
+    try:
+        proc = _git_run(["-C", str(source_tree), "symbolic-ref", "--short", "HEAD"])
+        if proc.returncode == 0 and proc.stdout.strip():
+            return proc.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return None
+
+
+def _build_install_bundle(lock_path: Path, target_name: str, source_tree: Path,
+                          skills_home: Path, project_root: Path) -> Path:
+    """Build a minimal official bundle (installer-readable) reflecting the NEW
+    lock: wxgzh-pipeline release tree + locked-skills (target = --source-tree,
+    others = current installed trees) + source-proofs from the new lock values.
+
+    Returns the bundle dir (caller owns cleanup)."""
+    new_lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    expected = {n for n, m in new_lock["skills"].items()
+                if m.get("kind") != "agent_invoked_skill"}
+    if target_name not in expected:
+        raise ValueError(f"target {target_name} not in lock")
+    td = Path(tempfile.mkdtemp(prefix="relock-install-"))
+    bundle = td / "portable-bundle"
+    copy_tree(Path(__file__).resolve().parents[1], bundle / "wxgzh-pipeline",
+              include_paths=PIPELINE_RELEASE_INCLUDES,
+              exclude_paths=PIPELINE_RELEASE_EXCLUDES)
+    # the installer reads the lock from its own pipeline tree: must be the NEW lock
+    (bundle / "wxgzh-pipeline" / "skills.lock.json").write_bytes(lock_path.read_bytes())
+    (bundle / "installer").mkdir()
+    shutil.copyfile(Path(__file__).resolve().parents[1] / "scripts" / "install.py",
+                    bundle / "installer" / "install.py")
+    for name in sorted(expected):
+        src = Path(source_tree) if name == target_name else Path(skills_home) / name
+        copy_tree(src, bundle / "locked-skills" / name)
+    shutil.copyfile(Path(__file__).resolve().parents[1] / "config.example.env",
+                    bundle / "config.example.env")
+    proofs = {}
+    for name, meta in new_lock["skills"].items():
+        if meta.get("kind") == "agent_invoked_skill":
+            continue
+        proofs[name] = {"repository_url": meta.get("repository_url"),
+                        "full_commit_sha": meta.get("full_commit_sha"),
+                        "source_tree_sha": meta.get("source_tree_sha")}
+    (bundle / "source-proofs.json").write_text(json.dumps(
+        {"generated_by": "relock.py 档44 (source-tree install)", "skills": proofs},
+        ensure_ascii=False, indent=2), encoding="utf-8")
+    scan = SEC.scan_tree(bundle, SEC.load_env_values(project_root / ".env"))
+    if scan["secrets_detected"]:
+        shutil.rmtree(td, ignore_errors=True)
+        raise ValueError(f"secrets detected in install bundle: {scan['hits']}")
+    files = []
+    for fp in sorted(bundle.rglob("*")):
+        if fp.is_file() and fp.name != "MANIFEST.json":
+            b = fp.read_bytes()
+            files.append({"path": fp.relative_to(bundle).as_posix(),
+                          "size": len(b), "sha256": hashlib.sha256(b).hexdigest()})
+    (bundle / "MANIFEST.json").write_text(json.dumps(
+        {"artifact": "relock-档44 source-tree install", "file_count": len(files),
+         "files": files}, ensure_ascii=False, indent=2), encoding="utf-8")
+    return td
+
+
+def _run_official_installer(bundle_td: Path, target_skills_home: Path) -> tuple[bool, str]:
+    """Run the official transactional installer against the bundle."""
+    cmd = [sys.executable,
+           str(bundle_td / "portable-bundle" / "installer" / "install.py"),
+           "--target", str(target_skills_home)]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=900)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"installer invocation failed: {exc}"
+    out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    ok = proc.returncode == 0 and '"ok": true' in (proc.stdout or "")
+    return ok, out
+
+
 def select_targets(args, lock_skills: dict) -> list[str]:
     """Validate the target set. aihot (agent-invoked) is never re-lockable."""
     if args.all:
@@ -260,10 +484,60 @@ def select_targets(args, lock_skills: dict) -> list[str]:
 
 
 def build_rows(targets: list[str], lock_skills: dict, skills_home: Path,
-               allow_required_files_removal: bool = False) -> list[dict]:
+               allow_required_files_removal: bool = False,
+               source_tree: Path | None = None, source_commit: str | None = None,
+               remote_tree_sha: str | None = None) -> list[dict]:
     rows = []
     for name in targets:
         entry = lock_skills[name]
+        if source_tree is not None:
+            # 档44 source-tree mode: all fields derived from the upgrade tree
+            skill_dir = Path(source_tree)
+            if not skill_dir.is_dir():
+                raise ValueError(f"{name}: --source-tree dir missing: {skill_dir}")
+            root_sha, man_sha, nfiles = compute_skill_hashes(skill_dir)
+            if not root_sha or not man_sha:
+                raise ValueError(f"{name}: hash computation returned empty for {skill_dir}")
+            old = {f: entry.get(f) for f in _ALL_FIELDS}
+            new = {
+                "skill_root_sha256": root_sha,
+                "runtime_manifest_sha256": man_sha,
+                "runtime_file_count": nfiles,
+                "full_commit_sha": source_commit,
+                "source_tree_sha": remote_tree_sha,
+                "branch": _source_branch_of(skill_dir) or entry.get("branch"),
+            }
+            for f in _FILE_HASH_FIELDS:
+                rel = entry.get(f[:-7])  # e.g. entrypoint_sha256 -> entrypoint
+                if not isinstance(rel, str) or not rel:
+                    new[f] = entry.get(f)
+                    continue
+                fp = skill_dir / rel
+                if not fp.is_file():
+                    raise ValueError(
+                        f"{name}: {f} source file missing on --source-tree: {rel}")
+                new[f] = _file_sha(fp)
+            changed = any(old.get(k) != new[k] for k in _ALL_FIELDS)
+            row = {"skill": name, "skill_dir": str(skill_dir),
+                   "old": old, "new": new, "changed": changed,
+                   "remove_required_files": [], "uncovered_entries": []}
+            if allow_required_files_removal:
+                locked_req = entry.get("required_files")
+                if isinstance(locked_req, list):
+                    protected = {f for f in (entry.get("entrypoint"),
+                                             entry.get("validator"),
+                                             entry.get("render_entry"),
+                                             entry.get("component_source"))
+                                 if isinstance(f, str) and f}
+                    missing = [rf for rf in locked_req
+                               if not (skill_dir / rf).is_file()]
+                    row["remove_required_files"] = [rf for rf in missing
+                                                    if rf not in protected]
+                    row["uncovered_entries"] = sorted(
+                        f for f in protected
+                        if (skill_dir / f).is_file() and f not in locked_req)
+            rows.append(row)
+            continue
         skill_dir = Path(skills_home) / name
         if not skill_dir.is_dir():
             raise ValueError(f"{name}: installed skill dir missing: {skill_dir}")
@@ -310,11 +584,10 @@ def print_rows(rows: list[dict]) -> None:
     for row in rows:
         print(f"=== {row['skill']} ===")
         print(f"installed_dir: {row['skill_dir']}")
-        for key in _HASH_FIELDS:
-            label = key
+        for key in row["old"]:  # 档44: every managed field, none missed
             old, new = row["old"][key], row["new"][key]
             marker = "" if old == new else "  (CHANGED)"
-            print(f"{label}: {old} -> {new}{marker}")
+            print(f"{key}: {old} -> {new}{marker}")
         if row.get("remove_required_files"):
             print(f"required_files removals: {row['remove_required_files']}")
         if row.get("uncovered_entries"):
@@ -324,8 +597,21 @@ def print_rows(rows: list[dict]) -> None:
         print()
 
 
-def append_history(history_path: Path, rows: list[dict], reason: str) -> list[dict]:
-    """Append one record per changed skill. Returns the appended records."""
+_LEGACY_LEDGER_NAMES = {
+    "skill_root_sha256": "root_sha256",
+    "runtime_manifest_sha256": "manifest_sha256",
+    "runtime_file_count": "file_count",
+}
+
+
+def append_history(history_path: Path, rows: list[dict], reason: str,
+                   source_witness: dict | None = None) -> list[dict]:
+    """Append one record per changed skill. Returns the appended records.
+
+    档44: every CHANGED field is recorded old -> new (legacy short names for
+    the three hash fields keep receipts.py chain tracing untouched). Records
+    also carry source_commit_verified + remote_repo when a remote witness ran.
+    """
     history = load_history(history_path)
     now = _utc_iso()
     appended = []
@@ -333,17 +619,20 @@ def append_history(history_path: Path, rows: list[dict], reason: str) -> list[di
         rec = {
             "entry_id": f"relock-{row['skill']}-{_utc_compact()}-{uuid.uuid4().hex[:8]}",
             "skill": row["skill"],
-            "old_root_sha256": row["old"]["skill_root_sha256"],
-            "new_root_sha256": row["new"]["skill_root_sha256"],
-            "old_manifest_sha256": row["old"]["runtime_manifest_sha256"],
-            "new_manifest_sha256": row["new"]["runtime_manifest_sha256"],
-            "old_file_count": row["old"]["runtime_file_count"],
-            "new_file_count": row["new"]["runtime_file_count"],
             "reason": reason,
             "removed_required_files": list(row.get("remove_required_files") or []),
             "recorded_at": now,
             "doctor_result": "PASS",
         }
+        for key in row["old"]:
+            if row["old"][key] == row["new"][key]:
+                continue
+            stem = _LEGACY_LEDGER_NAMES.get(key, key)
+            rec[f"old_{stem}"] = row["old"][key]
+            rec[f"new_{stem}"] = row["new"][key]
+        if source_witness:
+            rec["source_commit_verified"] = True
+            rec["remote_repo"] = source_witness.get("remote_repo")
         history.append(rec)
         appended.append(rec)
     history_path.write_bytes(
@@ -373,6 +662,14 @@ def parse_args(argv):
     ap.add_argument("--lock-path", default=None)
     ap.add_argument("--history-path", default=None)
     ap.add_argument("--backup-dir", default=None)
+    # 档44: full-field upgrade mode (single --skill target). The remote-witness
+    # constraint (OBS-74) is mandatory when these are given — NO skip switch,
+    # NO env override, NO local-only fallback exists by design.
+    ap.add_argument("--source-tree", default=None,
+                    help="upgrade source tree (new skill version); requires --source-commit")
+    ap.add_argument("--source-commit", default=None,
+                    help="40-hex commit sha that EXISTS on the remote repo and whose "
+                         "tree is byte-identical to --source-tree (remote witness)")
     return ap.parse_args(argv)
 
 
@@ -391,6 +688,22 @@ def main(argv=None) -> int:
     history_path = Path(args.history_path) if args.history_path else DEFAULT_HISTORY
     backup_dir = Path(args.backup_dir) if args.backup_dir else DEFAULT_BACKUP_DIR
 
+    source_tree = Path(args.source_tree) if args.source_tree else None
+    source_commit = (args.source_commit or "").strip().lower() if args.source_commit else None
+    if (source_tree is None) != (source_commit is None):
+        _err("--source-tree 与 --source-commit 必须同时提供")
+        return EXIT_USAGE
+    if source_commit is not None and not (
+            len(source_commit) == 40 and all(c in "0123456789abcdef" for c in source_commit)):
+        _err("--source-commit must be a 40-hex sha")
+        return EXIT_USAGE
+    if source_tree is not None and not source_tree.is_dir():
+        _err(f"--source-tree is not a directory: {source_tree}")
+        return EXIT_USAGE
+    if source_tree is not None and args.all:
+        _err("--source-tree/--source-commit 要求单个 --skill 目标(不支持 --all)")
+        return EXIT_USAGE
+
     if not lock_path.is_file():
         _err(f"skills.lock.json not found: {lock_path}")
         return EXIT_USAGE
@@ -404,8 +717,23 @@ def main(argv=None) -> int:
         if not targets:
             _err("no lockable skills (all lock entries are agent-invoked)")
             return EXIT_USAGE
+        # 档44 OBS-74 remote witness — BEFORE any computation/write; failure = zero writes
+        source_witness = None
+        if source_tree is not None:
+            repo_url = (lock_skills.get(args.skill) or {}).get("repository_url")
+            if not repo_url:
+                _err(f"{args.skill}: lock entry has no repository_url — remote witness impossible")
+                return EXIT_USAGE
+            ok_w, msg_w, info_w = verify_remote_witness(repo_url, source_commit, source_tree)
+            print(msg_w)
+            if not ok_w:
+                _err(msg_w)
+                return EXIT_USAGE
+            source_witness = info_w
         rows = build_rows(targets, lock_skills, skills_home,
-                          args.allow_required_files_removal)
+                          args.allow_required_files_removal,
+                          source_tree=source_tree, source_commit=source_commit,
+                          remote_tree_sha=(source_witness or {}).get("remote_tree_sha"))
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         _err(str(exc))
         return EXIT_USAGE
@@ -466,7 +794,10 @@ def main(argv=None) -> int:
 
     try:
         for row in changed_rows:
-            for key in _HASH_FIELDS:
+            # 档44: write EVERY computed field (3 hash fields in the classic
+            # path; + full_commit_sha/source_tree_sha/branch/entry/validator/
+            # render-entry/component-source hashes in --source-tree mode).
+            for key in row["new"]:
                 lock["skills"][row["skill"]][key] = row["new"][key]
             if args.allow_required_files_removal and row["remove_required_files"]:
                 req = lock["skills"][row["skill"]].get("required_files")
@@ -478,7 +809,7 @@ def main(argv=None) -> int:
         # "\r\n" on Windows, which would corrupt the CRLF template into
         # "\r\r\n" and break byte fidelity (档28 Part 2 test caught this).
         lock_path.write_bytes(_serialize_lock(lock, lock_bytes).encode("utf-8"))
-        appended = append_history(history_path, changed_rows, reason)
+        appended = append_history(history_path, changed_rows, reason, source_witness)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         _err(f"write failed — attempting rollback: {exc}")
         return _rollback(lock_path, lock_bytes, history_path,
@@ -491,6 +822,36 @@ def main(argv=None) -> int:
     for rec in appended:
         print(f"ledger: {rec['entry_id']} ({rec['skill']})")
 
+    # 档44: 先 relock 后安装 (source-tree mode only). Between the lock write and
+    # the install nothing else may run: the installer is invoked immediately, so
+    # the intermediate "lock 已更新但代码未装" state is never visible.
+    tree_backup = None
+    receipts_bytes = None
+    if source_tree is not None:
+        target_name = targets[0]
+        target_dir = Path(skills_home) / target_name
+        tree_backup = backup_dir / f"skills-tree.{target_name}.preinstall"
+        if tree_backup.exists():
+            shutil.rmtree(tree_backup)
+        shutil.copytree(target_dir, tree_backup)
+        rf = Path(skills_home) / ".install-receipts" / f"{target_name}.json"
+        receipts_bytes = rf.read_bytes() if rf.is_file() else None
+        bundle_td = _build_install_bundle(lock_path, target_name, source_tree,
+                                          Path(skills_home), project_root or resolved_root)
+        try:
+            ok_inst, inst_out = _run_official_installer(bundle_td, Path(skills_home))
+        finally:
+            shutil.rmtree(bundle_td, ignore_errors=True)
+        if not ok_inst:
+            _err("official installer FAILED after lock write — rolling back lock + ledger + tree")
+            if inst_out:
+                print(inst_out)
+            return _rollback(lock_path, lock_bytes, history_path,
+                             hist_existed, hist_bytes, EXIT_POST_DOCTOR_FAIL,
+                             tree_backup=tree_backup, receipts_bytes=receipts_bytes,
+                             skills_home=Path(skills_home))
+        print("installer: PASS (source-tree install)")
+
     ok, output = run_doctor(project_root, lock_path=lock_path,
                            skills_home=skills_home_override)
     if not ok:
@@ -498,7 +859,9 @@ def main(argv=None) -> int:
         if output:
             print(output)
         return _rollback(lock_path, lock_bytes, history_path,
-                         hist_existed, hist_bytes, EXIT_POST_DOCTOR_FAIL)
+                         hist_existed, hist_bytes, EXIT_POST_DOCTOR_FAIL,
+                         tree_backup=tree_backup, receipts_bytes=receipts_bytes,
+                         skills_home=Path(skills_home))
 
     print("doctor: PASS (post-relock)")
     if not args.skip_regression:
@@ -517,8 +880,14 @@ def main(argv=None) -> int:
 
 def _rollback(lock_path: Path, lock_bytes: bytes,
               history_path: Path, hist_existed: bool, hist_bytes: bytes | None,
-              fail_code: int) -> int:
-    """Restore skills.lock.json and the ledger to their exact pre-run bytes."""
+              fail_code: int,
+              tree_backup: Path | None = None,
+              receipts_bytes: bytes | None = None,
+              skills_home: Path | None = None) -> int:
+    """Restore skills.lock.json, the ledger and (档44) the installed tree to
+    their exact pre-run bytes. tree_backup is the pre-install copy of the
+    target skill dir under backup_dir; receipts_bytes is the pre-install
+    .install-receipts/<skill>.json content (None = file did not exist)."""
     problems = []
     try:
         lock_path.write_bytes(lock_bytes)
@@ -531,13 +900,36 @@ def _rollback(lock_path: Path, lock_bytes: bytes,
             history_path.unlink()  # file created by THIS run only
     except OSError as exc:
         problems.append(f"history restore failed: {exc}")
+    if tree_backup is not None and tree_backup.is_dir():
+        if skills_home is None:
+            problems.append("tree restore failed: skills_home not provided")
+        name = tree_backup.name[len("skills-tree."):-len(".preinstall")]
+        dest = Path(skills_home) / name
+        try:
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.move(str(tree_backup), str(dest))
+        except OSError as exc:
+            problems.append(f"installed tree restore failed: {exc}")
+        rf = dest.parent / ".install-receipts" / dest.name
+        try:
+            if receipts_bytes is not None:
+                rf.parent.mkdir(parents=True, exist_ok=True)
+                rf.write_bytes(receipts_bytes)
+            elif rf.is_file():
+                rf.unlink()
+        except OSError as exc:
+            problems.append(f"install receipt restore failed: {exc}")
     if problems:
         for problem in problems:
             _err(problem)
         _err("rollback INCOMPLETE — state may be inconsistent; do NOT re-run blindly")
         return EXIT_ROLLBACK_FAILED
-    print("rollback: skills.lock.json and ledger restored byte-identically")
+    print("rollback: skills.lock.json, ledger and installed tree restored byte-identically")
     return fail_code
+
+
+
 
 
 if __name__ == "__main__":
