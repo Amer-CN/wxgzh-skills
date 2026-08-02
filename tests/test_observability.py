@@ -147,3 +147,24 @@ def test_doctor_observability_skipped_without_repo_root(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = json.loads(proc.stdout)
     assert report["observability"]["OBS_68_PIPELINE_MATCH"]["status"] == "SKIPPED_NO_REPO"
+
+
+def test_doctor_exit_code_unchanged_with_match(tmp_path):
+    """档43 零步:MATCH 路径(MATCH + repo_root)同样必须保持退出码 0、doctor PASS。"""
+    project = tmp_path / "project"
+    project.mkdir()
+    skills = tmp_path / "skills"
+    repo = tmp_path / "repo"
+    _make_pipeline_tree(repo, {"wxgzh_pipeline/__init__.py": "x\n", "a.py": "x\n"})
+    _make_pipeline_tree(skills / "wxgzh-pipeline", {"wxgzh_pipeline/__init__.py": "x\n", "a.py": "x\n"})
+    lock_bytes = (REPO_ROOT / "skills.lock.json").read_bytes()  # baseline-equal lock
+    for root in (repo, skills / "wxgzh-pipeline"):
+        lock_p = root / "skills.lock.json"
+        lock_p.parent.mkdir(parents=True, exist_ok=True)
+        lock_p.write_bytes(lock_bytes)
+    proc = _run_doctor_offline(project, skills, repo)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = json.loads(proc.stdout)
+    assert report["doctor"] == "PASS"
+    assert report["observability"]["OBS_69_LOCK_MATCH"]["status"] == "MATCH"
+    assert report["observability"]["OBS_68_PIPELINE_MATCH"]["status"] == "MATCH"
