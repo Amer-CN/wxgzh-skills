@@ -4,3 +4,5 @@ __pycache__/
 .temp/
 *.egg-info/
 .env
+# OBS-79: relock preinstall 整树备份不得进入 git(仓库外 F:\AIXM\wxgzh-tree-backups-*)
+audit/upgrade-capability/lock-backups/skills-tree.*.preinstall/

@@ -397,6 +397,46 @@ def _source_branch_of(source_tree: Path) -> str | None:
     return None
 
 
+# 档45R2 OBS-78: entrypoint smoke. After post-doctor, BEFORE declaring success,
+# the locked skill's entrypoint must be run once via its PRODUCTION CLI path on
+# the installed tree with the skill's own sample input. Non-zero exit or a
+# python traceback in stderr => FAIL => full chain rollback (exit 4). No skip
+# switch / parameter / env var exists for the smoke step. Skills without a
+# configured smoke sample are SKIPPED EXPLICITLY with a printed notice.
+SMOKE_ENTRIES = {
+    "gzh-design": {
+        "entry": "scripts/render_article.py",
+        "args": ["--article", "{skill_dir}/assets/sample-article.md",
+                 "--output-dir", "{smoke_dir}", "--theme", "smartisan"],
+    },
+}
+_SMOKE_TRACEBACK_MARKERS = ("Traceback", "NameError", "AttributeError", "KeyError")
+
+
+def _run_entry_smoke(skills_home: Path, name: str,
+                     entry_cfg: dict) -> tuple[bool, str]:
+    """Production-CLI smoke of a locked entrypoint (installed tree)."""
+    skill_dir = Path(skills_home) / name
+    entry = skill_dir / entry_cfg["entry"]
+    if not entry.is_file():
+        return False, f"{name}: entrypoint missing for smoke: {entry}"
+    with tempfile.TemporaryDirectory(prefix="relock-smoke-") as td:
+        args = [str(a).format(skill_dir=skill_dir, smoke_dir=td)
+                for a in entry_cfg["args"]]
+        cmd = [sys.executable, "-X", "utf8", str(entry), *args]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", timeout=300)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return False, f"{name}: entrypoint smoke invocation failed: {exc}"
+        stderr = proc.stderr or ""
+        trace = any(m in stderr for m in _SMOKE_TRACEBACK_MARKERS)
+        if proc.returncode != 0 or trace:
+            return False, (f"{name}: entrypoint smoke FAILED rc={proc.returncode} "
+                           f"traceback={trace}\n{stderr[-1500:]}")
+    return True, f"{name}: entrypoint smoke PASS (CLI subprocess, production path)"
+
+
 def _build_install_bundle(lock_path: Path, target_name: str, source_tree: Path,
                           skills_home: Path, project_root: Path) -> Path:
     """Build a minimal official bundle (installer-readable) reflecting the NEW
@@ -679,6 +719,10 @@ def parse_args(argv):
     ap.add_argument("--lock-path", default=None)
     ap.add_argument("--history-path", default=None)
     ap.add_argument("--backup-dir", default=None)
+    # OBS-79 (档45R2): preinstall TREE backups must live OUTSIDE the git repo
+    # (same level as F:\AIXM\wxgzh-presnapshot-45\). Default =
+    # <project-root parent>/wxgzh-relock-tree-backups. Tests inject tmp dirs.
+    ap.add_argument("--tree-backup-dir", default=None)
     # 档44: full-field upgrade mode (single --skill target). The remote-witness
     # constraint (OBS-74) is mandatory when these are given — NO skip switch,
     # NO env override, NO local-only fallback exists by design.
@@ -847,7 +891,10 @@ def main(argv=None) -> int:
     if source_tree is not None:
         target_name = targets[0]
         target_dir = Path(skills_home) / target_name
-        tree_backup = backup_dir / f"skills-tree.{target_name}.preinstall"
+        tree_backup_dir = (Path(args.tree_backup_dir) if args.tree_backup_dir
+                           else resolved_root.parent / "wxgzh-relock-tree-backups")
+        tree_backup_dir.mkdir(parents=True, exist_ok=True)
+        tree_backup = tree_backup_dir / f"skills-tree.{target_name}.preinstall"
         if tree_backup.exists():
             shutil.rmtree(tree_backup)
         shutil.copytree(target_dir, tree_backup)
@@ -881,6 +928,29 @@ def main(argv=None) -> int:
                          skills_home=Path(skills_home))
 
     print("doctor: PASS (post-relock)")
+
+    # 档45R2 OBS-78: entrypoint smoke BEFORE success is declared. Failure =>
+    # identical rollback semantics as post-doctor (lock + ledger + installed
+    # tree + receipts restored byte-exactly), exit code 4. No skip switch.
+    if source_tree is not None:
+        smoke_cfg = SMOKE_ENTRIES.get(targets[0])
+        if smoke_cfg is None:
+            print(f"smoke: {targets[0]} 无入口样本,跳过冒烟 "
+                  f"(entrypoint smoke not configured for this skill)")
+        else:
+            # smoke runs THE LOCKED entrypoint (lock wins over the config default)
+            smoke_cfg = dict(smoke_cfg)
+            smoke_cfg["entry"] = ((lock_skills.get(targets[0]) or {}).get("entrypoint")
+                                  or smoke_cfg.get("entry"))
+            ok_smoke, smoke_out = _run_entry_smoke(Path(skills_home), targets[0], smoke_cfg)
+            print(smoke_out)
+            if not ok_smoke:
+                _err("entrypoint smoke FAILED after re-lock — rolling back")
+                return _rollback(lock_path, lock_bytes, history_path,
+                                 hist_existed, hist_bytes, EXIT_POST_DOCTOR_FAIL,
+                                 tree_backup=tree_backup, receipts_bytes=receipts_bytes,
+                                 skills_home=Path(skills_home))
+
     if not args.skip_regression:
         reg_ok, reg_output = run_regression()
         if not reg_ok:

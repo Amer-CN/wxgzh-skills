@@ -25,7 +25,8 @@ def chapters_of(md: str) -> list[str]:
             if ln.startswith("## ") and not ln.startswith("### ")]
 
 
-def build_html(title: str, titles: list[str], images: list[dict]) -> str:
+def build_html(title: str, titles: list[str], images: list[dict],
+               intro_paras: list[str] | None = None) -> str:
     p = []
     # cover-breaking (fingerprint + safe strikethrough)
     p.append(
@@ -47,6 +48,12 @@ def build_html(title: str, titles: list[str], images: list[dict]) -> str:
         f'<section style="display:inline-block;width:110px;"><p style="font-size:9px;font-weight:700;">'
         f'<span leaf="">PART ///</span></p><p style="font-size:13px;font-weight:800;">'
         f'<span leaf="">写在最后</span></p></section></section></section>')
+    # intro paragraphs BEFORE the first chapter (OBS-73, mirrors the real
+    # renderer: first line also feeds cover subtitle/oneliner truncation)
+    for para in intro_paras or []:
+        p.append(
+            f'<section style="margin:0 20px;"><p style="margin-bottom:16px;font-size:14px;'
+            f'line-height:1.9;text-align:justify;color:#555555;"><span leaf="">{para}</span></p></section>')
     # chapters (fingerprint exactly once per chapter) + images
     img_q = list(images)
     for i, t in enumerate(titles, 1):
@@ -114,11 +121,23 @@ def main(argv=None) -> int:
     title = next((ln[2:].strip() for ln in md.splitlines()
                   if ln.startswith("# ") and not ln.startswith("## ")), "未命名")
     titles = chapters_of(md) or [title]
+    intro_paras = []
+    title_seen = False
+    for ln in md.splitlines():
+        st = ln.strip()
+        if not title_seen and st.startswith("# ") and not st.startswith("## "):
+            title_seen = True
+            continue
+        if st.startswith("## ") and not st.startswith("### "):
+            break
+        if st.startswith("#") or not st:
+            continue
+        intro_paras.append(st)
     images = []
     if a.bindings and Path(a.bindings).is_file():
         images = json.loads(Path(a.bindings).read_text(encoding="utf-8")).get("body_images", [])
 
-    html = build_html(title, titles, images)
+    html = build_html(title, titles, images, intro_paras)
     out = Path(a.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "final.html").write_text(html, encoding="utf-8", newline="\n")

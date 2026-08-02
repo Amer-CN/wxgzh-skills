@@ -1,6 +1,0 @@
-validate_gzh_html.py output for b-output-moyu-green.html
-============================================================
-ERROR: 0
-WARNING: 0
-span leaf count: 56
-Result: ALL PASS

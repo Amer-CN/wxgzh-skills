@@ -22,5 +22,25 @@
     "new_skill_version": "v2026.08.02-hammer.2",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260802T133343Z-843f9372",
+    "skill": "gzh-design",
+    "reason": "档45R2 gzh-design 升版修正:OBS-78 CLI 入口修复 + 入口冒烟",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-02T13:33:43Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "802350c131ed537b33e874490749b8b6f71d8bb6c83c4038d678d548c31daafc",
+    "new_root_sha256": "f59d64bbb63309a7cdca2ae58081b49223731f86d1d866d058989d492816a6e4",
+    "old_entrypoint_sha256": "ca599b64266777497bdbfb5980c2dda697296be0143fdc7b03e509172cf43275",
+    "new_entrypoint_sha256": "8bc3ccee4354720f119d91577b3750fd03dba8dcd6810244868e3b945581c4ed",
+    "old_render_entry_sha256": "ca599b64266777497bdbfb5980c2dda697296be0143fdc7b03e509172cf43275",
+    "new_render_entry_sha256": "8bc3ccee4354720f119d91577b3750fd03dba8dcd6810244868e3b945581c4ed",
+    "old_full_commit_sha": "2d069b7664786f2dae2b7b322b1200be59d9315a",
+    "new_full_commit_sha": "9596eccb67a53d639cfa7990d39fa6c7f200c919",
+    "old_source_tree_sha": "fcd6bc517e2b71929bb21b6a8215771a6af98373",
+    "new_source_tree_sha": "5832ead022a4cf6c586b214b091eff0cb1d29692",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]

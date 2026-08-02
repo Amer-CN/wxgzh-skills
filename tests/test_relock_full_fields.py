@@ -95,6 +95,7 @@ def _args(tmp_path, extra=None):
         "--lock-path": str(tmp_path / "skills.lock.json"),
         "--history-path": str(tmp_path / "skills.lock.history.json"),
         "--backup-dir": str(tmp_path / "backups"),
+        "--tree-backup-dir": str(tmp_path / "tree-backups"),
         "--project-root": str(tmp_path),
     }
     if extra:
@@ -113,7 +114,7 @@ class FakeRunner:
     def __init__(self, tmp_path, *, ls_remote_ok=True, fetch_ok=True, add_ok=True,
                  write_tree_ok=True, local_tree=REMOTE_TREE, install_ok=True,
                  install_stdout=None, doctor_ok=True, doctor_results=None,
-                 network_down=False):
+                 network_down=False, smoke_ok=True):
         self.tmp_path = tmp_path
         self.ls_remote_ok = ls_remote_ok
         self.fetch_ok = fetch_ok
@@ -125,6 +126,7 @@ class FakeRunner:
         self.doctor_ok = doctor_ok
         self.doctor_results = list(doctor_results) if doctor_results else None
         self.network_down = network_down
+        self.smoke_ok = smoke_ok
         self.calls = []
 
     def __call__(self, cmd, **kwargs):
@@ -152,6 +154,11 @@ class FakeRunner:
                                 stdout=self.local_tree if self.write_tree_ok else "")
             return FakeProc(0)
         joined = " ".join(argv)
+        if "render" in joined and "scripts" in joined:
+            # OBS-78 entrypoint smoke subprocess
+            if self.smoke_ok:
+                return FakeProc(0, stdout="[render_article] smoke ok")
+            return FakeProc(1, stderr="Traceback (most recent call last):\nNameError: name '_render_item' is not defined")
         if "install.py" in joined:
             if self.install_ok:
                 out = self.install_stdout or json.dumps(
@@ -487,3 +494,68 @@ def test_rollback_restores_skill_version(tmp_path, monkeypatch):
     assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
     entry = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]["gzh-design"]
     assert entry["skill_version"] == "v-test"  # restored with the byte-level lock rollback
+
+
+# ── 档45R2 OBS-78: entrypoint smoke ─────────────────────────────────────────
+
+def test_smoke_failure_rolls_back_lock_and_tree(tmp_path, monkeypatch):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    (src / "RELEASE_NOTES.md").write_text("# gzh-design v9.9.9-test\n", encoding="utf-8")
+    before_lock = lock_path.read_bytes()
+    runner = FakeRunner(tmp_path, doctor_results=[0], smoke_ok=False)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
+    assert lock_path.read_bytes() == before_lock
+    assert not (tmp_path / "skills.lock.history.json").exists()
+    assert _snapshot(tmp_path / "skills") == _snapshot_skills_before(tmp_path, _snapshot(tmp_path))
+
+
+def test_smoke_pass_allows_apply(tmp_path, monkeypatch, capsys):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    (src / "RELEASE_NOTES.md").write_text("# gzh-design v9.9.9-test\n", encoding="utf-8")
+    runner = FakeRunner(tmp_path, doctor_results=[0], smoke_ok=True)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "entrypoint smoke PASS" in out
+
+
+def test_no_smoke_entry_skipped_explicitly(tmp_path, monkeypatch, capsys):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    monkeypatch.setattr(RELOCK, "SMOKE_ENTRIES", {})
+    runner = FakeRunner(tmp_path, doctor_results=[0])
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "跳过冒烟" in out or "not configured" in out
+
+
+def test_smoke_rolls_back_then_reapply_succeeds(tmp_path, monkeypatch):
+    """坏版本被拦 -> 回滚;修好后重跑 -> 成功(模拟 45R2 流程)。"""
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    (src / "RELEASE_NOTES.md").write_text("# gzh-design v9.9.9-test\n", encoding="utf-8")
+    runner = FakeRunner(tmp_path, doctor_results=[0], smoke_ok=False)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
+    runner2 = FakeRunner(tmp_path, doctor_results=[0], smoke_ok=True)
+    rc2 = _run(tmp_path, monkeypatch, runner2, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc2 == 0
