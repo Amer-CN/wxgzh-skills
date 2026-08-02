@@ -1,4 +1,4 @@
-# gzh-design v2026.07.18-hammer.1
+# gzh-design v2026.08.02-hammer.2
 
 ## 新增
 
@@ -61,7 +61,7 @@
 
 见 README.md。
 
-## v2026.07.18-hammer.1 追加变更（wxgzh-pipeline 集成侧，未改版本号）
+## v2026.08.02-hammer.2 追加变更（wxgzh-pipeline 集成侧）
 
 - **OBS-73 根治**:首个 `##` 之前、intro 第一行之后的段落不再被丢弃,作为正文段落渲染在第一个章节标题之前(顺序:封面 → 导语段落 → 章节标题 → 章节正文)。`intro` 字段语义不变,封面副标题与 oneliner 截断长度不变。
 - **fenced code block**:``` 围栏识别为代码块,渲染为可复制的 `<pre>`(内联样式:等宽字体、浅底、横向滚动、保留空白);不依赖 `<style>`/class;反引号不进入输出。
