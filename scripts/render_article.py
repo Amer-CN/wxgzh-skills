@@ -77,10 +77,17 @@ def split_title(title: str) -> tuple[str, str]:
 
 
 def parse_article(md: str) -> dict:
-    """Parse H1 title, an intro paragraph, and H2 chapters with paragraphs."""
+    """Parse H1 title, intro paragraph(s), and H2 chapters with paragraphs.
+
+    OBS-73 (根治): every non-empty line before the first "## " AFTER the intro
+    line is kept in intro_paras and rendered as body paragraphs before the first
+    chapter title — no more silent dropping. `intro` itself is unchanged and
+    still feeds the cover subtitle + oneliner.
+    """
     lines = md.replace("\r\n", "\n").split("\n")
     title = ""
     intro = ""
+    intro_paras: list[dict] = []
     chapters: list[dict] = []
     cur: dict | None = None
     for ln in lines:
@@ -99,11 +106,12 @@ def parse_article(md: str) -> dict:
         if cur is None:
             if not intro:
                 intro = st
+            else:
+                intro_paras.append({"kind": "para", "text": st})
             continue
-        cur["paras"].append(st)
-    return {"title": title or "未命名", "intro": intro, "chapters": chapters}
-
-
+        cur["paras"].append({"kind": "para", "text": st})
+    return {"title": title or "未命名", "intro": intro, "intro_paras": intro_paras,
+            "chapters": chapters}
 def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, dict]:
     title = parsed["title"]
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
@@ -128,6 +136,12 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
         parts.append(H.hammer_oneliner(theme_key, parsed["intro"][:40]))
         usage["oneliner_card"] += 1
 
+    # OBS-73 (根治): intro paragraphs render BEFORE the first chapter title.
+    # Order: cover -> intro paras -> chapter 1 title -> chapter body.
+    for item in parsed.get("intro_paras") or []:
+        parts.append(H.hammer_para(theme_key, item["text"]))
+        usage["paragraph"] += 1
+
     # distribute images across chapters: first image as media+text, rest as 2a.
     img_queue = list(body_images)
     per_chapter = _distribute(len(img_queue), len(chapters))
@@ -136,8 +150,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
         parts.append(H.hammer_chapter(theme_key, f"{i:02d}", ch["title"],
                                       en_label_for(ch["title"], i)))
         usage["chapter_title"] += 1
-        for para in ch["paras"]:
-            parts.append(H.hammer_para(theme_key, para))
+        for item in ch["paras"]:
+            parts.append(H.hammer_para(theme_key, item["text"]))
             usage["paragraph"] += 1
         for _ in range(per_chapter[i - 1]):
             if not img_queue:
