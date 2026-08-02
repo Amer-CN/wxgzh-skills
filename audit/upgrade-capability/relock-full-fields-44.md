@@ -150,3 +150,13 @@ dry-run: 1 skill(s) checked, 1 CHANGED — run with --apply to write (none writt
 3. `branch` 从源 checkout 的 `symbolic-ref` 派生;非 git 目录的源树保持原 branch 值(报告中如实记录)。
 4. `skill_version` 不自动更新(声明式字符串),升版时若版本号变化需单独处理(见第一.2)。
 5. 台账新增字段为纯追加,`_find_upgrade_chain` 只依赖 `old_root_sha256/new_root_sha256/entry_id/skill`,已用测试证明追溯不受影响。
+
+
+## 档 45R 更正(如实记录,不淡化)
+
+原报告「第一.2」写:『不纳入 `skill_version`(据实说明):它是声明式发布字符串,无法从树内容可靠推导;版本号由技能文档显式升版后,走常规三字段 relock 即可。』
+
+**该判断有误,由档 45 dry-run 实测推翻**:
+- `wxgzh_pipeline/skill_discovery.py` `_read_version`(L273-278)**本来就从树读取版本**:gzh-design 读 `RELEASE_NOTES.md` 首行,其余 skill 读 `VERSION` 文件。因此 skill_version 完全可以且必须从源树推导。
+- 「走常规三字段 relock 即可」不成立:三字段 relock 同样不写 `skill_version`;任何版本提升都会使 doctor `version_ok`(cur_ver == lock.skill_version)失配 → FAIL_CLOSED。
+- 档 45R 已修复:relock `--source-tree` 模式把 `skill_version` 纳入字段集,取值直接复用 `skill_discovery._read_version`(与 doctor 同源,逐字一致),并加 WARN(代码变版本未变 / 版本变代码未变)。

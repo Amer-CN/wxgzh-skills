@@ -61,6 +61,7 @@ from wxgzh_pipeline import paths as P  # noqa: E402
 from wxgzh_pipeline import secrets as SEC  # noqa: E402
 from wxgzh_pipeline.skill_discovery import (  # noqa: E402
     _file_sha,
+    _read_version,
     compute_root_sha,
     compute_runtime_manifest_sha,
 )
@@ -94,7 +95,7 @@ _HASH_FIELDS = ("skill_root_sha256", "runtime_manifest_sha256", "runtime_file_co
 # release string; bump it in the skill docs and re-lock the 3 hash fields only).
 _FILE_HASH_FIELDS = ("entrypoint_sha256", "validator_sha256",
                      "render_entry_sha256", "component_source_sha256")
-_SOURCE_FIELDS = ("full_commit_sha", "source_tree_sha", "branch")
+_SOURCE_FIELDS = ("full_commit_sha", "source_tree_sha", "branch", "skill_version")
 _ALL_FIELDS = _HASH_FIELDS + _FILE_HASH_FIELDS + _SOURCE_FIELDS
 
 
@@ -506,6 +507,11 @@ def build_rows(targets: list[str], lock_skills: dict, skills_home: Path,
                 "full_commit_sha": source_commit,
                 "source_tree_sha": remote_tree_sha,
                 "branch": _source_branch_of(skill_dir) or entry.get("branch"),
+                # 档45R: skill_version MUST come from the exact same source doctor
+                # uses (skill_discovery._read_version L273-278 — for gzh-design that
+                # is RELEASE_NOTES.md line 1). Any divergence would write A in the
+                # lock while doctor reads B -> version_ok=false -> FAIL_CLOSED.
+                "skill_version": _read_version(skill_dir, name) or entry.get("skill_version"),
             }
             for f in _FILE_HASH_FIELDS:
                 rel = entry.get(f[:-7])  # e.g. entrypoint_sha256 -> entrypoint
@@ -594,6 +600,17 @@ def print_rows(rows: list[dict]) -> None:
             print(f"NOTE: required_files 未覆盖的新入口文件: "
                   f"{row['uncovered_entries']} — 需人工裁决 (不会自动新增)")
         print(f"status: {'CHANGED' if row['changed'] else '无变化'}")
+        # 档45R WARN (output-only, never changes verdict/exit code):
+        # version label vs actual content drift detection.
+        if "skill_version" in row["old"]:
+            root_changed = row["old"].get("skill_root_sha256") != row["new"].get("skill_root_sha256")
+            ver_changed = row["old"].get("skill_version") != row["new"].get("skill_version")
+            if root_changed and not ver_changed:
+                print("WARN: root 变化但 skill_version 未变 — 代码已变但版本号未提升,"
+                      "lock 的版本标签将与实际内容脱节 (建议提升版本后重跑)")
+            elif ver_changed and not root_changed:
+                print("WARN: skill_version 变化但 root 未变 — 版本标签已变但内容未变,"
+                      "请核对是否仅为文档/版本声明变更")
         print()
 
 

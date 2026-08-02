@@ -399,3 +399,91 @@ def test_source_tree_without_commit_refused(tmp_path, monkeypatch):
         "--source-tree": str(src)})
     assert rc == RELOCK.EXIT_USAGE
     assert _snapshot(tmp_path) == before
+
+
+# ── 档45R: skill_version support (same source as doctor's _read_version) ────
+
+def test_skill_version_written_and_in_ledger(tmp_path, monkeypatch):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    (src / "RELEASE_NOTES.md").write_text("# gzh-design v9.9.9-test\n", encoding="utf-8")
+    runner = FakeRunner(tmp_path)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    entry = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]["gzh-design"]
+    assert entry["skill_version"] == "v9.9.9-test"
+    rec = json.loads((tmp_path / "skills.lock.history.json").read_text(encoding="utf-8"))[0]
+    assert rec["old_skill_version"] == "v-test"
+    assert rec["new_skill_version"] == "v9.9.9-test"
+
+
+def test_version_source_same_as_read_version(tmp_path, monkeypatch):
+    """口径同源: BOM + CRLF + 前后空白样本 — relock 写入值必须与
+    skill_discovery._read_version 读出值逐字相等(构造样本实测)。"""
+    from wxgzh_pipeline.skill_discovery import _read_version
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    # BOM + CRLF 行尾 + 首行前后空白 + 多个空格分隔
+    sample = "\ufeff# gzh-design   v9.9.9-tricky  \r\n"
+    (src / "RELEASE_NOTES.md").write_bytes(sample.encode("utf-8"))
+    expected = _read_version(src, "gzh-design")
+    assert expected == "v9.9.9-tricky", f"_read_version itself: {expected!r}"
+    runner = FakeRunner(tmp_path)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    entry = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]["gzh-design"]
+    assert entry["skill_version"] == expected  # 逐字相等,同源
+
+
+def test_warn_root_changed_version_unchanged(tmp_path, monkeypatch, capsys):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)  # render.py differs -> root changes; no RELEASE_NOTES -> version unchanged
+    runner = FakeRunner(tmp_path)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "WARN: root 变化但 skill_version 未变" in out
+
+
+def test_warn_version_changed_root_unchanged(tmp_path, monkeypatch, capsys):
+    src = tmp_path / "source-tree"
+    (src / ".git").mkdir(parents=True)
+    (src / "scripts").mkdir(parents=True)
+    # identical content to the old tree -> root unchanged (lock root = computed)
+    (src / "scripts" / "render.py").write_text("old-render\n", encoding="utf-8")
+    (src / "scripts" / "validate.py").write_text("old-validate\n", encoding="utf-8")
+    (src / "scripts" / "generate.py").write_text("old-gen\n", encoding="utf-8")
+    root_sha, _, _ = RELOCK.compute_skill_hashes(src)
+    skills, lock_path = _make_env(tmp_path, lock_values={"skill_root_sha256": root_sha})
+    monkeypatch.setattr(RELOCK, "_read_version", lambda tree, name: "v9.9.9-bump")
+    runner = FakeRunner(tmp_path)
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "WARN: skill_version 变化但 root 未变" in out
+
+
+def test_rollback_restores_skill_version(tmp_path, monkeypatch):
+    skills, lock_path = _make_env(tmp_path)
+    src = _make_source_tree(tmp_path)
+    (src / "RELEASE_NOTES.md").write_text("# gzh-design v9.9.9-test\n", encoding="utf-8")
+    runner = FakeRunner(tmp_path, install_ok=False, doctor_results=[0])
+    rc = _run(tmp_path, monkeypatch, runner, {
+        "--source-tree": str(src), "--source-commit": COMMIT, "--apply": None,
+        "--skip-regression": None,
+    })
+    assert rc == RELOCK.EXIT_POST_DOCTOR_FAIL
+    entry = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]["gzh-design"]
+    assert entry["skill_version"] == "v-test"  # restored with the byte-level lock rollback
