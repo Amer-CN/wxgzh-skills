@@ -1,0 +1,122 @@
+<section style="max-width:677px;margin:0 auto;background:#F0FDF4;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#374151;line-height:1.75;letter-spacing:0.5px;overflow-x:hidden;">
+<section style="margin:10px 10px 32px;background:#F0FDF4;border-radius:12px;box-shadow:0 4px 16px -4px rgba(0,0,0,0.08);padding:24px 20px;">
+  <p style="font-size:16px;font-weight:800;color:#111827;margin:0;line-height:1.7;"><span leaf="">把一个臃肿的 Python 服务镜像瘦身 85%，每一步都是踩坑换来的。</span></p>
+  <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF;text-align:right;"><span leaf="">—— 甲木</span></p>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">01</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">背景</span></p>
+</section>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">我们的 API 服务镜像一直停在 1.2GB。每次 CI 拉取镜像要 4 分钟，本地调试启动要 30 秒。团队忍了半年，直到某天磁盘空间告警，才下定决心优化。</span></p>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">最终结果：镜像从 1.2GB 降到 180MB，CI 拉取时间从 4 分钟降到 25 秒。</span></p>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">02</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">问题诊断</span></p>
+</section>
+<section style="margin:0 0 24px;background:#FFFBEB;border-radius:0 12px 12px 0;border-left:4px solid #FDE68A;padding:16px 20px;">
+  <p style="margin:0 0 6px;"><span style="display:inline-block;background:#FDE68A;color:#F0FDF4;font-size:11px;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:1px;"><span leaf="">WARNING</span></span></p>
+  <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#92400E;line-height:1.5;"><span leaf="">多阶段构建不是银弹</span></p>
+  <p style="margin:0;font-size:14px;color:#374151;line-height:1.8;"><span leaf="">多阶段构建能减小体积，但如果基础镜像选错了（比如用 `python:3.12` 而非 `python:3.12-slim`），体积差异可以到 800MB。先选对基础镜像，再做多阶段。</span></p>
+</section>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">原始 Dockerfile 的问题集中在三处：</span></p>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">- 基础镜像 `python:3.12` 自带完整 Debian 工具链（约 900MB）</span></p>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">- `pip install` 把 `.whl` 和缓存都留在了镜像层里</span></p>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">- 没有 `.dockerignore`，`COPY .` 把 `.git` 和 `node_modules` 都打进去了</span></p>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">03</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">优化前后对照</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#111827;line-height:1.5;"><span leaf="">Dockerfile 优化对照</span></p>
+  <section style="margin:0 0 12px;border-radius:12px;overflow:hidden;background:#1E293B;">
+    <section style="padding:7px 14px;background:#0F172A;"><span style="font-size:11px;color:#64748B;letter-spacing:1px;"><span leaf="">改前</span></span></section>
+    <section style="padding:11px 14px;"><p style="margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;"><span leaf="">FROM python:3.12
+COPY . /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+CMD ["python", "main.py"]</span></p></section>
+  </section>
+  <section style="margin:0 0 12px;border-radius:12px;overflow:hidden;background:#1a3a2a;">
+    <section style="padding:7px 14px;background:#0a2a1a;"><span style="font-size:11px;color:#6BCB77;letter-spacing:1px;"><span leaf="">改后</span></span></section>
+    <section style="padding:11px 14px;"><p style="margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;"><span leaf="">FROM python:3.12-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+FROM python:3.12-slim
+COPY --from=builder /root/.local /root/.local
+COPY . /app
+WORKDIR /app
+ENV PATH=/root/.local/bin:$PATH
+CMD ["python", "main.py"]</span></p></section>
+  </section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">04</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">关键数据</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="background:#ECFDF5;">
+        <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #059669;color:#111827;font-weight:700;"><span leaf="">指标</span></th>
+        <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #059669;color:#111827;font-weight:700;"><span leaf="">优化前</span></th>
+        <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #059669;color:#111827;font-weight:700;"><span leaf="">优化后</span></th>
+        <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #059669;color:#111827;font-weight:700;"><span leaf="">变化</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">镜像体积</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">1.2GB</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">180MB</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">-85%</span></td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">CI 拉取时间</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">4 min</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">25 s</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">-90%</span></td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">本地启动</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">30 s</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">6 s</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">-80%</span></td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">构建层数</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">4</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">7</span></td>
+        <td style="padding:6px 12px;border-bottom:1px solid #BBF7D0;color:#374151;"><span leaf="">+75%</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section style="margin:0 0 24px;background:#ECFDF5;border-radius:0 12px 12px 0;border-left:4px solid #059669;padding:16px 20px;">
+  <p style="margin:0 0 6px;"><span style="display:inline-block;background:#059669;color:#F0FDF4;font-size:11px;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:1px;"><span leaf="">IMPORTANT</span></span></p>
+  <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#111827;line-height:1.5;"><span leaf="">为什么层数反而增加了？</span></p>
+  <p style="margin:0;font-size:14px;color:#374151;line-height:1.8;"><span leaf="">多阶段构建把依赖安装和代码复制分离到不同层。虽然层数增加，但每层更小，总体积下降。这是用层数换体积的正确权衡。</span></p>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">05</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">延伸阅读</span></p>
+</section>
+<section style="margin:0 0 24px;"><p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#111827;line-height:1.5;"><span leaf="">参考资料</span></p>
+  <section style="margin:0 0 8px;padding:10px 14px;background:#ECFDF5;border-radius:12px;border-left:3px solid #059669;"><p style="margin:0;font-size:14px;color:#111827;font-weight:600;line-height:1.6;"><span leaf="">Docker 多阶段构建官方文档</span></p><p style="margin:2px 0 0;font-size:12px;color:#9CA3AF;"><span leaf="">https://docs.docker.com/build/building/multi-stage/</span></p></section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#ECFDF5;border-radius:12px;border-left:3px solid #059669;"><p style="margin:0;font-size:14px;color:#111827;font-weight:600;line-height:1.6;"><span leaf="">Python Docker 最佳实践</span></p><p style="margin:2px 0 0;font-size:12px;color:#9CA3AF;"><span leaf="">https://docs.docker.com/language/python/build-images/</span></p></section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#059669;line-height:1;"><span leaf="">06</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#111827;line-height:1.4;"><span leaf="">踩过的坑</span></p>
+</section>
+<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.9;"><span leaf="">最大的坑是 `COPY --from=builder /root/.local` 这行。如果 builder 阶段用 `pip install --user`，文件会装到 `/root/.local`。但如果基础镜像的 HOME 不是 `/root`，路径就对不上。排查了两个小时才发现在 `python:3.12-slim` 里 HOME 默认是 `/root`，但在某些 CI 环境里被覆盖了。</span></p>
+<section style="margin:24px 0 0;padding-top:16px;border-top:1px solid #D1D5DB;">
+  <p style="margin:0 0 6px;font-size:12px;color:#9CA3AF;line-height:1.7;"><span style="font-weight:700;color:#059669;margin-right:4px;"><span leaf="">[1]</span></span><span leaf="">测试环境：Docker Engine v26.0.0，macOS 14.4，8 核 M2 Pro，32GB 内存</span></p>
+<p style="margin:0 0 6px;font-size:12px;color:#9CA3AF;line-height:1.7;"><span style="font-weight:700;color:#059669;margin-right:4px;"><span leaf="">[2]</span></span><span leaf="">镜像体积使用 `docker images` 命令测量，不含 build cache</span></p>
+</section>
+<section style="margin:32px 0 0;padding:20px;background:#ECFDF5;border-radius:12px;text-align:center;">
+  <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#111827;line-height:1.7;"><span leaf="">我是甲木，热衷于分享 AI 观察与干货</span></p>
+  <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.7;"><span leaf="">如果你觉得今天这篇有收获，欢迎点赞、在看、转发三连，我们下篇见</span></p>
+</section>
+</section>

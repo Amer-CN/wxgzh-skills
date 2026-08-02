@@ -1,0 +1,26 @@
+[
+  {
+    "entry_id": "relock-gzh-design-20260802T131321Z-59d63817",
+    "skill": "gzh-design",
+    "reason": "档45R gzh-design 升版:OBS-73 根治 + fenced code block + OBS-67/75/76 + version bump",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-02T13:13:21Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "9a8cd7f548c2186f789a5e24235001308fc6a868e0f57d74fc06c8919b4ff79b",
+    "new_root_sha256": "802350c131ed537b33e874490749b8b6f71d8bb6c83c4038d678d548c31daafc",
+    "old_entrypoint_sha256": "e40237269265b63af73860bd9ef81b34a9e1b7bb80af59f3ebef4947baa5c095",
+    "new_entrypoint_sha256": "ca599b64266777497bdbfb5980c2dda697296be0143fdc7b03e509172cf43275",
+    "old_render_entry_sha256": "e40237269265b63af73860bd9ef81b34a9e1b7bb80af59f3ebef4947baa5c095",
+    "new_render_entry_sha256": "ca599b64266777497bdbfb5980c2dda697296be0143fdc7b03e509172cf43275",
+    "old_full_commit_sha": "0007d7e6a4493aab59070d9c31dcde83830302fd",
+    "new_full_commit_sha": "2d069b7664786f2dae2b7b322b1200be59d9315a",
+    "old_source_tree_sha": "a1f408201e394add46b0d7dede8c017030160644",
+    "new_source_tree_sha": "fcd6bc517e2b71929bb21b6a8215771a6af98373",
+    "old_branch": "chore/wxgzh-pipeline-dev2-integration",
+    "new_branch": "fix/obs73-codeblock-docs",
+    "old_skill_version": "v2026.07.18-hammer.1",
+    "new_skill_version": "v2026.08.02-hammer.2",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  }
+]

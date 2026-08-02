@@ -4,7 +4,9 @@ official image component types 2-4, no fallback, safe strikethrough. THEME_IDENT
 """
 from __future__ import annotations
 
+import html as _html
 import json
+import re as _re
 from pathlib import Path
 
 from . import subskill_validator_sha, load_validator
@@ -44,12 +46,13 @@ def content_validate(ctx, sd: Path, state):
     fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
     if not fa.is_file():
         return 1, {"reason": "frozen final_article.md missing — OBS-73 intro guard cannot run"}, vpath, vsha
-    guard = _intro_guard_report(fa.read_text(encoding="utf-8"))
+    guard = _intro_content_fidelity(fa.read_text(encoding="utf-8"),
+                                    final_html.read_text(encoding="utf-8"))
     if not guard["ok"]:
         return 1, {"reason": "INTRO_GUARD=FAIL (OBS-73)",
                    "intro_line_count": guard["intro_line_count"],
                    "intro_char_count": guard["intro_char_count"],
-                   "intro_dropped_text": guard["dropped_text"],
+                   "intro_missing_text": guard["missing_text"],
                    "guidance": guard["guidance"], "INTRO_GUARD": "FAIL"}, vpath, vsha
     # DYNAMIC chapter/TOC gate: expected chapter count is derived from the FROZEN
     # article (## headings), not self-reported by super_writer.
@@ -83,23 +86,13 @@ def _count_h2(md_path: Path) -> int:
     return n
 
 
-def _intro_guard_report(md_text: str) -> dict:
-    """Replicates gzh-design render_article.py parse_article() L79-104 intro handling.
-
-    Line-by-line correspondence (render_article.py, locked skill):
-      L81  md.replace("\r\n", "\n").split("\n")            -> same split
-      L86  title H1 branch (L88: starts "# " not "## ")      -> title_seen
-      L92  first "## " (not "### ") ends the intro region    -> break (chapters)
-      L95  any other "#" line is skipped                      -> continue
-      L97  blank lines are skipped                            -> continue
-      L99-102  while cur is None: first non-empty line is intro, all later
-              non-empty lines are DROPPED silently by the renderer            -> dropped[]
-    gzh-design 升版修复后此守卫需同步复核(见 audit/quality/intro-guard-40.md).
-    """
+def _intro_paras(md_text: str) -> list[str]:
+    """Intro-region paragraphs: non-empty non-heading lines between the H1 and
+    the first "## " (same region parse_article renders; see _INTRO_MAX_LEN note
+    above — the renderer now emits every line, so nothing is dropped)."""
     lines = md_text.replace("\r\n", "\n").split("\n")
     title_seen = False
-    intro = ""
-    dropped: list[str] = []
+    paras: list[str] = []
     for ln in lines:
         st = ln.strip()
         if not title_seen and st.startswith("# ") and not st.startswith("## "):
@@ -111,24 +104,60 @@ def _intro_guard_report(md_text: str) -> dict:
             continue
         if not st:
             continue
-        if not intro:
-            intro = st
+        paras.append(st)
+    return paras
+
+
+_TAG_RE = _re.compile(r"<[^>]+>")
+_WS_RE = _re.compile(r"\s+")
+
+
+def _html_to_plain_text(html_text: str) -> str:
+    """Strip tags + decode HTML entities + collapse whitespace (档45R 内容保真)."""
+    text = _TAG_RE.sub(" ", html_text)
+    text = _html.unescape(text)
+    return _WS_RE.sub("", text)
+
+
+def _intro_content_fidelity(md_text: str, html_text: str) -> dict:
+    """OBS-73 content fidelity guard (档45R, replaces the 档40 line-count guard).
+
+    The renderer now emits every intro paragraph before the first chapter title,
+    so multi-line intros are LEGAL. What must hold is CONTENT fidelity:
+      - every intro paragraph's text must appear in the rendered plain text;
+      - the FIRST line may be only partially present (cover subtitle 48 chars /
+        oneliner 40 chars truncation) — its 40-char prefix must appear;
+      - every LATER line must be present IN FULL (whitespace-normalized).
+    Frozen article missing => handled by the caller (FAIL, never skip).
+    No skip switch / env / exemption parameter exists for this guard.
+    """
+    plain = _html_to_plain_text(html_text)
+    paras = _intro_paras(md_text)
+    missing: list[str] = []
+    for idx, para in enumerate(paras):
+        norm = _WS_RE.sub("", para)
+        if not norm:
+            continue
+        if idx == 0:
+            # first line: truncation allowed -> prefix must exist
+            prefix = norm[:_INTRO_MAX_LEN]
+            if prefix not in plain:
+                missing.append(para)
         else:
-            dropped.append(st)
-    if dropped:
-        dropped_text = "\n".join(dropped)
-    elif len(intro) > _INTRO_MAX_LEN:
-        dropped_text = intro[_INTRO_MAX_LEN:]  # oneliner [:40] truncation tail
-    else:
-        dropped_text = ""
-    ok = (not dropped) and len(intro) <= _INTRO_MAX_LEN
+            if norm not in plain:
+                missing.append(para)
+    ok = not missing
     return {
         "ok": ok,
-        "intro_line_count": (1 + len(dropped)) if intro else len(dropped),
-        "intro_char_count": len(intro),
-        "dropped_text": dropped_text,
-        "guidance": "首个 ## 之前只能有一行且不超过 40 字。请将导语内容并入第一个章节,或压缩为副标题。",
+        "intro_line_count": len(paras),
+        "intro_char_count": sum(len(p) for p in paras),
+        "missing_text": "\n".join(missing),
+        "guidance": ("渲染产物缺失首个 ## 之前的导语内容:第一行的前 40 字与"
+                     "第二行起的每个段落必须完整存在于 HTML 中。"
+                     "请核对渲染器输出与冻结文章,不要改写正文。"),
     }
+
+
 
 
 def post(ctx, sd, state, exit_code, report):

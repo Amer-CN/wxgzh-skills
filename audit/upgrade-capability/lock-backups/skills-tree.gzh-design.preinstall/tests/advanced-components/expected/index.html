@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gzh-design Stage 1 预览索引</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fafb; color: #1c1917; }
+h1 { font-size: 24px; border-bottom: 2px solid #059669; padding-bottom: 12px; }
+h2 { font-size: 18px; margin-top: 36px; color: #374151; }
+.theme-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 16px 20px; text-decoration: none; color: inherit; transition: transform 0.15s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.card .name { font-weight: 700; font-size: 15px; }
+.card .desc { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+.badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; }
+.green { background: #ECFDF5; color: #059669; }
+.red { background: #FEF2F2; color: #DC2626; }
+.gray { background: #F4F4F5; color: #52525B; }
+.zen { background: #EEF3F0; color: #4A5D52; }
+.ticket { background: #fffef8; color: #1a1a1a; border: 1px solid #1a1a1a; }
+.olive { background: #eeefe9; color: #ed7b2f; }
+.summary { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin: 24px 0; }
+.summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.summary th, .summary td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; }
+.summary th { background: #F9FAFB; font-weight: 700; }
+.pass { color: #059669; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>gzh-design Stage 1 预览索引</h1>
+<p style="color:#6b7280;font-size:14px;">生成时间：2026-07-17 | 9 组件 × 6 主题 + 3 类整篇文章</p>
+
+<div class="summary">
+<h2 style="margin-top:0">校验汇总</h2>
+<table>
+<tr><th>校验项</th><th>结果</th></tr>
+<tr><td>component_lint.py（references/*.md）</td><td class="pass">ERROR×0（2 个预存 WARN）</td></tr>
+<tr><td>lint_advanced_components.py（references/advanced/**/*.md）</td><td class="pass">8/8 干净，ERROR×0，WARN×0</td></tr>
+<tr><td>test_advanced_components.py</td><td class="pass">30/30 通过</td></tr>
+<tr><td>validate_gzh_html.py（72 份 HTML）</td><td class="pass">72/72 ALL PASS（ERROR×0，WARNING×0）</td></tr>
+</table>
+</div>
+
+<h2>6 主题全组件样稿预览（推荐打开）</h2>
+<p style="font-size:13px;color:#9ca3af;">浏览器打开后右上角有「复制」按钮，可复制到公众号编辑器预览</p>
+<div class="theme-grid">
+  <a class="card" href="all-components-moyu-green_预览.html"><div class="name">摸鱼绿</div><div class="desc">emerald 主色 + 卡片式<div><span class="badge green">推荐</span></div></div></a>
+  <a class="card" href="all-components-red-white_预览.html"><div class="name">红白色系</div><div class="desc">正红 + 左竖条式</div></a>
+  <a class="card" href="all-components-graphite-minimal_预览.html"><div class="name">石墨极简</div><div class="desc">石墨灰 + 细线留白</div></a>
+  <a class="card" href="all-components-zen-whitespace_预览.html"><div class="name">留白禅意</div><div class="desc">墨绿 + 衬线大字</div></a>
+  <a class="card" href="all-components-moyu-ticket_预览.html"><div class="name">摸鱼票据</div><div class="desc">黑描边 + 硬阴影</div></a>
+  <a class="card" href="all-components-olive-journal_预览.html"><div class="name">橄榄手记</div><div class="desc">橙前导 + 米白底</div></a>
+</div>
+
+<h2>真实文章样稿（3-6 个组件自然选择）</h2>
+<div class="theme-grid">
+  <a class="card" href="real-article-moyu-green.html"><div class="name">摸鱼绿</div><div class="desc">AI 效率测试（5 组件）</div></a>
+  <a class="card" href="real-article-red-white.html"><div class="name">红白色系</div><div class="desc">AI 效率测试</div></a>
+  <a class="card" href="real-article-graphite-minimal.html"><div class="name">石墨极简</div><div class="desc">AI 效率测试</div></a>
+  <a class="card" href="real-article-zen-whitespace.html"><div class="name">留白禅意</div><div class="desc">AI 效率测试</div></a>
+  <a class="card" href="real-article-moyu-ticket.html"><div class="name">摸鱼票据</div><div class="desc">AI 效率测试</div></a>
+  <a class="card" href="real-article-olive-journal.html"><div class="name">橄榄手记</div><div class="desc">AI 效率测试</div></a>
+</div>
+
+<h2>短资讯样稿（最多 2 个组件，克制使用）</h2>
+<div class="theme-grid">
+  <a class="card" href="short-news-moyu-green.html"><div class="name">摸鱼绿</div><div class="desc">GPT-5 发布（1 组件）</div></a>
+  <a class="card" href="short-news-red-white.html"><div class="name">红白色系</div><div class="desc">GPT-5 发布</div></a>
+  <a class="card" href="short-news-graphite-minimal.html"><div class="name">石墨极简</div><div class="desc">GPT-5 发布</div></a>
+  <a class="card" href="short-news-zen-whitespace.html"><div class="name">留白禅意</div><div class="desc">GPT-5 发布</div></a>
+  <a class="card" href="short-news-moyu-ticket.html"><div class="name">摸鱼票据</div><div class="desc">GPT-5 发布</div></a>
+  <a class="card" href="short-news-olive-journal.html"><div class="name">橄榄手记</div><div class="desc">GPT-5 发布</div></a>
+</div>
+
+<h2>独立组件验收 HTML（9 组件 × 6 主题 = 54 份）</h2>
+<p style="font-size:13px;color:#9ca3af;">点击打开各组件的独立 HTML 片段</p>
+<div class="theme-grid">
+  <a class="card" href="alert-moyu-green.html"><div class="name">alert</div><div class="desc">提示框</div></a>
+  <a class="card" href="quote-moyu-green.html"><div class="name">quote</div><div class="desc">金句引用</div></a>
+  <a class="card" href="code-compare-moyu-green.html"><div class="name">code-compare</div><div class="desc">代码对照</div></a>
+  <a class="card" href="media-text-moyu-green.html"><div class="name">media-text</div><div class="desc">图文绑定</div></a>
+  <a class="card" href="gallery-moyu-green.html"><div class="name">gallery</div><div class="desc">图片画廊</div></a>
+  <a class="card" href="long-image-moyu-green.html"><div class="name">long-image</div><div class="desc">长图展示</div></a>
+  <a class="card" href="resources-moyu-green.html"><div class="name">resources</div><div class="desc">资源集合</div></a>
+  <a class="card" href="footnotes-moyu-green.html"><div class="name">footnotes</div><div class="desc">脚注</div></a>
+  <a class="card" href="dialogue-moyu-green.html"><div class="name">dialogue</div><div class="desc">对话</div></a>
+</div>
+<p style="font-size:12px;color:#9ca3af;margin-top:12px;">以上为摸鱼绿主题示例。其他 5 主题的独立组件 HTML 文件名格式为 <code>{组件}-{主题}.html</code>，在同一目录下。</p>
+
+</body>
+</html>

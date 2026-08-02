@@ -1,0 +1,118 @@
+<section style="max-width:677px;margin:0 auto;background:#F7F7F7;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#555555;line-height:1.75;letter-spacing:0.5px;overflow-x:hidden;">
+<section style="margin:10px 10px 32px;background:#F7F7F7;border-radius:12px;box-shadow:0 4px 16px -4px rgba(179,89,59,0.10);padding:24px 20px;">
+  <p style="font-size:16px;font-weight:800;color:#555555;margin:0;line-height:1.7;"><span leaf="">「从 1.2GB 到 180MB，Docker 镜像优化的完整决策路径。」</span></p>
+  <p style="margin:8px 0 0;font-size:12px;color:#737373;text-align:right;"><span leaf="">—— 甲木</span></p>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#B3593B;line-height:1;"><span leaf="">01</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#555555;line-height:1.4;"><span leaf="">现状数据</span></p>
+</section>
+<p style="margin:0 0 16px;font-size:14px;color:#555555;line-height:1.9;"><span leaf="">先看当前镜像的体积构成和关键指标。</span></p>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"><span leaf="">镜像现状</span></p>
+  <section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:13px;color:#737373;font-weight:600;"><span leaf="">镜像体积</span></p>
+      <p style="margin:2px 0 0;font-size:15px;color:#555555;font-weight:700;"><span leaf="">1.2GB</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:13px;color:#737373;font-weight:600;"><span leaf="">CI 拉取时间</span></p>
+      <p style="margin:2px 0 0;font-size:15px;color:#555555;font-weight:700;"><span leaf="">4 分钟</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:13px;color:#737373;font-weight:600;"><span leaf="">本地启动</span></p>
+      <p style="margin:2px 0 0;font-size:15px;color:#555555;font-weight:700;"><span leaf="">30 秒</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:13px;color:#737373;font-weight:600;"><span leaf="">构建层数</span></p>
+      <p style="margin:2px 0 0;font-size:15px;color:#555555;font-weight:700;"><span leaf="">4 层</span></p>
+    </section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#B3593B;line-height:1;"><span leaf="">02</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#555555;line-height:1.4;"><span leaf="">方案选择</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"><span leaf="">构建方案选择</span></p>
+  <p style="margin:0 0 12px;font-size:14px;color:#B3593B;font-weight:700;"><span leaf="">推荐方案：多阶段构建</span></p>
+  <section style="margin:0 0 10px;padding:10px 14px;border-radius:0 12px 12px 0;border-left:3px solid #737373;background:#F7F7F7;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#737373;"><span leaf="">备选</span></p>
+      <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#555555;"><span leaf="">单阶段构建</span></p>
+      <p style="margin:0;font-size:13px;color:#555555;line-height:1.7;"><span leaf="">简单但镜像大</span></p>
+    </section>
+<section style="margin:0 0 10px;padding:10px 14px;border-radius:0 12px 12px 0;border-left:3px solid #B3593B;background:#FAF9F5;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;"><span leaf="">推荐</span></p>
+      <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#555555;"><span leaf="">多阶段构建</span></p>
+      <p style="margin:0;font-size:13px;color:#555555;line-height:1.7;"><span leaf="">稍复杂但镜像小</span></p>
+    </section>
+<section style="margin:0 0 10px;padding:10px 14px;border-radius:0 12px 12px 0;border-left:3px solid #737373;background:#F7F7F7;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#737373;"><span leaf="">备选</span></p>
+      <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#555555;"><span leaf="">Distroless</span></p>
+      <p style="margin:0;font-size:13px;color:#555555;line-height:1.7;"><span leaf="">最小但调试困难</span></p>
+    </section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#B3593B;line-height:1;"><span leaf="">03</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#555555;line-height:1.4;"><span leaf="">执行步骤</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"><span leaf="">优化步骤</span></p>
+  <section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:0 12px 12px 0;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">1</span></span><span leaf="">选择 slim 基础镜像</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:0 12px 12px 0;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">2</span></span><span leaf="">分离构建层与运行层</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:0 12px 12px 0;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">3</span></span><span leaf="">添加 .dockerignore</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:0 12px 12px 0;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">4</span></span><span leaf="">验证镜像体积</span></p>
+    </section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#B3593B;line-height:1;"><span leaf="">04</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#555555;line-height:1.4;"><span leaf="">方案对比</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"><span leaf="">构建方案对比</span></p>
+  <section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#555555;"><span leaf="">镜像体积</span></p>
+      <p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">单阶段</span></span><span leaf="">大</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">多阶段</span></span><span leaf="">小</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">Distroless</span></span><span leaf="">最小</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#555555;"><span leaf="">构建复杂度</span></p>
+      <p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">单阶段</span></span><span leaf="">低</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">多阶段</span></span><span leaf="">中</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">Distroless</span></span><span leaf="">高</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#555555;"><span leaf="">调试便利性</span></p>
+      <p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">单阶段</span></span><span leaf="">高</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">多阶段</span></span><span leaf="">中</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">Distroless</span></span><span leaf="">低</span></p>
+    </section>
+<section style="margin:0 0 8px;padding:10px 14px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#555555;"><span leaf="">生产适用性</span></p>
+      <p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">单阶段</span></span><span leaf="">一般</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">多阶段</span></span><span leaf="">高</span></p><p style="margin:0 0 4px;font-size:13px;color:#555555;"><span style="font-weight:600;color:#737373;margin-right:4px;"><span leaf="">Distroless</span></span><span leaf="">高</span></p>
+    </section>
+</section>
+<section style="margin:36px 0 16px;display:flex;align-items:baseline;gap:10px;">
+  <span style="font-size:24px;font-weight:900;color:#B3593B;line-height:1;"><span leaf="">05</span></span>
+  <p style="margin:0;font-size:18px;font-weight:800;color:#555555;line-height:1.4;"><span leaf="">发布检查</span></p>
+</section>
+<section style="margin:0 0 24px;">
+  <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"><span leaf="">发布前检查</span></p>
+  <section style="margin:0 0 6px;padding:8px 12px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;text-decoration:line-through;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">✓</span></span><span leaf="">镜像体积 < 200MB</span></p>
+    </section>
+<section style="margin:0 0 6px;padding:8px 12px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;text-decoration:line-through;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">✓</span></span><span leaf="">CI 构建通过</span></p>
+    </section>
+<section style="margin:0 0 6px;padding:8px 12px;background:#FAF9F5;border-radius:12px;border-left:3px solid #B3593B;">
+      <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;text-decoration:line-through;"><span style="font-weight:700;color:#B3593B;margin-right:8px;"><span leaf="">✓</span></span><span leaf="">健康检查通过</span></p>
+    </section>
+<section style="margin:0 0 6px;padding:8px 12px;background:#F7F7F7;border-radius:12px;border-left:3px solid #737373;">
+      <p style="margin:0;font-size:14px;color:#737373;line-height:1.7;text-decoration:none;"><span style="font-weight:700;color:#737373;margin-right:8px;"><span leaf="">○</span></span><span leaf="">回滚预案就绪</span></p>
+    </section>
+</section>
+<section style="margin:32px 0 0;padding:20px;background:#FAF9F5;border-radius:12px;text-align:center;">
+  <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#555555;line-height:1.7;"><span leaf="">我是甲木，热衷于分享 AI 观察与干货</span></p>
+  <p style="margin:0;font-size:13px;color:#737373;line-height:1.7;"><span leaf="">如果你觉得今天这篇有收获，欢迎点赞、在看、转发三连，我们下篇见</span></p>
+</section>
+</section>
