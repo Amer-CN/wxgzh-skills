@@ -4,6 +4,7 @@
 - 数据来源:各 RUN 的 `stages/media_enrichment/upload_events.json`、`stages/wechat_draft/draft_creation_result.json`、`stages/wechat_draft/stage_receipt.json`;事件 RUN 数据经档 35 复核。
 - 更新记录:2026-08-02 档 37 首次建账,纳入 4 篇归档 RUN + 事件 RUN `20260801T231452-vibe-coding-guide-v2-1-1vg6jx`;2026-08-03 档 49 追加 RUN `20260802T220853-codex-sol-luna-max-m6pyv4`(5 次 uploadimg,未到草稿)。
 - 累计 uploadimg:22 次(2+2+12+5+1);草稿 #1/#2/#3 共 3 份(RUN 20260802T220853 未创建草稿)。
+- 档 53 更正(2026-08-03):草稿箱基线更正为 **1 份**——草稿 #1/#2 的消失经用户确认为**本人手动删除**,与流水线无关,**结案**。管线代码无删除/发布能力,此结论与档 52 登记一致。
 
 ## 累计汇总(截至 2026-08-02)
 
@@ -11,6 +12,7 @@
 |---|---|---|
 | uploadimg(图片上传) | 16 | 归档 RUN 4 次(各 2)+ 事件 RUN 12 次(6 张图 × 2) |
 | draft/add(草稿) | 3 | 草稿 #1/#2/#3,草稿箱 0→3 |
+| 草稿箱现存量 | 1 | 档 53 更正:草稿 #1/#2 经用户确认本人手动删除,结案 |
 | 封面 add_material | 3 | 每篇草稿各 1 次 |
 | publish / mass_send / scheduled / delete | 0 | 全部 RUN 均为 false |
 
@@ -65,4 +67,5 @@
 - OBS-72 生产实证:entrypoint argv 已带上 `--cover <run>/media_enrichment/discover/images/73b4e06d….jpg`(=A-109 本地冻结文件,已批准 AP-…-002,sha 与冻结清单一致);封面选择逻辑通过三条件校验,未触发任何 FAIL_CLOSED。
 - gzh_design 重跑(hammer.3 acc7745a):THEME_IDENTITY=PASS / INTRO_GUARD=PASS / intro 两段(43 字 + 107 字)完整进入 final.html——OBS-83 生产链路实证。
 - **草稿箱异常记录**:档 52 预检实测草稿箱 `total_count=1`(预期 3,档 50 时仍为 3);箱内仅剩事件稿「vibe-coding-guide v2.1 升级」(草稿 #3)。草稿 #1/#2 在 2026-08-03T19:53Z(档 50 复核)之后消失;管线代码不存在删除/发布草稿能力(代码层面无 draft/delete、无 publish),判定为人工侧动作(用户后台删除或发布),非管线行为,据实登记待查。
+- **档 53 更正(结案)**:上一条「草稿箱异常」经用户确认为**本人手动删除**,与流水线无关;草稿箱基线更正为 1 份(现存事件稿草稿 #3),本条目后续不再视为异常。
 - 无发布/群发/定时/删除;草稿箱 1 份(未变);累计 uploadimg 仍 22 次;累计草稿创建仍 3 份(箱内现存 1 份)。
