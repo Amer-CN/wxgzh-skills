@@ -49,3 +49,12 @@ fail_closed: true
 
 - 无任何微信副作用(未到上传/草稿阶段);草稿箱仍 3 份;四锁/lock/台账未变;证据目录未触碰;未修改被锁 skill、未 relock、未手工编辑 lock;未删除任何文件。
 - RUN 产物完整保留在 `.temp\wxgzh-pipeline\20260802T220853-codex-sol-luna-max-m6pyv4\`(aihot/super_writer/zh_human_writing 阶段产物与 receipts)。
+
+
+## 归因更正(档 48,2026-08-03)
+
+上文「根因…责任在本轮 aihot 交付数据缺字段,非流水线缺陷」表述**作废**。
+
+- 更正:本次失败定性为**流水线缺陷,归入 OBS-31**(aihot URL 位于 `links.*`;`producers._load_dedup_index` 的 URL 提取为 `source_url → url`,缺少 `links.original` 回退,与 canonical_claim_registry 生成侧(source_url → links.original)口径不一致,导致 FAIL_CLOSED)。
+- 追加登记 **OBS-81(高)**:比对逻辑对「两侧 source_url 均为 None」判为一致(放行),虽被 registry 前置空值检查兜底,仍是空值一致性缺陷;档 48 已修复为「任一侧取不到 URL 即 FAIL_CLOSED,两侧皆空不构成一致」。
+- 修复见 `audit/quality/url-field-contract-48.md`(同源函数 `_material_source_url` + 显式 `_check_material_url_consistency`)。

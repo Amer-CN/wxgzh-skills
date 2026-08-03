@@ -334,6 +334,40 @@ def _load_copyright_approvals(rd: Path) -> dict:
     return out
 
 
+def _material_source_url(item: dict) -> str | None:
+    """Single source of truth for a material/dedup item's source URL (OBS-31).
+
+    Priority: `source_url` -> `links.original`. This MUST stay byte-identical
+    with the canonical_claim_registry generation convention (档46R onward:
+    source_url, else links.original) — the 档46R FAIL_CLOSED was caused by a
+    divergence here (dedup side lacked the links.original fallback while the
+    registry side used it). Any future change must be applied to BOTH sides
+    through this one function; never re-implement the priority elsewhere.
+    NOTE: the old dedup-side `url` intermediate alias is deliberately NOT kept
+    (no real data uses it; keeping it would recreate a second split point).
+    """
+    url = item.get("source_url")
+    if not url:
+        links = item.get("links")
+        if isinstance(links, dict):
+            url = links.get("original")
+    return url or None
+
+
+def _check_material_url_consistency(mid: str, dedup_url, registry_url) -> None:
+    """OBS-31/OBS-81: dedup side and canonical registry side must agree on the
+    material source URL. FAIL_CLOSED unless BOTH sides have a non-empty URL AND
+    they are equal — two empty values are NEVER treated as consistent (the most
+    source-less case must not pass validation)."""
+    if not dedup_url or not registry_url:
+        raise MediaRequestError(
+            f"material {mid} source_url missing on one side "
+            f"(dedup={dedup_url!r} registry={registry_url!r}) (FAIL_CLOSED)")
+    if dedup_url != registry_url:
+        raise MediaRequestError(
+            f"material {mid} source_url disagrees with dedup (FAIL_CLOSED)")
+
+
 def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
     """P0#3 (strict): load aihot/deduplicated_items.json into a deterministic index
     used to cross-verify the canonical registry (tolerant of id/url key aliases).
@@ -356,7 +390,7 @@ def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
             continue
         iid = it.get("id", it.get("material_id", it.get("item_id")))
         iid = str(iid) if iid is not None else None
-        url = it.get("source_url") or it.get("url")
+        url = _material_source_url(it)
         permalink = it.get("aihot_permalink") or it.get("permalink") or url
         norm = {"id": iid, "source_url": url, "aihot_permalink": permalink,
                 "title": it.get("title", "")}
@@ -478,9 +512,7 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
                 raise MediaRequestError(
                     f"material {mid}: dedup_id {dkey} conflicts with the "
                     "material_id mapping (FAIL_CLOSED)")
-        if di["source_url"] != src:
-            raise MediaRequestError(
-                f"material {mid} source_url disagrees with dedup (FAIL_CLOSED)")
+        _check_material_url_consistency(mid, di["source_url"], src)
         permalink = m.get("aihot_permalink") or src
         if di.get("aihot_permalink") and di["aihot_permalink"] != permalink:
             raise MediaRequestError(
