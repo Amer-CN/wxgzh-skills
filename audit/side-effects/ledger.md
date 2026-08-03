@@ -59,3 +59,10 @@
 - gzh_design 通过(intro 两段完整进入 final.html,OBS-73 生产实证);
 - wechat_draft 停机:`FAIL_CLOSED: A-003 frozen cover sha256 mismatch`(仓库版封面硬编码 A-003/418d841f…,OBS-72 未修);无草稿创建;
 - 无发布/群发/定时/删除;无封面 add_material;草稿箱仍 3 份。
+
+### RUN 20260802T220853-codex-sol-luna-max-m6pyv4(档52 OBS-72 修复后重跑:gzh_design 重跑 PASS,wechat_draft 预检阻断停机)
+- **真实 uploadimg 0 次 / 封面 add_material 0 次 / 草稿 0 份**:wechat_draft 入口在「发布前安全预检」被阻断(validator WARN=1:2 处半角引号,本次发布要求 WARNING=0),预检阻断发生在获取 token 之前,全程零微信调用。
+- OBS-72 生产实证:entrypoint argv 已带上 `--cover <run>/media_enrichment/discover/images/73b4e06d….jpg`(=A-109 本地冻结文件,已批准 AP-…-002,sha 与冻结清单一致);封面选择逻辑通过三条件校验,未触发任何 FAIL_CLOSED。
+- gzh_design 重跑(hammer.3 acc7745a):THEME_IDENTITY=PASS / INTRO_GUARD=PASS / intro 两段(43 字 + 107 字)完整进入 final.html——OBS-83 生产链路实证。
+- **草稿箱异常记录**:档 52 预检实测草稿箱 `total_count=1`(预期 3,档 50 时仍为 3);箱内仅剩事件稿「vibe-coding-guide v2.1 升级」(草稿 #3)。草稿 #1/#2 在 2026-08-03T19:53Z(档 50 复核)之后消失;管线代码不存在删除/发布草稿能力(代码层面无 draft/delete、无 publish),判定为人工侧动作(用户后台删除或发布),非管线行为,据实登记待查。
+- 无发布/群发/定时/删除;草稿箱 1 份(未变);累计 uploadimg 仍 22 次;累计草稿创建仍 3 份(箱内现存 1 份)。

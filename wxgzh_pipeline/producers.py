@@ -851,6 +851,83 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         }
 
 
+def _select_live_cover(ctx):
+    """OBS-72: pick the cover from THIS run's approved assets' local frozen
+    files - never a hardcoded sha (the old 418d841f... A-003 wiring).
+
+    Rule (explicit, deterministic): the FIRST asset in
+    article_image_bindings.json body_images order that is
+    (a) approved via a stable single_asset approval record,
+    (b) recorded as a successful upload in continue/upload_events.json, and
+    (c) whose local discover/images/<asset_sha256>.* file sha256 equals the
+        frozen asset_discovery_manifest asset_sha256.
+
+    Fail-closed: no approved+uploaded candidate, missing/invalid contract,
+    manifest or events data, contract/manifest sha divergence, or local file
+    sha mismatch all raise MediaRequestError (exit 2, zero side effects).
+    Returns (cover_path, asset_id).
+    """
+    rd = Path(ctx.run_dir)
+    media_root = rd / "media_enrichment"
+    approvals = _load_copyright_approvals(rd)
+    if not approvals["single_asset"]:
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: no stable single_asset approval in contract")
+    frozen = media_root / "discover" / "asset_discovery_manifest.json"
+    if not frozen.is_file():
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: frozen asset_discovery_manifest.json missing")
+    manifest = json.loads(frozen.read_text(encoding="utf-8"))
+    by_id = {a["asset_id"]: a for a in manifest.get("assets", [])}
+    events_path = media_root / "continue" / "upload_events.json"
+    if not events_path.is_file():
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: continue/upload_events.json missing")
+    events = json.loads(events_path.read_text(encoding="utf-8"))
+    success_ids = []
+    for ev in events.get("events", []):
+        aid = ev.get("asset_id") if isinstance(ev, dict) else None
+        if aid and ev.get("status") == "success" and aid not in success_ids:
+            success_ids.append(aid)
+    if not success_ids:
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: no successful upload in continue/upload_events.json")
+    bindings_path = media_root / "article_image_bindings.json"
+    if not bindings_path.is_file():
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: article_image_bindings.json missing")
+    bindings = json.loads(bindings_path.read_text(encoding="utf-8"))
+    candidates = []
+    for img in bindings.get("body_images", []):
+        aid = img.get("asset_id") if isinstance(img, dict) else None
+        if aid in success_ids and aid in approvals["single_asset"]:
+            candidates.append(aid)
+    if not candidates:
+        raise MediaRequestError(
+            "cover FAIL_CLOSED: no approved and uploaded asset in bindings")
+    images_dir = media_root / "discover" / "images"
+    for asset_id in candidates:
+        rec = approvals["single_asset"][asset_id]
+        manifest_rec = by_id.get(asset_id)
+        if manifest_rec is None:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} missing from frozen discovery manifest")
+        if manifest_rec.get("asset_sha256") != rec.get("asset_sha256"):
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} approval sha diverges from frozen manifest")
+        expected_sha = rec["asset_sha256"]
+        matches = sorted(images_dir.glob(f"{expected_sha}.*")) if images_dir.is_dir() else []
+        if not matches:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} local frozen file missing")
+        local = matches[0]
+        if sha256_file(local) != expected_sha:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} local frozen file sha256 mismatch")
+        return local, asset_id
+    raise MediaRequestError("cover FAIL_CLOSED: no usable approved cover asset")
+
+
 def _wechat(ctx, stage, sd, expected, state):
     if not ctx.create_wechat_draft:
         return [], {"exec_kind": EM.WECHAT, "skipped": "create_wechat_draft=False"}
@@ -859,10 +936,9 @@ def _wechat(ctx, stage, sd, expected, state):
     args = ["--html", str(html), "--title", (state.topic or "wxgzh article")[:60],
             "--audit-dir", str(sd)]
     if ctx.network_mode == "live":
-        cover = (Path(ctx.run_dir) / "media_enrichment" / "discover" / "images" /
-                 "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf.png")
-        expected_cover_sha = "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf"
-        if not cover.is_file() or sha256_file(cover) != expected_cover_sha:
+        try:
+            cover, cover_asset_id = _select_live_cover(ctx)
+        except (OSError, ValueError, KeyError, TypeError, MediaRequestError) as exc:
             return [], {
                 "exec_kind": EM.WECHAT,
                 "invoked_entrypoint": str(entry),
@@ -871,7 +947,7 @@ def _wechat(ctx, stage, sd, expected, state):
                 "entry_run": {
                     "exit_code": 2,
                     "stdout": "",
-                    "stderr": "FAIL_CLOSED: A-003 frozen cover sha256 mismatch",
+                    "stderr": f"FAIL_CLOSED: {exc}",
                     "elapsed_seconds": 0.0,
                 },
             }
@@ -887,5 +963,7 @@ def _wechat(ctx, stage, sd, expected, state):
                           "stderr_sha256": run["stderr_sha256"],
                           "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
                           "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
+    if ctx.network_mode == "live":
+        meta["cover_asset_id"] = cover_asset_id
     outputs = [sd / o for o in expected if (sd / o).is_file()]
     return outputs, meta

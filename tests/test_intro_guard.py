@@ -87,9 +87,13 @@ class TestRealHTMLRegression:
     """档50 first-line-only-in-cover HTML must FAIL under the new guard."""
 
     def test_run50_html_fails(self):
-        run = Path(r"F:\AIXM\wxgzh\.temp\wxgzh-pipeline\20260802T220853-codex-sol-luna-max-m6pyv4")
-        md = (run / "zh_human_writing" / "final_article.md").read_text(encoding="utf-8")
-        html = (run / "gzh_design" / "final.html").read_text(encoding="utf-8")
+        # 档52:样本已冻结为 fixtures(原测试读 .temp 实时 RUN 目录;档52 按指令
+        # 重跑 gzh_design 时该文件被新渲染器产物合法覆盖,旧渲染(首段仅封面)已
+        # 无处可寻。fixture 用 hammer.2 渲染器(9596ecc)对同一冻结文章离线复现,
+        # 语义逐字等同档50 产物(首段仅以 40 字 oneliner 出现于封面,正文缺失)。
+        fixture = Path(__file__).resolve().parents[1] / "fixtures" / "regression_samples"
+        md = (fixture / "run50-final_article.md").read_text(encoding="utf-8")
+        html = (fixture / "run50-final-html-broken.html").read_text(encoding="utf-8")
         report = _intro_content_fidelity(md, html)
         assert report["ok"] is False
         assert "导语：多模型编排正在成为 AI 编程成本的关键杠杆" in report["missing_text"]
