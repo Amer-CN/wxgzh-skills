@@ -42,5 +42,27 @@
     "new_source_tree_sha": "5832ead022a4cf6c586b214b091eff0cb1d29692",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260803T121024Z-1afb45bd",
+    "skill": "gzh-design",
+    "reason": "档51 gzh-design 升版:OBS-83 首段入正文 + oneliner 取消 + version hammer.3",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-03T12:10:24Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "f59d64bbb63309a7cdca2ae58081b49223731f86d1d866d058989d492816a6e4",
+    "new_root_sha256": "b517aec6964d990213dbaaf095958d135f10e8975ae17af4300764d3e0d44b70",
+    "old_entrypoint_sha256": "8bc3ccee4354720f119d91577b3750fd03dba8dcd6810244868e3b945581c4ed",
+    "new_entrypoint_sha256": "5356c4808360e3074880b10bb6284316ac1d5c9b471b722ea3bae107591feb07",
+    "old_render_entry_sha256": "8bc3ccee4354720f119d91577b3750fd03dba8dcd6810244868e3b945581c4ed",
+    "new_render_entry_sha256": "5356c4808360e3074880b10bb6284316ac1d5c9b471b722ea3bae107591feb07",
+    "old_full_commit_sha": "9596eccb67a53d639cfa7990d39fa6c7f200c919",
+    "new_full_commit_sha": "acc7745a152d0b2f09794227e1478730f6ffb9a9",
+    "old_source_tree_sha": "5832ead022a4cf6c586b214b091eff0cb1d29692",
+    "new_source_tree_sha": "725bd9031fc806a03fbdb28e6dcfb3348dfee69f",
+    "old_skill_version": "v2026.08.02-hammer.2",
+    "new_skill_version": "v2026.08.02-hammer.3",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]

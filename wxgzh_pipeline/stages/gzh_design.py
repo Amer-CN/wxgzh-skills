@@ -108,52 +108,56 @@ def _intro_paras(md_text: str) -> list[str]:
     return paras
 
 
-_TAG_RE = _re.compile(r"<[^>]+>")
 _WS_RE = _re.compile(r"\s+")
+# OBS-83 (hammer.3): body paragraphs rendered by hammer_para (and code blocks).
+# The guard must inspect the BODY region only — cover subtitle / TOC / signature
+# / footer text must NOT count as "present" (档50 showed subtitle can carry the
+# first line coincidentally, which the old whole-HTML check could not tell).
+_PARA_RE = _re.compile(
+    r'<p style="margin-bottom:16px;font-size:14px;line-height:1.9;'
+    r'text-align:justify;[^"]*">(.*?)</p>', _re.S)
+_PRE_RE = _re.compile(r"<pre[^>]*>(.*?)</pre>", _re.S)
 
 
-def _html_to_plain_text(html_text: str) -> str:
-    """Strip tags + decode HTML entities + collapse whitespace (档45R 内容保真)."""
-    text = _TAG_RE.sub(" ", html_text)
-    text = _html.unescape(text)
-    return _WS_RE.sub("", text)
+def _body_plain_text(html_text: str) -> str:
+    """Plain text of BODY content only: hammer_para paragraphs + <pre> code
+    blocks (whitespace-normalized, HTML entities decoded). Cover/TOC/signature/
+    footer regions are excluded on purpose (OBS-83)."""
+    parts = _PARA_RE.findall(html_text) + _PRE_RE.findall(html_text)
+    text = "".join(_re.sub(r"<[^>]+>", "", p) for p in parts)
+    return _WS_RE.sub("", _html.unescape(text))
 
 
 def _intro_content_fidelity(md_text: str, html_text: str) -> dict:
-    """OBS-73 content fidelity guard (档45R, replaces the 档40 line-count guard).
+    """OBS-73/OBS-83 content fidelity guard.
 
-    The renderer now emits every intro paragraph before the first chapter title,
-    so multi-line intros are LEGAL. What must hold is CONTENT fidelity:
-      - every intro paragraph's text must appear in the rendered plain text;
-      - the FIRST line may be only partially present (cover subtitle 48 chars /
-        oneliner 40 chars truncation) — its 40-char prefix must appear;
-      - every LATER line must be present IN FULL (whitespace-normalized).
+    The renderer emits every intro paragraph (INCLUDING the first line, hammer.3)
+    as body paragraphs before the first chapter title. What must hold:
+      - EVERY intro paragraph's text must appear IN FULL in the BODY region
+        (hammer_para paragraphs / <pre> code blocks), whitespace-normalized;
+      - the FIRST line uses the SAME full-presence standard — a cover-subtitle or
+        oneliner occurrence does NOT count (OBS-83: the 档50 HTML carried the
+        first line only inside the cover and the old guard still passed).
     Frozen article missing => handled by the caller (FAIL, never skip).
     No skip switch / env / exemption parameter exists for this guard.
     """
-    plain = _html_to_plain_text(html_text)
+    body = _body_plain_text(html_text)
     paras = _intro_paras(md_text)
     missing: list[str] = []
-    for idx, para in enumerate(paras):
+    for para in paras:
         norm = _WS_RE.sub("", para)
         if not norm:
             continue
-        if idx == 0:
-            # first line: truncation allowed -> prefix must exist
-            prefix = norm[:_INTRO_MAX_LEN]
-            if prefix not in plain:
-                missing.append(para)
-        else:
-            if norm not in plain:
-                missing.append(para)
+        if norm not in body:
+            missing.append(para)
     ok = not missing
     return {
         "ok": ok,
         "intro_line_count": len(paras),
         "intro_char_count": sum(len(p) for p in paras),
         "missing_text": "\n".join(missing),
-        "guidance": ("渲染产物缺失首个 ## 之前的导语内容:第一行的前 40 字与"
-                     "第二行起的每个段落必须完整存在于 HTML 中。"
+        "guidance": ("渲染产物正文区域缺失首个 ## 之前的导语内容:每个段落(含首段)"
+                     "必须完整存在于正文段落中;仅出现在封面/oneliner 不算数。"
                      "请核对渲染器输出与冻结文章,不要改写正文。"),
     }
 
