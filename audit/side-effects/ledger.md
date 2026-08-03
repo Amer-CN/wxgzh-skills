@@ -3,7 +3,7 @@
 - 维护位置:`audit/side-effects/ledger.md`;本账登记所有已归档 RUN 的真实微信副作用(HTTP 200 / real_api_call)。
 - 数据来源:各 RUN 的 `stages/media_enrichment/upload_events.json`、`stages/wechat_draft/draft_creation_result.json`、`stages/wechat_draft/stage_receipt.json`;事件 RUN 数据经档 35 复核。
 - 更新记录:2026-08-02 档 37 首次建账,纳入 4 篇归档 RUN + 事件 RUN `20260801T231452-vibe-coding-guide-v2-1-1vg6jx`;2026-08-03 档 49 追加 RUN `20260802T220853-codex-sol-luna-max-m6pyv4`(5 次 uploadimg,未到草稿)。
-- 累计 uploadimg:21 次(2+2+12+5);草稿 #1/#2/#3 共 3 份(本 RUN 未创建草稿)。
+- 累计 uploadimg:22 次(2+2+12+5+1);草稿 #1/#2/#3 共 3 份(RUN 20260802T220853 未创建草稿)。
 
 ## 累计汇总(截至 2026-08-02)
 
@@ -51,3 +51,11 @@
 - A-107(已批准)因 `dimensions 100x100 below minimum 640x360` 被 continue 阶段 rejected,未上传;
 - 绑定 5 张 < body_images_min=6 → MEDIA_BINDINGS FAIL → 阶段失败停机;
 - 未创建草稿;草稿箱仍 3 份;无发布/群发/定时/删除;无封面 add_material;无图表生成(claims 无数字,warning 记录)。
+
+### RUN 20260802T220853-codex-sol-luna-max-m6pyv4(档50 追加批准续跑:media→gzh 通过,wechat_draft 停机)
+- 新增真实 uploadimg 1 次(A-109,2026-08-03,approval AP-…-002):
+  - A-109 `73b4e06da007d45a6782ad3382604833a56bec01b258dc415cb38872494acdac` → https://mmbiz.qpic.cn/mmbiz_jpg/Rejn3syibRSZ2TBXRIsxAdkPo6rDfGXgic7wKFKOI21libMMaeF4MyDNNI3iaHENicNIf4pDFaCFtibDBK4Auia9L8v0L5k4vlsToUHovUPmQrBX2M/0?from=appmsg
+- 幂等:本轮 continue 对已上传 5 张(A-110..A-114)追加 `skipped_already_uploaded` 事件(5 条,URL 复用,无重复上传)——OBS-53 幂等生效;
+- gzh_design 通过(intro 两段完整进入 final.html,OBS-73 生产实证);
+- wechat_draft 停机:`FAIL_CLOSED: A-003 frozen cover sha256 mismatch`(仓库版封面硬编码 A-003/418d841f…,OBS-72 未修);无草稿创建;
+- 无发布/群发/定时/删除;无封面 add_material;草稿箱仍 3 份。
