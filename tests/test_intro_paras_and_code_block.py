@@ -60,12 +60,13 @@ class TestOBS73IntroParas:
         assert html.index("第二行导语段落。") < html.index("第三行导语段落。")
         assert "第一行导语。" in html
 
-    def test_parse_article_keeps_intro_unchanged(self):
+    def test_parse_article_keeps_intro_and_first_line_in_paras(self):
         R = _load_render()
         parsed = R.parse_article(MULTI_INTRO)
         assert parsed["intro"] == "第一行导语。"
-        assert [i["kind"] for i in parsed["intro_paras"]] == ["para", "para"]
-        assert [i["text"] for i in parsed["intro_paras"]] == ["第二行导语段落。", "第三行导语段落。"]
+        # OBS-83: the FIRST line also enters intro_paras (body rendering)
+        assert [i["kind"] for i in parsed["intro_paras"]] == ["para", "para", "para"]
+        assert [i["text"] for i in parsed["intro_paras"]] == ["第一行导语。", "第二行导语段落。", "第三行导语段落。"]
 
     def test_single_intro_still_passes(self):
         _, code, html = _render_md("# T\n\n短导语。\n\n## 一\n\n正文。\n")
@@ -136,3 +137,45 @@ class TestFencedCodeBlock:
         _, code, html = _render_md("# T\n\n导语。\n\n## 一\n\n```\ncode line\n")
         assert code == 0
         assert "code line" in html
+
+
+# ── OBS-83 (hammer.3): first intro line must render IN FULL in the body ─────
+
+class TestOBS83FirstLineInBody:
+    def _body_paras(self, html):
+        import html as _h
+        import re as _re
+        m = _re.findall(r'<p style="margin-bottom:16px;font-size:14px;line-height:1.9;text-align:justify;[^"]*">(.*?)</p>', html, _re.S)
+        out = []
+        for x in m:
+            x = _re.sub(r'<[^>]+>', '', x)
+            x = _h.unescape(x)
+            out.append(''.join(x.split()))
+        return out
+
+    def test_first_line_43_chars_in_body(self):
+        md = "# 标题\n\n" + "甲" * 43 + "。\n\n## 一\n\n正文。\n"
+        _, code, html = _render_md(md)
+        assert code == 0
+        body = self._body_paras(html)
+        assert "甲" * 43 + "。" in body, "43-char first line must appear IN FULL in a body paragraph"
+
+    def test_first_line_200_chars_in_body(self):
+        md = "# 标题\n\n" + "乙" * 200 + "。\n\n## 一\n\n正文。\n"
+        _, code, html = _render_md(md)
+        assert code == 0
+        body = self._body_paras(html)
+        assert "乙" * 200 + "。" in body, "200-char first line must appear IN FULL in a body paragraph"
+
+    def test_only_first_line_no_second(self):
+        md = "# 标题\n\n只有首段，没有第二段。\n\n## 一\n\n正文。\n"
+        _, code, html = _render_md(md)
+        assert code == 0
+        body = self._body_paras(html)
+        assert "只有首段，没有第二段。" in body
+
+    def test_no_intro(self):
+        md = "# 标题\n\n## 一\n\n正文。\n"
+        _, code, html = _render_md(md)
+        assert code == 0
+        assert "正文。" in html

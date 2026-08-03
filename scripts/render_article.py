@@ -79,10 +79,11 @@ def split_title(title: str) -> tuple[str, str]:
 def parse_article(md: str) -> dict:
     """Parse H1 title, intro paragraph(s), and H2 chapters with paragraphs.
 
-    OBS-73 (根治): every non-empty line before the first "## " AFTER the intro
-    line is kept in intro_paras and rendered as body paragraphs before the first
-    chapter title — no more silent dropping. `intro` itself is unchanged and
-    still feeds the cover subtitle + oneliner.
+    OBS-73 (根治): every non-empty line before the first "## " (INCLUDING the
+    first intro line, OBS-83) is kept in intro_paras and rendered as body
+    paragraphs before the first chapter title. `intro` is unchanged and still
+    feeds the cover subtitle (the oneliner card was removed in hammer.3 — its
+    only content was intro[:40], now redundant with the full first paragraph).
     问题 B: ``` fenced blocks are parsed as code items ({"kind": "code"}) and
     are never merged into paragraph text. Paragraph items are
     {"kind": "para", "text": ...}; code items preserve whitespace verbatim.
@@ -126,8 +127,9 @@ def parse_article(md: str) -> dict:
         if cur is None:
             if not intro:
                 intro = st
-            else:
-                intro_paras.append({"kind": "para", "text": st})
+            # OBS-83: the FIRST intro line must ALSO render in the body (not only
+            # the cover subtitle/oneliner). Same path as every later line.
+            intro_paras.append({"kind": "para", "text": st})
             continue
         cur["paras"].append({"kind": "para", "text": st})
     if in_code:  # unclosed fence: keep collected lines as a code item (lenient)
@@ -142,7 +144,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
     chapter_titles = [c["title"] for c in chapters]
     usage = {"cover_breaking": 0, "toc_scroll": 0, "chapter_title": 0,
-             "oneliner_card": 0, "fixed_signature": 0, "footer_cta": 0,
+             "fixed_signature": 0, "footer_cta": 0,
              "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0}
 
     parts: list[str] = []
@@ -156,10 +158,6 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
 
     parts.append(H.hammer_toc(theme_key, chapter_titles))
     usage["toc_scroll"] += 1
-
-    if parsed.get("intro"):
-        parts.append(H.hammer_oneliner(theme_key, parsed["intro"][:40]))
-        usage["oneliner_card"] += 1
 
     # OBS-73 (根治): intro paragraphs render BEFORE the first chapter title.
     # Order: cover -> intro paras -> chapter 1 title -> chapter body.
