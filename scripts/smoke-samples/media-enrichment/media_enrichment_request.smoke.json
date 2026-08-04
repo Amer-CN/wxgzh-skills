@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "run_id": "media-smoke-obs80",
+  "article": {
+    "path": "article.md",
+    "sha256": "3336aec18010f54dd6a43f9153b994cc6dec9b7b7e361c56ebfff78218b926dd"
+  },
+  "materials": [
+    {
+      "material_id": "M-001",
+      "aihot_permalink": "https://aihot.virxact.com/items/example-001",
+      "source_url": "https://example.com/article-001",
+      "title": "示例素材：某模型基准测试结果",
+      "selected_claim_ids": [
+        "C-01",
+        "C-02"
+      ]
+    },
+    {
+      "material_id": "M-002",
+      "aihot_permalink": "https://aihot.virxact.com/items/example-002",
+      "source_url": "https://example.com/article-002",
+      "title": "示例素材：某模型成本对比",
+      "selected_claim_ids": [
+        "C-03"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "claim_text": "模型A在MMLU基准测试中得分76.2%",
+      "material_id": "M-001",
+      "source_url": "https://example.com/article-001",
+      "source_excerpt": "模型A在MMLU基准测试中得分76.2%",
+      "numbers": [
+        "76.2%"
+      ]
+    },
+    {
+      "claim_id": "C-02",
+      "claim_text": "模型B在MMLU基准测试中得分32.2%",
+      "material_id": "M-001",
+      "source_url": "https://example.com/article-001",
+      "source_excerpt": "模型B在MMLU基准测试中得分32.2%",
+      "numbers": [
+        "32.2%"
+      ]
+    },
+    {
+      "claim_id": "C-03",
+      "claim_text": "模型A的API调用成本为每百万token 15美元",
+      "material_id": "M-002",
+      "source_url": "https://example.com/article-002",
+      "source_excerpt": "模型A的API调用成本为每百万token 15美元",
+      "numbers": [
+        "15"
+      ]
+    }
+  ],
+  "config": {
+    "network_mode": "offline_fixture",
+    "upload_mode": "dry_run",
+    "max_images_per_material": 3,
+    "max_total_images": 12,
+    "min_width": 640,
+    "min_height": 360,
+    "max_download_bytes": 15728640,
+    "max_pixels": 40000000,
+    "allow_unknown_license_for_publish": false
+  }
+}

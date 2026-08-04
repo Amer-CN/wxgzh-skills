@@ -1,0 +1,21 @@
+material_ledger:
+  total_count: 1
+  source: "relock smoke sample"
+  retrieved_at: "2026-08-04"
+  materials:
+    - id: mat-001
+      source_type: url
+      source_url: "https://example.com/smoke-001"
+      title: "最小冒烟素材"
+      raw_text: "示例：某模型在基准测试中得分 76.2%。"
+      ingested_at: "2026-08-04"
+      event_id: evt-001
+      claim_ids: [cl-001]
+      status: used
+      excluded_reason: null
+      duplicate_of: null
+      duplicate_reason: null
+  events:
+    - id: evt-001
+      title: "冒烟事件"
+      materials: [mat-001]

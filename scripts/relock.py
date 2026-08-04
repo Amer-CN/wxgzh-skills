@@ -409,19 +409,41 @@ SMOKE_ENTRIES = {
         "args": ["--article", "{skill_dir}/assets/sample-article.md",
                  "--output-dir", "{smoke_dir}", "--theme", "smartisan"],
     },
+    # 档56 OBS-80:样本优先引用 skill 侧现成样本({skill_dir});必须新造的样本
+    # (super-writer ledger / media request+article+fixtures)放 Pipeline 侧
+    # scripts/smoke-samples/ ({sample_dir}),不改被锁 skill 树。
+    "super-writer": {
+        "entry": "scripts/material_ingestion.py",
+        "args": ["--ledger", "{sample_dir}/super-writer/material-ledger.smoke.yaml",
+                 "--output", "{smoke_dir}/material-ingestion-report.json", "--json"],
+    },
+    "zh-human-writing": {
+        "entry": "scripts/fidelity_guard.py",
+        "args": ["--original", "{skill_dir}/examples/01-author-preserve/input.txt",
+                 "--edited", "{skill_dir}/examples/01-author-preserve/input.txt",
+                 "--output", "json"],
+    },
+    "media-enrichment": {
+        "entry": "scripts/run_media_enrichment.py",
+        "args": ["--request", "{sample_dir}/media-enrichment/media_enrichment_request.smoke.json",
+                 "--output-dir", "{smoke_dir}",
+                 "--fixture-dir", "{sample_dir}/media-enrichment/fixtures",
+                 "--phase", "discover"],
+    },
 }
 _SMOKE_TRACEBACK_MARKERS = ("Traceback", "NameError", "AttributeError", "KeyError")
 
 
-def _run_entry_smoke(skills_home: Path, name: str,
-                     entry_cfg: dict) -> tuple[bool, str]:
+def _run_entry_smoke(skills_home: Path, name: str, entry_cfg: dict,
+                     sample_dir: Path | None = None) -> tuple[bool, str]:
     """Production-CLI smoke of a locked entrypoint (installed tree)."""
     skill_dir = Path(skills_home) / name
     entry = skill_dir / entry_cfg["entry"]
     if not entry.is_file():
         return False, f"{name}: entrypoint missing for smoke: {entry}"
     with tempfile.TemporaryDirectory(prefix="relock-smoke-") as td:
-        args = [str(a).format(skill_dir=skill_dir, smoke_dir=td)
+        args = [str(a).format(skill_dir=skill_dir, smoke_dir=td,
+                             sample_dir=sample_dir)
                 for a in entry_cfg["args"]]
         cmd = [sys.executable, "-X", "utf8", str(entry), *args]
         try:
@@ -942,7 +964,9 @@ def main(argv=None) -> int:
             smoke_cfg = dict(smoke_cfg)
             smoke_cfg["entry"] = ((lock_skills.get(targets[0]) or {}).get("entrypoint")
                                   or smoke_cfg.get("entry"))
-            ok_smoke, smoke_out = _run_entry_smoke(Path(skills_home), targets[0], smoke_cfg)
+            sample_dir = Path(__file__).resolve().parent / "smoke-samples"
+            ok_smoke, smoke_out = _run_entry_smoke(Path(skills_home), targets[0], smoke_cfg,
+                                                  sample_dir=sample_dir)
             print(smoke_out)
             if not ok_smoke:
                 _err("entrypoint smoke FAILED after re-lock — rolling back")
