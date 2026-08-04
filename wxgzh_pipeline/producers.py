@@ -253,6 +253,53 @@ _STABLE_SINGLE_ASSET_FIELDS = {
 }
 VALID_APPROVAL_SCOPES = ("material", "source_url", "single_asset")
 
+def _approval_precheck(rd: Path) -> dict:
+    """OBS-82(档55):discover 候选硬门槛预校验——不让不达标资产进入人工批准。
+
+    判定口径与 media-enrichment continue 阶段一致:正文图最小 640x360。
+    读 discover/media_manifest.json 的 width/height(discover 已下载并测尺寸),
+    不依赖 decision/quality_status 字段(档50 实证:A-107 decision=rejected 仍被
+    人工批准,quality=pass 语义混乱)。封面无独立尺寸门槛(从已批准正文图选择,
+    正文门槛已隐含覆盖;若未来引入封面专用尺寸需扩展本函数)。
+    行为:排除 + 标注——不达标资产从 eligible 清单排除,同时完整保留在 excluded
+    列表(可追溯、可人工复核)。"""
+    media_root = Path(rd) / "media_enrichment"
+    manifest_path = media_root / "discover" / "media_manifest.json"
+    eligible, excluded = [], []
+    if manifest_path.is_file():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise MediaRequestError(
+                f"approval precheck FAIL_CLOSED: invalid discover media_manifest: {exc}") from exc
+        for asset in manifest.get("assets", []):
+            aid = asset.get("asset_id") if isinstance(asset, dict) else None
+            if not aid:
+                continue
+            w, h = asset.get("width"), asset.get("height")
+            if isinstance(w, int) and isinstance(h, int) and (w < 640 or h < 360):
+                excluded.append({"asset_id": aid, "width": w, "height": h,
+                                "reason": "dimensions below minimum 640x360"})
+            else:
+                eligible.append(aid)
+    return {"schema_version": "1.0", "eligible": eligible, "excluded": excluded,
+            "min_width": 640, "min_height": 360, "source": "discover/media_manifest.json"}
+
+
+def _enforce_approval_precheck(rd: Path, precheck: dict) -> None:
+    """OBS-82 消费端兜底:批准合同中任何资产不在预校验 eligible 清单 -> FAIL_CLOSED。
+    防止「批准记录被消费而绑定数不足」(档50 A-107 场景)重演。"""
+    eligible = set(precheck.get("eligible") or [])
+    excluded_by_id = {a["asset_id"]: a for a in precheck.get("excluded") or []}
+    for approval in (precheck.get("checked_approvals") or []):
+        aid = approval.get("asset_id")
+        if aid not in eligible:
+            detail = excluded_by_id.get(aid)
+            extra = (f"({detail['width']}x{detail['height']} below minimum 640x360)"
+                     if detail else "not in eligible list")
+            raise MediaRequestError(
+                f"approval precheck FAIL_CLOSED: approved asset {aid} {extra}")
+
 
 def _canonical_discovery_sha(manifest: dict) -> str:
     unsigned = dict(manifest)
@@ -762,6 +809,12 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 meta["entry_run"]["stderr"] = (
                     "FAIL_CLOSED: discovery manifest missing or upload events not empty")
                 return [], meta
+            # OBS-82(档55):discover 完成后、等待人工批准前,写可批准性预校验报告
+            precheck = _approval_precheck(Path(ctx.run_dir))
+            precheck_path = Path(ctx.run_dir) / "media_enrichment" / "approval_precheck.json"
+            precheck_path.write_text(json.dumps(precheck, ensure_ascii=False, indent=2),
+                                    encoding="utf-8")
+            meta["approval_precheck"] = str(precheck_path)
             meta["await_media_approval"] = True
             meta["discovery_manifest"] = str(frozen)
             meta["approval_file"] = str(approval_file)
@@ -786,6 +839,14 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         approval_data = json.loads(approval_file.read_text(encoding="utf-8"))
         stable = [a for a in approval_data.get("approvals", [])
                   if a.get("approved_scope") == "single_asset"]
+        # OBS-82(档55):消费批准合同前,预校验兜底——批准了不达标资产必须 FAIL_CLOSED
+        precheck_path = Path(ctx.run_dir) / "media_enrichment" / "approval_precheck.json"
+        if not precheck_path.is_file():
+            raise MediaRequestError(
+                "approval precheck FAIL_CLOSED: approval_precheck.json missing")
+        precheck = json.loads(precheck_path.read_text(encoding="utf-8"))
+        precheck["checked_approvals"] = stable
+        _enforce_approval_precheck(Path(ctx.run_dir), precheck)
         frozen_by_id = {a["asset_id"]: a for a in discovery.get("assets", [])}
         for approval in stable:
             if not _STABLE_SINGLE_ASSET_FIELDS.issubset(approval):
