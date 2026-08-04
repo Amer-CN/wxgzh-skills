@@ -273,3 +273,59 @@ def test_wiring_visible_in_producers():
     assert PR.build_approval_readiness is AE.build_approval_readiness
     assert PR.enforce_approval_readiness is AE.enforce_approval_readiness
     assert PR.ApprovalEvidenceError is AE.ApprovalEvidenceError
+
+
+# ── 11. 档62 联动:manifest 自带 page_position 时优先消费(不再重抓页面) ──
+
+def test_manifest_page_position_consumed_without_fetch(tmp_path):
+    """OBS-86(档62)后,media-enrichment manifest 直接产出章节归属;
+    approval_readiness 必须直接消费,不再重抓页面(闸门语义不变)。"""
+    rd = tmp_path / "run"
+    d = rd / "media_enrichment" / "discover"
+    d.mkdir(parents=True)
+    asset = {
+        "asset_id": "A-950", "decision": "review_required",
+        "source_page_url": "https://example.test/page",
+        "resolved_original_url": "https://img.example.test/openaichart.png",
+        "page_region": "body",
+        "page_position": {"known": True,
+                          "heading": "降价 80%！OpenAI 下调 GPT-5.6 Luna 模型费用",
+                          "level": "h2"},
+    }
+    manifest = {"schema_version": "1.0", "assets": [asset]}
+    (d / "media_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+
+    def _boom(url):
+        raise AssertionError(f"html_provider 不应被调用: {url}")
+
+    readiness = AE.build_approval_readiness(rd, claim_texts=CLAIM_TEXTS,
+                                            html_provider=_boom)
+    rec = readiness["assets"][0]
+    assert rec["page_position"] == {"known": True,
+                                    "heading": "降价 80%！OpenAI 下调 GPT-5.6 Luna 模型费用",
+                                    "level": "h2"}
+    assert rec["approvable"] is False  # 内容仍缺可验证描述(档61 语义未放宽)
+
+
+def test_manifest_page_position_unknown_fail_closed(tmp_path):
+    rd = tmp_path / "run"
+    d = rd / "media_enrichment" / "discover"
+    d.mkdir(parents=True)
+    asset = {
+        "asset_id": "A-951", "decision": "review_required",
+        "source_page_url": "https://example.test/page",
+        "resolved_original_url": "https://img.example.test/x.jpg",
+        "content_description": "一张可验证的图片描述",
+        "content_description_source": "page_alt",
+        "page_region": "unknown",
+        "page_position": {"known": False, "heading": None, "level": None},
+    }
+    manifest = {"schema_version": "1.0", "assets": [asset]}
+    (d / "media_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    readiness = AE.build_approval_readiness(rd, claim_texts=CLAIM_TEXTS,
+                                            html_provider=lambda u: None)
+    rec = readiness["assets"][0]
+    assert rec["page_position"]["known"] is False
+    assert rec["approvable"] is False  # 位置未知,不得进入批准点(不降级)

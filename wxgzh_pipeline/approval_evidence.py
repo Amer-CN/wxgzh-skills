@@ -217,7 +217,19 @@ def build_approval_readiness(
         claim_texts = load_claim_texts(run_dir)
     provider = html_provider or fetch_html
 
-    # 按 source_page_url 分组抓取一次,缓存
+    # OBS-86(档62)联动:manifest 已带 page_position(提取层产出,章节归属)
+    # 时优先直接消费,不再重抓页面;仅对缺字段的旧 manifest 回退到页面解析。
+    # 闸门语义不变:位置必须 known 才可批准。
+    def _manifest_position(asset: dict) -> dict | None:
+        pos = asset.get("page_position")
+        if isinstance(pos, dict) and pos.get("known") is True and pos.get("heading"):
+            return {"known": True, "heading": str(pos["heading"]),
+                    "level": str(pos.get("level") or "")}
+        if isinstance(pos, dict) and pos.get("known") is False:
+            return {"known": False, "heading": None, "level": None}
+        return None
+
+    # 按 source_page_url 分组抓取一次,缓存(仅缺 manifest 位置字段的资产)
     page_cache: dict[str, str | None] = {}
     by_page: dict[str, list[dict]] = {}
     for asset in assets:
@@ -225,6 +237,8 @@ def build_approval_readiness(
             continue
         # rejected 资产不抓取页面位置(仍出现在 readiness 记录中,呈现为不可批准)
         if asset.get("decision") not in ("review_required", "eligible"):
+            continue
+        if _manifest_position(asset) is not None:
             continue
         src = asset.get("source_page_url")
         if src:
@@ -250,7 +264,15 @@ def build_approval_readiness(
         decision = asset.get("decision", "")
         content = assess_content(asset, claim_texts)
         section = asset.get("_obs87_section")
-        position_known = isinstance(section, dict) and bool(section.get("heading"))
+        manifest_pos = _manifest_position(asset)
+        if manifest_pos is not None:
+            position_known = bool(manifest_pos.get("known"))
+            pos_heading = manifest_pos.get("heading")
+            pos_level = manifest_pos.get("level")
+        else:
+            position_known = isinstance(section, dict) and bool(section.get("heading"))
+            pos_heading = section["heading"] if position_known else None
+            pos_level = section["level"] if position_known else None
         blockers = []
         if decision not in ("review_required", "eligible"):
             blockers.append(f"decision={decision} — 非可批准状态,不得写入批准合同")
@@ -263,7 +285,7 @@ def build_approval_readiness(
             "decision": decision,
             "content": content,
             "page_position": (
-                {"known": True, "heading": section["heading"], "level": section["level"]}
+                {"known": True, "heading": pos_heading, "level": pos_level}
                 if position_known else {"known": False, "heading": None, "level": None}),
             "approvable": not blockers,
             "approvable_blockers": blockers,
