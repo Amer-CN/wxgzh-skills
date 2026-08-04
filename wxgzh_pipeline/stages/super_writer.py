@@ -34,7 +34,7 @@ def content_validate(ctx, sd: Path, state):
     target = data.get("target_visible_chars")
     fixed_medium = length_mode == "medium" and target == 3000 and data.get("policy_source") == "fixed_default"
     ok = exit_code == 0 and not fixed_medium
-    return (0 if ok else 1), {
+    report = {
         "FULL_MODE_VALIDATOR_EXIT": exit_code,
         "length_mode": length_mode,
         "target_visible_chars": target,
@@ -42,7 +42,37 @@ def content_validate(ctx, sd: Path, state):
         "official_report_bound": True,
         "chapters": data.get("chapters"),
         "SUPER_WRITER": "PASS" if ok else "FAIL",
-    }, vpath, vsha
+    }
+    # OBS-88(档66):注入路径强制写作合同——数字结构化登记 + 代码块保真。
+    # 仅 items_file 注入路径启用;正常 aihot 检索路径不强制(避免影响资讯类 RUN)。
+    if ok and getattr(state, "items_file", None):
+        from ..writing_contract import validate_registry_numbers, validate_codeblock_fidelity
+        rd = Path(ctx.run_dir)
+        items_p = rd / "aihot" / "deduplicated_items.json"
+        reg_p = sd / "canonical_claim_registry.json"
+        art_p = sd / "article.md"
+        if not (items_p.is_file() and reg_p.is_file() and art_p.is_file()):
+            ok = False
+            report["reason"] = "OBS-88 FAIL: aihot items / registry / article missing"
+        else:
+            n_ok, n_rep = validate_registry_numbers(art_p, reg_p)
+            c_ok, c_rep = validate_codeblock_fidelity(art_p, items_p)
+            report["OBS88_NUMBERS"] = n_rep["OBS88_NUMBERS"]
+            report["OBS88_CODEBLOCK"] = c_rep["OBS88_CODEBLOCK"]
+            report["number_pairs"] = n_rep["pairs_in_article"]
+            report["registered_groups"] = len(n_rep["registered"])
+            report["deny_ask_covered"] = c_rep["covered_in_codeblocks"]
+            if not n_ok:
+                ok = False
+                report["reason"] = ("OBS-88 FAIL: registry numbers missing for "
+                                    + str(n_rep["missing"]))
+            elif not c_ok:
+                ok = False
+                report["reason"] = ("OBS-88 FAIL: deny/ask codeblock coverage "
+                                    f"{c_rep['covered_in_codeblocks']}/{c_rep['deny_ask_total']} "
+                                    f"(min {c_rep['min_coverage']}) or prefixes missing")
+        report["SUPER_WRITER"] = "PASS" if ok else "FAIL"
+    return (0 if ok else 1), report, vpath, vsha
 
 
 def post(ctx, sd, state, exit_code, report):

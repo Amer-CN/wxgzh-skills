@@ -38,7 +38,16 @@ from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
 
 AGENT_INSTRUCTIONS = {
     "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
-    "super_writer": "Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK.",
+    "super_writer": ("Run Super Writer Material-Heavy Full Mode. Generate every requested "
+                     "product, then run the locked official validate_article_length.py with "
+                     "--full-mode --json and save its exact JSON stdout as "
+                     "full_mode_validator_report.json before ACK. "
+                     "注入路径强制(OBS-88/档66):1) 含数字对比的事实(如「从 8 条扩到 11 条」"
+                     "「从 19 条扩到 25 条」「从四条扩到五条」)必须登记为结构化 numbers"
+                     "(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;"
+                     "2) shell 命令/脚本片段/终端输出/拦截文案必须以 fenced code block 原文"
+                     "呈现,不得转写为散文;3) 注入素材中的 deny/ask 拦截文案(含 ⛔/⚠️ "
+                     "前缀模板,_common.sh deny()/ask())至少 10 条逐字进入代码块,不得改写。"),
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
 }
 
@@ -187,9 +196,11 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                 existing = None
         if existing and existing.get("mode") == INJECTION_MODE:
             # 幂等:resume 不重写注入文件(fetch_log 含 generated_at 时间戳,
-            # 重写会破坏握手 token 绑定;注入事实已在首次写入时落盘)
+            # 重写会破坏握手 token 绑定;注入事实已在首次写入时落盘)。
+            # meta 字段集必须与 write_injected_aihot 返回值逐字同构,否则
+            # agent_handshake_request 字节变化导致 token 漂移(档 64/66 实测)。
             inj = existing.get("injection") or {}
-            injection_meta = {"mode": INJECTION_MODE, "resumed": True,
+            injection_meta = {"mode": INJECTION_MODE,
                               "items_file": state.items_file,
                               "items_file_sha256": inj.get("items_file_sha256"),
                               "frozen_copy": str(sd / "items_file.injected.json"),
@@ -814,6 +825,20 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         discover_paused = (frozen.is_file()
                            and (sd / "approval_precheck.json").is_file()
                            and (sd / "approval_readiness.json").is_file())
+        if discover_paused:
+            # 档66:上游 registry 变化 → discover 产物失效,必须重跑
+            # (discover 请求的 provenance 记录 canonical_registry_sha256)。
+            req_p = sd / "media_discovery_request.json"
+            old_reg_sha = None
+            if req_p.is_file():
+                try:
+                    old_reg_sha = json.loads(req_p.read_text(encoding="utf-8"))                         .get("provenance", {}).get("canonical_registry_sha256")
+                except (OSError, ValueError, AttributeError):
+                    old_reg_sha = None
+            cur_reg_sha = sha256_file(Path(ctx.run_dir) / "super_writer"
+                                      / "canonical_claim_registry.json")
+            if old_reg_sha != cur_reg_sha:
+                discover_paused = False
         if not discover_paused:
             request_path = _build_media_request(ctx, sd, state, phase="discover")
             run = run_script(

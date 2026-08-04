@@ -1,0 +1,90 @@
+[
+  {
+    "id": "user-material-01",
+    "title": "hooks/_common.sh",
+    "summary": "#!/usr/bin/env bash\n# vibe-coding-guide 护栏共用函数。\n# 设计原则：本脚本任何自身故障都必须 fail-open（放行），绝不阻断用户。\n\nset -u\n\nCLOSE_HINT=\"关闭护栏：/plugin disable vibe-coding-guide\"\n\nINPUT=\"$(cat 2>/dev/null || true)\"\n\nif command -v jq >/dev/null 2>&1; then\n\tJSON_TOOL=\"jq\"\nelif command -v python3 >/dev/null 2>&1; then\n\tJSON_TOOL=\"python3\"\nelse\n\techo \"vibe-coding-guide: 未找到 jq 或 python3，护栏已跳过（放行）。\" >&2\n\texit 0\nfi\n\n# json_get <jq过滤器> <python表达式>\njson_get() {\n\tif [ \"$JSON_TOOL\" = \"jq\" ]; then\n\t\tprintf '%s' \"$INPUT\" | jq -r \"$1 // empty\" 2>/dev/null || true\n\telse\n\t\tprintf '%s' \"$INPUT\" | python3 -c '\nimport sys, json\ntry:\n    d = json.load(sys.stdin)\nexcept Exception:\n    sys.exit(0)\ntry:\n    v = '\"$2\"'\nexcept Exception:\n    v = \"\"\nsys.stdout.write(str(v) if v else \"\")\n' 2>/dev/null || true\n\tfi\n}\n\n# 输出决定。理由文本中禁止出现双引号、反斜杠和换行。\nemit() {\n\tprintf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"%s\",\"permissionDecisionReason\":\"%s\"}}\\n' \"$1\" \"$2\"\n\texit 0\n}\n\ndeny() { emit \"deny\" \"⛔ vibe-coding-guide 拦截：$1。确需执行请你自己在终端手动运行。$CLOSE_HINT\"; }\nask()  { emit \"ask\"  \"⚠️ vibe-coding-guide 提醒：$1。确认要继续吗？$CLOSE_HINT\"; }\n\n# 大小写不敏感匹配\nmatch() { printf '%s' \"$SUBJECT\" | grep -qiE -- \"$1\"; }\n",
+    "originalTitle": "hooks/_common.sh",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/_common.sh",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/_common.sh"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/_common.sh",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/_common.sh",
+    "publishedAt": "2026-08-04T00:00:00Z",
+    "category": "project-update",
+    "source_provenance": {
+      "source_type": "repo_path",
+      "original_ref": "Amer-CN/vibe-coding-guide@8260988b:hooks/_common.sh",
+      "content_sha256": "a942915c3c5f15c5c37b6ffbc0f5e4599446b0b1ede7dd6c05931cc039b03985"
+    }
+  },
+  {
+    "id": "user-material-02",
+    "title": "hooks/guard-bash.sh",
+    "summary": "#!/usr/bin/env bash\n# 拦截危险 Bash 命令。fail-open。\nset -u\nDIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n# shellcheck source=/dev/null\n. \"$DIR/_common.sh\"\n\nCMD=\"$(json_get '.tool_input.command' 'd.get(\"tool_input\",{}).get(\"command\",\"\")')\"\n[ -z \"$CMD\" ] && exit 0\nSUBJECT=\"$CMD\"\n\n# ── 硬拦（deny）：几乎不存在正当理由 ──────────────────\n\n# 1. 根级 / 家目录 / 系统目录的递归删除\nmatch 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)+(/|~|\\$HOME|\\*)([[:space:]]|$)' \\\n\t&& deny '这是对根目录或家目录的递归删除，会清空整台机器（铁律 1）'\nmatch 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)+/(usr|etc|var|bin|lib|opt|home|root|System|Library|Users)([[:space:]/]|$)' \\\n\t&& deny '这是对系统目录的递归删除，会让系统无法启动（铁律 1）'\nmatch 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)+\\.([[:space:]]|$)' \\\n\t&& deny '这会删掉整个当前目录，包括你还没提交的代码（铁律 1）'\n\n# 2. 强推主分支\nmatch 'git[[:space:]]+push' \\\n\t&& match '(--force([[:space:]]|$)|[[:space:]]-f([[:space:]]|$))' \\\n\t&& match '(main|master)([[:space:]]|$)' \\\n\t&& deny '强推主分支会永久覆盖远端历史，别人的提交会消失（红线 11）'\n\n# 3. 删库\nmatch 'drop[[:space:]]+database' \\\n\t&& deny '这会删除整个数据库，且通常无法恢复（红线 6）'\n\n# 4. 管道直接执行网络内容\nmatch '(curl|wget)[^|]*\\|[[:space:]]*(sudo[[:space:]]+)?(bash|sh|zsh)([[:space:]]|$)' \\\n\t&& deny '这是把网上下载的内容直接执行，你没机会看清它要做什么（红线 10）'\n\n# 5. 递归 777 与磁盘写入\nmatch 'chmod[[:space:]]+(-[a-zA-Z]*R[a-zA-Z]*[[:space:]]+777|777[[:space:]]+-[a-zA-Z]*R)' \\\n\t&& deny '递归 777 会把文件权限对所有人开放（红线 7）'\nmatch '(mkfs(\\.[a-z0-9]+)?[[:space:]]|dd[[:space:]]+[^|]*of=/dev/)' \\\n\t&& deny '这是直接格式化或写裸设备，会造成不可恢复的数据丢失（铁律 1）'\n\n# ── 弹确认（ask）：有正当理由，但要你点头 ──────────────\n\n# 常见构建产物删掉即可重建，不打扰。其余递归删除仍要确认。\nrm_targets_all_safe() {\n\tlocal t p any=0\n\tset -f\n\tt=\"$(printf '%s' \"$CMD\" \\\n\t\t| grep -oE 'rm[[:space:]]+[^;|&]*' | head -n1 \\\n\t\t| sed -E 's/^rm[[:space:]]+//; s/(^|[[:space:]])-[a-zA-Z]+([[:space:]]|$)/ /g')\"\n\tfor p in $t; do\n\t\tany=1\n\t\tcase \"$(basename \"${p%/}\")\" in\n\t\t\tnode_modules|dist|build|out|.next|.nuxt|.turbo|.cache|.parcel-cache) ;;\n\t\t\tcoverage|__pycache__|.pytest_cache|target|venv|.venv|tmp) ;;\n\t\t\t*) set +f; return 1 ;;\n\t\tesac\n\tdone\n\tset +f\n\t[ \"$any\" = \"1\" ]\n}\n\nmatch '(npm[[:space:]]+(i|install|add)|pnpm[[:space:]]+(i|install|add)|yarn[[:space:]]+add|bun[[:space:]]+(add|install)|pip3?[[:space:]]+install|poetry[[:space:]]+add|cargo[[:space:]]+add|go[[:space:]]+get|gem[[:space:]]+install|composer[[:space:]]+require)' \\\n\t&& ask '要安装新依赖了。装之前请先确认包名全称、用途、周下载量和最近更新时间（红线 10）'\n\nmatch 'git[[:space:]]+(reset[[:space:]]+--hard|clean[[:space:]]+-[a-z]*f)' \\\n\t&& ask '这会丢弃你本地还没提交的改动，丢了找不回来（铁律 1）'\n\nmatch '(drop[[:space:]]+table|truncate[[:space:]]+table|alter[[:space:]]+table)' \\\n\t&& ask '这是在改数据库结构。请先出迁移文件再执行，不要直接改库（红线 6）'\n\nmatch 'delete[[:space:]]+from' && ! match 'delete[[:space:]]+from[^;]*where' \\\n\t&& ask '这条 DELETE 没有 WHERE 条件，会清空整张表（红线 6）'\n\nmatch 'git[[:space:]]+push[^&|;]*(--force([[:space:]]|$)|[[:space:]]-f([[:space:]]|$))' \\\n\t&& ask '强推会覆盖远端历史。确认这个分支只有你一个人在用（红线 11）'\n\n# rm -rf：常见构建产物（按 basename 匹配）直接放行，混合/其他路径弹确认\nif match 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)'; then\n\trm_targets_all_safe \\\n\t\t|| ask '要递归删除文件了。确认路径没写错、且这些文件已经提交过（铁律 1）'\nfi\n\nmatch 'git[[:space:]]+add[^&|;]*(^|[[:space:]]|/)\\.env([[:space:]]|$)' \\\n\t&& ask '你正在把 .env 加进 Git。密钥一旦提交，删掉也留在历史里（红线 7）'\n\nmatch '(vercel[^|;]*--prod|netlify[^|;]*deploy[^|;]*--prod|wrangler[[:space:]]+(publish|deploy)|fly[[:space:]]+deploy|kubectl[[:space:]]+apply|docker[[:space:]]+push)' \\\n\t&& ask '这是往线上环境部署。确认已经在本地验证过（红线 11）'\n\nexit 0\n",
+    "originalTitle": "hooks/guard-bash.sh",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/guard-bash.sh",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/guard-bash.sh"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/guard-bash.sh",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/hooks/guard-bash.sh",
+    "publishedAt": "2026-08-04T00:00:00Z",
+    "category": "project-update",
+    "source_provenance": {
+      "source_type": "repo_path",
+      "original_ref": "Amer-CN/vibe-coding-guide@8260988b:hooks/guard-bash.sh",
+      "content_sha256": "9fc55537984c8bb6092c7672b403f3c896d07023665f716a5e0263180e12f68c"
+    }
+  },
+  {
+    "id": "user-material-03",
+    "title": "CHANGELOG.md",
+    "summary": "# Changelog\n\n本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。\n\n## [2.1.0] - 2026-08-01\n\n### Added\n- 铁律从四条扩到五条：新增「测试不过时改实现去满足测试，不准改测试来迁就实现」与「指令自相矛盾或与红线冲突时，停下来问用户」两条。这是行为约束的扩充，非破坏性变更，故升次版本。\n- README 双语新增「装完后，花一分钟确认护栏真的生效了」验证步骤。\n- `SKILL.md` description 末尾追加英文触发句——description 是 Agent 判断要不要加载本技能的唯一依据，纯中文会让英文提问几乎不触发。\n\n### Changed\n- `references/checklist.md` 第 15 条补充「新加的每一条校验或拦截规则，是否本身也有一条测试覆盖」。\n- LICENSE.md 与插件元数据（plugin.json / marketplace.json）的中文标点统一为全角。\n- install.sh 与 README 明确区分「规矩本安装」与「完整安装」；护栏是否随 skills 目录安装生效未经实测，不做承诺。\n\n## [2.0.0] - 2026-08-01\n\n### Added\n- `scripts/audit.sh`：自动体检脚本，覆盖清单中可机检的部分，输出 ✅／❌ 与 `文件:行号`，\n  并明确列出它查不了的条目。\n- `hooks/`：基于 Claude Code PreToolUse 的强制护栏。极少数不可逆操作直接拦下，\n  其余弹确认并标明违反的红线编号；拒绝信息中包含关闭方法。\n- README 新增「关于强制护栏」一节，写明生效范围与失效场景。\n\n### Changed\n- 红线从\"只靠 AI 自觉遵守\"变为\"部分由 hooks 强制\"，这是本项目定位上的变化，故升主版本。\n- `banner.png` 压缩，仓库体积大幅下降。\n- `references/new-project.md` 速查页排序表述与清单对齐。\n- `assets/delivery-report.template.md` 条目列改为按显示宽度截断。\n\n## [1.2.0] - 2026-08-01\n\n### Added\n- 红线从 8 条扩到 11 条：新增「AI 功能」「依赖供应链」「Agent 操作安全」三组。\n- 自检清单从 19 条扩到 25 条，并标出 ⭐ 最小必查 8 条。\n- `assets/` 模板三件套：`AGENTS.template.md`、`gitignore.template`、`delivery-report.template.md`。\n\n### Changed\n- `SKILL.md` description 同步为 25 条，并覆盖三组新红线的触发场景。\n- `SKILL.md` 参考文件路由表新增 `assets/` 一行。\n\n## [1.1.0] - 2026-08-01\n\n### Changed\n- **精简 `SKILL.md` 的 description**：从 600+ 字的关键词堆砌压缩到约 190 字，长尾触发说法统一由 README 承载，减少常驻上下文占用。\n- **真源文档统一为 `AGENTS.md`**：不再与 `CLAUDE.md` 并列；`CLAUDE.md` 退化为一行引用。\n- **拆分 `references/handbook.md`**：原 33KB 单文件拆为 `redlines.md`、`legacy-audit.md`、`new-project.md`、`scenarios.md`、`ai-disputes.md`，实现按需加载。\n- **消除重复**：“四铁律 + 八红线”原先在三处各写一遍，现以 `SKILL.md`（短表）+ `redlines.md`（展开）为唯一来源。\n- `references/checklist.md` 要求每条给出证据位置。\n\n### Added\n- 本 CHANGELOG。\n- `SKILL.md` 中的参考文件路由表。\n\n### Removed\n- `references/handbook.md`（内容已全部迁移，无信息丢失）。\n\n## [1.0.0] - 2026-06-15\n\n- 首次发布：`SKILL.md` + 完整手册 + 19 条自检清单 + Claude Code 插件配置。\n",
+    "originalTitle": "CHANGELOG.md",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/CHANGELOG.md",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/CHANGELOG.md"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/CHANGELOG.md",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/CHANGELOG.md",
+    "publishedAt": "2026-08-04T00:00:00Z",
+    "category": "project-update",
+    "source_provenance": {
+      "source_type": "repo_path",
+      "original_ref": "Amer-CN/vibe-coding-guide@8260988b:CHANGELOG.md",
+      "content_sha256": "d4bffd5fc7a02b6ea29c93777384c35302326cc956c16fe81c38eb625720cf39"
+    }
+  },
+  {
+    "id": "user-material-04",
+    "title": "install.sh",
+    "summary": "#!/usr/bin/env bash\n# vibe-coding-guide 一键安装脚本\n# 用法：curl -fsSL https://raw.githubusercontent.com/Amer-CN/vibe-coding-guide/main/install.sh | bash\nset -euo pipefail\n\nREPO_URL=\"https://github.com/Amer-CN/vibe-coding-guide.git\"\nSKILLS_DIR=\"${HOME}/.claude/skills\"\nTARGET_DIR=\"${SKILLS_DIR}/vibe-coding-guide\"\n\necho \"▶ 正在安装 vibe-coding-guide ...\"\n\nif ! command -v git >/dev/null 2>&1; then\n  echo \"✗ 未检测到 git，请先安装 git 后重试。\"\n  exit 1\nfi\n\nmkdir -p \"${SKILLS_DIR}\"\n\nif [ -d \"${TARGET_DIR}/.git\" ]; then\n  echo \"• 已安装，正在更新到最新版本 ...\"\n  git -C \"${TARGET_DIR}\" pull --ff-only\nelse\n  git clone --depth 1 \"${REPO_URL}\" \"${TARGET_DIR}\"\nfi\n\necho \"\"\necho \"✓ 安装完成！位置：${TARGET_DIR}\"\necho \"\"\necho \"  这种装法安装的是【规矩本】部分。\"\necho \"  在 Claude Code 新对话里说一句：\\\"我要用 vibe-coding-guide 规范来写代码\\\" 即可。\"\necho \"\"\necho \"  ⚠️ 强制护栏（会真的拦下 rm -rf / 之类命令的那层）\"\necho \"     不保证以这种方式生效。要用护栏，请改用插件安装：\"\necho \"       /plugin marketplace add Amer-CN/vibe-coding-guide\"\necho \"       /plugin install vibe-coding-guide@vibe-coding-guide\"\necho \"\"\necho \"  想确认护栏到底有没有加载，在 Claude Code 里输入 /hooks，\"\necho \"  看列表里有没有 vibe-coding-guide 的两条 PreToolUse。\"\necho \"\"\n",
+    "originalTitle": "install.sh",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/install.sh",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/install.sh"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/install.sh",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/8260988b/install.sh",
+    "publishedAt": "2026-08-04T00:00:00Z",
+    "category": "project-update",
+    "source_provenance": {
+      "source_type": "repo_path",
+      "original_ref": "Amer-CN/vibe-coding-guide@8260988b:install.sh",
+      "content_sha256": "94c782d1db5f63d80a83613bce0d8b382fea78c736667ad1aaf4d226052ab392"
+    }
+  }
+]
