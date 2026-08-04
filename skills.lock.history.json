@@ -196,5 +196,33 @@
     "new_skill_version": "v2026.08.02-hammer.6",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260804T152138Z-47328655",
+    "skill": "gzh-design",
+    "reason": "档67D gzh-design 升版:回归 common-components 1a 深色代码块 + gen_cover 移入 tests + version hammer.7",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-04T15:21:38Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "30d7cdb3cc32123a33cecceaf13999a19b628050b67b541983d1104f3f836ea8",
+    "new_root_sha256": "0dd8d31756318773e8e927fde6735a97e5dd64fb0fe59228b8913f2fcf574300",
+    "old_manifest_sha256": "7724e3bae819fa9d0c4a600e9a8c869082cd0b836f19f6de6474215f1b4f0c45",
+    "new_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
+    "old_file_count": 77,
+    "new_file_count": 76,
+    "old_entrypoint_sha256": "82fed151bd36c7a3a75dbf9563d525c9341316ca58024d06f5fe2c8ee941c0cf",
+    "new_entrypoint_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+    "old_render_entry_sha256": "82fed151bd36c7a3a75dbf9563d525c9341316ca58024d06f5fe2c8ee941c0cf",
+    "new_render_entry_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+    "old_component_source_sha256": "d25beb3722c1de75f6ef9b5e3c52ed17f9c9de2fa8250ca812c88998ea9b7ef2",
+    "new_component_source_sha256": "74218a699ee9a661ba7e2389baee5672815784339005d4e1770488dd8c7d2f18",
+    "old_full_commit_sha": "5dd5589a612c1dd7ece710ece9892bc6e5cb0cc2",
+    "new_full_commit_sha": "af03b438a37233c111a20be77c4fd28898dc8f10",
+    "old_source_tree_sha": "c0785904ff0824cf7deee7c9dbfc5b7ed92f1fd3",
+    "new_source_tree_sha": "95afcd87b4930ee8484216c774f829b7f2737c71",
+    "old_skill_version": "v2026.08.02-hammer.6",
+    "new_skill_version": "v2026.08.02-hammer.7",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]

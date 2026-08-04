@@ -69,14 +69,14 @@
       "skill_name": "gzh-design",
       "repository_url": "https://github.com/Amer-CN/gzh-design-skill",
       "branch": "fix/obs73-codeblock-docs",
-      "full_commit_sha": "af03b438a37233c111a20be77c4fd28898dc8f10",
-      "source_tree_sha": "95afcd87b4930ee8484216c774f829b7f2737c71",
-      "skill_version": "v2026.08.02-hammer.7",
-      "skill_root_sha256": "0dd8d31756318773e8e927fde6735a97e5dd64fb0fe59228b8913f2fcf574300",
-      "runtime_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
-      "runtime_file_count": 76,
+      "full_commit_sha": "5dd5589a612c1dd7ece710ece9892bc6e5cb0cc2",
+      "source_tree_sha": "c0785904ff0824cf7deee7c9dbfc5b7ed92f1fd3",
+      "skill_version": "v2026.08.02-hammer.6",
+      "skill_root_sha256": "30d7cdb3cc32123a33cecceaf13999a19b628050b67b541983d1104f3f836ea8",
+      "runtime_manifest_sha256": "7724e3bae819fa9d0c4a600e9a8c869082cd0b836f19f6de6474215f1b4f0c45",
+      "runtime_file_count": 77,
       "entrypoint": "scripts/render_article.py",
-      "entrypoint_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+      "entrypoint_sha256": "82fed151bd36c7a3a75dbf9563d525c9341316ca58024d06f5fe2c8ee941c0cf",
       "validator": "scripts/validate_gzh_html.py",
       "validator_sha256": "b3d74347777890c145d99a152cd95e4c23c795937f54b19915baebaa46a1aefa",
       "required_files": [
@@ -86,9 +86,9 @@
         "scripts/generate_hammer_upgrade_samples.py"
       ],
       "render_entry": "scripts/render_article.py",
-      "render_entry_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+      "render_entry_sha256": "82fed151bd36c7a3a75dbf9563d525c9341316ca58024d06f5fe2c8ee941c0cf",
       "component_source": "scripts/generate_hammer_upgrade_samples.py",
-      "component_source_sha256": "74218a699ee9a661ba7e2389baee5672815784339005d4e1770488dd8c7d2f18"
+      "component_source_sha256": "d25beb3722c1de75f6ef9b5e3c52ed17f9c9de2fa8250ca812c88998ea9b7ef2"
     },
     "aihot": {
       "skill_name": "aihot",
