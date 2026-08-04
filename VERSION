@@ -1,5 +1,5 @@
-version: 0.1.0-dev8
-previous_version: 0.1.0-dev7-hotfix4
+version: 0.1.0-dev9
+previous_version: 0.1.0-dev8
 status: development
 engineering_tests: passed
 smoke_test: passed

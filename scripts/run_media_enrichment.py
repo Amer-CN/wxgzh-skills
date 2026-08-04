@@ -166,8 +166,9 @@ def main():
                 images_root = (frozen_path.parent / "images").resolve()
                 material_approved_ids = {
                     asset_id for asset_id, frozen in frozen_records.items()
-                    if (materials_by_id.get(frozen["material_id"], {})
-                        .get("copyright_review", {}).get("status") == "known_allowed")
+                    if frozen.get("asset_origin") != "generated"
+                    and (materials_by_id.get(frozen["material_id"], {})
+                         .get("copyright_review", {}).get("status") == "known_allowed")
                 }
                 upload_candidate_ids = set(asset_approvals) | material_approved_ids
                 if len(upload_candidate_ids) > len(asset_approvals):
@@ -209,15 +210,21 @@ def main():
                             f"approval_identity_mismatch: {asset_id} missing discovery local_path")
                         continue
                     local_path = Path(local_value).resolve()
-                    if not local_path.is_relative_to(images_root) or not local_path.is_file():
+                    allowed_roots = [images_root]
+                    if frozen.get("asset_origin") == "generated":
+                        allowed_roots.append((frozen_path.parent / "charts").resolve())
+                    if (not any(local_path.is_relative_to(r) for r in allowed_roots)
+                            or not local_path.is_file()):
                         builder.errors.append(
                             f"approval_identity_mismatch: {asset_id} local file outside discovery images")
                         continue
 
                     resolved_url = frozen["resolved_original_url"]
-                    sec_check = is_safe_url(
-                        resolved_url, require_dns=(network_mode == "live"))
-                    if not sec_check.safe:
+                    sec_check = None
+                    if frozen.get("asset_origin") != "generated":
+                        sec_check = is_safe_url(
+                            resolved_url, require_dns=(network_mode == "live"))
+                    if sec_check is not None and not sec_check.safe:
                         builder.errors.append(
                             f"URL security: {asset_id}: {', '.join(sec_check.reasons)}")
                         continue
@@ -429,6 +436,7 @@ def main():
             )
             discovery_record = {
                 "asset_id": asset_id,
+                "asset_origin": "source",
                 "material_id": material_id,
                 "source_page_url": page_url,
                 "resolved_original_url": resolved_url,
@@ -472,7 +480,89 @@ def main():
             total_assets_added += 1
             material_image_count += 1
 
+    # OBS-71(档63):生成图表纳入批准链——决策 review_required、版权 unknown、
+    # 计入数量上限、内容描述来自图表 spec(数据来源,非 claim 派生填充),
+    # 与源图走同一批准路径。仅 discover 生成;continue 从冻结清单重建,
+    # 图表必须有显式 single_asset 批准才会上传。禁止任何 known_allowed 硬编码。
+    def _generate_charts() -> None:
+        """discover 阶段生成图表(决策 review_required,需显式批准)。"""
+        nonlocal asset_counter, total_assets_added
+        print(f"\n[media-enrichment] Generating charts (discover only)...")
+        claims_with_numbers = [c for c in claims if c.get("numbers")]
+        if claims_with_numbers:
+            plan = build_chart_specs(claims_with_numbers, materials_by_id)
+            for w in plan.warnings:
+                builder.warnings.append(w)
+                print(f"  WARN: {w}")
+            for i, spec in enumerate(plan.specs):
+                if total_assets_added >= max_total_images:
+                    builder.warnings.append(
+                        f"max_total_images ({max_total_images}) reached — chart skipped (OBS-71)")
+                    break
+                chart_path = output_dir / "charts" / f"chart-{i+1:03d}.png"
+                chart_result = generate_chart(spec, chart_path)
+                if chart_result.success:
+                    asset_counter += 1
+                    asset_id = f"A-{asset_counter:03d}"
+                    material_ids = sorted({dp.material_id for dp in spec.data_points})
+                    claim_ids = sorted({dp.claim_id for dp in spec.data_points})
+                    src_page = materials_by_id.get(material_ids[0], {}).get("source_url") or ""
+                    resolved_url = f"{src_page}#chart-{chart_result.sha256[:12]}"
+                    identity_sha256 = stable_asset_identity(
+                        material_ids[0], src_page, resolved_url, chart_result.sha256)
+                    desc = (f"生成图表({spec.chart_type})「{spec.title or ''}」,"
+                            f"数据来源:{spec.source_note or 'canonical claim numbers'}")
+                    asset = AssetRecord(
+                        asset_id=asset_id, asset_origin="generated",
+                        material_ids=material_ids, claim_ids=claim_ids,
+                        extraction_method="generated", decode_method="none",
+                        source_page_url=src_page,
+                        discovered_url=f"generated://chart/{chart_result.sha256}",
+                        resolved_original_url=resolved_url,
+                        local_path=chart_result.chart_path, sha256=chart_result.sha256,
+                        perceptual_hash=chart_result.inspection.perceptual_hash if chart_result.inspection else None,
+                        mime_type="image/png",
+                        width=chart_result.inspection.width if chart_result.inspection else None,
+                        height=chart_result.inspection.height if chart_result.inspection else None,
+                        file_size=chart_result.inspection.file_size if chart_result.inspection else None,
+                        quality_status="pass", relevance_status="uncertain",
+                        copyright_status="unknown", copyright_risk="medium",
+                        asset_identity_sha256=identity_sha256,
+                        decision="review_required",
+                        reasons=["generated chart — requires explicit single_asset approval before upload (OBS-71)"],
+                        caption=spec.caption or spec.title, alt_text=spec.caption or spec.title,
+                        content_description=desc, content_description_source="generated",
+                        page_region="generated",
+                        page_position={"known": False, "heading": None, "level": None},
+                        upload={"mode": upload_mode, "status": "not_uploaded",
+                                "remote_url": None, "response_sha256": None},
+                    )
+                    pending_uploads.append((asset, chart_result.chart_path,
+                                            chart_result.inspection, "generated"))
+                    discovery_records.append({
+                        "asset_id": asset_id, "asset_origin": "generated",
+                        "material_id": material_ids[0],
+                        "source_page_url": src_page,
+                        "resolved_original_url": resolved_url,
+                        "asset_sha256": chart_result.sha256,
+                        "asset_identity_sha256": identity_sha256,
+                    })
+                    builder.add_asset(asset)
+                    total_assets_added += 1
+                    print(f"  Chart {i+1}: {chart_path} ({spec.chart_type}) — review_required")
+                else:
+                    builder.warnings.append(f"Chart generation failed: {chart_result.error}")
+        else:
+            builder.warnings.append("No claims with numbers — no charts generated")
+
+    if args.phase != "continue":
+        _generate_charts()
+
     # Freeze discovery before any source upload can occur. Discovery mode writes
+    # the manifest and stops at classification; continue mode compares a freshly
+    # resolved discovery against the user-approved frozen manifest.
+
+
     # the manifest and stops at classification; continue mode compares a freshly
     # resolved discovery against the user-approved frozen manifest.
     current_discovery = freeze_discovery_manifest(discovery_records)
@@ -613,60 +703,6 @@ def main():
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
 
-    # Generate charts (dev5: fail-closed chart_group/metric gating)
-    print(f"\n[media-enrichment] Generating charts...")
-    claims_with_numbers = [c for c in claims if c.get("numbers")]
-    if claims_with_numbers:
-        plan = build_chart_specs(claims_with_numbers, materials_by_id)
-        for w in plan.warnings:
-            builder.warnings.append(w)
-            print(f"  WARN: {w}")
-        for i, spec in enumerate(plan.specs):
-            chart_path = output_dir / "charts" / f"chart-{i+1:03d}.png"
-            chart_result = generate_chart(spec, chart_path)
-            if chart_result.success:
-                asset_counter += 1
-                asset_id = f"A-{asset_counter:03d}"
-                chart_upload = {
-                    "mode": upload_mode, "status": "not_uploaded",
-                    "remote_url": None, "response_sha256": None,
-                }
-                # Discovery is strictly side-effect-free: do not even invoke a
-                # dry-run uploader or emit an upload-attempt event. Generated
-                # charts may be uploaded only in the explicit continue phase.
-                if args.phase == "continue" and discovery_file_valid:
-                    chart_upload_result = timed_upload(
-                        uploader, upload_events, chart_result.chart_path, asset_id,
-                        copyright_status="known_allowed",
-                    )
-                    chart_upload = {
-                        "mode": upload_mode, "status": chart_upload_result.status,
-                        "remote_url": chart_upload_result.remote_url,
-                        "response_sha256": chart_upload_result.response_sha256,
-                    }
-                asset = AssetRecord(
-                    asset_id=asset_id, asset_origin="generated",
-                    material_ids=list(set(dp.material_id for dp in spec.data_points)),
-                    claim_ids=[dp.claim_id for dp in spec.data_points],
-                    extraction_method="generated", decode_method="none",
-                    local_path=chart_result.chart_path, sha256=chart_result.sha256,
-                    perceptual_hash=chart_result.inspection.perceptual_hash if chart_result.inspection else None,
-                    mime_type="image/png",
-                    width=chart_result.inspection.width if chart_result.inspection else None,
-                    height=chart_result.inspection.height if chart_result.inspection else None,
-                    file_size=chart_result.inspection.file_size if chart_result.inspection else None,
-                    quality_status="pass", relevance_status="relevant",
-                    copyright_status="known_allowed", copyright_risk="low",
-                    decision="eligible", reasons=["Generated from canonical claim data"],
-                    caption=spec.caption or spec.title, alt_text=spec.caption or spec.title,
-                    upload=chart_upload,
-                )
-                builder.add_asset(asset)
-                print(f"  Chart {i+1}: {chart_path} ({spec.chart_type})")
-            else:
-                builder.warnings.append(f"Chart generation failed: {chart_result.error}")
-    else:
-        builder.warnings.append("No claims with numbers — no charts generated")
 
     # Placement
     article_full_path = Path(args.request).parent / article_path if article_path else None
@@ -681,6 +717,11 @@ def main():
                         placement = placements.get(claim.get("claim_text", ""))
                         if placement and placement.anchor:
                             asset.placement = {"anchor": placement.anchor, "position": placement.position, "confidence": placement.confidence}
+                            # OBS-71:图表位置=拟绑定章节锚点(文章内位置,非页面位置)
+                            if asset.asset_origin == "generated" and placement.anchor:
+                                asset.page_position = {"known": True,
+                                                       "heading": placement.anchor,
+                                                       "level": "article-anchor"}
                             # dev5: generated charts keep their group-level caption/alt —
                             # a single claim text must never represent a multi-point chart
                             if asset.asset_origin != "generated":

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-dev9 (2026-08-04)
+
+- OBS-71(档63):生成图表纳入批准链——图表不再硬编码 known_allowed/eligible,
+  决策改为 review_required、版权 unknown,必须经显式 single_asset 批准才上传;
+  continue 阶段图表从冻结清单重建(与源资产同机制),绝不重复生成。
+- 图表计入 max_total_images 数量上限;内容描述来自图表 spec/数据来源
+  (content_description_source=generated),不使用 claim 派生文本填充。
+- 图表稳定身份:material_id/source_page_url/resolved_original_url(#chart-{sha12})/
+  asset_sha256/asset_identity_sha256 入冻结清单;material 级批准不再覆盖图表。
+- 封面联动:未批准图表不可上传、不可作封面(事件 RUN 草稿 #3 场景不可再现)。
+
+
 ## 0.1.0-dev8 (2026-08-04)
 
 - OBS-86(档62):正文边界判定——提取阶段按 DOM 容器语义(article/main/aside/nav/

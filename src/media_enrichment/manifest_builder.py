@@ -69,6 +69,10 @@ class AssetRecord:
     # 跨章节归属,供 Pipeline 侧 OBS-87 approval_readiness 直接消费。
     page_region: str = "unknown"
     page_position: dict[str, Any] | None = None
+    # OBS-71(档63):内容描述与来源(批准链专用)。generated 图表的描述来自
+    # 图表 spec/数据来源,绝不使用 claim 派生文本填充。
+    content_description: str | None = None
+    content_description_source: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -112,6 +116,8 @@ class AssetRecord:
             "upload": self.upload,
             "page_region": self.page_region,
             "page_position": self.page_position,
+            "content_description": self.content_description,
+            "content_description_source": self.content_description_source,
         }
 
 
