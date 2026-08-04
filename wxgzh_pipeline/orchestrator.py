@@ -164,17 +164,23 @@ class Orchestrator:
                             env=self.env or {}, create_wechat_draft=create_draft)
 
     # ---------- run ----------
-    def run(self, topic: str, profile: str = "fast_publish", create_wechat_draft: bool = True) -> dict:
+    def run(self, topic: str, profile: str = "fast_publish",
+            create_wechat_draft: bool = True, items_file: str | None = None,
+            stop_after: str | None = None) -> dict:
         ok, dreport = self.doctor()
         if not ok:
             return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport}
         disc = dreport["skills"]
         run_dir = P.new_run_dir(self.project_root, topic)
         st = PipelineState(run_id=run_dir.name, topic=topic, profile=profile)
+        if items_file:
+            # OBS-64:自有素材注入入口(正式通道);None = 正常 aihot 检索
+            st.items_file = str(Path(items_file).resolve())
         save_state(run_dir, st)
-        return self._drive(run_dir, st, disc, create_wechat_draft)
+        return self._drive(run_dir, st, disc, create_wechat_draft, stop_after=stop_after)
 
-    def resume(self, run_id: str | None = None) -> dict:
+    def resume(self, run_id: str | None = None,
+               stop_after: str | None = None) -> dict:
         run_dir = self._find_resume_run(run_id)
         if run_dir is None:
             return {"status": "NO_RESUMABLE_RUN"}
@@ -210,13 +216,15 @@ class Orchestrator:
         ok, dreport = self.doctor()
         if not ok:
             return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport}
-        out = self._drive(run_dir, st, dreport["skills"], create_wechat_draft=True, resumed=True)
+        out = self._drive(run_dir, st, dreport["skills"], create_wechat_draft=True,
+                          resumed=True, stop_after=stop_after)
         out["receipt_verification"] = verify_reports
         if broken:
             out["invalidated_from"] = broken
         return out
 
-    def _drive(self, run_dir, st, disc, create_wechat_draft, resumed=False) -> dict:
+    def _drive(self, run_dir, st, disc, create_wechat_draft, resumed=False,
+              stop_after: str | None = None) -> dict:
         ctx = self._context(run_dir, disc, create_wechat_draft)
         for stage in STAGES:
             if stage in st.completed_stages:
@@ -271,6 +279,12 @@ class Orchestrator:
             st.mark_complete(stage)
             st.current_stage = None
             save_state(run_dir, st)
+            # OBS-64:受控冒烟/分段执行——停在指定阶段后(不继续后续阶段)
+            if stop_after == stage:
+                return {"status": "STOPPED_AFTER", "run_id": st.run_id,
+                        "stage": stage, "stop_after": stop_after,
+                        "completed_stages": list(st.completed_stages),
+                        "note": "受控停止,不执行后续阶段(不发布、不调微信)"}
         write_delivery(run_dir)
         return {"status": "COMPLETE", "run_id": st.run_id, "topic": st.topic,
                 "completed_stages": st.completed_stages, "draft_created": st.draft_created,

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "user-material-01",
+    "title": "hooks/_common.sh",
+    "summary": "共享 shell 函数库:check_command / ensure_var / die 等。",
+    "originalTitle": "hooks/_common.sh",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/_common.sh",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/_common.sh"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/_common.sh",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/hooks/_common.sh"
+  },
+  {
+    "id": "user-material-02",
+    "title": "CHANGELOG.md",
+    "summary": "v2.1 变更记录。",
+    "source": {
+      "name": "vibe-coding-guide(自有素材)"
+    },
+    "links": {
+      "original": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md",
+      "aihot": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md"
+    },
+    "source_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md",
+    "aihot_permalink": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/CHANGELOG.md",
+    "source_provenance": {
+      "source_type": "repo_path",
+      "original_ref": "Amer-CN/vibe-coding-guide@8260988b:CHANGELOG.md",
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  }
+]

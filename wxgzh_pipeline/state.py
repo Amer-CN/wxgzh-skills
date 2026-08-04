@@ -71,6 +71,8 @@ class PipelineState:
     updated_at: str = field(default_factory=_now)
     theme: str = "smartisan"
     final_article_sha256: str | None = None
+    # OBS-64(档64):自有素材注入入口(--items-file);None = 正常 aihot 检索
+    items_file: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)

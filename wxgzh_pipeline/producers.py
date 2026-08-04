@@ -170,8 +170,41 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
 def _agent(ctx, stage, sd, expected, agent_expected, state):
     upstream = _upstream_hashes(ctx, stage)
     identity = _skill_identity(ctx, stage)
+    instructions = AGENT_INSTRUCTIONS.get(stage, "")
     inputs = {"topic": state.topic, "frozen_article_sha256": state.final_article_sha256}
-    AH.write_request(sd, stage, identity["skill_name"], AGENT_INSTRUCTIONS.get(stage, ""),
+    injection_meta = None
+    # OBS-64(档64):自有素材注入正门——aihot 阶段若指定 --items-file,
+    # 由 Pipeline 代码(而非 agent)写三文件:同构 schema 校验 + 来源留痕 +
+    # 注入标记;agent 只核验后 ACK,不得再调用 AI HOT API。
+    if stage == "aihot" and getattr(state, "items_file", None):
+        from .material_injection import write_injected_aihot, INJECTION_MODE
+        fetch_log_p = sd / "fetch_log.json"
+        existing = None
+        if fetch_log_p.is_file():
+            try:
+                existing = json.loads(fetch_log_p.read_text(encoding="utf-8"))
+            except ValueError:
+                existing = None
+        if existing and existing.get("mode") == INJECTION_MODE:
+            # 幂等:resume 不重写注入文件(fetch_log 含 generated_at 时间戳,
+            # 重写会破坏握手 token 绑定;注入事实已在首次写入时落盘)
+            inj = existing.get("injection") or {}
+            injection_meta = {"mode": INJECTION_MODE, "resumed": True,
+                              "items_file": state.items_file,
+                              "items_file_sha256": inj.get("items_file_sha256"),
+                              "frozen_copy": str(sd / "items_file.injected.json"),
+                              "item_count": inj.get("item_count")}
+        else:
+            injection_meta = write_injected_aihot(
+                sd, state.items_file, state.run_id, state.topic)
+        instructions = (
+            "素材已由正式注入入口提供(--items-file,自有素材注入)。"
+            "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="
+            "items_file_injection)与哈希后 ACK。"
+        )
+        inputs["items_file"] = state.items_file
+        inputs["material_injection"] = injection_meta
+    AH.write_request(sd, stage, identity["skill_name"], instructions,
                      agent_expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
                      stage_request_sha256=sha256_file(sd / "stage_request.json"),
                      skill_identity=identity, contract_sha256=_contract_sha(stage))
@@ -191,6 +224,9 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
     meta = {"exec_kind": EM.AGENT, "handshake": hs,
             "invoked_entrypoint": f"agent_handshake:{stage}",
             "entrypoint_path": None, "entrypoint_sha256": None}
+    if injection_meta is not None:
+        # OBS-64:注入事实显式标记(不伪装为 aihot 检索结果)
+        meta["material_injection"] = injection_meta
     if not ok:
         meta["await_agent"] = (hs.get("HANDSHAKE") == "AWAITING_AGENT")
         meta["handshake_failed"] = not meta["await_agent"]

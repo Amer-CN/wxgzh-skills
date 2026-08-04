@@ -21,6 +21,10 @@ def invoked_entrypoint(ctx):
 
 
 def side_effects(ctx, state):
+    # OBS-64(档64):注入路径不调用 AI HOT API,副作用如实声明为 none
+    if getattr(state, "items_file", None):
+        return [{"type": "none",
+                 "detail": "自有素材注入(--items-file),无 AI HOT API 调用(注入事实见 fetch_log)"}]
     return [{"type": "network_read", "detail": "anonymous read-only AI HOT API"}]
 
 
@@ -32,11 +36,47 @@ def content_validate(ctx, sd: Path, state):
     if not dedup.is_file():
         return 1, {"reason": "deduplicated_items.json missing"}, vpath, vsha
     try:
-        n = len(json.loads(dedup.read_text(encoding="utf-8")))
+        items = json.loads(dedup.read_text(encoding="utf-8"))
     except Exception as e:
         return 1, {"reason": f"dedup unreadable: {e}"}, vpath, vsha
+    n = len(items) if isinstance(items, list) else 0
     ok = n >= 1
-    return (0 if ok else 1), {"deduplicated_count": n, "AIHOT": "PASS" if ok else "FAIL"}, vpath, vsha
+    report = {"deduplicated_count": n, "AIHOT": "PASS" if ok else "FAIL"}
+    # OBS-64(档64):素材注入正门——旧的非正式通道(user_materials_override)
+    # 一律 FAIL_CLOSED;正式注入(items_file_injection)必须与注入块一致。
+    fetch_log_p = sd / "fetch_log.json"
+    if fetch_log_p.is_file():
+        try:
+            fetch_log = json.loads(fetch_log_p.read_text(encoding="utf-8"))
+        except Exception as e:
+            return 1, {"reason": f"fetch_log unreadable: {e}"}, vpath, vsha
+        mode = fetch_log.get("mode")
+        if mode == "user_materials_override":
+            return 1, {"reason": "user_materials_override 非正式通道已关闭(档64)",
+                       "AIHOT": "FAIL"}, vpath, vsha
+        if mode == "items_file_injection":
+            inj = fetch_log.get("injection")
+            problems = []
+            if not isinstance(inj, dict):
+                problems.append("injection block missing")
+            else:
+                if inj.get("item_count") != n:
+                    problems.append("item_count mismatch")
+                prov = inj.get("provenance")
+                if not isinstance(prov, list) or len(prov) != n:
+                    problems.append("provenance incomplete")
+                else:
+                    ids = {p.get("id") for p in prov}
+                    if ids != {it.get("id") for it in items}:
+                        problems.append("provenance id mismatch")
+            if problems:
+                return 1, {"reason": f"material injection inconsistent: {problems}",
+                           "AIHOT": "FAIL"}, vpath, vsha
+            report["injection"] = {"mode": "items_file_injection",
+                                   "items_file_sha256": inj.get("items_file_sha256"),
+                                   "item_count": n}
+            report["AIHOT"] = "PASS(INJECTED)" if ok else "FAIL"
+    return (0 if ok else 1), report, vpath, vsha
 
 
 def post(ctx, sd, state, exit_code, report):
