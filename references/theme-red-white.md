@@ -524,7 +524,7 @@
     <span leaf=""><img src="{{个人名片或引导图URL，无则删本 section}}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>
   </section>
   <p style="margin-bottom:20px;font-size:15px;line-height:1.8;text-align:justify;">
-    <span leaf="">我是 {{作者名}}，{{一句话简介，如：热衷于分享 AI 观察与干货}}。</span>
+    <span leaf="">我是 作者名，一句话简介（按实际作者填写，未知则整行删掉）。</span>
   </p>
   <p style="margin-bottom:20px;font-size:15px;line-height:1.8;text-align:justify;">
     <span leaf="">如果你觉得今天这篇有收获，欢迎</span>

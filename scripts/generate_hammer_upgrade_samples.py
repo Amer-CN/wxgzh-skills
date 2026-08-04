@@ -662,7 +662,7 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
       <span style="font-size:10px;color:{t['divider']};font-weight:600;"><span leaf="">{date}</span></span>
     </section>
     <section>
-      <p style="font-size:15px;color:{t['divider']};margin:0 0 6px;text-decoration:line-through;text-decoration-color:{p};text-decoration-thickness:1.5px;letter-spacing:0.5px;">
+      <p style="font-size:15px;color:{t['label_text']};margin:0 0 6px;text-decoration:line-through;text-decoration-color:{t['label_text']};text-decoration-thickness:1px;letter-spacing:0.5px;">
         <span leaf="">{strike}</span>
       </p>
       <p style="font-size:24px;font-weight:900;color:{t['title_color']};margin:0;line-height:1.05;letter-spacing:-2px;">

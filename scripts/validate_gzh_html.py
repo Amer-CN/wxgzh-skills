@@ -99,8 +99,13 @@ ASCII_QUOTE = re.compile(r"[\"']")
 # ② span leaf 未包裹不可放行;③ HTML 解析中断已升为 ERROR,任何情况不可放行。
 WARN_ALLOWABLE = "allowable"  # 可显式放行(仅当发布侧显式开关开启且逐条留痕)
 WARN_BLOCKING = "blocking"    # 不可放行
-# 代码区特征：等宽字体或 white-space:pre —— 其内半角符号是正常的
-CODE_STYLE = re.compile(r"monospace|white-space\s*:\s*pre|courier|consolas|sf mono", re.I)
+# 代码区特征：等宽字体(font-family 含 monospace/Consolas/'SF Mono'/courier)。
+# 档67A(OBS-90):不再以 white-space:pre 为代码区特征——那是自家 lint 判 ERROR
+# 的特征,一边豁免一边判错是内部矛盾;且 render_article 的代码块已改为每行
+# <p style="margin:0">,不再输出 white-space:pre。
+# 不会误判普通段落:renderer 只对代码块(fenced code block / code_compare)使用
+# 等宽字体,普通段落无 font-family 或使用系统默认字体栈,不含等宽关键字。
+CODE_STYLE = re.compile(r'font-family\s*:[^;"]*(monospace|consolas|sf\s*mono|courier)', re.I)
 
 
 class LeafChecker(HTMLParser):

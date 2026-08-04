@@ -420,10 +420,12 @@
 
 ## 组件 15 尾部作者签名区
 
+> 固定结尾署名组件（好了，今天就先聊到这儿 / 作者与邮箱行）以本主题的正文段落样式呈现，模板见 `common-components.md`；未提供作者信息时整段删掉。
+
 ```html
 <section style="padding: 0 16px 40px;">
   <p style="margin-bottom: 26px;font-size: 15px;line-height: 1.9;text-align: justify;color: #525252;">
-    <span leaf="">我是 {{作者名}}，{{一句话简介，如：热衷于分享 AI 观察与干货}}。</span>
+    <span leaf="">我是 作者名，一句话简介（按实际作者填写，未知则整行删掉）。</span>
   </p>
   <p style="margin-bottom: 26px;font-size: 15px;line-height: 1.9;text-align: justify;color: #525252;">
     <span leaf="">如果你觉得今天这篇有收获，欢迎</span>

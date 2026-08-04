@@ -290,19 +290,32 @@ def _render_item(theme_key: str, item) -> str:
 
 
 def _hammer_code_block(theme_key: str, text: str) -> str:
-    """Minimal single-column fenced code block (问题 B).
+    """WeChat-friendly single-column fenced code block (OBS-90/档67A).
 
-    <pre> + inline styles only (WeChat requires inline styles; no <style>/class):
-    monospace font, light background, horizontal scroll, preserved whitespace.
-    Content stays real selectable text — never an image or look-alike element.
+    每行一个 <p style="margin:0">(与 generate_advanced_html.code_compare 同构),
+    不用 <pre>、不用 white-space:pre(自家 lint 判 ERROR 的特征,档67A 修正内部
+    矛盾)。行内前导/连续空格转 &nbsp; 保留对齐;内容保持真实可选中文本,
+    不截图、不伪装元素。⛔/⚠️ 前缀与行内空格对齐正确。
     """
     body = H.PALETTES[theme_key]["body_color"]
-    return (f'<section style="margin:0 20px 16px;">'
-            f'<pre style="margin:0;padding:14px 16px;background:#F5F3F0;'
-            f'border:1px solid #E8E2DA;border-radius:8px;'
-            f"font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;"
-            f'line-height:1.7;color:{body};white-space:pre;overflow-x:auto;">'
-            f'{H.s(text)}</pre></section>')
+    code_bg = H.PALETTES[theme_key].get("code_bg", "#F5F3F0")
+    code_border = H.PALETTES[theme_key].get("code_border", "#E8E2DA")
+    lines = (text or "").splitlines()
+    rows = []
+    for line in lines:
+        # 先做最小 HTML 转义 + 空格转 &nbsp;(保留对齐),再包 <span leaf="">
+        # —— 顺序不能反:leaf 包裹自身的空格不得被替换(OBS-90 实测)。
+        safe = (line.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace(" ", "&nbsp;"))
+        esc = '<span leaf="">' + safe + '</span>'
+        rows.append(
+            '<p style="margin:0;font-family:\'SF Mono\',Consolas,Monaco,monospace;'
+            'font-size:13px;line-height:1.7;color:' + body + ';">'
+            + esc + '</p>')
+    return (f'<section style="margin:0 20px 16px;padding:14px 16px;'
+            f'background:{code_bg};border:1px solid {code_border};'
+            f'border-radius:8px;overflow-x:auto;">'
+            + "".join(rows) + '</section>')
 
 if __name__ == "__main__":
     sys.exit(main())

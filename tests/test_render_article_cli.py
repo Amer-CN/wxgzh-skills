@@ -83,10 +83,13 @@ class TestCliProductionPath:
     def test_fenced_code_block_cli(self):
         proc, html = _run_cli(FENCED)
         _assert_no_traceback(proc)
+        import html as _h
+        import html as _h
         assert "```" not in html
-        assert "rm -rf /tmp/x" in html
-        assert "git push --force origin main" in html
-        assert "    indented line" in html  # indentation preserved verbatim
+        assert "rm -rf /tmp/x" in _h.unescape(html).replace("\xa0", " ")
+        assert "git push --force origin main" in _h.unescape(html).replace("\xa0", " ")
+        # OBS-90:缩进以 &nbsp; 保留(unescape 后逐字一致)
+        assert "    indented line" in _h.unescape(html).replace("\xa0", " ")
 
     def test_minimal_call_without_bindings_cli(self):
         proc, html = _run_cli("# T\n\n导语。\n\n## 一\n\n正文。\n")

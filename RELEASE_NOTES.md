@@ -1,6 +1,23 @@
-# gzh-design v2026.08.02-hammer.4
+# gzh-design v2026.08.02-hammer.5
 
-## v2026.08.02-hammer.4 追加变更（wxgzh-pipeline 集成侧）
+## v2026.08.02-hammer.5(档67A)
+
+- OBS-90:代码块微信友好结构——每行一个 `<p style="margin:0">`(与
+  generate_advanced_html.code_compare 同构),不再输出 `<pre>` / `white-space:pre`
+  (自家 lint 判 ERROR 的特征,消除 validate_gzh_html 与 lint 的内部矛盾);
+  行内前导/连续空格以 `&nbsp;` 保留(⛔/⚠️ 前缀与缩进对齐);内容保持真实可选中
+  文本,不截图、不伪装元素。
+- validate_gzh_html:代码区识别改为等宽字体(font-family monospace/Consolas/
+  'SF Mono'/courier),不再依赖 white-space:pre;普通段落无等宽字体,不误判。
+- 封面删除线对比度:strike 文字色由 divider(≈1.2:1)改为 label_text #737373
+  (白底 4.74:1 ≥ 4.5:1);删除线由主题橙 #B3593B 1.5px 改为同文字色 1px 细线,
+  不盖字形。
+- OBS-77:主题文档占位符修复({作者名}/{一句话简介,如…})+ zen-whitespace
+  补固定结尾引用;fixed_signature 三项预存失败恢复。
+
+# gzh-design v2026.08.02-hammer.5
+
+## v2026.08.02-hammer.5 追加变更（wxgzh-pipeline 集成侧）
 
 - **WARN 分级 + 显式放行通道（档54R）** — 发布预检门槛分级:`validate_gzh_html.py` 引入规则类别标记;半角标点/英文引号 = `allowable`(可显式放行)、span leaf 未包裹 = `blocking`(不可放行);`publish_wechat_draft.py` 新增 `--allow-warnings` 显式开关(默认关闭,仅对 `allowable` 类别生效),放行条目逐条写入 `allowance_record.json`(audit 留痕,可追溯)。
 - **OBS-85:HTML 解析中断升为 ERROR** — 校验器未能完成检查不得输出温和结果,任何情况下(含开关全开)不可放行。

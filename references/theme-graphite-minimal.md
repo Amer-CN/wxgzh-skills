@@ -589,7 +589,7 @@ GIF 动图角标改极简描边胶囊：边框与字色用石墨主色 `#52525B`
 <section style="padding:0 10px 24px;">
   <section style="border-top:1px solid #E4E4E7;padding-top:28px;">
     <p style="margin-bottom:16px;font-size:15px;line-height:1.8;color:#52525B;text-align:justify;">
-      <span leaf="">我是 {{作者名}}，{{一句话简介，如：热衷于分享 AI 观察与干货}}。</span>
+      <span leaf="">我是 作者名，一句话简介（按实际作者填写，未知则整行删掉）。</span>
     </p>
     <p style="margin-bottom:0;font-size:15px;line-height:1.8;color:#52525B;text-align:justify;">
       <span leaf="">如果你觉得今天这篇有收获，欢迎</span>
