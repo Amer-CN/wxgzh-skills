@@ -952,6 +952,12 @@ def _wechat(ctx, stage, sd, expected, state):
                 },
             }
         args.extend(["--cover", str(cover)])
+        # 档54R:显式放行开关——仅当环境变量显式开启时向被锁脚本传 --allow-warnings
+        # (默认关闭;双层显式:env 开关 + 脚本参数;放行留痕由脚本写入 allowance_record.json)
+        ctx_env = getattr(ctx, "env", {}) or {}
+        allow_raw = str(ctx_env.get("WXGZH_ALLOW_WARNINGS") or "").strip().lower()
+        if allow_raw in ("1", "true", "yes"):
+            args.append("--allow-warnings")
     if ctx.network_mode in ("fake_live", "integration"):
         args.append("--dry-run")  # zero side effects; simulated batchget snapshots
     run = run_script(entry, args, timeout=300)
@@ -966,4 +972,8 @@ def _wechat(ctx, stage, sd, expected, state):
     if ctx.network_mode == "live":
         meta["cover_asset_id"] = cover_asset_id
     outputs = [sd / o for o in expected if (sd / o).is_file()]
+    # 档54R:放行产物(allowance_record.json)作为正式 stage 产物纳入 receipt,可追溯
+    allowance = sd / "allowance_record.json"
+    if allowance.is_file():
+        outputs.append(allowance)
     return outputs, meta

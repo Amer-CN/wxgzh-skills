@@ -230,3 +230,51 @@ def test_fake_live_never_adds_cover_arg(tmp_path, monkeypatch):
     assert "--dry-run" in meta["entry_run"]["command"]
     assert "--cover" not in meta["entry_run"]["command"]
     assert "cover_asset_id" not in meta
+
+
+class _CtxEnv(_Ctx):
+    def __init__(self, run_dir, skills_home, env=None):
+        super().__init__(run_dir, skills_home, network_mode="live")
+        self.env = env or {}
+
+
+def test_allow_warnings_env_switch(tmp_path, monkeypatch):
+    """档54R:WXGZH_ALLOW_WARNINGS 显式开启时传 --allow-warnings;关闭时不传。"""
+    blob = b"asset A"
+    sha = _sha(blob)
+    approvals = {"A-1": _make_approval("A-1", sha)}
+    # 默认关闭:不传 --allow-warnings
+    rd, skills_home = _build_run(
+        tmp_path, assets={"A-1": blob}, body_order=["A-1"],
+        upload_success=["A-1"], approvals=approvals)
+    monkeypatch.setattr(PR, "run_script", _fake_run)
+    sd = tmp_path / "stage"; sd.mkdir(exist_ok=True)
+    outputs, meta = PR._wechat(_CtxEnv(rd, skills_home), "wechat_draft", sd,
+                               EM.EXPECTED_OUTPUTS["wechat_draft"], _State())
+    assert "--allow-warnings" not in meta["entry_run"]["command"]
+    # 显式开启:传 --allow-warnings
+    rd2, skills_home2 = _build_run(
+        tmp_path, assets={"A-1": blob}, body_order=["A-1"],
+        upload_success=["A-1"], approvals=approvals)
+    sd2 = tmp_path / "stage2"; sd2.mkdir(exist_ok=True)
+    outputs2, meta2 = PR._wechat(
+        _CtxEnv(rd2, skills_home2, env={"WXGZH_ALLOW_WARNINGS": "1"}),
+        "wechat_draft", sd2, EM.EXPECTED_OUTPUTS["wechat_draft"], _State())
+    assert "--allow-warnings" in meta2["entry_run"]["command"]
+
+
+def test_allowance_record_joins_outputs(tmp_path, monkeypatch):
+    """档54R:放行记录文件存在时纳入 stage 产物(receipt 可追溯)。"""
+    blob = b"asset A"
+    sha = _sha(blob)
+    approvals = {"A-1": _make_approval("A-1", sha)}
+    rd, skills_home = _build_run(
+        tmp_path, assets={"A-1": blob}, body_order=["A-1"],
+        upload_success=["A-1"], approvals=approvals)
+    monkeypatch.setattr(PR, "run_script", _fake_run)
+    sd = tmp_path / "stage3"; sd.mkdir(exist_ok=True)
+    (sd / "allowance_record.json").write_text(
+        '{"schema_version": "1.0", "entries": []}', encoding="utf-8")
+    outputs, meta = PR._wechat(_CtxEnv(rd, skills_home), "wechat_draft", sd,
+                               EM.EXPECTED_OUTPUTS["wechat_draft"], _State())
+    assert any(o.name == "allowance_record.json" for o in outputs)

@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import sys
+import os
 
 from .orchestrator import Orchestrator
 
@@ -71,9 +72,11 @@ def main(argv=None) -> int:
         net = "integration"
     else:
         net = "live"
+    # 档54R:透传环境变量(放行开关 WXGZH_ALLOW_WARNINGS 等经 CLI 生效)
     orch = Orchestrator(
         project_root=a.project_root, network_mode=net,
         fixture_dir=a.fixture_dir, skills_home=a.skills_home,
+        env=dict(os.environ),
     )
 
     if cmd["command"] == "fabu":

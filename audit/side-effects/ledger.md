@@ -4,7 +4,9 @@
 - 数据来源:各 RUN 的 `stages/media_enrichment/upload_events.json`、`stages/wechat_draft/draft_creation_result.json`、`stages/wechat_draft/stage_receipt.json`;事件 RUN 数据经档 35 复核。
 - 更新记录:2026-08-02 档 37 首次建账,纳入 4 篇归档 RUN + 事件 RUN `20260801T231452-vibe-coding-guide-v2-1-1vg6jx`;2026-08-03 档 49 追加 RUN `20260802T220853-codex-sol-luna-max-m6pyv4`(5 次 uploadimg,未到草稿)。
 - 累计 uploadimg:22 次(2+2+12+5+1);草稿 #1/#2/#3 共 3 份(RUN 20260802T220853 未创建草稿)。
+- 档 54R 更新:累计 uploadimg 仍 22 次;草稿累计创建 **4 份**(#1/#2/#3/#4);封面 add_material 累计 **4 次**;草稿箱现存量 **2 份**;发布 0。
 - 档 53 更正(2026-08-03):草稿箱基线更正为 **1 份**——草稿 #1/#2 的消失经用户确认为**本人手动删除**,与流水线无关,**结案**。管线代码无删除/发布能力,此结论与档 52 登记一致。
+- 档 54R(2026-08-04):RUN `20260802T220853-codex-sol-luna-max-m6pyv4` 经 gzh-design hammer.4 升版 + 显式放行(2 处半角引号,allowance_record 留痕)续跑至草稿成功——**草稿 #4**(title=`Codex 用 Sol 指挥 Luna Max 省额度翻倍产出`,content_sha256=`160b26aa…`,before=1 → after=2,real_api_call=true);封面 add_material 1 次(封面=A-109,sha `73b4e06d…`);无 uploadimg 新增(正文 6 张为档 50 存量);草稿箱现存量 **2 份**;无发布/群发/定时/删除。
 
 ## 累计汇总(截至 2026-08-02)
 
