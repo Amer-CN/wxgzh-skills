@@ -1,6 +1,22 @@
-# gzh-design v2026.08.02-hammer.5
+# gzh-design v2026.08.02-hammer.6
 
-## v2026.08.02-hammer.5(档67A)
+## v2026.08.02-hammer.6(档67C)
+
+- OBS-91:代码块可复制性修复——仅行首前导空白(空格/制表符)转 `&nbsp;` 保留缩进;
+  行内空格保持普通空格(复制出来是普通空格,可复制性优先);行内连续空白段仅
+  「第二个及之后」转 `&nbsp;`(首个保持普通空格,防折叠同时不伤可复制性)。
+  同步修正 `_hammer_code_block` docstring,与实现逐字一致(上次 docstring 与实现
+  不一致是 OBS-91 成因之一)。
+- 新增可复制性回归测试(`tests/test_obs91_copyability.py`,自动化不依赖人眼):
+  渲染 → 去标签 + unescape → 与源代码块逐行比对(逐字节/无前导空白行零 U+00A0/
+  ⛔⚠️ 与 16 条 deny/ask 逐字还原);★反向验证:旧全 `&nbsp;` 实现被判 FAIL。
+- 举证(见档67C 报告):等宽字体在运行时仅代码块使用(renderer 输出面);gen_cover.py
+  为 2026-07-19 遗留未跟踪展示工具,前四次 gzh-design relock 源树为
+  repos/gzh-design-skill-43r-build(不含该文件),见证通过系源树不同,非见证漏洞。
+
+# gzh-design v2026.08.02-hammer.6
+
+## v2026.08.02-hammer.6(档67A)
 
 - OBS-90:代码块微信友好结构——每行一个 `<p style="margin:0">`(与
   generate_advanced_html.code_compare 同构),不再输出 `<pre>` / `white-space:pre`
@@ -15,9 +31,9 @@
 - OBS-77:主题文档占位符修复({作者名}/{一句话简介,如…})+ zen-whitespace
   补固定结尾引用;fixed_signature 三项预存失败恢复。
 
-# gzh-design v2026.08.02-hammer.5
+# gzh-design v2026.08.02-hammer.6
 
-## v2026.08.02-hammer.5 追加变更（wxgzh-pipeline 集成侧）
+## v2026.08.02-hammer.6 追加变更（wxgzh-pipeline 集成侧）
 
 - **WARN 分级 + 显式放行通道（档54R）** — 发布预检门槛分级:`validate_gzh_html.py` 引入规则类别标记;半角标点/英文引号 = `allowable`(可显式放行)、span leaf 未包裹 = `blocking`(不可放行);`publish_wechat_draft.py` 新增 `--allow-warnings` 显式开关(默认关闭,仅对 `allowable` 类别生效),放行条目逐条写入 `allowance_record.json`(audit 留痕,可追溯)。
 - **OBS-85:HTML 解析中断升为 ERROR** — 校验器未能完成检查不得输出温和结果,任何情况下(含开关全开)不可放行。

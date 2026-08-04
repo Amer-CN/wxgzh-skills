@@ -290,12 +290,16 @@ def _render_item(theme_key: str, item) -> str:
 
 
 def _hammer_code_block(theme_key: str, text: str) -> str:
-    """WeChat-friendly single-column fenced code block (OBS-90/档67A).
+    """WeChat-friendly single-column fenced code block (OBS-91/档67C).
 
     每行一个 <p style="margin:0">(与 generate_advanced_html.code_compare 同构),
-    不用 <pre>、不用 white-space:pre(自家 lint 判 ERROR 的特征,档67A 修正内部
-    矛盾)。行内前导/连续空格转 &nbsp; 保留对齐;内容保持真实可选中文本,
-    不截图、不伪装元素。⛔/⚠️ 前缀与行内空格对齐正确。
+    不用 <pre>、不用 white-space:pre(自家 lint 判 ERROR 的特征)。可复制性与
+    对齐同时成立:
+    - 仅行首前导空白(空格/制表符)转 &nbsp;,保留缩进对齐;
+    - 行内空格保持普通空格(可复制性:复制出来是普通空格);
+    - 行内连续空格若确有折叠风险,只把该连续段中「第二个及之后」的空格转
+      &nbsp;,首个保持普通空格;
+    - 内容保持真实可选中文本,不截图、不伪装元素;⛔/⚠️ 前缀逐字保留。
     """
     body = H.PALETTES[theme_key]["body_color"]
     code_bg = H.PALETTES[theme_key].get("code_bg", "#F5F3F0")
@@ -303,10 +307,23 @@ def _hammer_code_block(theme_key: str, text: str) -> str:
     lines = (text or "").splitlines()
     rows = []
     for line in lines:
-        # 先做最小 HTML 转义 + 空格转 &nbsp;(保留对齐),再包 <span leaf="">
-        # —— 顺序不能反:leaf 包裹自身的空格不得被替换(OBS-90 实测)。
-        safe = (line.replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace(" ", "&nbsp;"))
+        # 最小 HTML 转义,再按 OBS-91 规则处理空白:
+        # 1) 行首前导空白整段转 &nbsp;;
+        # 2) 行内连续空白段:首个保持普通空格,第二个起转 &nbsp;。
+        escaped = (line.replace("&", "&amp;").replace("<", "&lt;")
+                   .replace(">", "&gt;"))
+        stripped = escaped.lstrip(" \t")
+        leading = escaped[: len(escaped) - len(stripped)].replace(" ", "&nbsp;").replace("\t", "&nbsp;")
+        out = []
+        run = 0
+        for ch in stripped:
+            if ch in (" ", "\t"):
+                run += 1
+                out.append(" " if run == 1 else "&nbsp;")
+            else:
+                run = 0
+                out.append(ch)
+        safe = leading + "".join(out)
         esc = '<span leaf="">' + safe + '</span>'
         rows.append(
             '<p style="margin:0;font-family:\'SF Mono\',Consolas,Monaco,monospace;'

@@ -87,8 +87,9 @@ class TestOBS90CodeblockWechat:
         _, html = _render_cli(CODE_MD)
         # 代码行以 <p style="margin:0;..."> 呈现(行内含 <span leaf=""> 包裹)
         lines = re.findall(r'<p style="margin:0;[^"]*">(.*?)</p>', html, re.DOTALL)
-        assert any("⛔&nbsp;vibe-coding-guide&nbsp;拦截" in l for l in lines)
-        assert any("⚠️&nbsp;vibe-coding-guide&nbsp;提醒" in l for l in lines)
+        # OBS-91(档67C):行内空格保持普通空格(可复制性);行首缩进转 &nbsp;
+        assert any("⛔ vibe-coding-guide 拦截" in l for l in lines)
+        assert any("⚠️ vibe-coding-guide 提醒" in l for l in lines)
         # 行内前导空格以 &nbsp; 保留(缩进行)
         assert any("&nbsp;&nbsp;&nbsp;&nbsp;" in l for l in lines)
 
