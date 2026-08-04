@@ -33,6 +33,8 @@ from . import agent_handshake as AH
 from . import secrets as SEC
 from .state import sha256_file
 from .subprocess_runner import run_script
+from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
+                                enforce_approval_readiness)
 
 AGENT_INSTRUCTIONS = {
     "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
@@ -815,6 +817,13 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
             precheck_path.write_text(json.dumps(precheck, ensure_ascii=False, indent=2),
                                     encoding="utf-8")
             meta["approval_precheck"] = str(precheck_path)
+            # OBS-87(档61):批准点信息完备性——内容描述 + 页面位置,缺字段 FAIL_CLOSED
+            readiness = build_approval_readiness(Path(ctx.run_dir))
+            readiness_path = (Path(ctx.run_dir) / "media_enrichment"
+                              / "approval_readiness.json")
+            readiness_path.write_text(json.dumps(readiness, ensure_ascii=False, indent=2),
+                                     encoding="utf-8")
+            meta["approval_readiness"] = str(readiness_path)
             meta["await_media_approval"] = True
             meta["discovery_manifest"] = str(frozen)
             meta["approval_file"] = str(approval_file)
@@ -847,6 +856,14 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         precheck = json.loads(precheck_path.read_text(encoding="utf-8"))
         precheck["checked_approvals"] = stable
         _enforce_approval_precheck(Path(ctx.run_dir), precheck)
+        # OBS-87(档61):批准信息链闸门——旧合同自动失效;内容不明/rejected 不得消费
+        readiness_path = (Path(ctx.run_dir) / "media_enrichment"
+                          / "approval_readiness.json")
+        if not readiness_path.is_file():
+            raise MediaRequestError(
+                "approval readiness FAIL_CLOSED: approval_readiness.json missing")
+        readiness = json.loads(readiness_path.read_text(encoding="utf-8"))
+        enforce_approval_readiness(readiness_path, readiness, stable)
         frozen_by_id = {a["asset_id"]: a for a in discovery.get("assets", [])}
         for approval in stable:
             if not _STABLE_SINGLE_ASSET_FIELDS.issubset(approval):
@@ -901,7 +918,8 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                         (sd / name).write_bytes(source.read_bytes())
         outputs = [sd / name for name in expected if (sd / name).is_file()]
         return outputs, meta
-    except (OSError, ValueError, KeyError, TypeError, MediaRequestError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, MediaRequestError,
+            ApprovalEvidenceError) as exc:
         return [], {
             "exec_kind": EM.SUBPROC,
             "invoked_entrypoint": str(entry),

@@ -1,0 +1,16 @@
+{
+  "claim_texts": [
+    "Codex 高阶玩法：让 Sol 在 `~/.codex/agents/` 下创建 `luna-worker.toml` 子代理，模型设 `gpt-5.6-luna`、reasoning effort 设 max，Sol 负责拆任务与审代码",
+    "重度用户发现 OpenAI 订阅隐藏用法：GPT-5.6 Luna 搭配 Max reasoning effort（即\"Luna Max\"），日常写代码、debug、改 PR 等任务表现接近 Sol Medium，部分任务持平，但额度消耗远",
+    "通过 Sol 可将 GPT Luna Max 配置为 Codex 子代理，创建名为 luna_worker 的自定义代理，设置 model = \"gpt-5.6-luna\" 和 model_reasoning_effort = \"max\"。",
+    "Codex 的五小时费率还没恢复，而且我感觉它短期内不会回来了。\n\n这对我来说没问题！",
+    "西蒙·威利森发布七月赞助者通讯，涵盖 OpenAI 与 Anthropic 模型在测试中的意外网络攻击、GPT-5.6 Sol/Terra/Luna、Claude Opus 5、Kimi K3 与 DeepSeek-V4-Flash-073",
+    "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用，降幅达 80%，本次调整暂不影响 GPT-5.6 Sol 模型。降价后 GPT-5.6 Luna 的性价比已超过 De",
+    "OpenAI 下调 GPT-5.6 系列模型价格，Luna 每百万输入/输出 token 价格从 $1.00/$6.00 降至 $0.20/$1.20，单任务成本下降 80%；Terra 价格从 $2.50/$15.00 降至 $2.00/",
+    "OpenAI 将 GPT-5.6 Luna 价格大幅下调 80%，输入降至 $0.20/百万 token，输出 $1.20/百万 token，已低于 Google Gemini 3.1 Flash-Lite 和 Anthropic Clau",
+    "luna 是一个出色且低成本的模型。",
+    "这个成本，选 GPT-5.6 Luna，还是 DeepSeek v4 Pro",
+    "GPT 5.6 Luna 现已在 OpenCode Go 中可用。",
+    "该死，我本该再等等，而不是用掉我搁置的重置机会。\n\n总之，谢谢 Tibo，他信守了承诺。"
+  ]
+}

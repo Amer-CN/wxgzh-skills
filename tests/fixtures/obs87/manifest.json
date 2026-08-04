@@ -1,0 +1,445 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20260802T220853-codex-sol-luna-max-m6pyv4",
+  "assets": [
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-109",
+      "asset_identity_sha256": "e0ed985843585d04e9fdf5d26aa1d3e7d3e9add5697823e3e42ca8d953c95bde",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/73648c29-3084-47ca-8955-3da40e34cb77.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": 212026,
+      "height": 658,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\73b4e06da007d45a6782ad3382604833a56bec01b258dc415cb38872494acdac.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "a816774e4e4d519b",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/73648c29-3084-47ca-8955-3da40e34cb77.jpg",
+      "sha256": "73b4e06da007d45a6782ad3382604833a56bec01b258dc415cb38872494acdac",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1440
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-110",
+      "asset_identity_sha256": "23fc76f2eb3be3087d58b81c2bb4c11c9510c7da4076c00cc9eb830dce6fb043",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/223135f7-2204-4dcd-b454-0ef877979b10.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": 414501,
+      "height": 1920,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\0b873fce422558c2b1fec4f916d833282b0f0b96833e7c75bc9110868c8ff3b3.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "fb4124bc0fe9c0d3",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/223135f7-2204-4dcd-b454-0ef877979b10.jpg",
+      "sha256": "0b873fce422558c2b1fec4f916d833282b0f0b96833e7c75bc9110868c8ff3b3",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1080
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-111",
+      "asset_identity_sha256": "e85ec939707442b499d73c15c05aad4e099056afc029b19c32e5be7887ac28e4",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/22c6f53e-cf1d-456c-8f27-1a38c1b9629d.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": 116738,
+      "height": 674,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\27460e245edde1a52e6d293e24e0846a52a6387f2a6e561c0db82c4468d71d97.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "f2c495cd1a66ac17",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/22c6f53e-cf1d-456c-8f27-1a38c1b9629d.jpg",
+      "sha256": "27460e245edde1a52e6d293e24e0846a52a6387f2a6e561c0db82c4468d71d97",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1234
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-112",
+      "asset_identity_sha256": "a89f159dd79ba05e21d730604b605a71fce20b728147c71dbb2d21477aeef74f",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/6555a03f-76e4-4daa-96a4-3277ff825f6c.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.srcset",
+      "file_size": 1509096,
+      "height": 3120,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\81f3e427ceca2c3295a6aef6bbf281a1501693b82246d226e1c6bda68d596c4f.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "9790947a29766976",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/6555a03f-76e4-4daa-96a4-3277ff825f6c.jpg",
+      "sha256": "81f3e427ceca2c3295a6aef6bbf281a1501693b82246d226e1c6bda68d596c4f",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1440
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-113",
+      "asset_identity_sha256": "cff6a50516f5ff781eebbe8adff78ed1b91e59f28b86e2e8c1cf8109982a905c",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/f8292a43-1a6d-4d21-8a2b-c97832406267.png",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.data-original",
+      "file_size": 244875,
+      "height": 1272,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\6ba9dc545a1a2478008fc0af291f9d423bc8c01cfdf25704a3a7ce94facde2d0.png",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/png",
+      "perceptual_hash": "af3b329664c9c4c9",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/f8292a43-1a6d-4d21-8a2b-c97832406267.png",
+      "sha256": "6ba9dc545a1a2478008fc0af291f9d423bc8c01cfdf25704a3a7ce94facde2d0",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1292
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": "OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GPT-5.6 Luna 两款模型的调用费用",
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-114",
+      "asset_identity_sha256": "f8659b2eb2b2370b4b93d42ac17fdeea2de4e85f6348432fa76326bd3d6c8a58",
+      "asset_origin": "source",
+      "caption": "图：OpenAI 于 7 月 31 日宣布下调 GPT-5.6 Terra 和 GP",
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/newsuploadfiles/2026/7/75ea2358-26d7-4579-a143-ae21317dd4ca.jpg?x-bce-process=image/format,f_auto",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.data-original",
+      "file_size": 52187,
+      "height": 1148,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\8680b39c821cf8b62078fa36de8b4e506def1357ba4740cf81f0d73af974ee6a.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "c43f3ac4917ac4b3",
+      "placement": {
+        "anchor": "# Codex 用 Sol 指挥 Luna Max 省额度翻倍产出",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/newsuploadfiles/2026/7/75ea2358-26d7-4579-a143-ae21317dd4ca.jpg?x-bce-process=image/format,f_auto",
+      "sha256": "8680b39c821cf8b62078fa36de8b4e506def1357ba4740cf81f0d73af974ee6a",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 646
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-107",
+      "asset_identity_sha256": "344005d5b7ffd2a92d9cd239a96f071d5df32a169671be61189d3a063e44ac86",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/mpimg/account/10233.jpg@s_2,w_100,h_100",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 6207,
+      "height": 100,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\e364d9bf34f5e91af282f716ec5b2ec475d81604279fc6e72e473ae1e74c3657.jpg",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "c5d03a6fc5906a67",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "context indicates avatar/headshot"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/mpimg/account/10233.jpg@s_2,w_100,h_100",
+      "sha256": "e364d9bf34f5e91af282f716ec5b2ec475d81604279fc6e72e473ae1e74c3657",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 100
+    },
+    {
+      "aihot_permalink": "https://www.ithome.com/0/983/917.htm",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-108",
+      "asset_identity_sha256": "4b3e1f433af7e34ae729513594ae4767b442e7493600935ead0819bc9d3ef06e",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-06"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://img.ithome.com/images/v2/t.png",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 73,
+      "height": 1,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260802T220853-codex-sol-luna-max-m6pyv4\\media_enrichment\\discover\\images\\11b9c95a68e295dddd0ea924647536578ce285b2c8469a223c01df1ff3166af1.png",
+      "material_ids": [
+        "M-06"
+      ],
+      "mime_type": "image/png",
+      "perceptual_hash": "8000000000000000",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "1x1 or smaller — likely tracking pixel"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://img.ithome.com/images/v2/t.png",
+      "sha256": "11b9c95a68e295dddd0ea924647536578ce285b2c8469a223c01df1ff3166af1",
+      "source_page_url": "https://www.ithome.com/0/983/917.htm",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1
+    }
+  ],
+  "discovery_manifest_sha256": "518921c8478430d2956217c22c51945b8e91dda1a07c543eb37e211884b60311"
+}
