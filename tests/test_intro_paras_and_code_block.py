@@ -114,10 +114,10 @@ class TestFencedCodeBlock:
         assert "```" not in html
         # OBS-90(档67A):代码块不再输出 <pre>(微信友好结构,每行 <p style="margin:0">)
         assert "<pre" not in html
-        assert "rm -rf /tmp/x" in _h.unescape(html).replace("\xa0", " ")
-        assert "git push --force origin main" in _h.unescape(html).replace("\xa0", " ")
+        assert "rm -rf /tmp/x" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert "git push --force origin main" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
         # 缩进以 &nbsp; 保留,语义等价(unescape 后仍为 4 空格缩进行)
-        assert "    indented line" in _h.unescape(html).replace("\xa0", " ")
+        assert "    indented line" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 
     def test_code_block_passes_validate_gzh_html(self):
         import validate_gzh_html as vh
@@ -130,8 +130,8 @@ class TestFencedCodeBlock:
         assert code == 0
         assert "```" not in html
         import html as _h
-        assert "deny: rm -rf /" in _h.unescape(html).replace("\xa0", " ")
-        assert "deny: DROP TABLE" in _h.unescape(html).replace("\xa0", " ")
+        assert "deny: rm -rf /" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert "deny: DROP TABLE" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 
     def test_code_block_is_selectable_text_not_image(self):
         _, _, html = _render_md(FENCED)
@@ -143,7 +143,7 @@ class TestFencedCodeBlock:
         _, code, html = _render_md("# T\n\n导语。\n\n## 一\n\n```\ncode line\n")
         assert code == 0
         import html as _h
-        assert "code line" in _h.unescape(html).replace("\xa0", " ")
+        assert "code line" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 
 
 # ── OBS-83 (hammer.3): first intro line must render IN FULL in the body ─────

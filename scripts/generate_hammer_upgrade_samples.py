@@ -756,6 +756,49 @@ def hammer_para(theme_key, text):
             f'{s(text)}</p></section>')
 
 
+def hammer_code_block(language: str, text: str) -> str:
+    """1a 深色代码块(common-components.md)——所有主题共用,不做主题变色。
+
+    逐字对应 references/common-components.md「1a. 深色代码块(默认)」:
+    外层 background:#1E293B + border-radius:8px + overflow:hidden + box-shadow;
+    顶栏 background:#0F172A + display:flex,三色圆点
+    #FF5F56/#FFBD2E/#27C93F(10px 圆,font-size:0 隐藏占位字符);
+    语言标签 color:#64748B、Consolas 等宽、letter-spacing:1px(无语言则删该 span);
+    代码行每行一个 <p style="margin:0;font-family:'SF Mono',…;color:#E2E8F0;">。
+    缩进:行首前导空白转全角空格 U+3000(规范③);行内空格一字不动(规范⑤)。
+    """
+    lines = (text or "").splitlines()
+    body = []
+    for line in lines:
+        escaped = (line.replace("&", "&amp;").replace("<", "&lt;")
+                   .replace(">", "&gt;"))
+        stripped = escaped.lstrip(" \t")
+        leading = escaped[: len(escaped) - len(stripped)]
+        leading_fw = "".join("\u3000" if c in (" ", "\t") else c for c in leading)
+        safe = leading_fw + stripped
+        body.append(
+            '<p style="margin:0;font-family:\'SF Mono\',Consolas,Monaco,monospace;'
+            'font-size:13px;line-height:1.6;color:#E2E8F0;"><span leaf="">'
+            + safe + '</span></p>')
+    lang_span = ""
+    if language:
+        lang = (language.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;"))
+        lang_span = ('<span style="margin-left:12px;font-size:12px;color:#64748B;'
+                     'font-family:Consolas,Monaco,monospace;letter-spacing:1px;">'
+                     '<span leaf="">' + lang + '</span></span>')
+    return (f'<section style="margin:0 0 20px;border-radius:8px;overflow:hidden;'
+            f'background:#1E293B;box-shadow:0 4px 16px -8px rgba(15,23,42,0.4);">'
+            f'<section style="display:flex;align-items:center;padding:9px 14px;background:#0F172A;">'
+            f'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF5F56;margin-right:7px;font-size:0;line-height:0;overflow:hidden;">.</span>'
+            f'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FFBD2E;margin-right:7px;font-size:0;line-height:0;overflow:hidden;">.</span>'
+            f'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27C93F;font-size:0;line-height:0;overflow:hidden;">.</span>'
+            + lang_span
+            + '</section>'
+            + '<section style="padding:11px 14px;">' + "".join(body) + '</section>'
+            + '</section>')
+
+
 def hammer_image_2a(theme_key, url, caption=""):
     """Official common-components 2a standard image, hammer-toned."""
     t = PALETTES[theme_key]

@@ -96,14 +96,17 @@ def parse_article(md: str) -> dict:
     cur: dict | None = None
     in_code = False
     code_buf: list[str] = []
+    code_lang = ""
     for ln in lines:
         st = ln.strip()
         if in_code:
             if st.startswith("```"):
                 if cur is None:
-                    intro_paras.append({"kind": "code", "text": "\n".join(code_buf)})
+                    intro_paras.append({"kind": "code", "text": "\n".join(code_buf),
+                                        "language": code_lang})
                 else:
-                    cur["paras"].append({"kind": "code", "text": "\n".join(code_buf)})
+                    cur["paras"].append({"kind": "code", "text": "\n".join(code_buf),
+                                         "language": code_lang})
                 code_buf = []
                 in_code = False
             else:
@@ -112,6 +115,7 @@ def parse_article(md: str) -> dict:
         if st.startswith("```"):
             in_code = True
             code_buf = []
+            code_lang = ln.strip()[3:].strip()
             continue
         if not title and st.startswith("# ") and not st.startswith("## "):
             title = st[2:].strip()
@@ -286,53 +290,16 @@ def _render_item(theme_key: str, item) -> str:
     if isinstance(item, str) or item.get("kind") != "code":
         text = item if isinstance(item, str) else item["text"]
         return H.hammer_para(theme_key, text)
-    return _hammer_code_block(theme_key, item["text"])
+    return _hammer_code_block(theme_key, item["text"], item.get("language", ""))
 
 
-def _hammer_code_block(theme_key: str, text: str) -> str:
-    """WeChat-friendly single-column fenced code block (OBS-91/档67C).
+def _hammer_code_block(theme_key: str, text: str, language: str = "") -> str:
+    """OBS-91/档67D:委托官方 hammer_code_block 组件(common-components 1a)。
 
-    每行一个 <p style="margin:0">(与 generate_advanced_html.code_compare 同构),
-    不用 <pre>、不用 white-space:pre(自家 lint 判 ERROR 的特征)。可复制性与
-    对齐同时成立:
-    - 仅行首前导空白(空格/制表符)转 &nbsp;,保留缩进对齐;
-    - 行内空格保持普通空格(可复制性:复制出来是普通空格);
-    - 行内连续空格若确有折叠风险,只把该连续段中「第二个及之后」的空格转
-      &nbsp;,首个保持普通空格;
-    - 内容保持真实可选中文本,不截图、不伪装元素;⛔/⚠️ 前缀逐字保留。
+    本文件不手写任何 hammer HTML(文件头声明为真);结构/色值/缩进规则全部
+    来自 generate_hammer_upgrade_samples.hammer_code_block。
     """
-    body = H.PALETTES[theme_key]["body_color"]
-    code_bg = H.PALETTES[theme_key].get("code_bg", "#F5F3F0")
-    code_border = H.PALETTES[theme_key].get("code_border", "#E8E2DA")
-    lines = (text or "").splitlines()
-    rows = []
-    for line in lines:
-        # 最小 HTML 转义,再按 OBS-91 规则处理空白:
-        # 1) 行首前导空白整段转 &nbsp;;
-        # 2) 行内连续空白段:首个保持普通空格,第二个起转 &nbsp;。
-        escaped = (line.replace("&", "&amp;").replace("<", "&lt;")
-                   .replace(">", "&gt;"))
-        stripped = escaped.lstrip(" \t")
-        leading = escaped[: len(escaped) - len(stripped)].replace(" ", "&nbsp;").replace("\t", "&nbsp;")
-        out = []
-        run = 0
-        for ch in stripped:
-            if ch in (" ", "\t"):
-                run += 1
-                out.append(" " if run == 1 else "&nbsp;")
-            else:
-                run = 0
-                out.append(ch)
-        safe = leading + "".join(out)
-        esc = '<span leaf="">' + safe + '</span>'
-        rows.append(
-            '<p style="margin:0;font-family:\'SF Mono\',Consolas,Monaco,monospace;'
-            'font-size:13px;line-height:1.7;color:' + body + ';">'
-            + esc + '</p>')
-    return (f'<section style="margin:0 20px 16px;padding:14px 16px;'
-            f'background:{code_bg};border:1px solid {code_border};'
-            f'border-radius:8px;overflow-x:auto;">'
-            + "".join(rows) + '</section>')
+    return H.hammer_code_block(language, text)
 
 if __name__ == "__main__":
     sys.exit(main())

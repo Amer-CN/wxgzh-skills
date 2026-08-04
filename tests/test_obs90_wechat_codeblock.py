@@ -87,11 +87,11 @@ class TestOBS90CodeblockWechat:
         _, html = _render_cli(CODE_MD)
         # 代码行以 <p style="margin:0;..."> 呈现(行内含 <span leaf=""> 包裹)
         lines = re.findall(r'<p style="margin:0;[^"]*">(.*?)</p>', html, re.DOTALL)
-        # OBS-91(档67C):行内空格保持普通空格(可复制性);行首缩进转 &nbsp;
+        # OBS-91/档67D:行内空格保持普通空格(可复制性);行首缩进转全角空格 U+3000
         assert any("⛔ vibe-coding-guide 拦截" in l for l in lines)
         assert any("⚠️ vibe-coding-guide 提醒" in l for l in lines)
-        # 行内前导空格以 &nbsp; 保留(缩进行)
-        assert any("&nbsp;&nbsp;&nbsp;&nbsp;" in l for l in lines)
+        # 行首缩进以全角空格 U+3000 保留(缩进行)
+        assert any("\u3000\u3000\u3000\u3000" in l for l in lines)
 
     def test_output_passes_lint_checks(self):
         """★自家 lint 禁止的东西,自家渲染器不许输出。"""
@@ -118,6 +118,26 @@ class TestOBS90CodeblockWechat:
         # 代码行(等宽)判为代码区
         code = '<p style="margin:0;font-family:\'SF Mono\',Consolas,monospace;">x=1,</p>'
         assert vh.CODE_STYLE.search(code) is not None
+
+    def test_obs95_1a_structure_gate(self):
+        """★OBS-95 最小闸门:渲染输出的代码块必须命中 common-components 1a 结构。"""
+        proc, html = _render_cli(CODE_MD)
+        assert proc.returncode == 0
+        # 深底 + 顶栏 + 三色圆点 + box-shadow
+        assert "background:#1E293B" in html
+        assert "background:#0F172A" in html
+        assert "background:#FF5F56" in html
+        assert "background:#FFBD2E" in html
+        assert "background:#27C93F" in html
+        assert "box-shadow:0 4px 16px -8px rgba(15,23,42,0.4)" in html
+        # 每行独立 <p style="margin:0;...">
+        rows = re.findall(r'<p style="margin:0;font-family:[^"]*SF Mono[^"]*">', html)
+        assert len(rows) >= 1
+        # 语言标签(bash)存在
+        assert "color:#64748B;font-family:Consolas,Monaco,monospace" in html
+        # 无 white-space:pre、无 <pre>
+        assert "white-space:pre" not in html
+        assert "<pre" not in html
 
 
 class TestStrikeContrast:
