@@ -24,10 +24,10 @@ SAMPLE_DIR = REPO_ROOT / "scripts" / "smoke-samples"
 
 
 def _installed(skill_name):
-    # 项目根 = repo_root 的上上级(F:\AIXM\wxgzh);无安装侧时跳过
-    root = REPO_ROOT.parent.parent
-    home = root / ".agents" / "skills"
-    return home / skill_name
+    import os
+    # 项目根优先取 WXGZH_PROJECT_ROOT(upgrade_regression 注入);fallback 推导
+    project = Path(os.environ.get("WXGZH_PROJECT_ROOT") or REPO_ROOT.parents[1])
+    return project / ".agents" / "skills" / skill_name
 
 
 def test_all_locked_skills_have_smoke_config():
