@@ -45,9 +45,9 @@
     "media-enrichment": {
       "skill_name": "media-enrichment",
       "repository_url": "https://github.com/Amer-CN/media-enrichment",
-      "branch": "restore/local-patches-obs42-53",
-      "full_commit_sha": "2595e01465399eb34a10a56b190399039578da9e",
-      "source_tree_sha": "6ba0ba41dd8c2feada2924e07b4a9da3f05272bd",
+      "branch": "chore/wxgzh-pipeline-dev2-integration",
+      "full_commit_sha": "cedf92ca45b0cdb7e010d489e9da67dd28ef6e59",
+      "source_tree_sha": "c2b914a2cbe3ca8880d0b4b7525cc8adc7a5ce68",
       "skill_version": "0.1.0-dev7-hotfix4",
       "skill_root_sha256": "0d8aea2169cec17c4e9f95af66b6b4da3c532554a0a316fe3fb604bd0b7ab3a3",
       "runtime_manifest_sha256": "172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996",
@@ -61,9 +61,7 @@
         "scripts/validate_media_manifest.py",
         "src/media_enrichment/uploader.py",
         "src/media_enrichment/article_bindings.py"
-      ],
-      "render_entry_sha256": null,
-      "component_source_sha256": null
+      ]
     },
     "gzh-design": {
       "skill_name": "gzh-design",

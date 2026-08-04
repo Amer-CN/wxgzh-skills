@@ -84,5 +84,21 @@
     "new_skill_version": "v2026.08.02-hammer.4",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260804T050125Z-29b8f728",
+    "skill": "media-enrichment",
+    "reason": "档57 OBS-74 尾巴:full_commit_sha 对齐 restore/local-patches-obs42-53 @2595e014",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-04T05:01:25Z",
+    "doctor_result": "PASS",
+    "old_full_commit_sha": "cedf92ca45b0cdb7e010d489e9da67dd28ef6e59",
+    "new_full_commit_sha": "2595e01465399eb34a10a56b190399039578da9e",
+    "old_source_tree_sha": "c2b914a2cbe3ca8880d0b4b7525cc8adc7a5ce68",
+    "new_source_tree_sha": "6ba0ba41dd8c2feada2924e07b4a9da3f05272bd",
+    "old_branch": "chore/wxgzh-pipeline-dev2-integration",
+    "new_branch": "restore/local-patches-obs42-53",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]
