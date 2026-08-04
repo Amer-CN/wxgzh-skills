@@ -19,6 +19,7 @@ from media_enrichment import __version__ as SKILL_VERSION
 from media_enrichment.input_contract import validate_request
 from media_enrichment.page_fetcher import fetch_page, scan_no_repost
 from media_enrichment.image_extractor import extract_images
+from media_enrichment.section_align import section_matches_claims
 from media_enrichment.proxy_decoder import decode_proxy_url
 from media_enrichment.url_security import is_safe_url
 from media_enrichment.downloader import download_image
@@ -316,6 +317,16 @@ def main():
                     f"({'/'.join(no_repost_hits)}) — images restricted")
 
         extraction = extract_images(fetch_result.content, page_url=page_url)
+        # OBS-86(档62):正文边界判定后处理——素材 claim 文本(章节对齐用)
+        # 与排除统计。peripheral 图已在提取阶段被排除(下载前,零请求)。
+        material_claim_texts = [
+            c.get("claim_text", "") for c in claims
+            if c.get("claim_id") in (mat.get("selected_claim_ids") or [])
+        ]
+        if extraction.excluded:
+            builder.warnings.append(
+                f"{material_id}: excluded {len(extraction.excluded)} peripheral "
+                f"images before download (OBS-86)")
         builder.candidates_discovered += len(extraction.candidates)
         print(f"  Candidates: {len(extraction.candidates)}")
 
@@ -347,6 +358,29 @@ def main():
                 )
                 builder.add_asset(asset)
                 continue
+
+            # OBS-86(档62):跨章节图下载前排除——仅对多章节结构(h2/h3)生效:
+            # 聚合页正文容器内的其他新闻章节图与本素材 claim 不对齐,不下载、
+            # 不发第三方请求;位置仍记录供审计。h1 单篇页无跨章节歧义,不做
+            # 该门(其相关性属 OBS-87 批准闸门与素材层 OBS-29 职责)。
+            if (candidate.section_level in ("h2", "h3")
+                    and candidate.section_heading and material_claim_texts):
+                if not section_matches_claims(candidate.section_heading, material_claim_texts):
+                    asset = AssetRecord(
+                        asset_id=asset_id, asset_origin="source",
+                        material_ids=[material_id], claim_ids=mat.get("selected_claim_ids", []),
+                        aihot_permalink=permalink, source_page_url=page_url,
+                        discovered_url=candidate.url, resolved_original_url=resolved_url,
+                        extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                        decision="rejected",
+                        reasons=[f"cross-section image (section: {candidate.section_heading[:60]}) does not match any selected claim — excluded before download (OBS-86)"],
+                        quality_status="fail", relevance_status="irrelevant",
+                        page_region=candidate.page_region,
+                        page_position={"known": True, "heading": candidate.section_heading,
+                                       "level": candidate.section_level},
+                    )
+                    builder.add_asset(asset)
+                    continue
 
             images_dir = output_dir / "images"
             download_result = download_image(resolved_url, images_dir,
@@ -426,6 +460,12 @@ def main():
                 asset_identity_sha256=identity_sha256,
                 decision=classification.decision,
                 reasons=classification.rejection_reasons or classification.relevance_reasons,
+                page_region=candidate.page_region,
+                page_position=(
+                    {"known": True, "heading": candidate.section_heading,
+                     "level": candidate.section_level}
+                    if candidate.section_heading
+                    else {"known": False, "heading": None, "level": None}),
             )
             pending_uploads.append((asset, download_result.local_path, inspection, candidate.extraction_method))
             builder.add_asset(asset)

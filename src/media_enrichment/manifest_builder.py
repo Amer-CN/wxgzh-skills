@@ -64,6 +64,11 @@ class AssetRecord:
         "remote_url": None,
         "response_sha256": None,
     })
+    # OBS-86(档62):正文边界判定结果。page_region ∈ body / peripheral / unknown;
+    # page_position = {"known": bool, "heading": str, "level": str}——
+    # 跨章节归属,供 Pipeline 侧 OBS-87 approval_readiness 直接消费。
+    page_region: str = "unknown"
+    page_position: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -105,6 +110,8 @@ class AssetRecord:
             "asset_approval_consumed": self.asset_approval_consumed,
             "approval_identity_mismatch": sorted(self.approval_identity_mismatch),
             "upload": self.upload,
+            "page_region": self.page_region,
+            "page_position": self.page_position,
         }
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-dev8 (2026-08-04)
+
+- OBS-86(档62):正文边界判定——提取阶段按 DOM 容器语义(article/main/aside/nav/
+  header/footer、ARIA role、class/id 提示词)与尺寸属性区分正文/周边/未知;
+  侧边栏、推荐位、广告、页眉页脚、追踪像素(≤5×5 属性)与惰性占位 src
+  (data: URI / t.png 类,存在真实 srcset/data-* 时)在下载前直接排除,零第三方请求。
+- 章节归属:每个候选记录所属章节标题/层级(文档序前最近 h1/h2/h3),manifest 输出
+  page_region 与 page_position,供 Pipeline 侧 OBS-87 approval_readiness 直接消费。
+- 跨章节对齐(新增 section_align):聚合页正文容器内其他新闻章节的图与素材 claim
+  词元不对齐时,下载前排除;未知结构保留候选但标记位置未知,由批准闸门拦下。
+
+
 ## 0.1.0-dev7-hotfix4 (2026-07-29)
 
 - Restored material/source_url approval uploads in Continue while keeping stable single_asset approvals bound to the frozen discovery identity.

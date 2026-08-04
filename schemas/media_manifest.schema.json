@@ -90,6 +90,15 @@
           "duplicate_of": { "type": ["string", "null"] },
           "caption": { "type": ["string", "null"] },
           "alt_text": { "type": ["string", "null"] },
+          "page_region": { "type": "string", "enum": ["body", "peripheral", "unknown"] },
+          "page_position": {
+            "type": ["object", "null"],
+            "properties": {
+              "known": { "type": "boolean" },
+              "heading": { "type": ["string", "null"] },
+              "level": { "type": ["string", "null"] }
+            }
+          },
           "placement": {
             "type": ["object", "null"],
             "properties": {
