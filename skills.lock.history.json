@@ -124,5 +124,25 @@
     "new_skill_version": "0.1.0-dev8",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/media-enrichment"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260804T081330Z-86eefa4e",
+    "skill": "media-enrichment",
+    "reason": "档63 media-enrichment 升版:OBS-71 图表纳入批准链(去 known_allowed 硬编码/数量上限/内容描述 generated)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-04T08:13:30Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "273314e0f27f9fede9d7479d5746218dfb1beaab846d690d9a6fe1f1623969a2",
+    "new_root_sha256": "181752eb553906945aa29153aeb8ef9dc70260b76b9ff862297fea69fd3a72b8",
+    "old_entrypoint_sha256": "a96554e45f9e8244eb1fdb042df66a396a4d907e2b8007c6424aae0fce2fda70",
+    "new_entrypoint_sha256": "ab97f1efa05b14cbe202f98f5e28dac88d70a70669f174ed79c9283e32d33223",
+    "old_full_commit_sha": "08c7b22185614f81888fcb42aae52ef0f5354c97",
+    "new_full_commit_sha": "18414cc9cddb2a9be6782535a9f57ca1860a47d3",
+    "old_source_tree_sha": "a9b6b3e27ec1b5387397acaa12607bdec10209b1",
+    "new_source_tree_sha": "64755773317267059a25a18e59419a761825f018",
+    "old_skill_version": "0.1.0-dev8",
+    "new_skill_version": "0.1.0-dev9",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]

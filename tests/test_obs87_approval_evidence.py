@@ -329,3 +329,83 @@ def test_manifest_page_position_unknown_fail_closed(tmp_path):
     rec = readiness["assets"][0]
     assert rec["page_position"]["known"] is False
     assert rec["approvable"] is False  # 位置未知,不得进入批准点(不降级)
+
+
+# ── 12. 档63 OBS-71:自生成图表纳入批准链(内容描述 source=generated) ──
+
+def test_generated_chart_readiness_approvable(tmp_path):
+    """图表内容描述来自图表 spec(source=generated),位置=拟绑定章节锚点,
+    决策 review_required → 可批准(仍需人工批准,非自动放行)。"""
+    rd = tmp_path / "run"
+    d = rd / "media_enrichment" / "discover"
+    d.mkdir(parents=True)
+    asset = {
+        "asset_id": "A-700", "asset_origin": "generated", "decision": "review_required",
+        "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide",
+        "resolved_original_url": "https://github.com/Amer-CN/vibe-coding-guide#chart-abc",
+        "content_description": "生成图表(bar)「红线数量对比」,数据来源:canonical claim numbers",
+        "content_description_source": "generated",
+        "page_region": "generated",
+        "page_position": {"known": True, "heading": "# 红线数量", "level": "article-anchor"},
+        "placement": {"anchor": "# 红线数量", "position": "after", "confidence": 0.5},
+    }
+    manifest = {"schema_version": "1.0", "assets": [asset]}
+    (d / "media_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    readiness = AE.build_approval_readiness(rd, claim_texts=CLAIM_TEXTS,
+                                            html_provider=lambda u: None)
+    rec = readiness["assets"][0]
+    assert rec["content"]["kind"] == "verified", rec["content"]
+    assert rec["page_position"] == {"known": True,
+                                    "heading": "# 红线数量", "level": "article-anchor"}
+    assert rec["approvable"] is True
+    rp = _write_readiness(rd, readiness)
+    approvals = [{"asset_id": "A-700", "approval_readiness_sha256": PR.sha256_file(rp)}]
+    AE.enforce_approval_readiness(rp, readiness, approvals)  # 不抛异常
+
+
+def test_generated_chart_without_description_blocked(tmp_path):
+    """图表缺内容描述 → 内容不明,不得进入批准点(即使位置已知)。"""
+    rd = tmp_path / "run"
+    d = rd / "media_enrichment" / "discover"
+    d.mkdir(parents=True)
+    asset = {
+        "asset_id": "A-701", "asset_origin": "generated", "decision": "review_required",
+        "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide",
+        "resolved_original_url": "https://github.com/Amer-CN/vibe-coding-guide#chart-def",
+        "page_region": "generated",
+        "page_position": {"known": True, "heading": "# 测试覆盖", "level": "article-anchor"},
+    }
+    manifest = {"schema_version": "1.0", "assets": [asset]}
+    (d / "media_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    readiness = AE.build_approval_readiness(rd, claim_texts=CLAIM_TEXTS,
+                                            html_provider=lambda u: None)
+    rec = readiness["assets"][0]
+    assert rec["content"]["kind"] == "empty"
+    assert "内容不明" in rec["content"]["description"]
+    assert rec["approvable"] is False
+
+
+def test_generated_chart_claim_derived_description_blocked(tmp_path):
+    """图表内容描述若为 claim 派生文本 → 判派生,不放行(禁止自证填充)。"""
+    rd = tmp_path / "run"
+    d = rd / "media_enrichment" / "discover"
+    d.mkdir(parents=True)
+    ct = CLAIM_TEXTS[0]
+    asset = {
+        "asset_id": "A-702", "asset_origin": "generated", "decision": "review_required",
+        "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide",
+        "resolved_original_url": "https://github.com/Amer-CN/vibe-coding-guide#chart-ghi",
+        "content_description": ct[:60], "content_description_source": "generated",
+        "page_region": "generated",
+        "page_position": {"known": True, "heading": "# 某章节", "level": "article-anchor"},
+    }
+    manifest = {"schema_version": "1.0", "assets": [asset]}
+    (d / "media_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    readiness = AE.build_approval_readiness(rd, claim_texts=CLAIM_TEXTS,
+                                            html_provider=lambda u: None)
+    rec = readiness["assets"][0]
+    assert rec["content"]["kind"] == "claim_derived"
+    assert rec["approvable"] is False

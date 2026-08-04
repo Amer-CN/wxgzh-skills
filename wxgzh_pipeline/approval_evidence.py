@@ -42,9 +42,11 @@ from .state import sha256_file
 CLAIM_ALT_WINDOW = 60   # alt_text = claim_text[:60]
 CLAIM_CAPTION_WINDOW = 40  # caption = "图：" + claim_text[:40]
 
-# 可信的内容描述来源:必须来自图片自身或其页面上下文
+# 可信的内容描述来源:必须来自图片自身或其页面上下文;generated 仅限
+# media-enrichment 自生成图表(描述来自图表 spec/数据来源,OBS-71)。
+# 该枚举是白名单:未知来源一律视为不可验证,不构成自动放行。
 ALLOWED_DESCRIPTION_SOURCES = frozenset(
-    {"page_alt", "page_context", "human", "visual_analysis"})
+    {"page_alt", "page_context", "human", "visual_analysis", "generated"})
 
 # 页面位置解析允许的标题层级
 _SECTION_HEADING_LEVELS = ("h1", "h2", "h3")
@@ -270,9 +272,21 @@ def build_approval_readiness(
             pos_heading = manifest_pos.get("heading")
             pos_level = manifest_pos.get("level")
         else:
-            position_known = isinstance(section, dict) and bool(section.get("heading"))
-            pos_heading = section["heading"] if position_known else None
-            pos_level = section["level"] if position_known else None
+            # OBS-71:自生成图表的位置=文章内拟绑定章节锚点(placement),
+            # 与源图的页面位置语义不同但同为「位置必须已知才可批准」。
+            placement_anchor = None
+            if asset.get("asset_origin") == "generated":
+                placement = asset.get("placement")
+                if isinstance(placement, dict) and placement.get("anchor"):
+                    placement_anchor = str(placement["anchor"])
+            if placement_anchor:
+                position_known = True
+                pos_heading = placement_anchor
+                pos_level = "article-anchor"
+            else:
+                position_known = isinstance(section, dict) and bool(section.get("heading"))
+                pos_heading = section["heading"] if position_known else None
+                pos_level = section["level"] if position_known else None
         blockers = []
         if decision not in ("review_required", "eligible"):
             blockers.append(f"decision={decision} — 非可批准状态,不得写入批准合同")

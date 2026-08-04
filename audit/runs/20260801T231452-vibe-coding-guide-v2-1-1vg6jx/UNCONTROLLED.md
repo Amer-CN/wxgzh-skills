@@ -10,3 +10,12 @@
   - **代码基线为热修态**:本 RUN 由含 7 行 asset_counter 热修的 media-enrichment 安装副本与含 `_wechat_cover_asset` 热修的 producers.py 执行;安装侧 skills.lock.json 于 23:52:56 被改写
 - 保留用途:**OBS-71 修复后的回归样本**——修复生效后,此 RUN 的重放/复算必须 fail-closed(零上传、零草稿),不得再产生任何微信副作用
 - 本目录内容为历史物证,禁止修改、删除或用于任何真实发布
+
+## 档 63 补注(2026-08-04,OBS-71 修复验证)
+
+- 修复生效后重放验证(离线,零网络零微信):以本 RUN 的 media_discovery_request.json
+  (claims/numbers/chart_group 逐字)重放 discover → 6 张图表全部 decision=review_required、
+  copyright=unknown;重放 continue 且 asset_approvals=[] → **fail-closed:零上传事件、
+  零草稿、零微信副作用**。仅当对单张图表签发 single_asset 批准时才会上传该张。
+- 上述 fail-closed 契约已由 tests/test_obs71_chart_approval.py 固化(夹具冻结,
+  不引用本目录实时文件);本目录仍为历史物证,未做任何修改。
