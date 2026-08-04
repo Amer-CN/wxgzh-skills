@@ -64,5 +64,25 @@
     "new_skill_version": "v2026.08.02-hammer.3",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260804T042535Z-a0ec5388",
+    "skill": "gzh-design",
+    "reason": "档54R gzh-design 升版:WARN分级+OBS-85+显式放行通道(hammer.4)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-04T04:25:35Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "b517aec6964d990213dbaaf095958d135f10e8975ae17af4300764d3e0d44b70",
+    "new_root_sha256": "c3dd056edb1eb96d06396cdc8b70fc613e0e9356e1ea206a61cd90e8da073ce3",
+    "old_validator_sha256": "b986ae77d78f6205d4eda5b798fed6d5d8df4b58086b51b8204e63dd857a3cc8",
+    "new_validator_sha256": "4e834e215c645b1e1950e6855cf6e3ce1bde035dbdd959a95142179805aa44dc",
+    "old_full_commit_sha": "acc7745a152d0b2f09794227e1478730f6ffb9a9",
+    "new_full_commit_sha": "ce9bf4cc8e270bcdc71940dd2c430d4727b888c8",
+    "old_source_tree_sha": "725bd9031fc806a03fbdb28e6dcfb3348dfee69f",
+    "new_source_tree_sha": "19a1401346efc35cb937841fa769d42ac3aa345a",
+    "old_skill_version": "v2026.08.02-hammer.3",
+    "new_skill_version": "v2026.08.02-hammer.4",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]
