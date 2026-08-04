@@ -100,5 +100,29 @@
     "new_branch": "restore/local-patches-obs42-53",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/media-enrichment"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260804T073354Z-a9f86689",
+    "skill": "media-enrichment",
+    "reason": "档62 media-enrichment 升版:OBS-86 正文边界判定 + 章节归属 + 下载前排除 + 跨章节对齐",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-04T07:33:54Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "0d8aea2169cec17c4e9f95af66b6b4da3c532554a0a316fe3fb604bd0b7ab3a3",
+    "new_root_sha256": "273314e0f27f9fede9d7479d5746218dfb1beaab846d690d9a6fe1f1623969a2",
+    "old_manifest_sha256": "172aa1b8082c6bb80822e56e201732ba5a118c6a53d7472f34b911f4a891e996",
+    "new_manifest_sha256": "5533c0c87bffe322f7d90e4a02e23d2044ec1dcf70328e73b170289699b270d8",
+    "old_file_count": 57,
+    "new_file_count": 59,
+    "old_entrypoint_sha256": "2d877a93b37658bb5b2e247827952a86abe11fff5a9c148024238dd0cccd979f",
+    "new_entrypoint_sha256": "a96554e45f9e8244eb1fdb042df66a396a4d907e2b8007c6424aae0fce2fda70",
+    "old_full_commit_sha": "2595e01465399eb34a10a56b190399039578da9e",
+    "new_full_commit_sha": "08c7b22185614f81888fcb42aae52ef0f5354c97",
+    "old_source_tree_sha": "6ba0ba41dd8c2feada2924e07b4a9da3f05272bd",
+    "new_source_tree_sha": "a9b6b3e27ec1b5387397acaa12607bdec10209b1",
+    "old_skill_version": "0.1.0-dev7-hotfix4",
+    "new_skill_version": "0.1.0-dev8",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]
