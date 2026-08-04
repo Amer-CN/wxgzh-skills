@@ -809,7 +809,12 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
     approval_file = sd / "copyright_approval.json"
 
     try:
-        if not frozen.is_file():
+        # 档65:discover 失败残留判定——frozen 存在但 precheck/readiness 缺失
+        # 说明上次 discover 未成功收尾(失败残留),必须重跑,不得直接进批准点。
+        discover_paused = (frozen.is_file()
+                           and (sd / "approval_precheck.json").is_file()
+                           and (sd / "approval_readiness.json").is_file())
+        if not discover_paused:
             request_path = _build_media_request(ctx, sd, state, phase="discover")
             run = run_script(
                 entry,
