@@ -94,6 +94,11 @@ SKIP_TAGS = {"head", "title", "style", "script"}  # 不参与公众号正文粘�
 # 中文字后紧跟半角逗号/分号/叹号/问号（应改全角）；只查"中文在前"避免中英混排误伤
 HALF_PUNCT = re.compile(r"[一-鿿㐀-䶿][,;!?]")
 ASCII_QUOTE = re.compile(r"[\"']")
+
+# OBS-85/档54R:WARN 分级类别标记——① 半角标点/英文引号可显式放行;
+# ② span leaf 未包裹不可放行;③ HTML 解析中断已升为 ERROR,任何情况不可放行。
+WARN_ALLOWABLE = "allowable"  # 可显式放行(仅当发布侧显式开关开启且逐条留痕)
+WARN_BLOCKING = "blocking"    # 不可放行
 # 代码区特征：等宽字体或 white-space:pre —— 其内半角符号是正常的
 CODE_STYLE = re.compile(r"monospace|white-space\s*:\s*pre|courier|consolas|sf mono", re.I)
 
@@ -150,6 +155,19 @@ class LeafChecker(HTMLParser):
 
 def validate(html, name="<input>"):
     errors, warnings = [], []
+    errors, warnings, leaf_count, graded = validate_full(html, name)
+    return errors, warnings, leaf_count
+
+
+def validate_graded(html, name="<input>"):
+    """返回 (errors, warnings, leaf_count, graded)。graded 为结构化 WARN 条目:
+    [{"category": WARN_ALLOWABLE|WARN_BLOCKING, "rule": str, "text": str,
+      "snippets": [str,...]}]——发布侧据此做分级放行判定(档54R)。"""
+    return validate_full(html, name)
+
+
+def validate_full(html, name="<input>"):
+    errors, warnings, graded = [], [], []
 
     for rx, level, msg in FORBIDDEN:
         hits = len(rx.findall(html))
@@ -209,8 +227,8 @@ def validate(html, name="<input>"):
     checker = LeafChecker()
     try:
         checker.feed(html)
-    except Exception as e:  # 容错：解析失败不致命，只提示
-        warnings.append(f"HTML 解析中断: {e}")
+    except Exception as e:  # OBS-85(档54R):解析中断 = 校验器未能完成检查,升 ERROR,任何情况不可放行
+        errors.append(f"HTML 解析中断: {e}")
 
     has_cjk = bool(CJK.search(html))
     if has_cjk and checker.span_leaf_count == 0:
@@ -219,9 +237,11 @@ def validate(html, name="<input>"):
     elif checker.unwrapped:
         sample = "；".join(f"「{s}」(在 <{p}> 内)"
                            for s, p in checker.unwrapped[:5])
-        warnings.append(
-            f"{len(checker.unwrapped)} 处中文文本未被 <span leaf> 包裹，"
-            f"样式可能丢失。例：{sample}")
+        text = (f"{len(checker.unwrapped)} 处中文文本未被 <span leaf> 包裹，"
+                f"样式可能丢失。例：{sample}")
+        warnings.append(text)
+        graded.append({"category": WARN_BLOCKING, "rule": "unwrapped_leaf",
+                      "text": text, "snippets": [s for s, _ in checker.unwrapped[:5]]})
 
     if checker.half_punct:
         # 剔除固定结尾署名组件内部的半角内容（邮箱 @ . /），
@@ -237,11 +257,13 @@ def validate(html, name="<input>"):
             filtered.append(snippet)
         if filtered:
             sample = "；".join(f"「{s}」" for s in filtered[:5])
-            warnings.append(
-                f"{len(filtered)} 处正文疑似半角标点/英文引号，应改中文全角"
-                f"（代码块内不计；固定结尾署名组件内的邮箱和 / 已豁免）。例：{sample}")
+            text = (f"{len(filtered)} 处正文疑似半角标点/英文引号，应改中文全角"
+                    f"（代码块内不计；固定结尾署名组件内的邮箱和 / 已豁免）。例：{sample}")
+            warnings.append(text)
+            graded.append({"category": WARN_ALLOWABLE, "rule": "half_width_punct",
+                          "text": text, "snippets": filtered[:5]})
 
-    return errors, warnings, checker.span_leaf_count
+    return errors, warnings, checker.span_leaf_count, graded
 
 
 def main():

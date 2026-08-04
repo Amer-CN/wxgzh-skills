@@ -1,4 +1,9 @@
-# gzh-design v2026.08.02-hammer.3
+# gzh-design v2026.08.02-hammer.4
+
+## v2026.08.02-hammer.4 追加变更（wxgzh-pipeline 集成侧）
+
+- **WARN 分级 + 显式放行通道（档54R）** — 发布预检门槛分级:`validate_gzh_html.py` 引入规则类别标记;半角标点/英文引号 = `allowable`(可显式放行)、span leaf 未包裹 = `blocking`(不可放行);`publish_wechat_draft.py` 新增 `--allow-warnings` 显式开关(默认关闭,仅对 `allowable` 类别生效),放行条目逐条写入 `allowance_record.json`(audit 留痕,可追溯)。
+- **OBS-85:HTML 解析中断升为 ERROR** — 校验器未能完成检查不得输出温和结果,任何情况下(含开关全开)不可放行。
 
 ## 新增
 

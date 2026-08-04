@@ -108,7 +108,9 @@ except ImportError:
 
 # 与 validate_gzh_html.py 共享同一套检测逻辑
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from validate_gzh_html import validate, find_cn_quoted_attrs
+from validate_gzh_html import (validate, validate_graded, find_cn_quoted_attrs,
+                               WARN_ALLOWABLE, WARN_BLOCKING)
+from datetime import datetime, timezone
 
 # 微信 API 端点
 TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token"
@@ -319,17 +321,22 @@ def create_draft(access_token, title, html_content, thumb_media_id):
     return data["media_id"]
 
 
-def preflight_html(html_content, html_path, raw_file_sha256=""):
-    """发布前安全校验 HTML 内容。
+def preflight_html(html_content, html_path, raw_file_sha256="", audit_dir=None,
+                   allow_warnings=False):
+    """发布前安全校验 HTML 内容(档54R:WARN 分级 + 显式放行)。
 
-    必须在 get_access_token 之前完成。本次真实发布要求 ERROR=0 且 WARNING=0。
-    任何一项不达标都 sys.exit(1)，绝不进入网络请求阶段。
+    必须在 get_access_token 之前完成。ERROR 一律阻断;WARN 按类别:
+    WARN_ALLOWABLE(半角标点/英文引号)仅当 allow_warnings=True 且逐条留痕时放行;
+    WARN_BLOCKING(span leaf 未包裹)与解析中断(已升 ERROR)任何情况不可放行。
+    任何未放行的不达标都 sys.exit(1)，绝不进入网络请求阶段。
 
     参数:
         html_content: open(encoding="utf-8") 读取后的字符串（已 CRLF→LF）
         html_path: HTML 文件路径
         raw_file_sha256: 文件 raw bytes 的 SHA-256（由 main() 计算），
                         与 normalized_content_sha256 分开记录。
+        audit_dir: 审计目录;放行时写入 allowance_record.json(可追溯)
+        allow_warnings: 显式放行开关,默认关闭;仅对 WARN_ALLOWABLE 类别生效
     """
     errors = []
     warnings = []
@@ -378,9 +385,33 @@ def preflight_html(html_content, html_path, raw_file_sha256=""):
     # ---- 调用完整 HTML 校验器 ----
     # validate() 检查：禁用标签/属性/样式、全属性中文引号、占位符、编辑锚点、
     # span leaf 包裹、半角标点等。返回 (errors, warnings, leaf_count)。
-    v_errors, v_warnings, leaf_count = validate(html_content, html_path)
+    # 档54R:validate_graded 返回结构化 WARN(类别标记);解析中断已升 ERROR。
+    v_errors, v_warnings, leaf_count, graded = validate_graded(html_content, html_path)
     errors.extend(v_errors)
-    warnings.extend(v_warnings)
+    blocking = [g for g in graded if g.get("category") == WARN_BLOCKING]
+    allowable = [g for g in graded if g.get("category") == WARN_ALLOWABLE]
+    # 不可放行类别(② span leaf 未包裹)一律阻断
+    warnings.extend(g["text"] for g in blocking)
+    # 可放行类别(① 半角标点/英文引号):仅当显式开关开启时放行,否则阻断
+    allowed_records = []
+    if allowable and not allow_warnings:
+        warnings.extend(g["text"] for g in allowable)
+    elif allowable:
+        allowed_records = [{"rule": g["rule"], "category": g["category"],
+                           "text": g["text"], "snippets": g.get("snippets") or []}
+                          for g in allowable]
+        for g in allowable:
+            print(f"  → 放行 WARNING（{g['rule']}）: {g['text']}")
+        if audit_dir:
+            audit_dir = Path(audit_dir)
+            audit_dir.mkdir(parents=True, exist_ok=True)
+            record = {"schema_version": "1.0", "allow_warnings": True,
+                      "allowed_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                      "html_sha256": normalized_content_sha256,
+                      "entries": allowed_records}
+            (audit_dir / "allowance_record.json").write_text(
+                json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"  放行记录已写入: {audit_dir / 'allowance_record.json'}")
 
     # 全属性中文引号扫描（与 validator 共享逻辑，双重确认）
     cn_quote_hits = find_cn_quoted_attrs(html_content)
@@ -399,6 +430,7 @@ def preflight_html(html_content, html_path, raw_file_sha256=""):
     print(f"  validator WARN:               {len(v_warnings)}")
     print(f"  publish ERROR:                {len(errors)}")
     print(f"  publish WARNING:              {len(warnings)}")
+    print(f"  allowed WARNING:              {len(allowed_records)}")
 
     if errors:
         print(f"\n❌ 预检失败（{len(errors)} 项 ERROR）:")
@@ -406,11 +438,11 @@ def preflight_html(html_content, html_path, raw_file_sha256=""):
             print(f"   • {e}")
 
     if warnings:
-        print(f"\n⚠️  预检阻断（{len(warnings)} 项 WARNING，本次发布要求 WARNING=0）:")
+        print(f"\n⚠️  预检阻断（{len(warnings)} 项未放行 WARNING）:")
         for w in warnings:
             print(f"   • {w}")
 
-    # 本次真实发布要求 ERROR=0 且 WARNING=0
+    # 档54R:ERROR 一律阻断;未放行 WARNING 阻断;可放行类别已显式放行并留痕
     if errors or warnings:
         print("\n  不得获取 token，不得调用 draft/add")
         sys.exit(1)
@@ -528,6 +560,10 @@ def main():
                     help="审计模式：写 draft_before/after/creation_result.json 到该目录")
     ap.add_argument("--dry-run", action="store_true",
                     help="审计模式下不触网、不建真实草稿（模拟 batchget 前后快照）")
+    ap.add_argument("--allow-warnings", action="store_true",
+                    help="显式放行可放行类别 WARN（半角标点/英文引号）；默认关闭；"
+                         "仅对 WARN_ALLOWABLE 生效，其余 WARN 与全部 ERROR 仍阻断；"
+                         "放行条目逐条写入 audit-dir/allowance_record.json")
     args = ap.parse_args()
 
     # 最低限度检查
@@ -569,7 +605,9 @@ def main():
         html_content = f.read()
 
     # ---- 发布前安全校验（必须在获取 token 前完成）----
-    sha256 = preflight_html(html_content, html_path, raw_file_sha256=raw_file_sha256)
+    sha256 = preflight_html(html_content, html_path, raw_file_sha256=raw_file_sha256,
+                            audit_dir=Path(args.audit_dir) if args.audit_dir else None,
+                            allow_warnings=args.allow_warnings)
 
     # ---- 审计模式：快照前后草稿数并写审计产物（--dry-run 时不触网、无副作用）----
     if args.audit_dir:

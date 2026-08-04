@@ -8,8 +8,8 @@ deterministic root hash, and never modifies its business logic.
 | Field | Value |
 | --- | --- |
 | Skill | `gzh-design` |
-| Locked version | `v2026.08.02-hammer.3` |
-| Locked root SHA-256 | `802350c131ed537b33e874490749b8b6f71d8bb6c83c4038d678d548c31daafc` |
+| Locked version | `v2026.08.02-hammer.4` |
+| Locked root SHA-256 | `3e3aed4afdd295e8af9791ac1aa7291d0df831f304bd2ce78044244d9e00bc0b` |
 | Hash algorithm | sha256 over sorted `relpath:sha256(content)`, excluding `__pycache__/.git/.pytest_cache/.github` |
 
 **Documented entrypoints**
