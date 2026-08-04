@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Callable
 
 from .state import sha256_file
+from .visual_threshold import dedup_same_data_charts  # noqa: F401 (重导出供测试/接线)
 
 # 与 placement_planner.py 派生逻辑对应的检测窗口(见模块 docstring 口径说明)
 CLAIM_ALT_WINDOW = 60   # alt_text = claim_text[:60]
@@ -304,6 +305,21 @@ def build_approval_readiness(
             "approvable": not blockers,
             "approvable_blockers": blockers,
         })
+    # OBS-89(档67):同数据图表去重——同 chart_group + 同 numbers 最多一张
+    # 可批准,其余 duplicate_of 且 approvable=false(确定性保留 bar)。
+    registry_path = run_dir / "super_writer" / "canonical_claim_registry.json"
+    assets_by_id = {a.get("asset_id"): a for a in assets
+                    if isinstance(a, dict) and a.get("asset_id")}
+    records = dedup_same_data_charts(records, assets_by_id, registry_path)
+
+    # 档67:视觉内容门槛分级(客观判据,写 readiness 供批准点呈现;实际门槛在
+    # stages/media_enrichment.py content_validate 强制执行)。
+    article_path = run_dir / "zh_human_writing" / "final_article.md"
+    article_text = ""
+    if article_path.is_file():
+        article_text = article_path.read_text(encoding="utf-8", errors="ignore")
+    from .visual_threshold import compute_visual_tier
+    visual_tier = compute_visual_tier(article_text)
     summary = {
         "total": len(records),
         "approvable": sum(1 for r in records if r["approvable"]),
@@ -319,6 +335,7 @@ def build_approval_readiness(
             "page_position_required": True,
             "claim_derived_text_never_accepted": True,
         },
+        "visual_tier": visual_tier,
         "assets": records,
         "summary": summary,
     }

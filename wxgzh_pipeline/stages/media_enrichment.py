@@ -43,17 +43,56 @@ def content_validate(ctx, sd: Path, state):
     if not man.is_file() or not bnd.is_file():
         return 1, {"reason": "media_manifest.json or article_image_bindings.json missing"}, vpath, vsha
     mod = load_validator("validate_media_bindings")
+
+    # 档67:视觉内容门槛分级(客观判据,从冻结文章计算,无人工字段/开关/profile)。
+    # 代码密集型文章(>=2 个 fenced code block)图片下限降为 3,但要求
+    # 图片 + 代码块 >= 5 视觉单元;新闻综述(0-1 代码块)门槛保持 6 不降低。
+    from ..visual_threshold import compute_visual_tier, effective_body_images_min
+    article_path = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
+    article_text = (article_path.read_text(encoding="utf-8", errors="ignore")
+                    if article_path.is_file() else "")
+    tier = compute_visual_tier(article_text)
+
     config_path = sd / "validation_config.json"
-    body_images_min = 6
-    body_images_min_source = "default"
+    body_images_min = None
+    config_value = None
     if config_path.is_file():
         import json
         config = json.loads(config_path.read_text(encoding="utf-8"))
-        body_images_min = config.get("body_images_min", 6)
-        body_images_min_source = str(config_path)
+        config_value = config.get("body_images_min")
+    body_images_min = effective_body_images_min(tier, config_value)
+    body_images_min_source = (
+        f"visual_tier(档67){' (max of config ' + str(config_path) + ')' if config_value is not None else ''}")
     code, report = mod.validate(
         man, bnd, body_images_min=body_images_min,
         body_images_min_source=body_images_min_source)
+    # 档67:代码密集型文章须「视觉内容达标」——图片 + 代码块 >= 5 视觉单元,
+    # 通过理由必须是视觉内容达标,不是图片数量豁免。
+    if tier.get("code_dense"):
+        visual_units = int(report.get("body_image_count", 0) or 0) + int(tier["code_blocks"])
+        report["VISUAL_TIER"] = {
+            "code_blocks": tier["code_blocks"],
+            "code_dense": True,
+            "body_images_min": body_images_min,
+            "visual_units": visual_units,
+            "visual_units_min": tier["visual_units_min"],
+            "visual_content_met": visual_units >= tier["visual_units_min"],
+            "reason": "视觉内容达标(图片 + 代码块视觉单元),非图片数量豁免",
+        }
+        if not report["VISUAL_TIER"]["visual_content_met"]:
+            code = 1
+            report["MEDIA_BINDINGS"] = "FAIL"
+            report["blocking_reason"] = (
+                f"visual units {visual_units} < {tier['visual_units_min']} "
+                "(code-dense article requires images + code blocks)")
+    else:
+        report["VISUAL_TIER"] = {
+            "code_blocks": tier["code_blocks"],
+            "code_dense": False,
+            "body_images_min": body_images_min,
+            "visual_units_min": None,
+            "note": "新闻综述/非代码密集型:门槛保持 6,不降低",
+        }
     # depends-on-freeze: bindings must reference the frozen article sha
     if state.final_article_sha256:
         txt = bnd.read_text(encoding="utf-8")
