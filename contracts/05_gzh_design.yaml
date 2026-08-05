@@ -13,11 +13,15 @@ required_components:
   fixed_signature: 1
   footer_cta: 1
   official_image_component_types: [2, 4]
+# OBS-98(档69):删除线规格按形态语义描述,不硬编码具体色值——
+# 每个 line-through 元素必须:声明 text-decoration-color、与自身 color 同色、
+# thickness <= 1px、不得使用主题主色、白底对比度 >= 4.5。
 strikethrough:
-  color: "#737373"
-  text_decoration_color: "#B3593B"
-  text_decoration_thickness: "1.5px"
-  forbidden: "rgba(202,202,199,0.35)"
+  color: 与 text-decoration-color 同色(同色系细线,67A 第 7 条)
+  text_decoration_color: 等于该元素 color,且不得为主题主色 #B3593B
+  text_decoration_thickness: "<= 1px"
+  white_bg_min_contrast: "4.5:1"
+  forbidden: "rgba(202,202,199,0.35) 作 line-through 文字色(无豁免)"
 forbidden:
   - self_written_gray_html
   - color_mimicry_only

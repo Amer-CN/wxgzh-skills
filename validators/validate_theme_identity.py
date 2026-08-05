@@ -5,6 +5,11 @@ Reverse-parses the final HTML for structural fingerprints that appear verbatim
 in BOTH the official gzh-design source AND the HTML, asserting official-component
 counts, image-component types, theme fallback, and strikethrough safety.
 Also emits a program-generated component_usage_report (never hand-declared).
+
+OBS-98(档69):strike 断言改为形态语义判定,不再硬编码 #B3593B/1.5px。
+规格来源 = gzh-design references/common-components + 67D 落地实现
+(color:#737373 文字 + 同色 text-decoration-color + thickness:1px,白底对比度
+>= 4.5)。逐元素校验,不接受任何硬编码色值作为唯一合格值。
 """
 from __future__ import annotations
 
@@ -26,9 +31,139 @@ FINGERPRINTS = {
     "image_media_text_card": "0 4px 16px -4px rgba(179,89,59,0.10)",
 }
 
+# OBS-98:主题主色(hammer primary)——删除线不得使用主题主色作为 decoration 色。
+_HAMMER_PRIMARY_HEX = "#B3593B"
+# OBS-98:低对比度禁用文字色——line-through 元素使用该色一律判 bad,无豁免。
+_FORBIDDEN_STRIKE_TEXT_RGBA = "rgba(202,202,199,0.35)"
+# OBS-98:白底对比度下限(67C/67D 沿用,WCAG 普通文字阈值)。
+_MIN_CONTRAST = 4.5
+_WHITE = (255, 255, 255)
+
 
 def _sha(t: str) -> str:
     return hashlib.sha256(t.encode("utf-8")).hexdigest()
+
+
+def _hex_to_rgb(value: str) -> tuple[int, int, int] | None:
+    """#RRGGBB / RRGGBB -> (r,g,b);其余形态(变量/rgba/未知)返回 None。"""
+    s = (value or "").strip().lower().lstrip("#")
+    if len(s) != 6 or any(c not in "0123456789abcdef" for c in s):
+        return None
+    return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+
+
+def _linearize(c: float) -> float:
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _relative_luminance(rgb: tuple[int, int, int]) -> float:
+    r, g, b = (v / 255.0 for v in rgb)
+    return 0.2126 * _linearize(r) + 0.7152 * _linearize(g) + 0.0722 * _linearize(b)
+
+
+def _contrast_ratio(fg: tuple[int, int, int], bg: tuple[int, int, int] = _WHITE) -> float:
+    """WCAG 对比度(与 67D test_obs90 TestStrikeContrast 同一算法,白底默认)。"""
+    l1, l2 = _relative_luminance(fg), _relative_luminance(bg)
+    if l1 < l2:
+        l1, l2 = l2, l1
+    return (l1 + 0.05) / (l2 + 0.05)
+
+
+# OBS-98:逐个 line-through 元素解析其 style 声明(不做全文子串匹配)。
+_STYLE_ATTR_RE = re.compile(r'style="([^"]*)"')
+
+
+def _style_decl(style: str, name: str) -> str | None:
+    """从 style 串解析 `name:value` 声明(逗号/分号分隔均支持,大小写不敏感)。"""
+    for part in style.split(";"):
+        if ":" not in part:
+            continue
+        key, _, val = part.partition(":")
+        if key.strip().lower() == name:
+            return val.strip()
+    return None
+
+
+def _parse_strike_elements(html: str) -> list[dict]:
+    """收集所有含 line-through 的 style 元素(归一化空白后解析,防换行/空格干扰)。
+
+    每个元素返回:
+      style 原文 / color / text-decoration-color / text-decoration-thickness。
+    声明缺失的字段为 None(调用方按形态语义判 fail,不默认放行)。
+    """
+    normalized = html.replace(" ", "")
+    out = []
+    for m in _STYLE_ATTR_RE.finditer(normalized):
+        style = m.group(1)
+        if "line-through" not in style:
+            continue
+        out.append({
+            "style": style,
+            "color": _style_decl(style, "color"),
+            "decoration_color": _style_decl(style, "text-decoration-color"),
+            "thickness": _style_decl(style, "text-decoration-thickness"),
+        })
+    return out
+
+
+def _strike_element_ok(el: dict) -> tuple[bool, list[str]]:
+    """OBS-98 形态语义断言:单个 line-through 元素全部满足才算 ok。
+
+    (a) 声明了 text-decoration-color;
+    (b) text-decoration-color 与自身 color 为同一色值(同色系细线,67A 第 7 条);
+    (c) text-decoration-thickness 存在且 <= 1px;
+    (d) text-decoration-color 不为 #B3593B(主题主色不得用作删除线色);
+    (e) color 为可解析 hex 且白底对比度 >= 4.5(67C/67D 算法)。
+    """
+    problems: list[str] = []
+    color = el.get("color")
+    deco = el.get("decoration_color")
+    thick = el.get("thickness")
+
+    if not deco:
+        problems.append("missing text-decoration-color")
+    if not color:
+        problems.append("missing color")
+    if deco and color and deco.lower() != color.lower():
+        problems.append(f"text-decoration-color {deco!r} != color {color!r}")
+    if thick is None:
+        problems.append("missing text-decoration-thickness")
+    else:
+        try:
+            px = float(thick.rstrip("px").strip())
+            if px > 1.0:
+                problems.append(f"text-decoration-thickness {thick} > 1px")
+        except ValueError:
+            problems.append(f"text-decoration-thickness {thick!r} not parseable")
+    if deco and deco.lower() == _HAMMER_PRIMARY_HEX.lower():
+        problems.append("text-decoration-color is theme primary #B3593B")
+    rgb = _hex_to_rgb(color or "")
+    if rgb is None:
+        problems.append(f"color {color!r} not a parseable hex")
+    else:
+        ratio = _contrast_ratio(rgb)
+        if ratio < _MIN_CONTRAST:
+            problems.append(f"contrast {ratio:.2f}:1 < {_MIN_CONTRAST}:1")
+    return (not problems, problems)
+
+
+def _strike_check(html: str) -> tuple[bool, bool, int]:
+    """返回 (strike_props_ok, strike_bad, line_through_count)。
+
+    - line_through == 0 -> props ok(保持原语义);
+    - 任一 line-through 元素 low-contrast 文字色(rgba(202,202,199,0.35))-> bad;
+      该禁用无豁免(OBS-98 收紧:不再因 decoration-color=#B3593B 而放行)。
+    - props ok 要求每个 line-through 元素都通过形态语义断言。
+    """
+    elements = _parse_strike_elements(html)
+    line_through = len(elements)
+    if line_through == 0:
+        return True, False, 0
+    strike_bad = any(
+        _FORBIDDEN_STRIKE_TEXT_RGBA in (el.get("color") or "").replace(" ", "")
+        for el in elements)
+    props_ok = all(_strike_element_ok(el)[0] for el in elements)
+    return props_ok, strike_bad, line_through
 
 
 def validate(final_html: str | Path, expected_chapters: int | None = None,
@@ -52,22 +187,11 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     toc_dynamic_ok = bool(expected_chapters) and all(
         f"PART {i:02d}" in html for i in range(1, expected_chapters + 1))
     img_types = [c for c in ("image_2a_standard", "image_media_text_card") if ev[c]["occurrences"] > 0]
-    hammer_primary = "#B3593B" in html
+    hammer_primary = _HAMMER_PRIMARY_HEX in html
     moyu_absent = "#059669" not in html
     fallback_used = (not hammer_primary) or (not moyu_absent)
-    line_through = html.count("line-through")
-    # A strikethrough is FORBIDDEN only when struck text uses the low-contrast
-    # colour WITHOUT the official hammer strike decoration on the SAME element.
-    # The hammer theme legitimately uses rgba(202,202,199,0.35) elsewhere (PART
-    # labels, dividers), so a global substring match would false-positive on a
-    # real render — scope the check to line-through elements (P0#1 live-proof).
-    _nz = html.replace(" ", "")
-    strike_bad = any(
-        ("line-through" in st and "color:rgba(202,202,199,0.35)" in st
-         and "text-decoration-color:#B3593B" not in st)
-        for st in re.findall(r'style="([^"]*)"', _nz))
-    strike_props_ok = (line_through == 0) or (
-        "text-decoration-color:#B3593B" in html and "text-decoration-thickness:1.5px" in html)
+    # OBS-98:形态语义 strike 判定(逐元素),不再硬编码 #B3593B/1.5px。
+    strike_props_ok, strike_bad, line_through = _strike_check(html)
     chapters_ok = bool(expected_chapters) and (chapters == expected_chapters)
 
     # ── P0#8/hotfix2: theme identity is only OFFICIAL with REAL execution proof ──

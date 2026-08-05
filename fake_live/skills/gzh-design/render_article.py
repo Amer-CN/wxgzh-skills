@@ -32,8 +32,8 @@ def build_html(title: str, titles: list[str], images: list[dict],
     p.append(
         f'<section style="margin:0 0 32px;background:#fff;border:1.5px solid rgba(179,89,59,0.15);'
         f'border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">'
-        f'<p style="font-size:15px;text-decoration:line-through;text-decoration-color:{HAMMER};'
-        f'text-decoration-thickness:1.5px;"><span leaf="">别急着划走</span></p>'
+        f'<p style="font-size:15px;color:#737373;text-decoration:line-through;'
+        f'text-decoration-color:#737373;text-decoration-thickness:1px;"><span leaf="">别急着划走</span></p>'
         f'<p style="font-size:24px;font-weight:900;color:{HAMMER};"><span leaf="">{title}</span></p>'
         f'</section>')
     # toc-scroll (fingerprint + PART 01..0N + ///)
