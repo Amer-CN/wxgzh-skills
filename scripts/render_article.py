@@ -37,6 +37,7 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 # OFFICIAL components (single reusable source of truth).
 import generate_hammer_upgrade_samples as H
+import generate_advanced_html as ADV  # OBS-108:import 零写盘(OUT 已移入 main)
 from validate_gzh_html import validate as validate_html
 
 # smartisan is the pipeline alias for the registered gzh theme id "hammer".
@@ -97,8 +98,34 @@ def parse_article(md: str) -> dict:
     in_code = False
     code_buf: list[str] = []
     code_lang = ""
+    in_component = False
+    component_buf: list[str] = []
+    component_name = ""
+    component_head = ""
     for ln in lines:
         st = ln.strip()
+        if in_component:
+            if st.startswith(":::"):
+                item = {"kind": "component", "name": component_name,
+                        "head": component_head,
+                        "body": "\n".join(component_buf)}
+                if cur is None:
+                    intro_paras.append(item)
+                else:
+                    cur["paras"].append(item)
+                component_buf = []
+                in_component = False
+            else:
+                component_buf.append(ln)
+            continue
+        if st.startswith(":::"):
+            # 高级组件块:仅识别 A 组 9 类;未知名记录为 component(渲染时进 unknown)
+            in_component = True
+            component_buf = []
+            head = st[3:].strip()
+            component_name = head.split()[0] if head.split() else ""
+            component_head = head
+            continue
         if in_code:
             if st.startswith("```"):
                 if cur is None:
@@ -149,7 +176,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     chapter_titles = [c["title"] for c in chapters]
     usage = {"cover_breaking": 0, "toc_scroll": 0, "chapter_title": 0,
              "fixed_signature": 0, "footer_cta": 0,
-             "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0}
+             "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0,
+             "code_block": 0, "components": {}, "unknown": [], "unknown_count": 0}
 
     parts: list[str] = []
 
@@ -166,7 +194,9 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     # OBS-73 (根治): intro paragraphs render BEFORE the first chapter title.
     # Order: cover -> intro paras -> chapter 1 title -> chapter body.
     for item in parsed.get("intro_paras") or []:
-        parts.append(_render_item(theme_key, item))
+        parts.append(_render_item(theme_key, item, usage))
+        if isinstance(item, dict) and item.get("kind") in ("code", "component"):
+            continue
         usage["paragraph"] += 1
 
     # distribute images across chapters: first image as media+text, rest as 2a.
@@ -178,7 +208,9 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
                                       en_label_for(ch["title"], i)))
         usage["chapter_title"] += 1
         for item in ch["paras"]:
-            parts.append(_render_item(theme_key, item))
+            parts.append(_render_item(theme_key, item, usage))
+            if isinstance(item, dict) and item.get("kind") in ("code", "component"):
+                continue
             usage["paragraph"] += 1
         for _ in range(per_chapter[i - 1]):
             if not img_queue:
@@ -285,12 +317,104 @@ def main(argv=None) -> int:
           f"validator_errors={len(errors)}")
     return 0 if not errors else 1
 
-def _render_item(theme_key: str, item) -> str:
-    """Render one body item (paragraph or fenced code block)."""
-    if isinstance(item, str) or item.get("kind") != "code":
-        text = item if isinstance(item, str) else item["text"]
-        return H.hammer_para(theme_key, text)
-    return _hammer_code_block(theme_key, item["text"], item.get("language", ""))
+# OBS-106(档71C-1):A 组 9 类组件 -> generate_advanced_html.py 官方 builder。
+# R11:零手写 HTML;未知名组件不静默降级,由 render() 计入 unknown。
+_COMPONENT_BUILDERS = {
+    "alert": ADV.alert, "quote": ADV.quote, "code-compare": ADV.code_compare,
+    "media-text": ADV.media_text, "gallery": ADV.gallery,
+    "long-image": ADV.long_image, "resources": ADV.resources,
+    "footnotes": ADV.footnotes, "dialogue": ADV.dialogue,
+}
+
+
+def _render_item(theme_key: str, item, usage: dict) -> str:
+    """Render one body item (paragraph / fenced code block / ::: component)."""
+    if isinstance(item, str):
+        return H.hammer_para(theme_key, item)
+    kind = item.get("kind")
+    if kind == "code":
+        usage["code_block"] += 1
+        return _hammer_code_block(theme_key, item["text"], item.get("language", ""))
+    if kind == "component":
+        name = item.get("name", "")
+        builder = _COMPONENT_BUILDERS.get(name)
+        if builder is None:
+            usage["unknown"].append({"name": name,
+                                     "head": item.get("head", "")[:120]})
+            usage["unknown_count"] += 1
+            return ""
+        usage["components"][name] = usage["components"].get(name, 0) + 1
+        return _render_component(builder, item)
+    return H.hammer_para(theme_key, item.get("text", ""))
+
+
+def _render_component(builder, item) -> str:
+    """按 references/advanced-components.md 输入语法取参调用 builder。
+
+    解析 :::name key="val" 头部参数 + 块内行;参数缺失用 builder 默认值。
+    tid 固定为 "hammer"(smartisan 别名映射的主题 id)。
+    """
+    import re as _re
+    head = item.get("head", "")
+    body = item.get("body", "")
+    args = {"tid": "hammer"}
+    for m in _re.finditer(r'([\w-]+)="([^"]*)"', head):
+        args[m.group(1)] = m.group(2)
+    name = item.get("name", "")
+    if name == "alert":
+        args.setdefault("typ", "warning")
+        args.setdefault("title", "风险提示")
+        args.setdefault("body", body.strip() or "提示内容")
+        return builder(args["tid"], typ=args["typ"], title=args["title"], body=args["body"])
+    if name == "quote":
+        args.setdefault("qt", "highlight")
+        args.setdefault("text", body.strip() or "金句")
+        return builder(args["tid"], qt=args["qt"], text=args["text"])
+    if name == "code-compare":
+        lines = [l for l in body.splitlines() if l.strip()]
+        before = after = ""
+        for l in lines:
+            if l.startswith("@before"):
+                before = l[len("@before"):].strip()
+            elif l.startswith("@after"):
+                after = l[len("@after"):].strip()
+        args.setdefault("title", "改前与改后")
+        return builder(args["tid"], title=args["title"], bc=before, ac=after)
+    if name == "media-text":
+        args.setdefault("cap", "图示说明")
+        args.setdefault("exp", body.strip() or "")
+        url = args.get("url") or args.get("image") or ""
+        return builder(args["tid"], url=url, cap=args["cap"], exp=args["exp"])
+    if name == "gallery":
+        urls = _re.findall(r"!\[([^\]]*)\]\(([^)]+)\)", body)
+        imgs = [(u, c) for c, u in urls] if urls else None
+        args.setdefault("title", "图集")
+        return builder(args["tid"], title=args["title"], imgs=imgs)
+    if name == "long-image":
+        url = args.get("url") or ""
+        args.setdefault("cap", "完整流程图")
+        return builder(args["tid"], url=url, cap=args["cap"])
+    if name == "resources":
+        links = _re.findall(r"- \[([^\]]*)\]\(([^)]+)\)", body)
+        args.setdefault("title", "参考资料")
+        return builder(args["tid"], title=args["title"],
+                       links=[(c, u) for c, u in links] if links else None)
+    if name == "footnotes":
+        fns = [(m.group(1), m.group(2))
+               for m in _re.finditer(r"\[\^(\d+)\]\s*:\s*(.+)", body)]
+        return builder(args["tid"], fns=fns if fns else None)
+    if name == "dialogue":
+        turns = []
+        for l in body.splitlines():
+            if l.startswith("@user:"):
+                turns.append(("user", l[len("@user:"):].strip()))
+            elif l.startswith("@assistant:"):
+                turns.append(("assistant", l[len("@assistant:"):].strip()))
+        args.setdefault("title", "排障问答")
+        return builder(args["tid"], title=args["title"],
+                       turns=turns if turns else None)
+    # 不可达:name 已在 _COMPONENT_BUILDERS 校验
+    return ""
 
 
 def _hammer_code_block(theme_key: str, text: str, language: str = "") -> str:

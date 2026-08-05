@@ -6,8 +6,8 @@
 import os, sys
 
 SKILL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(SKILL, "tests", "advanced-components", "expected")
-os.makedirs(OUT, exist_ok=True)
+# OBS-108(档71C-1):OUT 与 makedirs 移进 main() —— import 本模块时零写盘。
+# render_article.py 需 import 本模块的 builder 函数,不得在 import 时写 tests/。
 
 T = {
  "moyu-green": dict(n="摸鱼绿",p="#059669",pd="#047857",lb="#ECFDF5",bg="#F0FDF4",bd="#BBF7D0",tc="#111827",tx="#374151",st="#9CA3AF",dv="#D1D5DB",wb="#FFFBEB",wt="#92400E",wbd="#FDE68A",r="12px",sh="0 4px 16px -4px rgba(0,0,0,0.08)",style="card",pad="16px 20px"),
@@ -228,6 +228,9 @@ COMPS = {
 }
 
 def main():
+    # OBS-108:OUT 仅在本脚本作为 CLI 执行时创建(import 零写盘)
+    OUT = os.path.join(SKILL, "tests", "advanced-components", "expected")
+    os.makedirs(OUT, exist_ok=True)
     for cid, gen in COMPS.items():
         for tid in ORDER:
             html = gen(tid)
