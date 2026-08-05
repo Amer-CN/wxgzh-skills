@@ -997,23 +997,33 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
 
 
 def _select_live_cover(ctx):
-    """OBS-72: pick the cover from THIS run's approved assets' local frozen
-    files - never a hardcoded sha (the old 418d841f... A-003 wiring).
+    """OBS-72/档70(OBS-99):封面从本 RUN 已批准资产的本地冻结文件选择。
 
-    Rule (explicit, deterministic): the FIRST asset in
-    article_image_bindings.json body_images order that is
-    (a) approved via a stable single_asset approval record,
-    (b) recorded as a successful upload in continue/upload_events.json, and
-    (c) whose local discover/images/<asset_sha256>.* file sha256 equals the
-        frozen asset_discovery_manifest asset_sha256.
+    规则(显式,不依赖隐式顺序):article_image_bindings.json body_images
+    顺序中第一张「已批准(single_asset)+ 已成功上传」的资产;取不到任何
+    候选即 FAIL_CLOSED。
 
-    Fail-closed: no approved+uploaded candidate, missing/invalid contract,
-    manifest or events data, contract/manifest sha divergence, or local file
-    sha mismatch all raise MediaRequestError (exit 2, zero side effects).
-    Returns (cover_path, asset_id).
+    本地文件定位(OBS-99,不再硬编码 discover/images 单目录):
+    (a) 候选目录集合 = media_enrichment/discover/ 下由冻结清单实际引用到的
+        资产目录:asset_origin=generated -> discover/charts/,其余 ->
+        discover/images/;media_manifest 若记录了 local_path,其父目录亦纳入
+        候选(须 resolve 后在 media_root 之内)。不得递归扫描整个 RUN 目录,
+        不得把 RUN 目录之外的任何路径纳入候选。
+    (b) 在候选目录内按 <asset_sha256>.* 匹配;若冻结清单记录了 local_path,
+        仅用它做交叉验证(解析后必须落在 media_root 之内、必须是常规文件),
+        不得作为唯一取值来源直接 open。
+    (c) 命中文件必须 resolve() 后仍位于 media_root.resolve() 之内
+        (防符号链接/路径穿越),否则 FAIL_CLOSED。
+    (d) 命中文件 sha256 必须等于冻结清单 asset_sha256。
+    (e) 若 local_path 记录值与实际命中文件不是同一文件 -> FAIL_CLOSED
+        (记录与实物不符)。
+
+    三条件 FAIL_CLOSED(任一条即拦截,exit 2 零副作用):批准缺失/未上传/
+    本地文件缺失或 sha 失配。返回 (cover_path, asset_id)。
     """
     rd = Path(ctx.run_dir)
     media_root = rd / "media_enrichment"
+    media_root_resolved = media_root.resolve()
     approvals = _load_copyright_approvals(rd)
     if not approvals["single_asset"]:
         raise MediaRequestError(
@@ -1050,7 +1060,105 @@ def _select_live_cover(ctx):
     if not candidates:
         raise MediaRequestError(
             "cover FAIL_CLOSED: no approved and uploaded asset in bindings")
-    images_dir = media_root / "discover" / "images"
+
+    # OBS-99:候选目录集合 = 冻结清单实际引用到的资产目录(images/ + charts/)。
+    # 以 asset_discovery_manifest 的 asset_origin 为确定性依据;media_manifest
+    # 的 local_path 父目录仅作补充(须在 media_root 内),绝不信任字符串直接 open。
+    full_manifest_path = media_root / "discover" / "media_manifest.json"
+    full_by_id: dict = {}
+    if full_manifest_path.is_file():
+        try:
+            full = json.loads(full_manifest_path.read_text(encoding="utf-8"))
+            full_by_id = {a.get("asset_id"): a
+                          for a in full.get("assets", []) if isinstance(a, dict)}
+        except (OSError, ValueError):
+            full_by_id = {}
+
+    def _candidate_dirs() -> list[Path]:
+        dirs: list[Path] = []
+        seen = set()
+        for asset in manifest.get("assets", []):
+            if not isinstance(asset, dict) or not asset.get("asset_id"):
+                continue
+            if asset.get("asset_origin") == "generated":
+                d = media_root / "discover" / "charts"
+            else:
+                d = media_root / "discover" / "images"
+            try:
+                dr = d.resolve()
+            except OSError:
+                continue
+            if dr in seen:
+                continue
+            seen.add(dr)
+            if dr.is_dir() and dr.is_relative_to(media_root_resolved):
+                dirs.append(dr)
+        # media_manifest 记录的 local_path 父目录补充(仅限 media_root 内)
+        for asset in full_by_id.values():
+            lp = asset.get("local_path") if isinstance(asset, dict) else None
+            if not lp:
+                continue
+            try:
+                dr = Path(lp).resolve().parent
+            except OSError:
+                continue
+            if dr in seen or not dr.is_relative_to(media_root_resolved):
+                continue
+            seen.add(dr)
+            if dr.is_dir():
+                dirs.append(dr)
+        return dirs
+
+    def _find_frozen_file(asset_id: str, expected_sha: str) -> Path:
+        """定位本 RUN 冻结产物:候选文件 = 候选目录内 <sha>.* 命中的文件 ∪
+        media_manifest local_path 解析后的文件(带 resolve/越界/常规文件约束)。
+
+        - 图表资产命名 chart-NNN.png(非 <sha> 命名),glob 不命中时由
+          local_path 定位;local_path 是记录值,★绝不直接 open —— 必须
+          resolve 后在 media_root 内、必须是常规文件、字节 sha 必须等于
+          冻结清单值(三重约束后才是可用的本地冻结文件)。
+        - 两者都存在且不是同一文件 -> FAIL_CLOSED(记录与实物不符)。
+        """
+        glob_hits: list[Path] = []
+        for d in _candidate_dirs():
+            try:
+                for p in sorted(d.glob(f"{expected_sha}.*")):
+                    rp = p.resolve()
+                    if rp.is_file() and rp.is_relative_to(media_root_resolved):
+                        glob_hits.append(rp)
+            except OSError:
+                continue
+        rec_full = full_by_id.get(asset_id) or {}
+        lp = rec_full.get("local_path") if isinstance(rec_full, dict) else None
+        lp_resolved: Path | None = None
+        if lp:
+            try:
+                lpr = Path(lp).resolve()
+            except OSError:
+                raise MediaRequestError(
+                    f"cover FAIL_CLOSED: {asset_id} local_path invalid")
+            if not lpr.is_relative_to(media_root_resolved):
+                raise MediaRequestError(
+                    f"cover FAIL_CLOSED: {asset_id} local_path outside media_root")
+            if lpr.exists() and not lpr.is_file():
+                raise MediaRequestError(
+                    f"cover FAIL_CLOSED: {asset_id} local_path not a regular file")
+            # 记录的文件不存在:不作为定位来源(等同无记录);最终无任何命中 -> missing
+            if lpr.is_file():
+                lp_resolved = lpr
+        if not glob_hits and lp_resolved is None:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} local frozen file missing")
+        if glob_hits and lp_resolved is not None and lp_resolved not in glob_hits:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} local_path record does not match hit file")
+        local = lp_resolved if lp_resolved is not None else glob_hits[0]
+        # (d) 字节 sha 必须与冻结清单一致
+        if sha256_file(local) != expected_sha:
+            raise MediaRequestError(
+                f"cover FAIL_CLOSED: {asset_id} local frozen file sha256 mismatch")
+        return local
+
     for asset_id in candidates:
         rec = approvals["single_asset"][asset_id]
         manifest_rec = by_id.get(asset_id)
@@ -1060,15 +1168,7 @@ def _select_live_cover(ctx):
         if manifest_rec.get("asset_sha256") != rec.get("asset_sha256"):
             raise MediaRequestError(
                 f"cover FAIL_CLOSED: {asset_id} approval sha diverges from frozen manifest")
-        expected_sha = rec["asset_sha256"]
-        matches = sorted(images_dir.glob(f"{expected_sha}.*")) if images_dir.is_dir() else []
-        if not matches:
-            raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} local frozen file missing")
-        local = matches[0]
-        if sha256_file(local) != expected_sha:
-            raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} local frozen file sha256 mismatch")
+        local = _find_frozen_file(asset_id, rec["asset_sha256"])
         return local, asset_id
     raise MediaRequestError("cover FAIL_CLOSED: no usable approved cover asset")
 
