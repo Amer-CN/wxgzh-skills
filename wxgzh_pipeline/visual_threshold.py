@@ -1,9 +1,10 @@
-"""OBS-89/档67:视觉内容门槛分级 + 同数据重复检测。
+"""OBS-89/档67/档68:视觉内容门槛分级 + 同数据重复检测。
 
 背景:技术文(代码密集型)的媒体形态与新闻综述不同——正文以代码块为主体,
 可批准候选常少于 6 张新闻配图。档 67 引入两级客观判据(判据全部从冻结产物
 final_article.md 计算,无人工标记字段、无环境开关、无 profile 判据),同时
-实现 OBS-89 同数据图表去重。
+实现 OBS-89 同数据图表去重。档 68 正式启用分级,依据留痕见 compute_visual_tier
+返回的 evidence 字段(替换档 67 的浏览器高度几何估算)。
 
 分级判据(全部可从产物客观计算):
 1. code_blocks = final_article.md 中成对 ``` 围栏且含 >=1 行非空内容的代码块数;
@@ -13,11 +14,13 @@ final_article.md 计算,无人工标记字段、无环境开关、无 profile �
    code_dense     -> body_images_min = 3(最低可见性基线)
                       且要求 images + code_blocks >= 5(视觉内容达标)。
 
-代码块权重 1:1 的独立依据(不依赖本篇文章):
-- 微信正文中代码块与正文图同为「全宽、分隔文本流」的视觉组件;gzh-design 渲染
-  体系中 hammer_code_block 与图片组件均 100% 宽度,10 行代码块渲染高约 250px,
-  16:9 图在 375px 宽下高约 211px,高度比约 1.18 -> 保守取整为 1:1(不夸大代码
-  的视觉贡献);
+代码块权重 1:1 的独立依据(档68 正式启用,替换旧 250px 几何估算):
+- 依据一:1a 深色代码块是 references/common-components.md 的默认组件,规范原文
+  声明「适配所有主题」——它是本 skill 的官方视觉单元,不是临时排版。
+- 依据二:2026-08-05 00:27–00:37 用户在微信编辑器内人工预览实测,深色卡片、圆角、
+  顶栏、红黄绿三圆点、语言标签全部保留未被剥离——代码块在最终平台上确为独立
+  视觉单元。
+- 依据三:用户历史文章长期使用该组件形态且呈现正确(用户 2026-08-04 22:41 陈述)。
 - 视觉锚点下限 5:3000+ 字长文约每 600-800 字需要一个视觉锚点(图片或代码块,
   可读性基线),3950 字文章 -> >=5 个锚点,5 为保守下界。
 
@@ -38,6 +41,14 @@ CODE_DENSE_MIN_BLOCKS = 2       # >=2 个代码块 => 代码密集型(技术文)
 CODE_DENSE_IMAGE_MIN = 3        # 代码密集型文章的正文图下限
 NEWS_IMAGE_MIN = 6              # 非代码密集型(新闻综述)门槛,不得降低
 CODE_DENSE_VISUAL_UNITS = 5     # 代码密集型文章视觉锚点下限(图片 + 代码块)
+
+# 档68:视觉分级正式启用的三条依据(替换档67 的 250px/211px 浏览器高度估算)。
+# 必须随 readiness 的 visual_tier 块与 stage_result.VISUAL_TIER 一并留痕。
+VISUAL_TIER_EVIDENCE = [
+    "依据一:references/common-components.md 1a 深色代码块为默认组件,规范声明「适配所有主题」——官方视觉单元,非临时排版。",
+    "依据二:2026-08-05 00:27–00:37 微信编辑器人工预览实测,深色卡片/圆角/顶栏/三圆点/语言标签全部保留未被剥离。",
+    "依据三:用户历史文章长期使用该组件形态且呈现正确(用户 2026-08-04 22:41 陈述)。",
+]
 
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 _CHART_TYPE_RE = re.compile(r"^生成图表\((\w+)\)")
@@ -60,6 +71,7 @@ def compute_visual_tier(article_text: str) -> dict:
         "code_dense": code_dense,
         "body_images_min": CODE_DENSE_IMAGE_MIN if code_dense else NEWS_IMAGE_MIN,
         "visual_units_min": CODE_DENSE_VISUAL_UNITS if code_dense else None,
+        "evidence": list(VISUAL_TIER_EVIDENCE),
         "criterion": (
             "code_dense(>=2 fenced blocks) => body_images>=3 且 images+code_blocks>=5"
             if code_dense

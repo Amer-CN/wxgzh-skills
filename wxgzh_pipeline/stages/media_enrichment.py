@@ -47,6 +47,7 @@ def content_validate(ctx, sd: Path, state):
     # 档67:视觉内容门槛分级(客观判据,从冻结文章计算,无人工字段/开关/profile)。
     # 代码密集型文章(>=2 个 fenced code block)图片下限降为 3,但要求
     # 图片 + 代码块 >= 5 视觉单元;新闻综述(0-1 代码块)门槛保持 6 不降低。
+    # 档68:正式启用,三条依据随 VISUAL_TIER 留痕(见 visual_threshold.VISUAL_TIER_EVIDENCE)。
     from ..visual_threshold import compute_visual_tier, effective_body_images_min
     article_path = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
     article_text = (article_path.read_text(encoding="utf-8", errors="ignore")
@@ -67,7 +68,7 @@ def content_validate(ctx, sd: Path, state):
         man, bnd, body_images_min=body_images_min,
         body_images_min_source=body_images_min_source)
     # 档67:代码密集型文章须「视觉内容达标」——图片 + 代码块 >= 5 视觉单元,
-    # 通过理由必须是视觉内容达标,不是图片数量豁免。
+    # 通过理由必须是视觉内容达标,不是图片数量豁免。档68:依据留痕并入 VISUAL_TIER。
     if tier.get("code_dense"):
         visual_units = int(report.get("body_image_count", 0) or 0) + int(tier["code_blocks"])
         report["VISUAL_TIER"] = {
@@ -77,6 +78,7 @@ def content_validate(ctx, sd: Path, state):
             "visual_units": visual_units,
             "visual_units_min": tier["visual_units_min"],
             "visual_content_met": visual_units >= tier["visual_units_min"],
+            "evidence": list(tier.get("evidence") or []),
             "reason": "视觉内容达标(图片 + 代码块视觉单元),非图片数量豁免",
         }
         if not report["VISUAL_TIER"]["visual_content_met"]:
@@ -91,6 +93,7 @@ def content_validate(ctx, sd: Path, state):
             "code_dense": False,
             "body_images_min": body_images_min,
             "visual_units_min": None,
+            "evidence": list(tier.get("evidence") or []),
             "note": "新闻综述/非代码密集型:门槛保持 6,不降低",
         }
     # depends-on-freeze: bindings must reference the frozen article sha

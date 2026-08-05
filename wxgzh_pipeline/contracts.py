@@ -173,11 +173,20 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
             by_id = {x["asset_id"]: x for x in man.get("assets", [])}
             body = bnd.get("body_images", [])
             counts = c.get("counts", {})
-            cmin = counts.get("BODY_IMAGES_MIN", 6)
+            # 档67/68:视觉内容门槛分级——contract 层与 stages/media_enrichment.py
+            # content_validate 同口径(默认值 6 本身不改,新闻综述仍 6;代码密集
+            # 类 >=2 代码块 -> 3 且 images+code_blocks>=5)。validation_config.json
+            # 只允许抬升,不允许把新闻类压到 6 以下(effective_body_images_min)。
+            from .visual_threshold import compute_visual_tier, effective_body_images_min
+            fa = run_dir / "zh_human_writing" / "final_article.md"
+            article_text = fa.read_text(encoding="utf-8", errors="ignore") if fa.is_file() else ""
+            tier = compute_visual_tier(article_text)
             validation_config = sd / "validation_config.json"
+            config_value = None
             if validation_config.is_file():
                 config = json.loads(validation_config.read_text(encoding="utf-8"))
-                cmin = config.get("body_images_min", cmin)
+                config_value = config.get("body_images_min")
+            cmin = effective_body_images_min(tier, config_value)
             chk("body_images_min", len(body) >= cmin, f"{len(body)} < {cmin}")
             per = c.get("per_bound_image", {})
             host = per.get("remote_url_host", "mmbiz.qpic.cn")
