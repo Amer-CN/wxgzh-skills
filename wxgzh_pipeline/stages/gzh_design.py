@@ -49,6 +49,15 @@ def content_validate(ctx, sd: Path, state):
     if gate is not None and gate["exit_code"] != 0:
         return 1, {"reason": "OBS102_SYNTAX_GATE=FAIL",
                    "syntax_gate": gate["report"]}, vpath, vsha
+    # OBS-110(档71C-1):final.html <img src> 白名单——只允许 https://;命中
+    # ../ 、file:// 、盘符、data: -> FAIL_CLOSED。挂载于此因 final.html 在
+    # gzh_design content_validate 路径上(validate_delivery 不在该路径)。
+    # 5c 悖论检查:现 RUN 实测命中 0 后启用 enforce(见 validator docstring)。
+    from .. import load_validator as _lv
+    img_gate = _lv("validate_img_src_whitelist")
+    img_code, img_report = img_gate.validate(final_html, enforce=True)
+    if img_code != 0:
+        return 1, {"reason": "OBS110_IMG_SRC=FAIL", "img_src": img_report}, vpath, vsha
     # OBS-73: same frozen final_article.md the media_enrichment stage binds (the
     # zh_human_writing output). Unavailable = FAIL, never skip.
     fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"

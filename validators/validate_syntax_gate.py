@@ -129,7 +129,7 @@ def _probe_single(renderer: Path, sample_md: str, out_dir: Path,
     html_path = out_dir / "final.html"
     html = html_path.read_text(encoding="utf-8") if html_path.is_file() else ""
     # R9:针与文本同一归一化。测量域=归一化正文区(与哨兵同源)。
-    body = _normalize_text(_body_plain_text(html))
+    body = _body_plain_text(html)
     ctrl_visible = needle in body
     sentinel_missing = not ("SENTINEL_A1" in body and "SENTINEL_A2" in body)
     return {"exit_code": proc.returncode, "html_len": len(html),

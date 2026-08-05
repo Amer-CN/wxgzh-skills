@@ -143,3 +143,12 @@ def test_obs102_current_run_scan_hits(tmp_path):
             assert n == 4, f"code_fence expected 4, got {n}"
         else:
             assert n == 0, f"{key} expected 0, got {n}"
+
+
+def test_obs118_no_double_normalization():
+    """OBS-118:构造含 &amp;lt; 的 HTML,单次归一化与二次归一化结果不同。"""
+    html = ('<p style="margin-bottom:16px;font-size:14px;line-height:1.9;'
+            'text-align:justify;">a &amp;lt; b</p>')
+    once = _body_plain_text(html)          # 单次归一化
+    twice = _normalize_text(once)          # 二次归一化(旧 _probe_single 行为)
+    assert once != twice, "单次与二次归一化应不同(证明双归一化分叉真实存在)"

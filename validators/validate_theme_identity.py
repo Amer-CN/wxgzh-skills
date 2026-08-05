@@ -21,6 +21,10 @@ import sys
 from pathlib import Path
 
 # fingerprint -> literal substring present in official source + rendered HTML
+# OBS-109(档71C-1):图片类指纹去碰撞 —— image_media_text_card 原值
+# "0 4px 16px -4px rgba(179,89,59,0.10)" == T["hammer"]["sh"] 阴影令牌,
+# 被 media-text/long-image 高级组件共享,非图片专有。改为「阴影令牌 + <img
+# 标签特征」复合判据:必须同时出现阴影令牌与 <img,才计为 media-text 卡。
 FINGERPRINTS = {
     "cover_breaking": "border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06)",
     "toc_scroll": "overflow-x:scroll;-webkit-overflow-scrolling:touch;white-space:nowrap",
@@ -166,6 +170,23 @@ def _strike_check(html: str) -> tuple[bool, bool, int]:
     return props_ok, strike_bad, line_through
 
 
+def _img_type_occurrences(html: str, shadow_token: str) -> int:
+    """OBS-109:图片组件指纹去碰撞 —— 阴影令牌命中处后续 400 字符内必须出现
+    <img 才计为图片组件。media-text/long-image 高级组件(含占位 <img)仍命中;
+    alert/quote 等纯文本组件共享阴影令牌但不含 <img,不计入。"""
+    n = 0
+    start = 0
+    while True:
+        i = html.find(shadow_token, start)
+        if i < 0:
+            break
+        window = html[i:i + len(shadow_token) + 400]
+        if "<img" in window:
+            n += 1
+        start = i + len(shadow_token)
+    return n
+
+
 def validate(final_html: str | Path, expected_chapters: int | None = None,
              usage_out: str | Path | None = None,
              exec_evidence: dict | None = None,
@@ -186,7 +207,8 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
     footer = ev["footer_cta"]["occurrences"]
     toc_dynamic_ok = bool(expected_chapters) and all(
         f"PART {i:02d}" in html for i in range(1, expected_chapters + 1))
-    img_types = [c for c in ("image_2a_standard", "image_media_text_card") if ev[c]["occurrences"] > 0]
+    img_types = [c for c in ("image_2a_standard", "image_media_text_card")
+                 if _img_type_occurrences(html, FINGERPRINTS[c]) > 0]
     hammer_primary = _HAMMER_PRIMARY_HEX in html
     moyu_absent = "#059669" not in html
     fallback_used = (not hammer_primary) or (not moyu_absent)

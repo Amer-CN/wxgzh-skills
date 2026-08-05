@@ -76,18 +76,54 @@ def _mode_enforce() -> bool:
 
 
 def _enforce_expected_counts(pipeline_count: int, manifest_count: int,
-                             bundle_count: int, enforce: bool) -> None:
+                             bundle_count: int, enforce: bool,
+                             skip_count: int = 0) -> None:
     """动态实算校验:以构建产物自身计数为基线,拒绝写死常量。"""
     print(f"[build] 实算计数: pipeline={pipeline_count} manifest={manifest_count} "
           f"bundle_zip={bundle_count} enforce={enforce}")
     if not enforce:
         return
-    # fail-closed 语义:manifest 记录文件数 == bundle zip 实际文件数 - 2
-    # (顶层 MANIFEST.json 与 wxgzh-pipeline/audit/runs/*/MANIFEST.json 均名为
-    #  MANIFEST.json,构建时被 p.name != "MANIFEST.json" 排除出记录)。
-    # 实测(档71B'-C):manifest=1228 bundle_zip=1230 -> 1228 == 1230-2 ✓。
-    if manifest_count != bundle_count - 2:
-        raise SystemExit(f"manifest count mismatch: manifest={manifest_count} bundle_zip={bundle_count}")
+    # fail-closed 语义(OBS-116):manifest 记录文件数 == bundle zip 实际文件数
+    # − skip_count。skip_count = bundle 中名为 MANIFEST.json 的条目数(同名文件
+    # 可能有多个,如顶层与 audit/runs/*/ 内嵌),随仓库演进动态统计,禁止写死。
+    if manifest_count != bundle_count - skip_count:
+        raise SystemExit(
+            f"manifest count mismatch: manifest={manifest_count} "
+            f"bundle_zip={bundle_count} skip_count={skip_count}")
+    # OBS-117:恢复被删维度 —— pipeline_count 必须等于磁盘独立枚举数。
+    # 不复用 copy_tree/deterministic_zip,按 PIPELINE_RELEASE_INCLUDES/EXCLUDES
+    # 独立走一遍 _skip 语义得到 disk_count;两者不等说明打包环节有真实偏差。
+    disk_count = _disk_enum_count()
+    if pipeline_count != disk_count:
+        raise SystemExit(
+            f"pipeline/disk count mismatch: pipeline={pipeline_count} "
+            f"disk={disk_count}")
+
+
+def _disk_enum_count() -> int:
+    """OBS-117:按 PIPELINE_RELEASE_INCLUDES/EXCLUDES 独立枚举磁盘文件数。
+
+    与 zipping._skip 的排除语义保持一致但不复用其函数(独立实现,防「同一份
+    代码两个副本」与「校验与被校验同源」)。"""
+    from wxgzh_pipeline import zipping as _zip_mod
+    src = SKILL_ROOT
+    n = 0
+    for p in sorted(src.rglob("*")):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(src)
+        posix = rel.as_posix()
+        if posix in {Path(x).as_posix() for x in _zip_mod.PIPELINE_RELEASE_EXCLUDES}:
+            continue
+        if posix in {Path(x).as_posix() for x in _zip_mod.PIPELINE_RELEASE_INCLUDES}:
+            n += 1
+            continue
+        if any(part in _zip_mod.EXCLUDE_DIRS for part in p.parts):
+            continue
+        if p.suffix.lower() in _zip_mod.EXCLUDE_SUFFIXES or p.name in _zip_mod.FORBIDDEN_NAMES:
+            continue
+        n += 1
+    return n
 
 
 def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Path) -> dict:
@@ -108,8 +144,10 @@ def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Pa
         manifest = json.loads(bundle_z.read("portable-bundle/MANIFEST.json"))
         bundle_files = [i for i in bundle_z.infolist() if not i.is_dir()]
         # OBS-65:动态实算校验(见 _enforce_expected_counts;常量已废除)
+        skip_count = sum(1 for i in bundle_z.infolist()
+                        if not i.is_dir() and Path(i.filename).name == "MANIFEST.json")
         _enforce_expected_counts(len(skill_tree), len(manifest.get("files", [])),
-                                 len(bundle_files), _mode_enforce())
+                                 len(bundle_files), _mode_enforce(), skip_count)
         manifest_paths = {item["path"] for item in manifest.get("files", [])}
         workflow_manifest_path = "wxgzh-pipeline/" + workflow_rel
         if workflow_manifest_path not in manifest_paths:
