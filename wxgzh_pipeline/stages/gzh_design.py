@@ -53,7 +53,7 @@ def content_validate(ctx, sd: Path, state):
     # ../ 、file:// 、盘符、data: -> FAIL_CLOSED。挂载于此因 final.html 在
     # gzh_design content_validate 路径上(validate_delivery 不在该路径)。
     # 5c 悖论检查:现 RUN 实测命中 0 后启用 enforce(见 validator docstring)。
-    from .. import load_validator as _lv
+    from . import load_validator as _lv
     img_gate = _lv("validate_img_src_whitelist")
     img_code, img_report = img_gate.validate(final_html, enforce=True)
     if img_code != 0:
@@ -155,6 +155,13 @@ _PRE_RE = _re.compile(r"<pre[^>]*>(.*?)</pre>", _re.S)  # 兼容 67D 之前历�
 _CODE_ROW_RE = _re.compile(
     "<p style=\"margin:0;font-family:'SF Mono',Consolas[^\"]*?color:#E2E8F0;\">"
     "(.*?)</p>", _re.S)
+# OBS-106(档71C-1,7b 备选②):高级组件正文段落锚 —— 从 generate_advanced_html.py
+# builder 真实产物抄录的开标签(A 组 9 类的 body 段落共用的形态)。负对照:
+# 现 RUN 无组件 final.html 中该锚 0 命中(封面/目录/署名/页脚均不匹配)。选备选
+# ② 因 R11 禁止手写组件 HTML,且 builder 段落非 hammer_para 形态(路径①不可行)。
+_COMPONENT_PARA_RE = _re.compile(
+    "<p style=\"margin:0;font-size:14px;color:#555555;line-height:1.8;\">"
+    "(.*?)</p>", _re.S)
 
 
 def _body_plain_text(html_text: str) -> str:
@@ -162,6 +169,7 @@ def _body_plain_text(html_text: str) -> str:
     <pre> 历史代码块(whitespace-normalized, HTML entities decoded)。
     Cover/TOC/signature/footer regions are excluded on purpose (OBS-83)。"""
     parts = (_PARA_RE.findall(html_text) + _CODE_ROW_RE.findall(html_text)
+             + _COMPONENT_PARA_RE.findall(html_text)
              + _PRE_RE.findall(html_text))
     return _normalize_text("".join(parts))
 

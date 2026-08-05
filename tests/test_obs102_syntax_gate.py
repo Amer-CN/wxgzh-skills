@@ -92,20 +92,32 @@ def test_obs102_stub_fence_supported(tmp_path):
     assert rep["probe_summary"]["fence"]["unsupported"] is False
 
 
-def test_obs102_real_renderer_fence_fails(tmp_path):
-    """反向:真实渲染器 + 含 :::alert 样本 -> FAIL,problems[0] 含行号与片段。"""
+def test_obs102_real_renderer_fence_supported(tmp_path):
+    """档71C-1 后:真实渲染器已接线 ::: -> fence 判「支持」-> 门禁 PASS。"""
     renderer = _real_renderer()
     if renderer is None:
         pytest.skip("安装侧渲染器不可得(技能未安装)")
     sample = "# 标题\n\n## 章节\n\n:::alert type=\"warn\"\nSENTINEL_A1\n:::\nSENTINEL_A2 结尾。\n"
     p = tmp_path / "b.md"; p.write_text(sample, encoding="utf-8")
     code, rep = validate_syntax_gate(p, renderer, tmp_path / "probe")
+    assert code == 0, rep
+    assert rep["OBS102_SYNTAX_GATE"] == "PASS"
+    assert rep["probe_summary"]["fence"]["unsupported"] is False
+
+
+def test_obs102_real_renderer_h3_still_fails(tmp_path):
+    """反向(保留):真实渲染器 + 含 ### 样本 -> 仍 FAIL,problems[0] 含行号与片段。"""
+    renderer = _real_renderer()
+    if renderer is None:
+        pytest.skip("安装侧渲染器不可得(技能未安装)")
+    sample = "# 标题\n\n## 章节\n\n### SENTINEL_A1\nSENTINEL_A2 结尾。\n"
+    p = tmp_path / "c.md"; p.write_text(sample, encoding="utf-8")
+    code, rep = validate_syntax_gate(p, renderer, tmp_path / "probe")
     assert code == 1
     assert rep["OBS102_SYNTAX_GATE"] == "FAIL"
     assert rep["hits"], rep
-    assert rep["hits"][0]["category"] == "::: 围栏"
+    assert rep["hits"][0]["category"] == "### 及更深标题"
     assert rep["hits"][0]["line"] == 5
-    assert ":::alert" in rep["hits"][0]["snippet"]
 
 
 # ── 现 RUN 冻结文章(依赖安装侧,可 skip) ────────────────────────

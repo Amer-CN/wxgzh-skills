@@ -184,6 +184,17 @@ def needle_self_check() -> dict:
 def validate_syntax_gate(article_path: Path, renderer: Path,
                          probe_dir: Path, cache_path: Path | None = None) -> tuple[int, dict]:
     """冻结文章中任何「不支持」语法 -> FAIL_CLOSED。"""
+    # 7f(档71C-1):针体自检前置 —— 任一 needle 不可匹配即 FAIL_CLOSED。
+    # 理由:自检此前只活在 pytest 里,改 CATALOG 而不跑测试会悄悄退回
+    # 「针扎不中 -> 判支持」。此处运行时强制,与 pytest 双保险。
+    self_check = needle_self_check()
+    bad_needles = [k for k, ok in self_check.items() if not ok]
+    if bad_needles:
+        return 1, {
+            "OBS102_SYNTAX_GATE": "FAIL",
+            "needle_self_check_failed": bad_needles,
+            "guidance": "probe 针体不可匹配(见 needle_self_check),拒绝判定",
+        }
     article = article_path.read_text(encoding="utf-8")
     lines = article.splitlines()
     support = load_or_probe(renderer, probe_dir, cache_path)

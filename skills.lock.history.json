@@ -224,5 +224,25 @@
     "new_skill_version": "v2026.08.02-hammer.7",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260805T142041Z-7b474c84",
+    "skill": "gzh-design",
+    "reason": "71C-1: ::: A组9类接线 + required_files 新增 generate_advanced_html.py",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-05T14:20:41Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "0dd8d31756318773e8e927fde6735a97e5dd64fb0fe59228b8913f2fcf574300",
+    "new_root_sha256": "a51a551b6437d39b7c2e1cf4aedfebf4287fa2f61b3b80ee9417a72f1cb55c3d",
+    "old_entrypoint_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+    "new_entrypoint_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
+    "old_render_entry_sha256": "5ae3be90dd5fe71c9ab10543b6f0905ebeffe30b916bf3be4064a1e5289aa9fe",
+    "new_render_entry_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
+    "old_full_commit_sha": "af03b438a37233c111a20be77c4fd28898dc8f10",
+    "new_full_commit_sha": "5791e637110ed941406ee371c96d3b1b115f9131",
+    "old_source_tree_sha": "95afcd87b4930ee8484216c774f829b7f2737c71",
+    "new_source_tree_sha": "b81b7e8d7e096bde0c1ecc40acdc09e1c1336dec",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]
