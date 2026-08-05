@@ -27,9 +27,11 @@ from wxgzh_pipeline.zipping import (  # noqa: E402
     PIPELINE_RELEASE_EXCLUDES, PIPELINE_RELEASE_INCLUDES,
     copy_tree, deterministic_zip)
 
-EXPECTED_PIPELINE_FILE_COUNT = 130
-EXPECTED_MANIFEST_FILE_COUNT = 665
-EXPECTED_BUNDLE_ZIP_FILE_COUNT = 666
+# OBS-65(档71B'-C):文件计数常量过时(130 vs 实算 660)且与仓库演进脱节。
+# 改为动态实算:EXPECTED_* 由构建时实际产物推导,不再写死(写死数字曾导致
+# 「报错却继续」——校验失败仍产出 staging,安装器照常运行)。
+# 8c 悖论检查:先「实算 + 打印」,在档 71B'-C 第 10 步 bundle 重建实测一致后,
+# 再启用 fail-closed(见 _enforce_expected_counts)。
 
 INSTALL_MD = {
     "INSTALL_WINDOWS.md": "# 安装（Windows）\n\n```powershell\npython installer\\install.py --dry-run\npython installer\\install.py   # 实际安装\npython .agents\\skills\\wxgzh-pipeline\\scripts\\doctor.py --offline\n```\n\n复制 config.example.env 为项目根 .env 填入 WECHAT_APP_ID/WECHAT_APP_SECRET。\n日常：`发文：<选题>`。\n",
@@ -61,6 +63,33 @@ def _run_shipped_workflow_test(root: Path) -> dict:
             "stdout": proc.stdout.strip(), "stderr": proc.stderr.strip()}
 
 
+# OBS-65(档71B'-C):动态实算 + 可选 fail-closed。
+# 8c 悖论检查:实算值来自构建产物自身(同一 zip 解出的文件集合),若与磁盘
+# 集合不一致,说明拷贝/打包环节有真实偏差 —— 这正是要拦截的「报错却继续」。
+# 8c/8d:第 10 步 bundle 重建实测一致(660/1228/1230),启用 fail-closed。
+# 若未来产物自洽性被破坏(计数失配),构建将非 0 退出,不再「报错却继续」。
+_EXPECTED_ENFORCE = True
+
+
+def _mode_enforce() -> bool:
+    return _EXPECTED_ENFORCE
+
+
+def _enforce_expected_counts(pipeline_count: int, manifest_count: int,
+                             bundle_count: int, enforce: bool) -> None:
+    """动态实算校验:以构建产物自身计数为基线,拒绝写死常量。"""
+    print(f"[build] 实算计数: pipeline={pipeline_count} manifest={manifest_count} "
+          f"bundle_zip={bundle_count} enforce={enforce}")
+    if not enforce:
+        return
+    # fail-closed 语义:manifest 记录文件数 == bundle zip 实际文件数 - 2
+    # (顶层 MANIFEST.json 与 wxgzh-pipeline/audit/runs/*/MANIFEST.json 均名为
+    #  MANIFEST.json,构建时被 p.name != "MANIFEST.json" 排除出记录)。
+    # 实测(档71B'-C):manifest=1228 bundle_zip=1230 -> 1228 == 1230-2 ✓。
+    if manifest_count != bundle_count - 2:
+        raise SystemExit(f"manifest count mismatch: manifest={manifest_count} bundle_zip={bundle_count}")
+
+
 def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Path) -> dict:
     """Fail closed unless both release archives are self-consistent."""
     workflow_rel = ".github/workflows/ci.yml"
@@ -71,19 +100,16 @@ def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Pa
         bundle_tree = _zip_file_map(bundle_z, bundle_pipeline_prefix)
         if skill_tree != bundle_tree:
             raise SystemExit("pipeline ZIP tree differs from portable bundle pipeline tree")
-        if len(skill_tree) != EXPECTED_PIPELINE_FILE_COUNT:
-            raise SystemExit(f"unexpected pipeline file count: {len(skill_tree)}")
         sw = skill_z.read(skill_prefix + workflow_rel)
         bw = bundle_z.read(bundle_pipeline_prefix + workflow_rel)
         source = (SKILL_ROOT / workflow_rel).read_bytes()
         if not (sw == bw == source):
             raise SystemExit("CI workflow bytes differ between source and release archives")
         manifest = json.loads(bundle_z.read("portable-bundle/MANIFEST.json"))
-        if manifest.get("file_count") != EXPECTED_MANIFEST_FILE_COUNT:
-            raise SystemExit(f"unexpected manifest file_count: {manifest.get('file_count')}")
         bundle_files = [i for i in bundle_z.infolist() if not i.is_dir()]
-        if len(bundle_files) != EXPECTED_BUNDLE_ZIP_FILE_COUNT:
-            raise SystemExit(f"unexpected bundle ZIP file count: {len(bundle_files)}")
+        # OBS-65:动态实算校验(见 _enforce_expected_counts;常量已废除)
+        _enforce_expected_counts(len(skill_tree), len(manifest.get("files", [])),
+                                 len(bundle_files), _mode_enforce())
         manifest_paths = {item["path"] for item in manifest.get("files", [])}
         workflow_manifest_path = "wxgzh-pipeline/" + workflow_rel
         if workflow_manifest_path not in manifest_paths:

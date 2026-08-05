@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""档71B OBS-102:未支持语法门禁 —— 判据来自渲染器实测行为(probe)。
+"""档71B OBS-102/档71B'-C:未支持语法门禁 —— 判据来自渲染器实测行为(probe)。
 
 作用对象:stage 03 产出的冻结文章 zh_human_writing/final_article.md。
 执行时机:stage 05(gzh_design)内容校验阶段,渲染之后、放行之前。
@@ -9,14 +9,22 @@
 形状),因此不与 71C/71D 构成不可满足集合。
 
 ★判据来源必须是渲染器实际行为,严禁硬编码「支持/不支持」清单:
-  - 每类语法生成最小样本 md(H1 + 一个 ## 章节 + 该语法 3-5 行),语法内文本
-    使用可唯一定位的哨兵串(SENTINEL_A1 / SENTINEL_A2);
+  - 每类语法生成最小样本 md(骨架 + 控制行 + 哨兵);
   - 用生产调用方式(CLI 子进程)调用安装侧 gzh-design 渲染器;
   - 判「不支持」的两个条件,任一成立即不支持:
-      ① 语法控制符原样出现在 final.html 的可见文本中;
+      ① 语法控制符原样出现在正文区文本中(R9:针与文本同一归一化;
+         测量域=归一化正文区,与哨兵同源);
       ② 哨兵文本未完整出现在 final.html 的正文区。
-  - ★正文区口径复用 wxgzh_pipeline/stages/gzh_design.py 的 _PARA_RE + _PRE_RE
-    + _body_plain_text(同源,禁止另写一套)。
+  - ★正文区口径复用 wxgzh_pipeline/stages/gzh_design.py 的 _PARA_RE +
+    _CODE_ROW_RE + _PRE_RE + _body_plain_text + _normalize_text(同源,禁止另写)。
+
+OBS-114(高):探针针体无可匹配性自检 —— 不可匹配的针恒产出「支持」;
+本档实例 = ulist/olist 的 token 含空格而测量域删除全部空白。通用修法 =
+R9(针与文本同归一化 + 针体自检,见 3C-d 固化为 pytest 用例)。
+
+OBS-115(中):ARTICLE_SCAN 曾用并集正则(r"^[-*]\s+"、r"\*\*|~~"),
+探针只测其中一支,未测形态借用已测形态的结论;本档已拆分并补
+ulist_star / strike 两类样本(拆分理由见 ARTICLE_SCAN 注释)。
 """
 from __future__ import annotations
 
@@ -27,35 +35,80 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ── 语法目录(catalog,10 类,档71B 第 4b 条逐字照用) ──────────────
-CATALOG_VERSION = "v1"
+# ── 语法目录(catalog,13 类 + 1 负对照,档71B'-C 第 3C-c 条逐字照用) ──────
+CATALOG_VERSION = "v3"
+
+# 样本统一骨架:标题 + 导语占位(无控制符) + 章节 + 控制行 + 结尾段落
+_SKELETON = (
+    "# 探针样本\n"
+    "\n"
+    "这是导语占位段落，不含任何控制符。\n"
+    "\n"
+    "## 章节一\n"
+)
+
+# (key, label, token, needle, 控制行模板)
+#   token  = 该类原始控制符(仅用于报告与负对照诊断,不参与判定)
+#   needle = 参与判定的针,必须是「经 _normalize_text 处理后仍可匹配」的形态
+#            (含空白的 token 在归一化(删空白)后不可匹配,故 needle 用哨兵锚定形)
+# SENTINEL_A1 放在控制行上(或围栏块内),SENTINEL_A2 放在紧随的普通段落。
 CATALOG = [
-    # (key, label, 检测用控制符, 样本 md 模板)
-    ("fence", "::: 围栏", ":::", "# 标题\n\n## 章节\n\n```\nSENTINEL_A1\nSENTINEL_A2\n```\n"),
-    ("fn_ref", "[^N] 脚注引用", "[^1]", "# 标题\n\n## 章节\n\n正文 SENTINEL_A1[^1] 继续\n\n[^1]: SENTINEL_A2 定义\n"),
-    ("fn_def", "[^N]: 脚注定义", "[^1]:", "# 标题\n\n## 章节\n\n[^1]: SENTINEL_A1 定义行\n[^2]: SENTINEL_A2 定义行\n"),
-    ("h3", "### 及更深标题", "###", "# 标题\n\n## 章节\n\n### SENTINEL_A1 三级标题\n### SENTINEL_A2 更深\n"),
-    ("quote", "行首 > 引用", ">", "# 标题\n\n## 章节\n\n> SENTINEL_A1 引用一行\n> SENTINEL_A2 引用二行\n"),
-    ("ulist", "行首 - 无序列表", "- ", "# 标题\n\n## 章节\n\n- SENTINEL_A1 项一\n- SENTINEL_A2 项二\n"),
-    ("olist", "行首 1. 有序列表", "1. ", "# 标题\n\n## 章节\n\n1. SENTINEL_A1 步一\n2. SENTINEL_A2 步二\n"),
-    ("table", "| 表格", "|", "# 标题\n\n## 章节\n\n| SENTINEL_A1 | SENTINEL_A2 |\n|---|---|\n| 甲 | 乙 |\n"),
-    ("bold", "** 加粗 或 ~~ 删除线", "**", "# 标题\n\n## 章节\n\n**SENTINEL_A1** 与 ~~SENTINEL_A2~~\n"),
-    ("inline_code", "行内反引号 `code`", "`", "# 标题\n\n## 章节\n\n`SENTINEL_A1` 与 `SENTINEL_A2`\n"),
+    ("code_fence", "``` 代码围栏", "```", "```",
+     "```text\nSENTINEL_A1\n```\n"),
+    ("fence", "::: 围栏", ":::", ":::",
+     ":::alert type=\"warn\" title=\"探针\"\nSENTINEL_A1\n:::\n"),
+    ("h3", "### 及更深标题", "###", "###", "### SENTINEL_A1\n"),
+    ("quote", "行首 > 引用", ">", ">", "> SENTINEL_A1\n"),
+    ("ulist", "行首 - 无序列表", "- ", "-SENTINEL_A1", "- SENTINEL_A1\n"),
+    ("ulist_star", "行首 * 无序列表", "* ", "*SENTINEL_A1", "* SENTINEL_A1\n"),
+    ("olist", "行首 1. 有序列表", "1. ", "1.SENTINEL_A1", "1. SENTINEL_A1\n"),
+    ("table", "| 表格", "|", "|SENTINEL_A1", "| SENTINEL_A1 | 值 |\n| --- | --- |\n"),
+    ("bold", "** 加粗", "**", "**", "**SENTINEL_A1**\n"),
+    ("strike", "~~ 删除线", "~~", "~~", "~~SENTINEL_A1~~\n"),
+    ("inline_code", "行内反引号 `code`", "`", "`", "`SENTINEL_A1`\n"),
+    ("fn_ref", "[^N] 脚注引用", "[^1]", "[^1]", "正文 SENTINEL_A1[^1] 结束。\n"),
+    ("fn_def", "[^N]: 脚注定义", "[^1]:", "[^1]:", "[^1]: SENTINEL_A1\n"),
 ]
 
-# 文章侧扫描用(与 catalog 的 key 对应,检测冻结文章中是否出现该类语法)
+# 负对照:无控制行,只有骨架 + 两个哨兵
+# 3C-c 要求:baseline 正文不得含上表任何 token 字符(含 - 与 * 与 "1."),
+# 故导语占位段与结尾段均用纯中文/字母,无连字符、星号、数字点、竖线、引号。
+BASELINE_SAMPLE = (
+    "# 探针样本\n"
+    "\n"
+    "这是导语占位段落，不含任何控制符。\n"
+    "\n"
+    "## 章节一\n"
+    "\n"
+    "SENTINEL_A1 结尾普通段落。\n"
+)
+
+# 文章侧扫描用(与 catalog 的 key 对应)
+# OBS-115:拆分并集正则 —— r"^[-*]\s+" 拆为 r"^-\s+" 与 r"^\*\s+",
+# r"\*\*|~~" 拆为 r"\*\*" 与 r"~~";避免未测形态借用已测形态的结论。
 ARTICLE_SCAN = {
+    "code_fence": re.compile(r"^```", re.M),
     "fence": re.compile(r"^:::", re.M),
-    "fn_ref": re.compile(r"\[\^\d+\](?!:)"),
-    "fn_def": re.compile(r"^\[\^\d+\]:", re.M),
     "h3": re.compile(r"^#{3,}\s", re.M),
     "quote": re.compile(r"^>\s?", re.M),
-    "ulist": re.compile(r"^[-*]\s+", re.M),
+    "ulist": re.compile(r"^-\s+", re.M),
+    "ulist_star": re.compile(r"^\*\s+", re.M),
     "olist": re.compile(r"^\d+\.\s+", re.M),
     "table": re.compile(r"^\|", re.M),
-    "bold": re.compile(r"\*\*|~~"),
+    "bold": re.compile(r"\*\*", re.M),
+    "strike": re.compile(r"~~", re.M),
     "inline_code": re.compile(r"`[^`\n]+`"),
+    "fn_ref": re.compile(r"\[\^\d+\](?!:)"),
+    "fn_def": re.compile(r"^\[\^\d+\]:", re.M),
 }
+
+
+# 正文区口径:复用 gzh_design(同源,禁止另写一套)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from wxgzh_pipeline.stages.gzh_design import (  # noqa: E402
+    _body_plain_text,
+    _normalize_text,
+)
 
 
 def _renderer_sha256(renderer: Path) -> str:
@@ -63,7 +116,7 @@ def _renderer_sha256(renderer: Path) -> str:
 
 
 def _probe_single(renderer: Path, sample_md: str, out_dir: Path,
-                 ctrl: str) -> dict:
+                 needle: str) -> dict:
     """对单个语法样本运行渲染器,返回 (ctrl_visible, sentinel_missing)。"""
     md_path = out_dir / "sample.md"
     md_path.write_text(sample_md, encoding="utf-8")
@@ -75,15 +128,9 @@ def _probe_single(renderer: Path, sample_md: str, out_dir: Path,
         timeout=120)
     html_path = out_dir / "final.html"
     html = html_path.read_text(encoding="utf-8") if html_path.is_file() else ""
-    # ① 语法控制符原样出现在可见文本(逐类检测其专有控制符)
-    visible = re.sub(r"<[^>]+>", "", html)
-    import html as _html_mod
-    visible = _html_mod.unescape(visible)
-    ctrl_visible = ctrl in visible
-    # 正文区口径:复用 gzh_design._body_plain_text(同源)
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from wxgzh_pipeline.stages.gzh_design import _body_plain_text
-    body = _body_plain_text(html)
+    # R9:针与文本同一归一化。测量域=归一化正文区(与哨兵同源)。
+    body = _normalize_text(_body_plain_text(html))
+    ctrl_visible = needle in body
     sentinel_missing = not ("SENTINEL_A1" in body and "SENTINEL_A2" in body)
     return {"exit_code": proc.returncode, "html_len": len(html),
             "ctrl_visible": ctrl_visible, "sentinel_missing": sentinel_missing,
@@ -91,13 +138,14 @@ def _probe_single(renderer: Path, sample_md: str, out_dir: Path,
 
 
 def probe_syntax_support(renderer: Path, probe_dir: Path) -> dict:
-    """对 10 类语法逐一 probe,返回 {key: {"label", "unsupported", ...}}。"""
+    """对 13 类语法逐一 probe,返回 {key: {"label", "unsupported", ...}}。"""
     probe_dir.mkdir(parents=True, exist_ok=True)
     result = {}
-    for key, label, ctrl, sample in CATALOG:
+    for key, label, _token, needle, control_line in CATALOG:
         out_dir = probe_dir / key
         out_dir.mkdir(parents=True, exist_ok=True)
-        r = _probe_single(renderer, sample, out_dir, ctrl)
+        sample = _SKELETON + control_line + "SENTINEL_A2 结尾普通段落。\n"
+        r = _probe_single(renderer, sample, out_dir, needle)
         result[key] = {"label": label, **r}
     return result
 
@@ -122,29 +170,35 @@ def load_or_probe(renderer: Path, probe_dir: Path, cache_path: Path | None = Non
     return result
 
 
+def needle_self_check() -> dict:
+    """3C-d 针体可匹配性自检:每类 needle 必须出现在 _normalize_text(该类样本
+    md 原文)中。必须调用同一个 _normalize_text 函数对象。"""
+    out = {}
+    for key, label, _token, needle, control_line in CATALOG:
+        sample = _SKELETON + control_line + "SENTINEL_A2 结尾普通段落。\n"
+        norm = _normalize_text(sample)
+        out[key] = needle in norm
+    return out
+
+
 def validate_syntax_gate(article_path: Path, renderer: Path,
                          probe_dir: Path, cache_path: Path | None = None) -> tuple[int, dict]:
-    """冻结文章中任何「不支持」语法 -> FAIL_CLOSED。
-
-    报告给出语法类别 + 行号 + 原文片段 + probe 依据(哪一条判定条件命中)。
-    """
+    """冻结文章中任何「不支持」语法 -> FAIL_CLOSED。"""
     article = article_path.read_text(encoding="utf-8")
     lines = article.splitlines()
     support = load_or_probe(renderer, probe_dir, cache_path)
     problems = []
-    for key, label, ctrl, _sample in CATALOG:
+    for key, label, _token, needle, _control_line in CATALOG:
         rx = ARTICLE_SCAN[key]
         hits = [(i + 1, ln) for i, ln in enumerate(lines) if rx.search(ln)]
-        if not hits:
-            continue
         entry = support.get(key, {})
         unsupported = entry.get("unsupported", True)
-        reasons = []
-        if entry.get("ctrl_visible"):
-            reasons.append("① 语法控制符原样出现在 final.html 可见文本")
-        if entry.get("sentinel_missing"):
-            reasons.append("② 哨兵文本未完整出现在 final.html 正文区")
         if unsupported:
+            reasons = []
+            if entry.get("ctrl_visible"):
+                reasons.append("① 语法控制符原样出现在正文区文本")
+            if entry.get("sentinel_missing"):
+                reasons.append("② 哨兵文本未完整出现在正文区")
             for lineno, text in hits[:5]:
                 problems.append({
                     "category": label, "line": lineno,

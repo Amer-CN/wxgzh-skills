@@ -1,0 +1,16 @@
+⛔ vibe-coding-guide 拦截：这是对根目录或家目录的递归删除，会清空整台机器（铁律 1）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：这是对系统目录的递归删除，会让系统无法启动（铁律 1）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：这会删掉整个当前目录，包括你还没提交的代码（铁律 1）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：强推主分支会永久覆盖远端历史，别人的提交会消失（红线 11）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：这会删除整个数据库，且通常无法恢复（红线 6）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：这是把网上下载的内容直接执行，你没机会看清它要做什么（红线 10）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：递归 777 会把文件权限对所有人开放（红线 7）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⛔ vibe-coding-guide 拦截：这是直接格式化或写裸设备，会造成不可恢复的数据丢失（铁律 1）。确需执行请你自己在终端手动运行。关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：要安装新依赖了。装之前请先确认包名全称、用途、周下载量和最近更新时间（红线 10）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：这会丢弃你本地还没提交的改动，丢了找不回来（铁律 1）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：这是在改数据库结构。请先出迁移文件再执行，不要直接改库（红线 6）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：这条 DELETE 没有 WHERE 条件，会清空整张表（红线 6）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：强推会覆盖远端历史。确认这个分支只有你一个人在用（红线 11）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：要递归删除文件了。确认路径没写错、且这些文件已经提交过（铁律 1）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：你正在把 .env 加进 Git。密钥一旦提交，删掉也留在历史里（红线 7）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide
+⚠️ vibe-coding-guide 提醒：这是往线上环境部署。确认已经在本地验证过（红线 11）。确认要继续吗？关闭护栏：/plugin disable vibe-coding-guide

@@ -15,18 +15,12 @@ import sys
 from pathlib import Path
 
 
-def _renderer_path(skills_home: Path, network_mode: str | None = None) -> Path:
-    """定位 gzh-design 渲染器。
+def _renderer_path(skills_home: Path) -> Path:
+    """定位安装侧 gzh-design 渲染器(skills.lock 锁定版本)。
 
-    - live / integration:安装侧被锁渲染器(skills.lock 锁定版本);
-    - fake_live / offline_fixture:fake shim(fake_live/skills/gzh-design),它是
-      该模式下真实被调用的渲染路径;probe 判据必须与实际执行路径一致。
+    fake_live 是否纳入语法门禁 = 独立议题,留待 71C 之后单列;本档不改变
+    run_syntax_gate 的跳过行为(fake_live/offline 仍返回 None)。
     """
-    if network_mode in ("fake_live", "offline_fixture"):
-        shim = Path(__file__).resolve().parents[1] / "fake_live" / "skills" \
-            / "gzh-design" / "render_article.py"
-        if shim.is_file():
-            return shim
     p = Path(skills_home) / "gzh-design" / "scripts" / "render_article.py"
     if not p.is_file():
         raise FileNotFoundError(f"gzh-design renderer missing: {p}")
@@ -46,7 +40,7 @@ def run_syntax_gate(ctx, sd: Path, state) -> dict | None:
     if not article.is_file():
         return None
     try:
-        renderer = _renderer_path(Path(ctx.skills_home), network_mode)
+        renderer = _renderer_path(Path(ctx.skills_home))
     except FileNotFoundError:
         return {"exit_code": 1,
                 "report": {"OBS102_SYNTAX_GATE": "FAIL",

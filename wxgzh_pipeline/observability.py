@@ -122,7 +122,8 @@ def check_pipeline_consistency(installed_pipeline: Path, repo_pipeline: Path | N
     """OBS-68: installed wxgzh-pipeline runtime files vs repo worktree.
 
     Uses the same release-include rules as the official installer
-    (zipping.copy_tree), so a fresh install reproduces MATCH with 564 files.
+    (zipping.copy_tree). 计数基线 = runtime 文件集合减去 audit/quality/**/*.md
+    (OBS-107/档71B);具体数值随仓库演进,不写死(写死数字曾导致注释与实现脱节)。
     """
     if repo_pipeline is None or not Path(repo_pipeline).is_dir():
         return {"status": "SKIPPED_NO_REPO",

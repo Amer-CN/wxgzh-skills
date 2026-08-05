@@ -117,6 +117,15 @@ def _intro_paras(md_text: str) -> list[str]:
 
 
 _WS_RE = _re.compile(r"\s+")
+
+
+def _normalize_text(text: str) -> str:
+    """单一归一函数(3C-a):去标签 -> HTML 实体解码 -> 删除全部空白。
+
+    与 _body_plain_text 旧三步逐字一致(去标签 re.sub(r"<[^>]+>","",s) ->
+    html.unescape -> _WS_RE.sub("", ...));正文区与查找串共用,禁止另写一套。"""
+    stripped = _re.sub(r"<[^>]+>", "", text)
+    return _WS_RE.sub("", _html.unescape(stripped))
 # OBS-83 (hammer.3): body paragraphs rendered by hammer_para (and code blocks).
 # The guard must inspect the BODY region only — cover subtitle / TOC / signature
 # / footer text must NOT count as "present" (档50 showed subtitle can carry the
@@ -124,16 +133,28 @@ _WS_RE = _re.compile(r"\s+")
 _PARA_RE = _re.compile(
     r'<p style="margin-bottom:16px;font-size:14px;line-height:1.9;'
     r'text-align:justify;[^"]*">(.*?)</p>', _re.S)
-_PRE_RE = _re.compile(r"<pre[^>]*>(.*?)</pre>", _re.S)
+# OBS-111(档71B'):67D 代码块 = 每行一个 <p style="margin:0;font-family:'SF Mono',
+# Consolas,...;font-size:13px;line-height:1.6;color:#E2E8F0;">,无 <pre>。
+# _CODE_ROW_RE 以 1b 抄录的真实开标签为锚(color:#E2E8F0 + SF Mono 双特征):
+#   - 锚点一 color:#E2E8F0 已实测全仓 18 处且全在代码行(1c),但为确保不误匹配
+#     未来新增的顶栏/语言标签,追加同一标签内的第二个稳定特征 font-family SF Mono;
+#   - 只匹配代码行,不匹配封面/目录/署名/页脚(那些用其它颜色与字体)。
+_PRE_RE = _re.compile(r"<pre[^>]*>(.*?)</pre>", _re.S)  # 兼容 67D 之前历史产物,当前命中 0
+
+
+# OBS-111(档71B'):代码行锚点(1b 抄录的真实开标签)。保留 _PRE_RE 兼容历史产物。
+_CODE_ROW_RE = _re.compile(
+    "<p style=\"margin:0;font-family:'SF Mono',Consolas[^\"]*?color:#E2E8F0;\">"
+    "(.*?)</p>", _re.S)
 
 
 def _body_plain_text(html_text: str) -> str:
-    """Plain text of BODY content only: hammer_para paragraphs + <pre> code
-    blocks (whitespace-normalized, HTML entities decoded). Cover/TOC/signature/
-    footer regions are excluded on purpose (OBS-83)."""
-    parts = _PARA_RE.findall(html_text) + _PRE_RE.findall(html_text)
-    text = "".join(_re.sub(r"<[^>]+>", "", p) for p in parts)
-    return _WS_RE.sub("", _html.unescape(text))
+    """Plain text of BODY content only: hammer_para paragraphs + 1a 代码行 +
+    <pre> 历史代码块(whitespace-normalized, HTML entities decoded)。
+    Cover/TOC/signature/footer regions are excluded on purpose (OBS-83)。"""
+    parts = (_PARA_RE.findall(html_text) + _CODE_ROW_RE.findall(html_text)
+             + _PRE_RE.findall(html_text))
+    return _normalize_text("".join(parts))
 
 
 def _intro_content_fidelity(md_text: str, html_text: str) -> dict:
@@ -153,7 +174,7 @@ def _intro_content_fidelity(md_text: str, html_text: str) -> dict:
     paras = _intro_paras(md_text)
     missing: list[str] = []
     for para in paras:
-        norm = _WS_RE.sub("", para)
+        norm = _normalize_text(para)
         if not norm:
             continue
         if norm not in body:
