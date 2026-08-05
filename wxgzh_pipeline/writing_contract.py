@@ -13,7 +13,7 @@ content_validate 挂载):
    metric_name + series_label 非空)。支持中文数字(四→五)。文章没有的对比对
    不要求(不伪造);文章有的而 registry 没登记 → FAIL_CLOSED。
 2. `validate_codeblock_fidelity`:注入素材中的 deny/ask 拦截文案(guard-bash.sh
-   的 8 deny + 7 ask,⛔/⚠️ 前缀模板在 _common.sh)至少 10 条必须以 fenced code
+   的 deny/ask 拦截文案(实测 16 条,⛔/⚠️ 前缀模板在 _common.sh)至少 10 条必须以 fenced code
    block 逐字进入文章,且代码块内必须出现 ⛔ 与 ⚠️ 模板前缀;改写/散文化不计数。
 
 两者都只读 RUN 产物,不修改任何文件。

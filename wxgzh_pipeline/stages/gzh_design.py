@@ -41,6 +41,14 @@ def content_validate(ctx, sd: Path, state):
     final_html = sd / "final.html"
     if not final_html.is_file():
         return 1, {"reason": "final.html missing"}, vpath, vsha
+    # 档71B OBS-102:未支持语法门禁(probe 判据)——冻结文章含渲染器不支持的
+    # 语法即 FAIL_CLOSED;判据来自安装侧渲染器实测,不含跨仓硬编码期望值,
+    # 71C 接线后 probe 自动放行 :::(免悖论声明见 validators/validate_syntax_gate.py)。
+    from ..validators_syntax import run_syntax_gate
+    gate = run_syntax_gate(ctx, sd, state)
+    if gate is not None and gate["exit_code"] != 0:
+        return 1, {"reason": "OBS102_SYNTAX_GATE=FAIL",
+                   "syntax_gate": gate["report"]}, vpath, vsha
     # OBS-73: same frozen final_article.md the media_enrichment stage binds (the
     # zh_human_writing output). Unavailable = FAIL, never skip.
     fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"

@@ -74,7 +74,7 @@ _STYLE_ATTR_RE = re.compile(r'style="([^"]*)"')
 
 
 def _style_decl(style: str, name: str) -> str | None:
-    """从 style 串解析 `name:value` 声明(逗号/分号分隔均支持,大小写不敏感)。"""
+    """从 style 串解析 `name:value` 声明(仅按分号分隔,大小写不敏感)。"""
     for part in style.split(";"):
         if ":" not in part:
             continue

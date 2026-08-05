@@ -94,9 +94,25 @@ def check_lock_consistency(installed_lock: Path, repo_lock: Path | None = None) 
             "diff_summary": _lock_skill_diff_summary(inst_path, repo_lock)}
 
 
+# OBS-107(档71B):报告类文件永不在自身核验范围内。
+# 报告是审计产物、不是运行资产;「核验先跑、报告后写」是必然时序,不排除就会形成
+# 「同步 -> 产生新报告 -> 又不一致」的无限递归,靠调整顺序不可能消除。
+# 排除范围仅限 audit/quality/**/*.md;audit/runs/ 是 RUN 证据,严禁排除。
+# 显式常量 + 显式前缀判定,不得写成正则通配 audit/ 全目录。
+REPORT_DOC_EXCLUDE_PREFIX = ("audit", "quality")
+
+
+def _is_report_doc(rel: str) -> bool:
+    parts = rel.split("/")
+    return (len(parts) >= 3 and parts[0] == REPORT_DOC_EXCLUDE_PREFIX[0]
+            and parts[1] == REPORT_DOC_EXCLUDE_PREFIX[1]
+            and rel.endswith(".md"))
+
+
 def _runtime_files(root: Path) -> list[Path]:
     return sorted(
         p for p in Path(root).rglob("*") if p.is_file()
+        and not _is_report_doc(p.relative_to(root).as_posix())
         and not zipping._skip(p.relative_to(root),
                               zipping.PIPELINE_RELEASE_INCLUDES,
                               zipping.PIPELINE_RELEASE_EXCLUDES))
