@@ -22,45 +22,57 @@ ORDER = list(T.keys())
 
 def s(x): return f'<span leaf="">{x}</span>'
 
+def _p_lines(style: str, body: str) -> str:
+    """多行正文槽:逐有效行一个 <p>,空行跳过;style 逐字复用调用处字符串。
+    R21:不新造 HTML 常量,只把既有单行 <p> 模板按行重复。"""
+    lines = [l for l in body.replace("\r\n", "\n").split("\n") if l.strip()]
+    if not lines:
+        return f'<p style="{style}">{s(body)}</p>'
+    return "\n".join(f'<p style="{style}">{s(l)}</p>' for l in lines)
+
+
 def alert(tid, typ="warning", title="风险提示", body="此版本在 PostgreSQL 16.2 上存在已知的连接池泄漏问题。"):
     t=T[tid]; at={"note":("NOTE",t["lb"],t["bd"],t["tx"]),"tip":("TIP",t["lb"],t["p"],t["pd"]),"important":("IMPORTANT",t["lb"],t["p"],t["tc"]),"warning":("WARNING",t["wb"],t["wbd"],t["wt"]),"caution":("CAUTION",t["wb"],t["wbd"],t["wt"])}[typ]
     lab,bg,bdc,tx=at
     if t["style"] in("minimal","zen"):
+        body_p = _p_lines("margin:0;font-size:14px;color:" + tx + ";line-height:1.8;", body)
         return f'''<section style="margin:0 0 24px;padding:20px 20px;border-top:1px solid {bdc};border-bottom:1px solid {bdc};background:{bg};">
   <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:2px;color:{t["st"]};">{s(lab)}</p>
   <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:{t["tc"]};line-height:1.6;">{s(title)}</p>
-  <p style="margin:0;font-size:14px;color:{tx};line-height:1.8;">{s(body)}</p>
+  {body_p}
 </section>'''
     elif t["style"]=="ticket":
+        body_p = _p_lines("margin:0;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", body)
         return f'''<section style="margin:0 0 24px;background:{bg};border:2px solid {bdc};box-shadow:{t["sh"]};padding:14px 18px;">
   <p style="margin:0 0 8px;"><span style="display:inline-block;background:{bdc};color:{t["bg"]};font-size:11px;font-weight:700;padding:2px 10px;letter-spacing:1px;">{s(lab)}</span></p>
   <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:{t["tc"]};line-height:1.5;">{s(title)}</p>
-  <p style="margin:0;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(body)}</p>
+  {body_p}
 </section>'''
     else:
+        body_p = _p_lines("margin:0;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", body)
         return f'''<section style="margin:0 0 24px;background:{bg};border-radius:0 {t["r"]} {t["r"]} 0;border-left:4px solid {bdc};padding:{t["pad"]};">
   <p style="margin:0 0 6px;"><span style="display:inline-block;background:{bdc};color:{t["bg"]};font-size:11px;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:1px;">{s(lab)}</span></p>
   <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:{tx};line-height:1.5;">{s(title)}</p>
-  <p style="margin:0;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(body)}</p>
+  {body_p}
 </section>'''
 
 def quote(tid, qt="highlight", text="「排版的核心不是好看，而是可读。」", source=None):
     t=T[tid]
     if qt=="normal":
         if t["style"] in("minimal","zen"):
-            return f'<section style="margin:0 0 24px;padding:16px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};"><p style="margin:0;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(text)}</p></section>'
-        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:3px solid {t["bd"]};padding:14px 18px;"><p style="margin:0;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(text)}</p></section>'
+            return f'<section style="margin:0 0 24px;padding:16px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};">{_p_lines("margin:0;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", text)}</section>'
+        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:3px solid {t["bd"]};padding:14px 18px;">{_p_lines("margin:0;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", text)}</section>'
     elif qt=="highlight":
         if t["style"] in("minimal","zen"):
-            return f'<section style="margin:0 0 24px;padding:20px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};text-align:center;"><p style="margin:0;font-size:16px;font-weight:700;color:{t["tc"]};line-height:1.7;">{s(text)}</p></section>'
+            return f'<section style="margin:0 0 24px;padding:20px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};text-align:center;">{_p_lines("margin:0;font-size:16px;font-weight:700;color:" + t["tc"] + ";line-height:1.7;", text)}</section>'
         elif t["style"]=="ticket":
-            return f'<section style="margin:0 0 24px;background:{t["lb"]};border:2px solid {t["bd"]};box-shadow:{t["sh"]};padding:14px 18px;text-align:center;"><p style="margin:0;font-size:16px;font-weight:800;color:{t["tc"]};line-height:1.7;">{s(text)}</p></section>'
-        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:4px solid {t["p"]};padding:16px 20px;"><p style="margin:0;font-size:16px;font-weight:800;color:{t["pd"]};line-height:1.7;">{s(text)}</p></section>'
+            return f'<section style="margin:0 0 24px;background:{t["lb"]};border:2px solid {t["bd"]};box-shadow:{t["sh"]};padding:14px 18px;text-align:center;">{_p_lines("margin:0;font-size:16px;font-weight:800;color:" + t["tc"] + ";line-height:1.7;", text)}</section>'
+        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:4px solid {t["p"]};padding:16px 20px;">{_p_lines("margin:0;font-size:16px;font-weight:800;color:" + t["pd"] + ";line-height:1.7;", text)}</section>'
     else:
         sl=f'\n  <p style="margin:8px 0 0;font-size:12px;color:{t["st"]};">{s(f"—— {source}")}</p>' if source else ""
         if t["style"] in("minimal","zen"):
-            return f'<section style="margin:0 0 24px;padding:20px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};"><p style="margin:0;font-size:15px;font-weight:600;color:{t["tc"]};line-height:1.8;">{s(text)}</p>{sl}</section>'
-        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:4px solid {t["p"]};padding:14px 18px;"><p style="margin:0;font-size:15px;font-weight:600;color:{t["tc"]};line-height:1.8;">{s(text)}</p>{sl}</section>'
+            return f'<section style="margin:0 0 24px;padding:20px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};">{_p_lines("margin:0;font-size:15px;font-weight:600;color:" + t["tc"] + ";line-height:1.8;", text)}{sl}</section>'
+        return f'<section style="margin:0 0 24px;background:{t["lb"]};border-radius:0 {t["r"]} {t["r"]} 0;border-left:4px solid {t["p"]};padding:14px 18px;">{_p_lines("margin:0;font-size:15px;font-weight:600;color:" + t["tc"] + ";line-height:1.8;", text)}{sl}</section>'
 
 def code_compare(tid, title="改前与改后", bc="pool = connect(maxconn=200)", ac="pool = connect(maxconn=200, retry=True)"):
     t=T[tid]
@@ -94,13 +106,13 @@ def media_text(tid, url="../assets/media-demo.png", cap="架构示意图", exp="
         return f'''<section style="margin:0 0 24px;">
   <section style="margin:0 0 10px;"><span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span></section>
   <p style="margin:0 0 10px;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>
-  <p style="margin:0;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(exp)}</p>
+  {_p_lines("margin:0;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", exp)}
 </section>'''
     return f'''<section style="margin:0 0 8px;background:{t["bg"]};border-radius:{t["r"]};padding:6px;border:1px solid {t["bd"]};box-shadow:{t["sh"]};">
   <section style="margin:0;border-radius:{t["r"]};overflow:hidden;"><span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span></section>
 </section>
 <p style="margin:0 0 8px;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>
-<p style="margin:0 0 24px;font-size:14px;color:{t["tx"]};line-height:1.8;">{s(exp)}</p>'''
+{_p_lines("margin:0 0 24px;font-size:14px;color:" + t["tx"] + ";line-height:1.8;", exp)}'''
 
 def gallery(tid, title="安装过程", imgs=None):
     t=T[tid]

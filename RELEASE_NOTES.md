@@ -1,4 +1,17 @@
-# gzh-design v2026.08.02-hammer.7
+# gzh-design v2026.08.02-hammer.8
+
+## v2026.08.02-hammer.8(档71C-R)
+
+- OBS-129/132:alert / quote 正文槽由单 `<p>` 改为逐有效行一个 `<p>`(style 逐字复用,
+  空行跳过;S12 已实测 `<br>` 在微信端失行,故用逐行 p 而非 `<br>`)。
+- OBS-126:media-text 块体 `![说明](url)` 解析为图 URL + 说明;剩余行作解释段,多行逐行。
+- OBS-124:code-compare `@before/@after` 支持续行直到 `@end`;同行 `lang="..."` 解析为
+  语言标签(title 后缀),不再串入代码正文。
+- OBS-125:long-image 按文档 `image=`/`caption=`(兼容 `url=`/`cap=`);删除硬编码
+  `setdefault("cap","完整流程图")`,缺 caption 不出说明行。
+- OBS-127:alert/quote 类型参数读 `type=`(兼容 `typ`/`qt`),枚举照 references 原文。
+- OBS-128:footnotes 支持正文散落 `[^N]`+`[^N]:` 定义与既有 `:::footnotes` 块两种写法,
+  产出 HTML 一致(散落定义由 parse_article 收集,无块时自动追加组件)。
 
 ## v2026.08.02-hammer.7(档67D)
 

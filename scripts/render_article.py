@@ -102,6 +102,7 @@ def parse_article(md: str) -> dict:
     component_buf: list[str] = []
     component_name = ""
     component_head = ""
+    scattered_fns: list[str] = []  # 1g(OBS-128):正文散落 [^N]: 定义行
     for ln in lines:
         st = ln.strip()
         if in_component:
@@ -155,6 +156,10 @@ def parse_article(md: str) -> dict:
             continue
         if not st:
             continue
+        # 1g(OBS-128):散落 [^N]: 定义行 → 收集,不当作正文段落渲染。
+        if re.match(r"^\[\^\d+\]\s*:", st):
+            scattered_fns.append(st)
+            continue
         if cur is None:
             if not intro:
                 intro = st
@@ -168,6 +173,20 @@ def parse_article(md: str) -> dict:
             intro_paras.append({"kind": "code", "text": "\n".join(code_buf)})
         else:
             cur["paras"].append({"kind": "code", "text": "\n".join(code_buf)})
+    # 1g(OBS-128):正文散落 [^N]: 定义 → 若无 :::footnotes 块,自动追加 footnotes 组件
+    # (与显式块产出 HTML 一致)。已显式用块的不重复追加。
+    has_footnotes_block = any(
+        (p2.get("kind") == "component" and p2.get("name") == "footnotes")
+        for ch in chapters for p2 in ch.get("paras", [])) or any(
+        p2.get("kind") == "component" and p2.get("name") == "footnotes"
+        for p2 in intro_paras)
+    if scattered_fns and not has_footnotes_block:
+        fn_item = {"kind": "component", "name": "footnotes",
+                   "head": ":::footnotes", "body": "\n".join(scattered_fns)}
+        if cur is not None:
+            cur["paras"].append(fn_item)
+        else:
+            intro_paras.append(fn_item)
     return {"title": title or "未命名", "intro": intro, "intro_paras": intro_paras,
             "chapters": chapters}
 def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, dict]:
@@ -362,44 +381,89 @@ def _render_component(builder, item) -> str:
         args[m.group(1)] = m.group(2)
     name = item.get("name", "")
     if name == "alert":
-        args.setdefault("typ", "warning")
+        # 1f(OBS-127):文档 type= 优先,兼容 typ=。
+        typ = args.get("type") or args.get("typ") or "warning"
         args.setdefault("title", "风险提示")
         args.setdefault("body", body.strip() or "提示内容")
-        return builder(args["tid"], typ=args["typ"], title=args["title"], body=args["body"])
+        return builder(args["tid"], typ=typ, title=args["title"], body=args["body"])
     if name == "quote":
-        args.setdefault("qt", "highlight")
+        # 1f(OBS-127):文档 type= 优先,兼容 qt=。
+        qt = args.get("type") or args.get("qt") or "highlight"
         args.setdefault("text", body.strip() or "金句")
-        return builder(args["tid"], qt=args["qt"], text=args["text"])
+        return builder(args["tid"], qt=qt, text=args["text"])
     if name == "code-compare":
-        lines = [l for l in body.splitlines() if l.strip()]
+        # 1d(OBS-124):@before/@after 支持续行直到 @end;同行 lang="..." 解析为语言标签,
+        # 不串入代码正文。@before lang="python" → 语言标签作 title 后缀(不污染代码)。
         before = after = ""
-        for l in lines:
-            if l.startswith("@before"):
-                before = l[len("@before"):].strip()
-            elif l.startswith("@after"):
-                after = l[len("@after"):].strip()
+        before_lang = after_lang = ""
+        cur = None
+        for l in body.splitlines():
+            st = l.strip()
+            if st.startswith("@before"):
+                cur = "before"
+                m = _re.search(r"lang=\"([^\"]*)\"", st)
+                if m:
+                    before_lang = m.group(1)
+                cont = st[len("@before"):]
+                cont = _re.sub(r"lang=\"[^\"]*\"", "", cont).strip()
+                if cont:
+                    before = cont
+                continue
+            if st.startswith("@after"):
+                cur = "after"
+                m = _re.search(r"lang=\"([^\"]*)\"", st)
+                if m:
+                    after_lang = m.group(1)
+                cont = st[len("@after"):]
+                cont = _re.sub(r"lang=\"[^\"]*\"", "", cont).strip()
+                if cont:
+                    after = cont
+                continue
+            if st.startswith("@end"):
+                cur = None
+                continue
+            if cur == "before":
+                before = (before + "\n" if before else "") + l
+            elif cur == "after":
+                after = (after + "\n" if after else "") + l
         args.setdefault("title", "改前与改后")
+        if before_lang:
+            args["title"] += f"（{before_lang}）"
         return builder(args["tid"], title=args["title"], bc=before, ac=after)
     if name == "media-text":
-        args.setdefault("cap", "图示说明")
-        args.setdefault("exp", body.strip() or "")
+        # 1c(OBS-126):块体 ![说明](url) 解析为图 URL + 说明;剩余行作解释段(多行逐行)。
+        m_img = _re.search(r"!\[([^\]]*)\]\(([^)]+)\)", body)
         url = args.get("url") or args.get("image") or ""
-        return builder(args["tid"], url=url, cap=args["cap"], exp=args["exp"])
+        cap = args.get("cap")
+        exp_lines = []
+        for l in body.splitlines():
+            if _re.match(r"^!\[[^\]]*\]\([^)]+\)", l.strip()):
+                continue
+            if l.strip():
+                exp_lines.append(l)
+        if m_img:
+            cap = cap or m_img.group(1)
+            url = url or m_img.group(2)
+        args.setdefault("cap", cap or "图示说明")
+        args["exp"] = "\n".join(exp_lines).strip()
+        return builder(args["tid"], url=url, cap=args["cap"], exp=args["exp"] or " ")
     if name == "gallery":
         urls = _re.findall(r"!\[([^\]]*)\]\(([^)]+)\)", body)
         imgs = [(u, c) for c, u in urls] if urls else None
         args.setdefault("title", "图集")
         return builder(args["tid"], title=args["title"], imgs=imgs)
     if name == "long-image":
-        url = args.get("url") or ""
-        args.setdefault("cap", "完整流程图")
-        return builder(args["tid"], url=url, cap=args["cap"])
+        # 1e(OBS-125):文档 image=/caption= 优先,兼容 url=/cap=;缺 caption 不出说明行。
+        url = args.get("image") or args.get("url") or ""
+        cap = args.get("caption") or args.get("cap")
+        return builder(args["tid"], url=url, cap=cap or "")
     if name == "resources":
         links = _re.findall(r"- \[([^\]]*)\]\(([^)]+)\)", body)
         args.setdefault("title", "参考资料")
         return builder(args["tid"], title=args["title"],
                        links=[(c, u) for c, u in links] if links else None)
     if name == "footnotes":
+        # 1g(OBS-128):块体 [^N]: 定义 + 正文散落 [^N](由 parse_article 收集) 两种写法。
         fns = [(m.group(1), m.group(2))
                for m in _re.finditer(r"\[\^(\d+)\]\s*:\s*(.+)", body)]
         return builder(args["tid"], fns=fns if fns else None)
