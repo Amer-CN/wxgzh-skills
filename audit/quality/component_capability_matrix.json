@@ -1,11 +1,11 @@
 {
-  "criteria_version": "v3",
+  "criteria_version": "v4",
   "criteria_changelog": [
-    "v2 -> v3 (档71C-R3): 恢复 struct_ok 真测量(相邻哨兵对载体判据, OBS-151); multiline 导出改 struct_ok 口径(去 and False 短路, OBS-152); sentinels_for 唯一集合函数(anchor_ok 与锚导出同源, OBS-153); _COMPONENT_PARA_RES 改由 component_anchors.json 构造(锚闭环, OBS-154)"
+    "v3 -> v4 (档71C-R5): anchor_ok 口径改写(JSON锚与渲染器同步+哨兵在最近<p>内,删全量覆盖已证措辞); component_anchors.json slot 列改 SLOTS 真实槽名(源头函数反查,单一来源); 锚 41 条; 五列全比测试"
   ],
   "renderer_path": "gzh-design-skill/scripts/render_article.py",
   "renderer_sha256": "437fb8aa04916b2cb88d96626cad9b128a584700a96e230898b2ca76daf95378",
-  "generated_at_utc": "2026-08-06T12:57:15+00:00",
+  "generated_at_utc": "2026-08-06T14:33:17+00:00",
   "lists_exported": {
     "quarantined": [],
     "multiline": [],

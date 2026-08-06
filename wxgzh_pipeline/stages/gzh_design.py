@@ -121,8 +121,8 @@ def content_validate(ctx, sd: Path, state):
                                 network_mode=ctx.network_mode)
     report["chapters_source"] = "frozen final_article.md (## headings)"
     report["INTRO_GUARD"] = "PASS"
-    # 4c(OBS-164):锚 JSON 状态注入(只可见,不阻断)。
-    report["ANCHORS_JSON_STATUS"] = dict(_ANCHORS_STATUS)
+    # 4c/5c(OBS-164/173):锚 JSON 状态注入(惰性计算,只可见,不阻断)。
+    report["ANCHORS_JSON_STATUS"] = refresh_anchor_status()
     # program-generated theme identity report (never hand-declared)
     (sd / "theme_identity_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -218,38 +218,73 @@ _CODE_ROW_RE = _re.compile(
 _ANCHORS_JSON = Path(__file__).resolve().parents[2] / "validators" / "component_anchors.json"
 
 
-# 4c(OBS-164):锚 JSON 状态(只可见不阻断;与 observability 只检测口径一致)。
+# 4c(OBS-164)+5c(OBS-173):锚 JSON 状态(只可见不阻断)。
+# ★惰性化:import 期不得读安装侧文件、不得算 sha256;状态由 refresh_anchor_status()
+# 在 content_validate 首次调用时计算。_COMPONENT_PARA_RES 仍在 import 期从仓内
+# JSON 构造(纯本地读,不碰安装侧)。
 _ANCHORS_STATUS: dict = {"key": "ANCHORS_JSON_OK", "detail": ""}
+_ANCHORS_STATUS_REFRESHED = False
+
+
+def refresh_anchor_status() -> dict:
+    """5c(OBS-173):计算锚 JSON 状态(惰性,首次调用后缓存)。
+
+    键:ANCHORS_JSON_OK / ANCHORS_JSON_MISSING / ANCHORS_JSON_CORRUPT /
+    ANCHORS_SHA_ABSENT / ANCHORS_SHA_DRIFT / ANCHORS_RENDERER_NOT_FOUND。
+    渲染器路径经 paths + skill_discovery 解析(与 tests _installed_renderer 同源,
+    无硬编码)。
+    """
+    global _ANCHORS_STATUS_REFRESHED
+    if _ANCHORS_STATUS_REFRESHED:
+        return dict(_ANCHORS_STATUS)
+    import hashlib as _hashlib
+    try:
+        data = json.loads(_ANCHORS_JSON.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        _ANCHORS_STATUS.update(key="ANCHORS_JSON_MISSING",
+                               detail=f"JSON 缺失: {_ANCHORS_JSON}")
+    except (OSError, ValueError):
+        _ANCHORS_STATUS.update(key="ANCHORS_JSON_CORRUPT",
+                               detail="JSON 损坏或不可解析")
+    else:
+        try:
+            from .. import paths as _paths
+            from .. import skill_discovery as _sd
+            root = _paths.resolve_project_root()
+            sh = _paths.skills_home(root)
+            lock = _sd.load_lock(Path(__file__).resolve().parents[2])
+            ep = lock["skills"].get("gzh-design", {}).get("entrypoint", "")
+            installed_renderer = Path(sh) / "gzh-design" / ep
+        except Exception as _e:  # noqa: BLE001
+            _ANCHORS_STATUS.update(key="ANCHORS_RENDERER_NOT_FOUND",
+                                   detail=f"渲染器路径解析失败: {_e!r}")
+            _ANCHORS_STATUS_REFRESHED = True
+            return dict(_ANCHORS_STATUS)
+        if not installed_renderer.is_file():
+            _ANCHORS_STATUS.update(key="ANCHORS_RENDERER_NOT_FOUND",
+                                   detail=f"渲染器不存在: {installed_renderer}")
+        elif not data.get("renderer_sha256"):
+            _ANCHORS_STATUS.update(key="ANCHORS_SHA_ABSENT",
+                                   detail="JSON 缺 renderer_sha256 键")
+        else:
+            actual = _hashlib.sha256(installed_renderer.read_bytes()).hexdigest()
+            if data["renderer_sha256"] != actual:
+                _ANCHORS_STATUS.update(
+                    key="ANCHORS_SHA_DRIFT",
+                    detail=f"JSON sha {data['renderer_sha256'][:12]} != 安装侧 "
+                           f"{actual[:12]}")
+            else:
+                _ANCHORS_STATUS.update(key="ANCHORS_JSON_OK", detail="")
+    _ANCHORS_STATUS_REFRESHED = True
+    return dict(_ANCHORS_STATUS)
 
 
 def _load_component_para_res() -> list["_re.Pattern"]:
-    import hashlib as _hashlib
     try:
         data = json.loads(_ANCHORS_JSON.read_text(encoding="utf-8"))
         styles = sorted({row["style"] for row in data.get("anchors", [])
                          if row.get("style") and row["style"] != "URL_SLOT"})
-        # renderer_sha256 漂移检测(只记录,不阻断)
-        installed_renderer = Path(__file__).resolve().parents[2].parent / \
-            ".agents" / "skills" / "gzh-design" / "scripts" / "render_article.py"
-        if installed_renderer.is_file():
-            actual = _hashlib.sha256(installed_renderer.read_bytes()).hexdigest()
-            if data.get("renderer_sha256") != actual:
-                _ANCHORS_STATUS.update(
-                    key="ANCHORS_SHA_DRIFT",
-                    detail=f"JSON sha {data.get('renderer_sha256')[:12]} != 安装侧 "
-                           f"{actual[:12]}")
-            else:
-                _ANCHORS_STATUS.update(key="ANCHORS_JSON_OK", detail="")
-        else:
-            _ANCHORS_STATUS.update(key="ANCHORS_JSON_MISSING",
-                                   detail=f"安装侧渲染器不存在: {installed_renderer}")
-    except FileNotFoundError:
-        _ANCHORS_STATUS.update(key="ANCHORS_JSON_MISSING",
-                               detail=f"JSON 缺失: {_ANCHORS_JSON}")
-        styles = []
     except (OSError, ValueError):
-        _ANCHORS_STATUS.update(key="ANCHORS_JSON_CORRUPT",
-                               detail="JSON 损坏或不可解析")
         styles = []
     return [_re.compile(f'<p style="{_re.escape(s)}">(.*?)</p>', _re.S) for s in styles]
 

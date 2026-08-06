@@ -185,6 +185,20 @@ def sentinels_for(component: str, kinds=("required", "optional", "url")) -> list
 _URL_SENTINEL_SET = frozenset(s for lst in URL_SENTINELS.values() for s in lst)
 
 
+def _lookup_slot(sentinel: str) -> tuple[str, str]:
+    """OBS-172:从 SLOTS 反查哨兵对应的 (slot_name, mode);反查不中 -> ("SLOT_LOOKUP_MISS", "")."""
+    for cs in _SLOTS:
+        for slot in cs.slots:
+            if slot.multi:
+                for i in range(3):
+                    if _sentinel_name(cs.component, slot.name, slot.mode, i) == sentinel:
+                        return slot.name, slot.mode
+            else:
+                if _sentinel_name(cs.component, slot.name, slot.mode) == sentinel:
+                    return slot.name, slot.mode
+    return "SLOT_LOOKUP_MISS", ""
+
+
 def _render_one(renderer: Path, out_dir: Path, block: str) -> tuple[int, str]:
     """CLI 渲染单个样本到 out_dir,返回 (returncode, final.html 文本)。"""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -321,13 +335,17 @@ def export_body_anchors_from_measurement(renderer: Path, out_dir: Path) -> dict[
             for sent in sentinels_for(name):
                 if sent not in smp["block"] or sent in anchors:
                     continue
+                # 2a(OBS-172):从 SLOTS 反查真实 (slot_name, mode) 三元组(单一来源);
+                # 反查不中 -> slot="SLOT_LOOKUP_MISS" 由调用方 FAIL,禁止静默空串。
+                slot_name, slot_mode = _lookup_slot(sent)
                 if sent in _URL_SENTINEL_SET:
                     # URL 槽无文本 <p> 载体,记 URL_SLOT(不参与锚判据,非 NO_P_ANCHOR)。
-                    anchors[sent] = {"style": "URL_SLOT", "component": name, "slot": sent.lower()}
+                    anchors[sent] = {"style": "URL_SLOT", "component": name,
+                                     "slot": slot_name, "mode": slot_mode}
                     continue
                 style = _nearest_p_style(html, sent)
-                slot = sent.rsplit("_", 1)[0].lower().replace("_", "-")
-                anchors[sent] = {"style": style, "component": name, "slot": slot}
+                anchors[sent] = {"style": style, "component": name,
+                                 "slot": slot_name, "mode": slot_mode}
     # S37:任何哨兵无 <p> 祖先 -> 停机(由测试/调用方检查 None)
     return anchors
 
@@ -419,16 +437,19 @@ def main(argv=None) -> int:
     ap.add_argument("--emit-anchors", default=None,
                     help="3a(OBS-154):把锚导出落成 validators/component_anchors.json")
     a = ap.parse_args(argv)
+    # 1a(OBS-167):统一 out = Path(a.out_dir),后续全部改用 out(缺失明细分支
+    # 曾用未定义 out_dir 而崩溃)。
+    out = Path(a.out_dir)
     _repo = Path(__file__).resolve().parents[1]
     if str(_repo) not in sys.path:
         sys.path.insert(0, str(_repo))
-    result = component_structure_check(Path(a.renderer), Path(a.out_dir))
+    result = component_structure_check(Path(a.renderer), out)
     for name, r in sorted(result.items()):
         print(f"{name}: render_ok={r['render_ok']} struct_ok={r['struct_ok']} "
               f"anchor_ok={r['anchor_ok']} per_item_ok={r['per_item_ok']}")
     # 2c/4a(OBS-153/162):逐条打印 组件 | 真正缺失哨兵(sent not in body) | style。
     from wxgzh_pipeline.stages.gzh_design import _body_plain_text
-    anchors = export_body_anchors_from_measurement(Path(a.renderer), Path(a.out_dir))
+    anchors = export_body_anchors_from_measurement(Path(a.renderer), out)
     # 3a(OBS-154):落成 component_anchors.json(五列 + renderer sha + 生成时间)。
     if a.emit_anchors:
         import hashlib
@@ -436,21 +457,10 @@ def main(argv=None) -> int:
         from datetime import datetime, timezone
         rows = []
         for sent, info in sorted(anchors.items()):
-            # 4b(OBS-163):slot 列用 SLOTS 真实槽名(component/slot/mode 三元组)。
+            # 2b(OBS-172):直接消费源头函数的结果(单一来源,R29),不再重复反查。
             comp = info["component"]
-            slot_name = ""
-            mode = ""
-            for s in _SLOTS:
-                if s.component != comp:
-                    continue
-                for slot in s.slots:
-                    gen = _sentinel_name(comp, slot.name, slot.mode)
-                    if slot.multi:
-                        for i in range(3):
-                            if _sentinel_name(comp, slot.name, slot.mode, i) == sent:
-                                slot_name, mode = slot.name, slot.mode
-                    elif gen == sent:
-                        slot_name, mode = slot.name, slot.mode
+            slot_name = info.get("slot", "")
+            mode = info.get("mode", "")
             rows.append({"sentinel": sent, "component": comp,
                          "slot": slot_name, "mode": mode,
                          "style": info["style"]})
@@ -467,7 +477,7 @@ def main(argv=None) -> int:
         if not (r["render_ok"] and not r["anchor_ok"]):
             continue
         for smp in SLOT_SAMPLES[name]:
-            d = out_dir / f"{name}-{smp['mode']}"
+            d = out / f"{name}-{smp['mode']}"
             html = (d / "final.html").read_text(encoding="utf-8") \
                 if (d / "final.html").is_file() else ""
             body = _body_plain_text(html)

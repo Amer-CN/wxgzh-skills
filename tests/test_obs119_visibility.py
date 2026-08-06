@@ -136,7 +136,8 @@ def test_obs154_anchors_json_renderer_sha_matches_installed(tmp_path):
 
 
 def test_obs154_anchors_json_matches_export_exact(tmp_path):
-    """3d:现场导出 == JSON 内容,逐条相等(不是子集、不是子串)。"""
+    """2d(OBS-172):现场导出 == JSON 内容,五列全比(sentinel/component/slot/mode/style)。"""
+    from validators.component_slots import SLOTS
     renderer = _renderer_or_skip()
     anchors_json = SKILL_ROOT / "validators" / "component_anchors.json"
     if not anchors_json.is_file():
@@ -146,11 +147,23 @@ def test_obs154_anchors_json_matches_export_exact(tmp_path):
     json_map = {row["sentinel"]: row for row in payload["anchors"]}
     assert set(json_map) == set(anchors), \
         f"JSON 哨兵集 != 现场哨兵集: {sorted(set(json_map) ^ set(anchors))}"
+    slot_names = {s.name for cs in SLOTS for s in cs.slots}
     for sent, info in anchors.items():
         row = json_map[sent]
+        # 五列全比
+        assert row["sentinel"] == sent, sent
+        assert row["component"] == info["component"], sent
+        assert row["slot"] == info["slot"], \
+            f"{sent}: JSON slot {row['slot']!r} != 现场 {info['slot']!r}"
+        assert row["mode"] == info["mode"], \
+            f"{sent}: JSON mode {row['mode']!r} != 现场 {info['mode']!r}"
         assert row["style"] == info["style"], \
             f"{sent}: JSON style {row['style']!r} != 现场 {info['style']!r}"
-        assert row["component"] == info["component"], sent
+        # 形状断言:slot 不得以 s- / s_ 开头,且必须命中 SLOTS 真实槽名
+        assert not row["slot"].startswith(("s-", "s_")), \
+            f"{sent}: slot 旧格式 {row['slot']!r}"
+        assert row["slot"] in slot_names, \
+            f"{sent}: slot {row['slot']!r} 不在 SLOTS 槽名集合"
 
 
 def test_obs154_gzh_design_para_res_built_from_json():
@@ -252,7 +265,7 @@ def test_obs145_matrix_json_matches_measured(tmp_path):
     if not matrix_path.is_file():
         pytest.skip("矩阵 JSON 未生成")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-    assert matrix.get("criteria_version") == "v3"
+    assert matrix.get("criteria_version") == "v4"
     assert matrix.get("criteria_changelog"), "v2 缺 changelog"
     measured = vcv.component_structure_check(renderer, tmp_path / "struct2")
     for name, r in measured.items():
@@ -277,7 +290,7 @@ def test_obs145_matrix_metadata_shape():
     if not matrix_path.is_file():
         pytest.skip("矩阵 JSON 未生成")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-    assert matrix.get("criteria_version") == "v3"
+    assert matrix.get("criteria_version") == "v4"
     # 5b(OBS-166):renderer_path 随 bundle 发布,不得含机器绝对路径。
     rp = matrix.get("renderer_path", "")
     assert rp and not Path(rp).is_absolute() and ":" not in rp, f"renderer_path 含绝对路径: {rp}"
