@@ -9,6 +9,7 @@ import json
 
 import pytest
 import sys
+from pathlib import Path
 
 from conftest import SKILL_ROOT
 
@@ -82,3 +83,38 @@ def test_obs173_status_ok(tmp_path, monkeypatch):
     monkeypatch.setattr(gd, "_ANCHORS_JSON", p)
     st = gd.refresh_anchor_status()
     assert st["key"] == "ANCHORS_JSON_OK", st
+
+
+# ── 3a/3b(OBS-173,S49/R33/R40):RENDERER_NOT_FOUND + 键全集相等 ──
+
+def test_obs173_status_renderer_not_found(tmp_path, monkeypatch):
+    """渲染器路径解析落空 -> ANCHORS_RENDERER_NOT_FOUND(JSON 本身合法)。"""
+    import hashlib
+    from wxgzh_pipeline import paths as _paths
+    from wxgzh_pipeline import skill_discovery as _sd
+    # JSON 合法且带 renderer_sha256(排除 MISSING/CORRUPT/SHA_ABSENT 干扰)
+    p = _make_json(tmp_path, json.dumps(
+        {"renderer_sha256": "1" * 64, "anchors": []}))
+    monkeypatch.setattr(gd, "_ANCHORS_JSON", p)
+    # skills_home 指向 tmp(无 gzh-design 安装)
+    monkeypatch.setattr(_paths, "skills_home", lambda root, env=None: tmp_path / "skills")
+    monkeypatch.setattr(_sd, "load_lock",
+                        lambda root: {"skills": {"gzh-design": {"entrypoint": "scripts/render_article.py"}}})
+    st = gd.refresh_anchor_status()
+    assert st["key"] == "ANCHORS_RENDERER_NOT_FOUND", st
+    assert st["detail"]
+
+
+def test_obs173_all_keys_have_tests():
+    """refresh_anchor_status 源码里全部 key 常量 == 本文件断言的字面量(全集相等,R33)。"""
+    import re as _re
+    src = Path(gd.__file__).read_text(encoding="utf-8")
+    # 从 refresh_anchor_status 函数体抓 key 常量
+    fn = src[src.find("def refresh_anchor_status"):]
+    fn = fn[:fn.find("\n\ndef ")] if "\n\ndef " in fn else fn
+    impl_keys = set(_re.findall(r'key="(ANCHORS_[A-Z_]+)"', fn))
+    test_src = Path(__file__).read_text(encoding="utf-8")
+    test_keys = set(_re.findall(r'st\[\"key\"\] == \"(ANCHORS_[A-Z_]+)\"', test_src))
+    # test_keys 还应含源码里的默认键 ANCHORS_JSON_OK(被第一条 OK 测试断言)
+    assert impl_keys == test_keys, \
+        f"键集合不等: 实现={sorted(impl_keys)} 测试={sorted(test_keys)}"

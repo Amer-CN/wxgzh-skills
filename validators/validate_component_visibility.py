@@ -322,8 +322,9 @@ def export_lists_from_measurement(measured: dict[str, dict]) -> dict[str, frozen
 def export_body_anchors_from_measurement(renderer: Path, out_dir: Path) -> dict[str, dict]:
     """3a:对每个哨兵定位最近 <p style> 祖先,产出 style 串集合。
 
-    返回 {sentinel: {"style": str|None, "component": str, "slot": str}};
-    style None 记 NO_P_ANCHOR 并停机 S37(不得静默跳过)。
+    返回 {sentinel: {"style": str|None, "component": str, "slot": str, "mode": str}};
+    style None 记 NO_P_ANCHOR 并停机 S37(不得静默跳过)。slot/mode 来自 SLOTS 反查,
+    反查不中 slot="SLOT_LOOKUP_MISS" 并在收尾 raise(OBS-163/档71C-R6)。
     """
     from wxgzh_pipeline.stages.gzh_design import _body_plain_text
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -347,6 +348,10 @@ def export_body_anchors_from_measurement(renderer: Path, out_dir: Path) -> dict[
                 anchors[sent] = {"style": style, "component": name,
                                  "slot": slot_name, "mode": slot_mode}
     # S37:任何哨兵无 <p> 祖先 -> 停机(由测试/调用方检查 None)
+    # 4c(OBS-163):SLOT_LOOKUP_MISS 真失败 —— 反查不中的哨兵收集后 raise。
+    miss = sorted(s for s, info in anchors.items() if info.get("slot") == "SLOT_LOOKUP_MISS")
+    if miss:
+        raise ValueError(f"SLOT_LOOKUP_MISS: {miss}")
     return anchors
 
 
@@ -449,7 +454,12 @@ def main(argv=None) -> int:
               f"anchor_ok={r['anchor_ok']} per_item_ok={r['per_item_ok']}")
     # 2c/4a(OBS-153/162):逐条打印 组件 | 真正缺失哨兵(sent not in body) | style。
     from wxgzh_pipeline.stages.gzh_design import _body_plain_text
-    anchors = export_body_anchors_from_measurement(Path(a.renderer), out)
+    try:
+        anchors = export_body_anchors_from_measurement(Path(a.renderer), out)
+    except ValueError as _ve:
+        # 4c:SLOT_LOOKUP_MISS 打印并 return 1(不静默)。
+        print(f"ERROR: {_ve}")
+        return 1
     # 3a(OBS-154):落成 component_anchors.json(五列 + renderer sha + 生成时间)。
     if a.emit_anchors:
         import hashlib

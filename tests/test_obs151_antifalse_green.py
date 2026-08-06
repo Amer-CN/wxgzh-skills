@@ -195,3 +195,15 @@ def test_obs160_fake_partial_quarantined_nonempty_and_distinct(tmp_path):
         {"alert", "code-compare", "dialogue", "footnotes", "gallery",
          "long-image", "media-text", "quote", "resources"}), \
         "QUARANTINED 不应是全 9 类(需有区分度)"
+
+
+# ── 4d(OBS-163,R28):SLOT_LOOKUP_MISS 真失败反证 ───────────
+
+def test_obs163_lookup_miss_raises(tmp_path, monkeypatch):
+    """_SLOTS 为空 -> export_body_anchors 抛 ValueError 且消息含 SLOT_LOOKUP_MISS。"""
+    monkeypatch.setattr(vcv, "_SLOTS", ())
+    with pytest.raises(ValueError) as ei:
+        vcv.export_body_anchors_from_measurement(
+            SKILL_ROOT / "tests" / "fixtures" / "fake_offanchor.py",
+            tmp_path / "miss")
+    assert "SLOT_LOOKUP_MISS" in str(ei.value), str(ei.value)

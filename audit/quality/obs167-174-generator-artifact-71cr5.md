@@ -24,7 +24,8 @@
 | 五列全比 | test_obs154_anchors_json_matches_export_exact | `assert row["slot"] == info["slot"]` 等五条 |
 | slot 非旧格式 | 同上 | `assert not row["slot"].startswith(("s-", "s_"))` |
 | slot 命中 SLOTS | 同上 | `assert row["slot"] in slot_names` |
-| 陷阱可构造 | test_obs170_dropintro_trap | `assert gd._normalize_text(first_para) in gd._normalize_text(missing) or first_para in missing` |
+| 陷阱可构造 | test_obs170_full_false_green_constructible(档71C-R6) | `assert guard["ok"] is False`(修复后期望;修复前为 ok=True 完全假绿,见注释) |
+| (更正) R5 提交时该结论无断言支撑 | — | R5 的 test_obs170_dropintro_trap 贴的是前置断言(first_para in missing),非结论断言;档71C-R6 补齐 test_obs170_full_false_green_constructible 与 test_obs170_component_title_substitutes(修复后翻转断言) |
 | 阀二两配置 | test_obs171_valve2_anchor_scope | `assert results["乙"]["body_len"] > results["甲"]["body_len"]` 等 |
 | 锚状态五键 | test_obs173_status_missing/corrupt/sha_absent/sha_drift/ok | `assert st["key"] == "ANCHORS_JSON_MISSING"` 等 |
 

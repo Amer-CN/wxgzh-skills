@@ -295,9 +295,25 @@ _COMPONENT_PARA_RES = _load_component_para_res()
 def _body_plain_text(html_text: str) -> str:
     """Plain text of BODY content only: hammer_para paragraphs + 1a 代码行 +
     <pre> 历史代码块(whitespace-normalized, HTML entities decoded)。
-    Cover/TOC/signature/footer regions are excluded on purpose (OBS-83)。"""
+    Cover/TOC/signature/footer regions are excluded on purpose (OBS-83)。
+    ★含组件锚(_COMPONENT_PARA_RES):供组件可见性判据 anchor_ok 使用。"""
     parts = (_PARA_RE.findall(html_text) + _CODE_ROW_RE.findall(html_text)
              + [m for rx in _COMPONENT_PARA_RES for m in rx.findall(html_text)]
+             + _PRE_RE.findall(html_text))
+    return _normalize_text("".join(parts))
+
+
+def _intro_body_text(html_text: str) -> str:
+    """R6(OBS-170)判据分离:导语保真判据的取值范围。
+
+    取值范围 = _PARA_RE + _CODE_ROW_RE + _PRE_RE(★不含 _COMPONENT_PARA_RES);
+    归一化复用 _normalize_text(禁止另写一套)。
+
+    理由:导语段按 _intro_paras 定义永远是非组件段落(::: 块整块排除, OBS-120),
+    故导语保真判据不得看组件锚;组件可见性判据 anchor_ok 仍用 _body_plain_text。
+    OBS-170 / 档71C-R6 裁决。
+    """
+    parts = (_PARA_RE.findall(html_text) + _CODE_ROW_RE.findall(html_text)
              + _PRE_RE.findall(html_text))
     return _normalize_text("".join(parts))
 
@@ -315,7 +331,7 @@ def _intro_content_fidelity(md_text: str, html_text: str) -> dict:
     Frozen article missing => handled by the caller (FAIL, never skip).
     No skip switch / env / exemption parameter exists for this guard.
     """
-    body = _body_plain_text(html_text)
+    body = _intro_body_text(html_text)
     paras = _intro_paras(md_text)
     missing: list[str] = []
     for para in paras:

@@ -57,10 +57,17 @@ def test_obs171_valve2_anchor_scope(tmp_path):
     md = NINE_COMPONENTS.read_text(encoding="utf-8")
     html = _render(renderer, NINE_COMPONENTS, tmp_path / "render")
 
+    import json as _json
     cfg_a = _cfg(MANUAL_STYLES)                      # 甲:6 条手抄
     cfg_b = gd._COMPONENT_PARA_RES                   # 乙:当前 JSON 全量
     assert len(cfg_a) == 6, f"甲锚条数应 6,实际 {len(cfg_a)}"
-    assert len(cfg_b) >= 6, f"乙锚条数应 >=6,实际 {len(cfg_b)}"
+    # 4a(OBS-174):乙条数与 JSON 同源 —— 从 component_anchors.json 现算 N。
+    payload = _json.loads((SKILL_ROOT / "validators" / "component_anchors.json")
+                          .read_text(encoding="utf-8"))
+    n_json = len({row["style"] for row in payload["anchors"]
+                  if row.get("style") and row["style"] != "URL_SLOT"})
+    assert len(cfg_b) == n_json, f"乙锚条数 {len(cfg_b)} != JSON 同源 {n_json}"
+    print(f"N(JSON distinct 非 URL style)={n_json}")
 
     results = {}
     orig = gd._COMPONENT_PARA_RES
@@ -72,7 +79,11 @@ def test_obs171_valve2_anchor_scope(tmp_path):
             probes = {
                 "alert_body": "这是alert的正文内容。",
                 "quote_text": "这是quote的金句文本。",
+                "code_compare_before": "old_code()",
                 "media_exp": "这是media-text的解释段落。",
+                "gallery_cap": "安装第一步",
+                "long_image_cap": "完整流程图",
+                "resources_text": "官方文档",
                 "footnotes_fn": "数据来源说明",
                 "dialogue_msg": "为什么样式丢失？",
             }
@@ -89,7 +100,15 @@ def test_obs171_valve2_anchor_scope(tmp_path):
     assert results["甲"]["ok"] == results["乙"]["ok"], "guard ok 应一致"
     assert results["甲"]["line_count"] == results["乙"]["line_count"] == 2
     assert results["甲"]["missing"] == results["乙"]["missing"] == ""
-    for k in ("alert_body", "quote_text", "media_exp", "footnotes_fn", "dialogue_msg"):
+    for k in ("alert_body", "quote_text", "code_compare_before", "media_exp",
+              "gallery_cap", "long_image_cap", "resources_text",
+              "footnotes_fn", "dialogue_msg"):
+        # 甲(6 条手抄)对部分组件无锚——如实分列断言(注释写明理由,4b)。
+        if k in ("code_compare_before", "long_image_cap"):
+            # code_compare_before: 甲无等宽代码锚(手抄 6 条无 SF Mono);
+            # long_image_cap: 甲无 12px/24px caption 锚(手抄只有 gallery 的 16px 版)。
+            assert results["乙"]["in_body"][k], f"乙缺 {k}"
+            continue
         assert results["甲"]["in_body"][k], f"甲缺 {k}"
         assert results["乙"]["in_body"][k], f"乙缺 {k}"
     assert results["乙"]["body_len"] > results["甲"]["body_len"], \

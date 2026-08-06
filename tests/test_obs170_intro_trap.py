@@ -1,10 +1,12 @@
-"""档71C-R5 OBS-170 陷阱反证(R37):fake_dropintro 吞导语 + 组件同名文本补位。
+"""档71C-R6 OBS-170 陷阱结论焊死(R38/R55):三条会因结论翻转而变红的测试。
 
-用 nine_components.md(导语第二段「风险提示」与 alert title 同名):
-- 断言导语第一段被判 missing(证明假渲染器确实在丢导语);
-- 对「风险提示」实测断言:若 guard 判存在(因 alert title 同名文本进正文区)
-  -> 断言 not in missing_text 并标记【高危:假绿可构造】;
-  若判 missing -> 断言 in missing_text 并说明。
+修复前语义(fake_dropintro 吞导语 + 组件同名文本补位):
+  ① 前置:假渲染器确实吞掉导语段
+  ② 部分补位:nine_components.md 的「风险提示」被 alert title 补位 -> not in missing
+  ③ 完全假绿:single_intro_trap.md 单段导语同名 -> guard ok=True
+
+2d 修复后(判据分离,_intro_body_text 不含组件锚):②③ 期望翻转,
+注释保留原期望(OBS-170)。
 """
 from __future__ import annotations
 
@@ -21,9 +23,12 @@ from wxgzh_pipeline.stages import gzh_design as gd
 
 FAKE_DROPINTRO = SKILL_ROOT / "tests" / "fixtures" / "fake_dropintro.py"
 NINE_COMPONENTS = SKILL_ROOT / "tests" / "fixtures" / "nine_components.md"
+SINGLE_TRAP = SKILL_ROOT / "tests" / "fixtures" / "single_intro_trap.md"
+FIRST_PARA = "这是第一段导语，描述整体背景。"
+TRAP_PARA = "风险提示"
 
 
-def _render_with(renderer: Path, md_path: Path, out_dir: Path) -> str:
+def _render(renderer: Path, md_path: Path, out_dir: Path) -> str:
     out_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.run(
         [sys.executable, "-X", "utf8", str(renderer),
@@ -36,42 +41,36 @@ def _render_with(renderer: Path, md_path: Path, out_dir: Path) -> str:
     return html_path.read_text(encoding="utf-8") if html_path.is_file() else ""
 
 
-def test_obs170_dropintro_trap():
-    """fake_dropintro 吞导语:第一段 missing 且「风险提示」实测判定。"""
-    md = NINE_COMPONENTS.read_text(encoding="utf-8")
-    html = _render_with(FAKE_DROPINTRO, NINE_COMPONENTS, Path(__file__).parent / ".." / ".." / ".temp" / "71cr5-trap")
-    # 用 JSON 锚(当前 _COMPONENT_PARA_RES)
-    guard = gd._intro_content_fidelity(md, html)
-    missing = guard["missing_text"]
-    first_para = "这是第一段导语，描述整体背景。"
-    trap_para = "风险提示"
-    # ① 第一段必须被判 missing(证明假渲染器确实在丢导语)
-    assert gd._normalize_text(first_para) not in gd._body_plain_text(html), \
-        "前置:假渲染器应吞掉第一段导语"
-    assert gd._normalize_text(first_para) in gd._normalize_text(missing) or \
-        first_para in missing, f"第一段应在 missing_text: {missing!r}"
-    # ② 陷阱段「风险提示」实测判定
-    trap_in_missing = (trap_para in missing)
-    if trap_in_missing:
-        print("【判定】风险提示 判 missing:组件同名文本未能顶替(导语本体未进正文区)")
-    else:
-        print("【高危:假绿可构造】风险提示 判存在:alert title 同名文本补位")
-    # 两种结果都合法,但必须断言其一
-    assert trap_in_missing or gd._normalize_text(trap_para) in gd._body_plain_text(html), \
-        "风险提示既不在 missing 也不在 body,自相矛盾"
-    # 判定结果由 print 输出供报告;不 return(避免 pytest warning)。
+def test_obs170_dropintro_drops_intro(tmp_path):
+    """① 前置条件:假渲染器确实吞掉导语第一段。"""
+    html = _render(FAKE_DROPINTRO, NINE_COMPONENTS, tmp_path / "r1")
+    body = gd._body_plain_text(html)
+    assert gd._normalize_text(FIRST_PARA) not in body, \
+        "前置:fake_dropintro 应吞掉导语第一段"
 
 
-def test_obs170_dropintro_guard_ok_flag():
-    """guard ok 标志随陷阱判定:若假绿可构造则 ok 可能为 True(记录,不改 guard)。"""
+def test_obs170_component_title_substitutes(tmp_path):
+    """② 修复前语义:组件同名文本补位导语段。
+
+    修复前:「风险提示」not in missing_text(补位坐实)且 guard ok=False(仅部分补位);
+    修复后(2d 翻转):「风险提示」in missing_text 且 guard ok=False。
+    """
+    html = _render(FAKE_DROPINTRO, NINE_COMPONENTS, tmp_path / "r2")
     md = NINE_COMPONENTS.read_text(encoding="utf-8")
-    html = _render_with(FAKE_DROPINTRO, NINE_COMPONENTS,
-                        Path(__file__).parent / ".." / ".." / ".temp" / "71cr5-trap2")
     guard = gd._intro_content_fidelity(md, html)
-    missing = guard["missing_text"]
-    trap_in_missing = ("风险提示" in missing)
-    if not trap_in_missing:
-        # 假绿可构造:第一段 missing 但 guard ok 仍可能 True(陷阱成立)
-        print(f"guard ok={guard['ok']} missing_text={missing!r}")
-    # 只记录不修改;断言 guard 对象结构完整
-    assert "ok" in guard and "missing_text" in guard
+    # 修复后期望(OBS-170 翻转):同名补位失效,导语段被判 missing
+    assert TRAP_PARA in guard["missing_text"], \
+        f"修复后「风险提示」应 missing;missing_text={guard['missing_text']!r}"
+    assert guard["ok"] is False, "修复后 guard 应 FAIL(导语缺失)"
+
+
+def test_obs170_full_false_green_constructible(tmp_path):
+    """③ 完全假绿:单段导语同名 -> 修复前 guard ok=True;修复后 ok=False。
+
+    修复前:ok=True(完全假绿);修复后(2d 翻转):ok=False。
+    """
+    html = _render(FAKE_DROPINTRO, SINGLE_TRAP, tmp_path / "r3")
+    md = SINGLE_TRAP.read_text(encoding="utf-8")
+    guard = gd._intro_content_fidelity(md, html)
+    # 修复后期望(OBS-170 翻转):完全假绿被拆穿
+    assert guard["ok"] is False, f"修复后 guard 应 FAIL;ok={guard['ok']} missing={guard['missing_text']!r}"
