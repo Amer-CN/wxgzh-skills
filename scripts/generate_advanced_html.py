@@ -32,6 +32,11 @@ def _p_lines(style: str, body: str) -> str:
 
 
 def alert(tid, typ="warning", title="风险提示", body="此版本在 PostgreSQL 16.2 上存在已知的连接池泄漏问题。"):
+    # OBS-145(R26):显式枚举判断,未知 type 不抛异常,回落默认 warning。
+    # 枚举来自 references/advanced/alerts.md L17-21(note/tip/important/warning/caution)。
+    _ALERT_TYPES = {"note", "tip", "important", "warning", "caution"}
+    if typ not in _ALERT_TYPES:
+        typ = "warning"
     t=T[tid]; at={"note":("NOTE",t["lb"],t["bd"],t["tx"]),"tip":("TIP",t["lb"],t["p"],t["pd"]),"important":("IMPORTANT",t["lb"],t["p"],t["tc"]),"warning":("WARNING",t["wb"],t["wbd"],t["wt"]),"caution":("CAUTION",t["wb"],t["wbd"],t["wt"])}[typ]
     lab,bg,bdc,tx=at
     if t["style"] in("minimal","zen"):
@@ -57,6 +62,11 @@ def alert(tid, typ="warning", title="风险提示", body="此版本在 PostgreSQ
 </section>'''
 
 def quote(tid, qt="highlight", text="「排版的核心不是好看，而是可读。」", source=None):
+    # OBS-145(R26):显式枚举判断,未知 type 不抛异常,回落默认 highlight。
+    # 枚举来自 references/advanced/quotes.md L9-21(normal/highlight/sourced)。
+    _QUOTE_TYPES = {"normal", "highlight", "sourced"}
+    if qt not in _QUOTE_TYPES:
+        qt = "highlight"
     t=T[tid]
     if qt=="normal":
         if t["style"] in("minimal","zen"):
@@ -126,17 +136,20 @@ def gallery(tid, title="安装过程", imgs=None):
     return f'<section style="margin:0 0 24px;"><p style="margin:0 0 14px;font-size:15px;font-weight:700;color:{t["tc"]};line-height:1.5;">{s(title)}</p>\n  {items.strip()}\n</section>'
 
 def long_image(tid, url="../assets/long-flow.png", cap="完整部署流程图"):
-    t=T[tid]
-    if t["style"] in("minimal","zen"):
-        return f'''<section style="margin:0 0 24px;padding:16px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};">
-  <span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>
-  <p style="margin:12px 0 0;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>
-</section>'''
-    return f'''<section style="margin:0 0 8px;background:{t["bg"]};border-radius:{t["r"]};padding:6px;border:1px solid {t["bd"]};box-shadow:{t["sh"]};">
-  <span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>
-</section>
-<p style="margin:0 0 24px;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>'''
-
+    t = T[tid]
+    if t["style"] in ("minimal", "zen"):
+        cap_line = (f'<p style="margin:12px 0 0;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>'
+                    if cap else "")
+        return (f'<section style="margin:0 0 24px;padding:16px 20px;border-top:1px solid {t["bd"]};border-bottom:1px solid {t["bd"]};">'
+                f'<span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>'
+                f'{cap_line}'
+                f'</section>')
+    cap_line = (f'<p style="margin:0 0 24px;font-size:12px;color:{t["st"]};text-align:center;">{s(cap)}</p>'
+                if cap else "")
+    return (f'<section style="margin:0 0 8px;background:{t["bg"]};border-radius:{t["r"]};padding:6px;border:1px solid {t["bd"]};box-shadow:{t["sh"]};">'
+            f'<span leaf=""><img src="{url}" style="max-width:100%;height:auto;display:block;margin:0 auto;"></span>'
+            f'</section>'
+            f'{cap_line}')
 def resources(tid, title="参考资料", links=None):
     t=T[tid]
     if links is None: links=[("官方文档","https://example.com/docs"),("项目仓库","https://github.com/example/repo")]

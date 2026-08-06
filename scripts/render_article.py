@@ -196,7 +196,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     usage = {"cover_breaking": 0, "toc_scroll": 0, "chapter_title": 0,
              "fixed_signature": 0, "footer_cta": 0,
              "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0,
-             "code_block": 0, "components": {}, "unknown": [], "unknown_count": 0}
+             "code_block": 0, "components": {}, "unknown": [], "unknown_count": 0,
+             "unknown_component_args": []}
 
     parts: list[str] = []
 
@@ -363,11 +364,11 @@ def _render_item(theme_key: str, item, usage: dict) -> str:
             usage["unknown_count"] += 1
             return ""
         usage["components"][name] = usage["components"].get(name, 0) + 1
-        return _render_component(builder, item)
+        return _render_component(builder, item, usage)
     return H.hammer_para(theme_key, item.get("text", ""))
 
 
-def _render_component(builder, item) -> str:
+def _render_component(builder, item, usage=None) -> str:
     """按 references/advanced-components.md 输入语法取参调用 builder。
 
     解析 :::name key="val" 头部参数 + 块内行;参数缺失用 builder 默认值。
@@ -380,16 +381,29 @@ def _render_component(builder, item) -> str:
     for m in _re.finditer(r'([\w-]+)="([^"]*)"', head):
         args[m.group(1)] = m.group(2)
     name = item.get("name", "")
+    _unknown_args = []
     if name == "alert":
         # 1f(OBS-127):文档 type= 优先,兼容 typ=。
         typ = args.get("type") or args.get("typ") or "warning"
+        if typ not in {"note", "tip", "important", "warning", "caution"}:
+            _unknown_args.append({"component": name, "attr": "type", "value": typ})
         args.setdefault("title", "风险提示")
         args.setdefault("body", body.strip() or "提示内容")
+        if usage is not None and _unknown_args:
+            usage["unknown_component_args"].extend(_unknown_args)
         return builder(args["tid"], typ=typ, title=args["title"], body=args["body"])
     if name == "quote":
         # 1f(OBS-127):文档 type= 优先,兼容 qt=。
         qt = args.get("type") or args.get("qt") or "highlight"
+        if qt not in {"normal", "highlight", "sourced"}:
+            _unknown_args.append({"component": name, "attr": "type", "value": qt})
         args.setdefault("text", body.strip() or "金句")
+        # OBS-146(4c):source= 接线(references/advanced/quotes.md L19)。
+        src_attr = args.get("source") or None
+        if usage is not None and _unknown_args:
+            usage["unknown_component_args"].extend(_unknown_args)
+        if src_attr:
+            return builder(args["tid"], qt=qt, text=args["text"], source=src_attr)
         return builder(args["tid"], qt=qt, text=args["text"])
     if name == "code-compare":
         # 1d(OBS-124):@before/@after 支持续行直到 @end;同行 lang="..." 解析为语言标签,
@@ -427,8 +441,8 @@ def _render_component(builder, item) -> str:
             elif cur == "after":
                 after = (after + "\n" if after else "") + l
         args.setdefault("title", "改前与改后")
-        if before_lang:
-            args["title"] += f"（{before_lang}）"
+        # 4a(档71C-R2):references/advanced/code-compare.md L8-15 未规定 title 追加
+        # 语言标签,lang= 仅是 @before 行内属性 → 不追加「（lang）」。
         return builder(args["tid"], title=args["title"], bc=before, ac=after)
     if name == "media-text":
         # 1c(OBS-126):块体 ![说明](url) 解析为图 URL + 说明;剩余行作解释段(多行逐行)。
@@ -468,12 +482,24 @@ def _render_component(builder, item) -> str:
                for m in _re.finditer(r"\[\^(\d+)\]\s*:\s*(.+)", body)]
         return builder(args["tid"], fns=fns if fns else None)
     if name == "dialogue":
+        # OBS-146(档71C-R2 4c 延伸):支持 references/advanced/dialogue.md L20-21
+        # 的 @user name="X": / @assistant name="X": 形式(名字不串入消息文本)。
         turns = []
         for l in body.splitlines():
-            if l.startswith("@user:"):
-                turns.append(("user", l[len("@user:"):].strip()))
-            elif l.startswith("@assistant:"):
-                turns.append(("assistant", l[len("@assistant:"):].strip()))
+            st = l.strip()
+            m_role = _re.match(r"^@(user|assistant)\b", st)
+            if not m_role:
+                continue
+            role = m_role.group(1)
+            rest = st[m_role.end():].strip()
+            m_name = _re.match(r'^name="([^"]*)"\s*:', rest)
+            if m_name:
+                name_val = m_name.group(1)
+                msg = rest[m_name.end():].strip()
+                turns.append((role, msg, name_val))
+            else:
+                msg = rest.lstrip(":").strip()
+                turns.append((role, msg))
         args.setdefault("title", "排障问答")
         return builder(args["tid"], title=args["title"],
                        turns=turns if turns else None)
