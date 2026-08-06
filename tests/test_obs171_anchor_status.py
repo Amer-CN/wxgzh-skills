@@ -115,14 +115,8 @@ def test_obs173_all_keys_have_tests():
     impl_keys = set(_re.findall(r'key="(ANCHORS_[A-Z_]+)"', fn))
     test_src = Path(__file__).read_text(encoding="utf-8")
     test_keys = set(_re.findall(r'st\[\"key\"\] == \"(ANCHORS_[A-Z_]+)\"', test_src))
-    # 2b(71C-R7):执行层覆盖校验 —— 依赖安装侧渲染器的键测试(skip 条件)可能
-    # 在本次会话被 skip。此处输出显式警告,不做硬断言(避免引入新框架)。
-    import subprocess as _sp
-    _r = _sp.run(["rg", "-n", "pytest.skip|_installed_renderer", str(Path(__file__))],
-                 capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if _r.stdout.strip():
-        print(f"[WARN] 键测试可能含 skip 条件(文本层覆盖,执行层未验证):\n{_r.stdout[:400]}")
+    # 1a(71D,R43/R44):删除 rg 调用 —— 仓外二进制依赖(未装 ripgrep 的机器会
+    # FileNotFoundError 直接 error),且 grep 的是本文件自身必然命中(恒真警告)。
+    # 键测试执行层覆盖在台账登记为【未覆盖】(不保留假覆盖)。
     assert impl_keys == test_keys, \
         f"键集合不等: 实现={sorted(impl_keys)} 测试={sorted(test_keys)}"
-    # 2b 限制说明:无法用 pytest request.session 精确断言「每条键测试已执行」
-    # (渲染器不可得时 skip 属合法);以显式警告字符串承担「执行层未验证」提示。

@@ -200,10 +200,20 @@ def test_obs160_fake_partial_quarantined_nonempty_and_distinct(tmp_path):
 # ── 4d(OBS-163,R28):SLOT_LOOKUP_MISS 真失败反证 ───────────
 
 def test_obs163_lookup_miss_raises(tmp_path, monkeypatch):
-    """_SLOTS 为空 -> export_body_anchors 抛 ValueError 且消息含 SLOT_LOOKUP_MISS。"""
+    """1b①(71D):_SLOTS 为空 -> export 抛 SlotLookupMiss(收窄用具体类,基类断言零保护)。"""
     monkeypatch.setattr(vcv, "_SLOTS", ())
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(vcv.SlotLookupMiss) as ei:
         vcv.export_body_anchors_from_measurement(
             SKILL_ROOT / "tests" / "fixtures" / "fake_offanchor.py",
             tmp_path / "miss")
     assert "SLOT_LOOKUP_MISS" in str(ei.value), str(ei.value)
+
+
+def test_obs163_main_does_not_swallow_other_valueerror(tmp_path, monkeypatch):
+    """1b②(71D):main 只捕获 SlotLookupMiss,其它 ValueError 必须向上抛(不吞成 return 1)。"""
+    def _boom(renderer, out_dir):
+        raise ValueError("OTHER_NOT_LOOKUP_MISS")
+    monkeypatch.setattr(vcv, "export_body_anchors_from_measurement", _boom)
+    with pytest.raises(ValueError) as ei:
+        vcv.main(["--renderer", str(FAKE_OFFANCHOR), "--out-dir", str(tmp_path / "out")])
+    assert "OTHER_NOT_LOOKUP_MISS" in str(ei.value), str(ei.value)

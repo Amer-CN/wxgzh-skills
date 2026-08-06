@@ -20,7 +20,7 @@
 | 128 | footnotes 文档语法与实现不兼容 | 已修 | render_article.py parse_article;test_obs136 | 71C-R1 |
 | 129 | alert 多行块体塌成单 <p> | 已修 | generate_advanced_html.py alert();test_obs151 | 71C-R1 |
 | 130 | 可见性判据只查文本不查结构 | 已修 | validate_component_visibility.py struct_ok | 71C-2 |
-| 131 | A 组无并列短句载体(71D 阻塞) | 已裁决未实施 | obs119-carrier-visibility-71c2.md | 71C-2A' |
+| 131 | A 组无并列短句载体(71D 阻塞;alert 多行已由 OBS-129 修复) | 未修(已裁决未实施) | obs119-carrier-visibility-71c2.md;OBS-129 修复承载 | 71C-2A' |
 | 132 | quote 同单槽多行塌陷 | 已修 | generate_advanced_html.py quote() | 71C-R1 |
 | 133 | media-text 多行塌陷/名单手填 | 已修 | validate_component_visibility.py;test_obs151 | 71C-2A' |
 | 134 | (grep 无着落) | 待查 | — | 71C-R7 |
@@ -69,9 +69,10 @@
 
 | OBS/项 | 问题 | 阻塞 71D |
 |---|---|---|
-| 122 | B 组 10 类未接线(71C-3 范围) | 不阻塞(71D 用 A 组 9 类) |
+| 122 | B 组 10 类未接线(71C-3 范围) | 不阻塞(71D 用 alert type=warning 承载 16 行,alert 属 A 组已接线;71D 不使用 B 组任何类) |
+| 131 | A 组无并列短句载体(已裁决未实施;71D 承载见上) | 不阻塞(71C-2A' 裁决「71D 不换载体,等 71C-R 修 alert 多行」;OBS-129 已修复,16 行实测为 16 个独立 <p>,struct_ok=True) |
 | 148 | 探针样本住在随包发布的生产文件 | 不阻塞(仅测试资产,随包发布是工程债) |
-| 158 | _nearest_p_style 不校验哨兵在 <p>…</p> 内 | 不阻塞(锚判据仅探针用;真实渲染产物结构已由 anchor_ok 覆盖) |
+| 158 | _nearest_p_style 只取 ps[-1],不校验哨兵是否真在该 <p>…</p> 内 | 不阻塞(如实:该导出是生产侧 _COMPONENT_PARA_RES 的来源,缺陷偏「假绿」方向;71D 由 anchor_ok + 实测可见性门禁兜底,本档真实渲染已过 component_visibility,故维持不阻塞,但理由不再写「仅探针用」) |
 | 159 | relock 不自动同步 OBS-69 基线 | 不阻塞(下一档 relock 前手动同步即可) |
 | — | 微信端渲染未验证(需人工预览) | **阻塞**(71D 发文前必须人工预览) |
 | — | fake_live 仍不过语法门禁(R9 保留项) | 不阻塞(仅测试路径) |
@@ -85,3 +86,4 @@
 3. 待查项:134/141/142/149/150——文件名区间认领但正文无描述、全仓 grep(非 audit)零命中;
    需由后续档回查指令原文或审核方补充。
 4. 下次更新责任:任何新档新增/修复 OBS 号,须同步更新本台账并标注认领档号。
+5. R45(71D):「已裁决未实施」= 未修的一种,必须进未修分区并给 71D 阻塞判定。
