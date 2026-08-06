@@ -209,17 +209,24 @@ _CODE_ROW_RE = _re.compile(
 #   media-text -> margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;(media_text() hammer)
 #   gallery    -> margin:0 0 16px;font-size:12px;color:#737373;text-align:center;(gallery() hammer)
 #   resources  -> margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;(resources() hammer)
-# code-compare / long-image 归 QUARANTINED(2d' 类B:哨兵未进 final.html,渲染器缺陷
-# OBS-124/OBS-125,见 validators/validate_component_visibility.py)。
-# 负对照:现 RUN 无组件 final.html 中这些锚 0 命中(封面/目录/署名/页脚均不匹配)。
-_COMPONENT_PARA_RES = [
-    _re.compile("<p style=\"margin:0;font-size:14px;color:#555555;line-height:1.8;\">(.*?)</p>", _re.S),   # alert/dialogue
-    _re.compile("<p style=\"margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;\">(.*?)</p>", _re.S),  # footnotes
-    _re.compile("<p style=\"margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;\">(.*?)</p>", _re.S),  # quote
-    _re.compile("<p style=\"margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;\">(.*?)</p>", _re.S),  # media-text
-    _re.compile("<p style=\"margin:0 0 16px;font-size:12px;color:#737373;text-align:center;\">(.*?)</p>", _re.S),  # gallery
-    _re.compile("<p style=\"margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;\">(.*?)</p>", _re.S),  # resources
-]
+# OBS-154(档71C-R3):_COMPONENT_PARA_RES 改为 import 时读 validators/
+# component_anchors.json(由 --emit-anchors 从哨兵实测导出)构造,不再手抄。
+# ★禁止在 import 时启动渲染器子进程(JSON 是静态产物)。
+# JSON 缺失时退化为空列表(测试焊死 JSON 存在且 == 现场导出,防假绿)。
+_ANCHORS_JSON = Path(__file__).resolve().parents[2] / "validators" / "component_anchors.json"
+
+
+def _load_component_para_res() -> list["_re.Pattern"]:
+    try:
+        data = json.loads(_ANCHORS_JSON.read_text(encoding="utf-8"))
+        styles = sorted({row["style"] for row in data.get("anchors", [])
+                         if row.get("style") and row["style"] != "URL_SLOT"})
+    except (OSError, ValueError):
+        styles = []
+    return [_re.compile(f'<p style="{_re.escape(s)}">(.*?)</p>', _re.S) for s in styles]
+
+
+_COMPONENT_PARA_RES = _load_component_para_res()
 
 
 def _body_plain_text(html_text: str) -> str:

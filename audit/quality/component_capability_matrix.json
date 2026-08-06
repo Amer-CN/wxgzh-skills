@@ -1,86 +1,81 @@
 {
-  "criteria_version": "v2",
+  "criteria_version": "v3",
   "criteria_changelog": [
-    "v1 -> v2 (档71C-R2, OBS-147): 判据分裂 render_ok/anchor_ok/per_item_ok v2(删_BASE_EL_COUNT与魔数3); 新增 ANCHOR_GAP=render_ok且not anchor_ok; QUARANTINED收紧为not render_ok; 探针样本按文档化槽重建(30槽)"
+    "v2 -> v3 (档71C-R3): 恢复 struct_ok 真测量(相邻哨兵对载体判据, OBS-151); multiline 导出改 struct_ok 口径(去 and False 短路, OBS-152); sentinels_for 唯一集合函数(anchor_ok 与锚导出同源, OBS-153); _COMPONENT_PARA_RES 改由 component_anchors.json 构造(锚闭环, OBS-154)"
   ],
   "renderer_path": "F:\\AIXM\\wxgzh\\gzh-design-skill\\scripts\\render_article.py",
   "renderer_sha256": "437fb8aa04916b2cb88d96626cad9b128a584700a96e230898b2ca76daf95378",
-  "generated_at_utc": "2026-08-06T12:12:10+00:00",
+  "generated_at_utc": "2026-08-06T12:57:15+00:00",
   "lists_exported": {
     "quarantined": [],
     "multiline": [],
-    "anchor_gap": [
+    "anchor_gap": [],
+    "approved": [
       "alert",
       "code-compare",
       "dialogue",
+      "footnotes",
       "gallery",
       "long-image",
       "media-text",
       "quote",
       "resources"
-    ],
-    "approved": [
-      "footnotes"
     ]
   },
   "assertions_executed": true,
-  "exported_anchor_styles": [
-    "margin:0 0 16px;font-size:12px;color:#737373;text-align:center;",
-    "margin:0 0 24px;font-size:12px;color:#737373;text-align:center;",
-    "margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;",
-    "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;",
-    "margin:0 0 8px;font-size:12px;color:#737373;text-align:center;",
-    "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;",
-    "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;",
-    "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;",
-    "margin:0;font-size:14px;color:#555555;line-height:1.8;",
-    "margin:0;font-size:15px;font-weight:600;color:#555555;line-height:1.8;",
-    "margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;"
-  ],
   "components": {
     "alert": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": null
     },
     "code-compare": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": null
     },
     "dialogue": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": true
     },
     "footnotes": {
       "render_ok": true,
+      "struct_ok": true,
       "anchor_ok": true,
       "per_item_ok": true
     },
     "gallery": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": true
     },
     "long-image": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": null
     },
     "media-text": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": null
     },
     "quote": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": null
     },
     "resources": {
       "render_ok": true,
-      "anchor_ok": false,
+      "struct_ok": true,
+      "anchor_ok": true,
       "per_item_ok": true
     }
   }

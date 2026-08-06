@@ -22,15 +22,34 @@ from wxgzh_pipeline.stages.gzh_design import _body_plain_text
 
 
 def _resolved_renderer() -> tuple[Path | None, list[str]]:
-    """解析渲染器:优先同工作区 gzh-design-skill 仓(本档修复树),再退回安装侧。"""
+    """OBS-157:解析渲染器(无硬编码路径)。
+
+    返回 (renderer, 解析日志);解析不到 -> (None, 日志),由调用方 skip。
+    """
     log: list[str] = []
-    # 1) 同工作区仓内树(优先,本档修复所在)
-    for cand in (SKILL_ROOT.parent / "gzh-design-skill" / "scripts" / "render_article.py",
-                 Path(r"F:\AIXM\wxgzh\gzh-design-skill\scripts\render_article.py")):
-        if cand.is_file():
-            log.append(f"repo renderer={cand}")
-            return cand, log
-    # 2) 安装侧
+    # 1) 同工作区仓内树(SKILL_ROOT.parent/gzh-design-skill,相对解析)
+    repo_cand = SKILL_ROOT.parent / "gzh-design-skill" / "scripts" / "render_article.py"
+    log.append(f"repo candidate={repo_cand} is_file={repo_cand.is_file()}")
+    if repo_cand.is_file():
+        return repo_cand, log
+    # 2) 安装侧(经 paths/skill_discovery)
+    try:
+        from wxgzh_pipeline import paths as P
+        from wxgzh_pipeline import skill_discovery as SD
+        root = P.resolve_project_root()
+        sh = P.skills_home(root)
+        lock = SD.load_lock(SKILL_ROOT)
+        ep = lock["skills"].get("gzh-design", {}).get("entrypoint", "")
+        cand = Path(sh) / "gzh-design" / ep
+        log.append(f"installed candidate={cand} is_file={cand.is_file()}")
+        return (cand if cand.is_file() else None), log
+    except Exception as e:  # noqa: BLE001
+        return None, log + [f"resolve failed: {e!r}"]
+
+
+def _installed_renderer() -> tuple[Path | None, list[str]]:
+    """5b:安装侧渲染器(经 paths/skill_discovery;不回落仓内树)。"""
+    log: list[str] = []
     try:
         from wxgzh_pipeline import paths as P
         from wxgzh_pipeline import skill_discovery as SD
@@ -101,18 +120,58 @@ def test_obs145_lists_entries_have_obs_numbers():
     assert re.search(r"OBS-145", src)
 
 
-# ── 3b:锚快照焊死(R19:快照 == 现场导出) ───────────────────────
+# ── 3c/3d(OBS-154):component_anchors.json 焊死(R19,逐条相等) ─────
 
-def test_obs145_component_para_res_snapshot_matches_export(tmp_path):
-    """gzh_design._COMPONENT_PARA_RES 快照 == 锚实测导出生成集(R19,防手抄自证)。"""
-    from wxgzh_pipeline.stages import gzh_design as gd
+def test_obs154_anchors_json_renderer_sha_matches_installed(tmp_path):
+    """3c:component_anchors.json 的 renderer_sha256 == 当前安装侧渲染器 sha256。"""
+    import hashlib
     renderer = _renderer_or_skip()
+    anchors_json = SKILL_ROOT / "validators" / "component_anchors.json"
+    if not anchors_json.is_file():
+        pytest.skip("component_anchors.json 未生成")
+    payload = json.loads(anchors_json.read_text(encoding="utf-8"))
+    actual = hashlib.sha256(renderer.read_bytes()).hexdigest()
+    assert payload.get("renderer_sha256") == actual, \
+        f"JSON sha {payload.get('renderer_sha256')} != 渲染器 sha {actual}"
+
+
+def test_obs154_anchors_json_matches_export_exact(tmp_path):
+    """3d:现场导出 == JSON 内容,逐条相等(不是子集、不是子串)。"""
+    renderer = _renderer_or_skip()
+    anchors_json = SKILL_ROOT / "validators" / "component_anchors.json"
+    if not anchors_json.is_file():
+        pytest.skip("component_anchors.json 未生成")
+    payload = json.loads(anchors_json.read_text(encoding="utf-8"))
     anchors = vcv.export_body_anchors_from_measurement(renderer, tmp_path / "anchors")
-    exported = vcv.build_component_para_regexes(anchors)
-    snapshot = [m for rx in gd._COMPONENT_PARA_RES for m in re.findall(r'<p style="([^"]*)"', rx.pattern)]
-    # 快照 style 必须是导出集合的子集(导出含更多,快照是 71C-2 时期的手抄子集)
-    for s in snapshot:
-        assert any(s in e for e in exported), f"快照锚 {s} 不在导出集"
+    json_map = {row["sentinel"]: row for row in payload["anchors"]}
+    assert set(json_map) == set(anchors), \
+        f"JSON 哨兵集 != 现场哨兵集: {sorted(set(json_map) ^ set(anchors))}"
+    for sent, info in anchors.items():
+        row = json_map[sent]
+        assert row["style"] == info["style"], \
+            f"{sent}: JSON style {row['style']!r} != 现场 {info['style']!r}"
+        assert row["component"] == info["component"], sent
+
+
+def test_obs154_gzh_design_para_res_built_from_json():
+    """gzh_design._COMPONENT_PARA_RES 由 JSON 构造(非手抄),style 与 JSON 逐条相等。"""
+    from wxgzh_pipeline.stages import gzh_design as gd
+    anchors_json = SKILL_ROOT / "validators" / "component_anchors.json"
+    if not anchors_json.is_file():
+        pytest.skip("component_anchors.json 未生成")
+    payload = json.loads(anchors_json.read_text(encoding="utf-8"))
+    json_styles = sorted({row["style"] for row in payload["anchors"]
+                          if row.get("style") and row["style"] != "URL_SLOT"})
+    # pattern 里 style 被 re.escape 转义,需 unescape 后与 JSON 原文比较。
+    import html as _html
+    res_styles = []
+    for rx in gd._COMPONENT_PARA_RES:
+        m = re.search(r'<p style="(.*?)">', rx.pattern)
+        if m:
+            res_styles.append(re.sub(r"\\(.)", r"\1", m.group(1)))
+    res_styles = sorted(set(res_styles))
+    assert res_styles == json_styles, \
+        f"gzh_design 锚 style != JSON style: {sorted(set(res_styles) ^ set(json_styles))}"
 
 
 # ── 1d:负样本(未知 type/缺 type 不崩 + unknown_component_args) ──
@@ -193,13 +252,14 @@ def test_obs145_matrix_json_matches_measured(tmp_path):
     if not matrix_path.is_file():
         pytest.skip("矩阵 JSON 未生成")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-    assert matrix.get("criteria_version") == "v2"
+    assert matrix.get("criteria_version") == "v3"
     assert matrix.get("criteria_changelog"), "v2 缺 changelog"
     measured = vcv.component_structure_check(renderer, tmp_path / "struct2")
     for name, r in measured.items():
         m = matrix.get("components", {}).get(name)
         assert m is not None, name
         assert m["render_ok"] == r["render_ok"]
+        assert m["struct_ok"] == r["struct_ok"]
         assert m["anchor_ok"] == r["anchor_ok"]
         assert m["per_item_ok"] == r["per_item_ok"]
 
@@ -217,7 +277,7 @@ def test_obs145_matrix_metadata_shape():
     if not matrix_path.is_file():
         pytest.skip("矩阵 JSON 未生成")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-    assert matrix.get("criteria_version") == "v2"
+    assert matrix.get("criteria_version") == "v3"
     assert Path(matrix.get("renderer_path", "")).is_absolute()
     assert re.fullmatch(r"[0-9a-f]{64}", matrix.get("renderer_sha256", ""))
 

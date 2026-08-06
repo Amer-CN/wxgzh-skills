@@ -216,10 +216,10 @@ def validate_syntax_gate(article_path: Path, renderer: Path,
                     "snippet": text.strip()[:120],
                     "probe_reason": "；".join(reasons) if reasons else "probe 判定不支持",
                 })
-    # 1e(OBS-145,R26):组件 type 枚举校验 —— 未定义值 -> FAIL 并给源稿行号。
-    # 枚举:alert = references/advanced/alerts.md L17-21;quote = quotes.md L9-21。
-    _ALERT_TYPES = {"note", "tip", "important", "warning", "caution"}
-    _QUOTE_TYPES = {"normal", "highlight", "sourced"}
+    # 1e(OBS-145,R26)+4d(OBS-156):组件 type 枚举校验 —— 未定义值 -> FAIL 并给源稿行号。
+    # 枚举从 validators/component_slots.py import(单一来源,references 行号见该文件)。
+    from validators.component_slots import ALERT_TYPES as _ALERT_TYPES
+    from validators.component_slots import QUOTE_TYPES as _QUOTE_TYPES
     for i, ln in enumerate(lines):
         st = ln.strip()
         if not st.startswith(":::"):

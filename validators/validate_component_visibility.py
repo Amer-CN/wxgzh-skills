@@ -28,48 +28,71 @@ from pathlib import Path
 # 三名单快照(实测导出;测试以 R19 口径断言 == 现场导出,禁止赋值后自证)。
 # OBS-145(档71C-R2):QUARANTINED 语义由「哨兵未进 final.html」收紧为「not render_ok」;
 # 新增 ANCHOR_GAP = render_ok 且 not anchor_ok(渲染器吐字但 pipeline 锚缺口)。
-# 实测导出快照(档71C-R2 实测):QUARANTINED 空集(渲染器修复后 9 类全 render_ok);
-# MULTILINE 空集(多行逐行 p 已修);ANCHOR_GAP = 8 类(仅 footnotes 锚齐全);
-# APPROVED = {footnotes}。测试以 R19 断言 == 现场导出,防快照过期。
+# 实测导出快照(档71C-R3 实测):锚闭环(OBS-154)后 _COMPONENT_PARA_RES 从
+# component_anchors.json 全量导出(11 条 style),9 类全部 render_ok+struct_ok+
+# anchor_ok -> QUARANTINED/MULTILINE/ANCHOR_GAP 全空,APPROVED = 9 类全部。
+# 测试以 R19 断言 == 现场导出,防快照过期。
 QUARANTINED_COMPONENTS = frozenset()
 MULTILINE_UNSUPPORTED_COMPONENTS = frozenset()
-ANCHOR_GAP_COMPONENTS = frozenset({"alert", "code-compare", "dialogue", "gallery",
-                                   "long-image", "media-text", "quote", "resources"})
-APPROVED_CARRIER_COMPONENTS = frozenset({"footnotes"})
+ANCHOR_GAP_COMPONENTS = frozenset()
+APPROVED_CARRIER_COMPONENTS = frozenset({"alert", "code-compare", "dialogue",
+                                         "footnotes", "gallery", "long-image",
+                                         "media-text", "quote", "resources"})
 
-# ── 2a 探针样本(按 validators/component_slots.py 0b 槽清单重建) ──
-# 每个文档化槽一个唯一哨兵 S_<COMP>_<SLOT>;模式维度全展开。
+# ── 4a(OBS-155):三张哨兵表从 component_slots.SLOTS 机械生成 ──
+# 哨兵名 = S_<COMP>_<SLOT>;同一 (组件,槽) 多模式时追加模式后缀(type=note -> _NOTE,
+# lang=有 -> _YES);multi 槽按 N=3 追加 _1.._N。禁止手写(4b 测试焊死与 SLOTS 对应)。
+def _load_slots():
+    """延迟 import component_slots(CLI 直跑时 repo 根由 main 注入 sys.path)。"""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from validators.component_slots import SLOTS
+    return SLOTS
 
-# URL 槽哨兵(如 long-image image / resources url):只验证渲染 HTML 含哨兵,
-# 无文本 <p> 载体,不参与 anchor_ok 判据(2b/2f:ANCHOR_GAP 只针对文本槽)。
-URL_SENTINELS: dict[str, list[str]] = {
-    "long-image": ["S_LI_IMAGE"],
-    "resources": ["S_RES_U1", "S_RES_U2"],
-}
 
-# 可选槽哨兵(2f 预测表口径:title/caption/source/name 等可选槽锚缺口计入 ANCHOR_GAP)
-OPTIONAL_SENTINELS: dict[str, list[str]] = {
-    "alert": ["S_ALERT_TITLE"],
-    "quote": ["S_QUOTE_SOURCE"],
-    "code-compare": ["S_CMP_TITLE"],
-    "gallery": ["S_GAL_TITLE"],
-    "resources": ["S_RES_TITLE"],
-    "dialogue": ["S_DIA_TITLE", "S_DIA_NAME"],
-}
+_SLOTS = _load_slots()
 
-# 必填槽哨兵(render_ok/anchor_ok 判据用)
-REQUIRED_SENTINELS: dict[str, list[str]] = {
-    "alert": ["S_ALERT_BODY_NOTE", "S_ALERT_BODY_TIP", "S_ALERT_BODY_IMPORTANT",
-              "S_ALERT_BODY_WARNING", "S_ALERT_BODY_CAUTION"],
-    "quote": ["S_QUOTE_TEXT_NORMAL", "S_QUOTE_TEXT_HIGHLIGHT", "S_QUOTE_TEXT_SOURCED"],
-    "code-compare": ["S_CMP_BEFORE_NO", "S_CMP_AFTER_NO", "S_CMP_BEFORE_YES", "S_CMP_AFTER_YES"],
-    "media-text": ["S_MT_CAP", "S_MT_EXP"],
-    "gallery": ["S_GAL_CAP_1", "S_GAL_CAP_2", "S_GAL_CAP_3"],
-    "long-image": ["S_LI_CAP"],
-    "resources": ["S_RES_L1", "S_RES_L2"],
-    "footnotes": ["S_FN_1", "S_FN_2"],
-    "dialogue": ["S_DIA_M1", "S_DIA_M2"],
-}
+
+def _sentinel_name(comp: str, slot_name: str, mode: str, idx: int | None = None) -> str:
+    base = f"S_{comp.upper().replace('-', '_')}_{slot_name.upper()}"
+    suffix = ""
+    if mode and mode != "默认" and "*" not in mode:
+        if mode.startswith("type="):
+            suffix = "_" + mode[5:].upper()
+        elif mode.startswith("lang="):
+            suffix = "_" + ("YES" if mode[5:] == "有" else "NO")
+    if idx is not None:
+        suffix += f"_{idx + 1}"
+    return base + suffix
+
+
+def _build_sentinel_tables() -> tuple[dict, dict, dict]:
+    required: dict[str, list[str]] = {}
+    optional: dict[str, list[str]] = {}
+    url: dict[str, list[str]] = {}
+    for cs in _SLOTS:
+        comp = cs.component
+        slot_entries: dict[str, list] = {}
+        for s in cs.slots:
+            slot_entries.setdefault(s.name, []).append(s)
+        for slot_name, entries in slot_entries.items():
+            s0 = entries[0]
+            multi_n = 3 if s0.multi else None
+            target = url if s0.url else (required if s0.required else optional)
+            target.setdefault(comp, [])
+            for e in entries:
+                if multi_n is not None:
+                    for i in range(multi_n):
+                        n = _sentinel_name(comp, slot_name, e.mode, i)
+                        if n not in target[comp]:
+                            target[comp].append(n)
+                else:
+                    n = _sentinel_name(comp, slot_name, e.mode)
+                    if n not in target[comp]:
+                        target[comp].append(n)
+    return required, optional, url
+
+
+REQUIRED_SENTINELS, OPTIONAL_SENTINELS, URL_SENTINELS = _build_sentinel_tables()
 
 # 每类最小样本(渲染到 HTML,覆盖全部必填槽)。模式用 mode 字段区分。
 SLOT_SAMPLES: dict[str, list[dict]] = {
@@ -83,44 +106,44 @@ SLOT_SAMPLES: dict[str, list[dict]] = {
     "quote": [
         {"mode": "type=normal", "block": ':::quote type="normal"\nS_QUOTE_TEXT_NORMAL 引用\n:::\n'},
         {"mode": "type=highlight", "block": ':::quote type="highlight"\nS_QUOTE_TEXT_HIGHLIGHT 金句\n:::\n'},
-        {"mode": "type=sourced", "block": ':::quote type="sourced" source="S_QUOTE_SOURCE"\nS_QUOTE_TEXT_SOURCED 引文\n:::\n'},
+        {"mode": "type=sourced", "block": ':::quote type="sourced" source="S_QUOTE_SOURCE_SOURCED"\nS_QUOTE_TEXT_SOURCED 引文\n:::\n'},
     ],
     "code-compare": [
-        {"mode": "lang=无", "block": ':::code-compare title="S_CMP_TITLE"\n@before\nS_CMP_BEFORE_NO 旧\n@end\n@after\nS_CMP_AFTER_NO 新\n@end\n:::\n'},
-        {"mode": "lang=有", "block": ':::code-compare title="S_CMP_TITLE"\n@before lang="python"\nS_CMP_BEFORE_YES 旧\n@end\n@after lang="python"\nS_CMP_AFTER_YES 新\n@end\n:::\n'},
+        {"mode": "lang=无", "block": ':::code-compare title="S_CODE_COMPARE_TITLE_NO"\n@before\nS_CODE_COMPARE_BEFORE_NO 旧\n@end\n@after\nS_CODE_COMPARE_AFTER_NO 新\n@end\n:::\n'},
+        {"mode": "lang=有", "block": ':::code-compare title="S_CODE_COMPARE_TITLE_NO"\n@before lang="python"\nS_CODE_COMPARE_BEFORE_YES 旧\n@end\n@after lang="python"\nS_CODE_COMPARE_AFTER_YES 新\n@end\n:::\n'},
     ],
     "media-text": [
-        {"mode": "默认", "block": ':::media-text\n![S_MT_CAP](https://x.com/a.png)\nS_MT_EXP 解释\n:::\n'},
+        {"mode": "默认", "block": ':::media-text\n![S_MEDIA_TEXT_CAP](https://x.com/a.png)\nS_MEDIA_TEXT_EXP 解释\n:::\n'},
     ],
     "gallery": [
-        {"mode": "默认", "block": ':::gallery title="S_GAL_TITLE"\n![S_GAL_CAP_1](https://x.com/1.png)\n![S_GAL_CAP_2](https://x.com/2.png)\n![S_GAL_CAP_3](https://x.com/3.png)\n:::\n'},
+        {"mode": "默认", "block": ':::gallery title="S_GALLERY_TITLE"\n![S_GALLERY_CAPTION_1](https://x.com/1.png)\n![S_GALLERY_CAPTION_2](https://x.com/2.png)\n![S_GALLERY_CAPTION_3](https://x.com/3.png)\n:::\n'},
     ],
     "long-image": [
-        {"mode": "默认", "block": ':::long-image image="https://x.com/S_LI_IMAGE.png" caption="S_LI_CAP"\n:::\n'},
+        {"mode": "默认", "block": ':::long-image image="https://x.com/S_LONG_IMAGE_IMAGE.png" caption="S_LONG_IMAGE_CAPTION"\n:::\n'},
     ],
     "resources": [
-        {"mode": "默认", "block": ':::resources title="S_RES_TITLE"\n- [S_RES_L1](https://x.com/S_RES_U1)\n- [S_RES_L2](https://x.com/S_RES_U2)\n:::\n'},
+        {"mode": "默认", "block": ':::resources title="S_RESOURCES_TITLE"\n- [S_RESOURCES_LINK_TEXT_1](https://x.com/S_RESOURCES_URL_1)\n- [S_RESOURCES_LINK_TEXT_2](https://x.com/S_RESOURCES_URL_2)\n:::\n'},
     ],
     "footnotes": [
-        {"mode": "默认", "block": ':::footnotes\n[^1]: S_FN_1 注释一\n[^2]: S_FN_2 注释二\n:::\n'},
+        {"mode": "默认", "block": ':::footnotes\n[^1]: S_FOOTNOTES_FN_TEXT_1 注释一\n[^2]: S_FOOTNOTES_FN_TEXT_2 注释二\n:::\n'},
     ],
     "dialogue": [
-        {"mode": "默认", "block": ':::dialogue title="S_DIA_TITLE"\n@user name="S_DIA_NAME": S_DIA_M1 问题一\n@assistant: S_DIA_M2 回答二\n:::\n'},
+        {"mode": "默认", "block": ':::dialogue title="S_DIALOGUE_TITLE"\n@user name="S_DIALOGUE_NAME_1": S_DIALOGUE_MSG_1 问题一\n@assistant: S_DIALOGUE_MSG_2 回答二\n:::\n'},
     ],
 }
 
 # per_item v2 输入(multi 槽组件 N=3)
 PER_ITEM_V2: dict[str, list[str]] = {
-    "gallery": ["S_GAL_CAP_1", "S_GAL_CAP_2", "S_GAL_CAP_3"],
-    "resources": ["S_RES_L1", "S_RES_L2", "S_RES_L3"],
-    "footnotes": ["S_FN_1", "S_FN_2", "S_FN_3"],
-    "dialogue": ["S_DIA_M1", "S_DIA_M2", "S_DIA_M3"],
+    "gallery": ["S_GALLERY_CAPTION_1", "S_GALLERY_CAPTION_2", "S_GALLERY_CAPTION_3"],
+    "resources": ["S_RESOURCES_LINK_TEXT_1", "S_RESOURCES_LINK_TEXT_2", "S_RESOURCES_LINK_TEXT_3"],
+    "footnotes": ["S_FOOTNOTES_FN_TEXT_1", "S_FOOTNOTES_FN_TEXT_2", "S_FOOTNOTES_FN_TEXT_3"],
+    "dialogue": ["S_DIALOGUE_MSG_1", "S_DIALOGUE_MSG_2", "S_DIALOGUE_MSG_3"],
 }
 PER_ITEM_V2_SAMPLES: dict[str, str] = {
-    "gallery": ':::gallery title="S_GAL_TITLE"\n![S_GAL_CAP_1](https://x.com/1.png)\n![S_GAL_CAP_2](https://x.com/2.png)\n![S_GAL_CAP_3](https://x.com/3.png)\n:::\n',
-    "resources": ':::resources title="S_RES_TITLE"\n- [S_RES_L1](https://x.com/1)\n- [S_RES_L2](https://x.com/2)\n- [S_RES_L3](https://x.com/3)\n:::\n',
-    "footnotes": ':::footnotes\n[^1]: S_FN_1 注释一\n[^2]: S_FN_2 注释二\n[^3]: S_FN_3 注释三\n:::\n',
-    "dialogue": ':::dialogue title="S_DIA_TITLE"\n@user: S_DIA_M1 问题一\n@assistant: S_DIA_M2 回答二\n@user: S_DIA_M3 问题三\n:::\n',
+    "gallery": ':::gallery title="S_GALLERY_TITLE"\n![S_GALLERY_CAPTION_1](https://x.com/1.png)\n![S_GALLERY_CAPTION_2](https://x.com/2.png)\n![S_GALLERY_CAPTION_3](https://x.com/3.png)\n:::\n',
+    "resources": ':::resources title="S_RESOURCES_TITLE"\n- [S_RESOURCES_LINK_TEXT_1](https://x.com/1)\n- [S_RESOURCES_LINK_TEXT_2](https://x.com/2)\n- [S_RESOURCES_LINK_TEXT_3](https://x.com/3)\n:::\n',
+    "footnotes": ':::footnotes\n[^1]: S_FOOTNOTES_FN_TEXT_1 注释一\n[^2]: S_FOOTNOTES_FN_TEXT_2 注释二\n[^3]: S_FOOTNOTES_FN_TEXT_3 注释三\n:::\n',
+    "dialogue": ':::dialogue title="S_DIALOGUE_TITLE"\n@user: S_DIALOGUE_MSG_1 问题一\n@assistant: S_DIALOGUE_MSG_2 回答二\n@user: S_DIALOGUE_MSG_3 问题三\n:::\n',
 }
 
 # 负样本(1d,OBS-145):未知 type / 缺 type,渲染不崩且 unknown_component_args 有记录。
@@ -132,6 +155,24 @@ _NEGATIVE_SAMPLES: dict[str, str] = {
 
 # 结构位换行载体归一化正则(1b 单一判据来源;字面 </p><p 与 </p>换行<p 同载体)。
 _STRUCT_CARRIER_RE = re.compile(r"</p>\s*<p")
+
+
+def sentinels_for(component: str, kinds=("required", "optional", "url")) -> list[str]:
+    """OBS-153(R29):哨兵集合唯一来源。
+
+    anchor_ok 与 export_body_anchors_from_measurement 必须调用本函数且传相同
+    kinds(required+optional+url),禁止两处各写各的。URL 槽哨兵由调用方按 URL
+    语义跳过(见 _URL_SENTINEL_SET)。
+    """
+    tables = {"required": REQUIRED_SENTINELS, "optional": OPTIONAL_SENTINELS,
+              "url": URL_SENTINELS}
+    out: list[str] = []
+    for k in kinds:
+        out.extend(tables[k].get(component, []))
+    return out
+
+
+_URL_SENTINEL_SET = frozenset(s for lst in URL_SENTINELS.values() for s in lst)
 
 
 def _render_one(renderer: Path, out_dir: Path, block: str) -> tuple[int, str]:
@@ -169,9 +210,13 @@ def _p_open_offset(html: str, sentinel: str) -> int | None:
 
 
 def component_structure_check(renderer: Path, out_dir: Path) -> dict[str, dict]:
-    """OBS-145(档71C-R2):三判据分裂。
+    """OBS-151(档71C-R3):四判据。
 
-    render_ok / anchor_ok / per_item_ok(v2)。docstring 口径与实现逐字一致(OBS-139)。
+    render_ok / struct_ok / anchor_ok / per_item_ok(v2)。
+    struct_ok(1a 恢复):对每个样本内相邻哨兵对,取两者之间的 HTML 片段,命中
+    _STRUCT_CARRIER_RE 或含 <section 即判有载体;全部有载体 -> True;
+    无相邻哨兵对的组件(单槽样本)视为无多行证据 -> True。docstring 口径与
+    实现逐字一致(OBS-139)。
     """
     from wxgzh_pipeline.stages.gzh_design import _body_plain_text
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -179,6 +224,7 @@ def component_structure_check(renderer: Path, out_dir: Path) -> dict[str, dict]:
     for name, samples in SLOT_SAMPLES.items():
         render_ok = True
         anchor_ok = True
+        struct_ok = True
         for smp in samples:
             d = out_dir / f"{name}-{smp['mode']}"
             rc, html = _render_one(renderer, d, smp["block"])
@@ -187,11 +233,26 @@ def component_structure_check(renderer: Path, out_dir: Path) -> dict[str, dict]:
             for sent in REQUIRED_SENTINELS.get(name, []) + URL_SENTINELS.get(name, []):
                 if sent in smp["block"] and sent not in html:
                     render_ok = False
-            # 2f:anchor_ok 查样本中出现的全部哨兵(必填+可选,title/caption 等缺口
-            # 计入 ANCHOR_GAP,与预测表口径一致)。
-            for sent in REQUIRED_SENTINELS.get(name, []) + OPTIONAL_SENTINELS.get(name, []):
-                if sent in smp["block"] and sent not in body:
+            # 2f/2a(OBS-153):anchor_ok 查 sentinels_for(name) 全部哨兵(required+
+            # optional+url,与 export 同源同 kinds);URL 槽不在正文区,跳过。
+            for sent in sentinels_for(name):
+                if sent in smp["block"] and sent not in _URL_SENTINEL_SET and sent not in body:
                     anchor_ok = False
+            # 1a(OBS-151):struct_ok —— 相邻哨兵对之间的 HTML 片段须有换行载体。
+            # ★只取文本槽(REQUIRED+OPTIONAL);URL 槽在 img src 属性内,非文本行,
+            # 不参与多行塌陷判据(与 anchor 判据口径一致,见 4c② 定案)。
+            # ★按 HTML 中出现顺序排序(block 顺序 ≠ HTML 渲染顺序,如 quote source
+            # 渲染在 text 之后;倒序对会得到空片段,误判塌陷)。
+            present = sorted(
+                [s for s in sentinels_for(name, ("required", "optional"))
+                 if s in smp["block"] and s in html],
+                key=lambda s: html.find(s))
+            for i in range(len(present) - 1):
+                p1 = html.find(present[i])
+                p2 = html.find(present[i + 1])
+                seg = html[p1:p2] if p1 >= 0 and p2 >= 0 else ""
+                if not (_STRUCT_CARRIER_RE.search(seg) or "<section" in seg):
+                    struct_ok = False
         per_item = None
         if name in PER_ITEM_V2:
             d = out_dir / f"{name}-n3"
@@ -210,8 +271,8 @@ def component_structure_check(renderer: Path, out_dir: Path) -> dict[str, dict]:
             per_item = (len(valid) == len(PER_ITEM_V2[name])
                         and len({_p_open_offset(html, sent)
                                  for sent in PER_ITEM_V2[name]}) == len(PER_ITEM_V2[name]))
-        result[name] = {"render_ok": render_ok, "anchor_ok": anchor_ok,
-                        "per_item_ok": per_item}
+        result[name] = {"render_ok": render_ok, "struct_ok": struct_ok,
+                        "anchor_ok": anchor_ok, "per_item_ok": per_item}
     return result
 
 
@@ -225,8 +286,9 @@ def export_lists_from_measurement(measured: dict[str, dict]) -> dict[str, frozen
                            if r["render_ok"] and not r["anchor_ok"])
     approved = frozenset(c for c, r in measured.items()
                          if r["render_ok"] and r["anchor_ok"])
-    multiline = frozenset(c for c, r in measured.items() if r["render_ok"] and r["anchor_ok"] and False)
-    # MULTILINE 由组件×模式导出:检查每类样本是否相邻行无载体。当前全修复,空集。
+    # 1b(OBS-152):multiline = {c : render_ok 且 not struct_ok}。
+    multiline = frozenset(c for c, r in measured.items()
+                          if r["render_ok"] and not r["struct_ok"])
     return {"quarantined": quarantined, "multiline": multiline,
             "anchor_gap": anchor_gap, "approved": approved}
 
@@ -244,10 +306,10 @@ def export_body_anchors_from_measurement(renderer: Path, out_dir: Path) -> dict[
         for smp in samples:
             d = out_dir / f"{name}-{smp['mode']}"
             rc, html = _render_one(renderer, d, smp["block"])
-            for sent in (REQUIRED_SENTINELS.get(name, []) + URL_SENTINELS.get(name, [])):
+            for sent in sentinels_for(name):
                 if sent not in smp["block"] or sent in anchors:
                     continue
-                if sent in URL_SENTINELS.get(name, []):
+                if sent in _URL_SENTINEL_SET:
                     # URL 槽无文本 <p> 载体,记 URL_SLOT(不参与锚判据,非 NO_P_ANCHOR)。
                     anchors[sent] = {"style": "URL_SLOT", "component": name, "slot": sent.lower()}
                     continue
@@ -342,14 +404,47 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="OBS-145 component structure check (v2)")
     ap.add_argument("--renderer", required=True)
     ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--emit-anchors", default=None,
+                    help="3a(OBS-154):把锚导出落成 validators/component_anchors.json")
     a = ap.parse_args(argv)
     _repo = Path(__file__).resolve().parents[1]
     if str(_repo) not in sys.path:
         sys.path.insert(0, str(_repo))
     result = component_structure_check(Path(a.renderer), Path(a.out_dir))
     for name, r in sorted(result.items()):
-        print(f"{name}: render_ok={r['render_ok']} anchor_ok={r['anchor_ok']} "
-              f"per_item_ok={r['per_item_ok']}")
+        print(f"{name}: render_ok={r['render_ok']} struct_ok={r['struct_ok']} "
+              f"anchor_ok={r['anchor_ok']} per_item_ok={r['per_item_ok']}")
+    # 2c(OBS-153 补做):逐条打印 组件 | 缺失哨兵名 | 实测 style。
+    anchors = export_body_anchors_from_measurement(Path(a.renderer), Path(a.out_dir))
+    # 3a(OBS-154):落成 component_anchors.json(五列 + renderer sha + 生成时间)。
+    if a.emit_anchors:
+        import hashlib
+        import json as _json
+        from datetime import datetime, timezone
+        rows = []
+        for sent, info in sorted(anchors.items()):
+            rows.append({"sentinel": sent, "component": info["component"],
+                         "slot": info.get("slot", ""),
+                         "mode": next((s["mode"] for s in SLOT_SAMPLES.get(info["component"], [])
+                                       if sent in s["block"]), ""),
+                         "style": info["style"]})
+        payload = {
+            "renderer_sha256": hashlib.sha256(Path(a.renderer).read_bytes()).hexdigest(),
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "anchors": rows,
+        }
+        Path(a.emit_anchors).write_text(
+            _json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[emit-anchors] wrote {len(rows)} rows -> {a.emit_anchors}")
+    print("--- 缺失哨兵明细(组件 | 哨兵 | style) ---")
+    for name, r in sorted(result.items()):
+        if r["render_ok"] and not r["anchor_ok"]:
+            for sent in sentinels_for(name):
+                if sent in _URL_SENTINEL_SET:
+                    continue
+                info = anchors.get(sent)
+                if info is not None and info["style"] is not None:
+                    print(f"{name} | {sent} | {info['style']}")
     return 0
 
 

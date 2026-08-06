@@ -20,6 +20,7 @@ class Slot:
     required: bool       # 必填还是可选
     mode: str            # 所属模式（type 取值 / lang 有无 / 位置）
     multi: bool = False  # 是否多项输入槽（N 项各一个哨兵）
+    url: bool = False    # 是否 URL 槽(如 image=/url=,在 img src 属性,无文本锚)
 
 
 @dataclass(frozen=True)
@@ -75,14 +76,14 @@ SLOTS: tuple[ComponentSlots, ...] = (
     )),
     # media.md L23-27: long-image image= 必填 + caption= 可选
     ComponentSlots("long-image", (
-        Slot("image", "头部属性 image", "references/advanced/media.md L25", True, "默认"),
-        Slot("caption", "头部属性 caption", "references/advanced/media.md L25", False, "默认"),
+        Slot("image", "头部属性 image", "references/advanced/media.md L25", True, "默认", url=True),
+        Slot("caption", "头部属性 caption", "references/advanced/media.md L25/L33", True, "默认"),
     )),
     # links-resources.md L8-11: resources title 可选 + N 条链接(文字+URL)
     ComponentSlots("resources", (
         Slot("title", "头部属性 title", "references/advanced/links-resources.md L8", False, "默认"),
         Slot("link_text", "块体 - [文字](url) 文字", "references/advanced/links-resources.md L9-10", True, "默认", multi=True),
-        Slot("url", "块体 - [文字](url) url", "references/advanced/links-resources.md L9-10", True, "默认", multi=True),
+        Slot("url", "块体 - [文字](url) url", "references/advanced/links-resources.md L9-10", True, "默认", multi=True, url=True),
     )),
     # footnotes.md L8-11: 正文 [^N] 引用 + 文末 [^N]: 定义
     ComponentSlots("footnotes", (
@@ -98,6 +99,12 @@ SLOTS: tuple[ComponentSlots, ...] = (
 )
 
 BY_COMPONENT: dict[str, ComponentSlots] = {c.component: c for c in SLOTS}
+
+
+# 4d(OBS-156):type 枚举常量(带 references 行号)。
+# alerts.md L17-21: note/tip/important/warning/caution;quotes.md L9-21: normal/highlight/sourced。
+ALERT_TYPES = frozenset({"note", "tip", "important", "warning", "caution"})
+QUOTE_TYPES = frozenset({"normal", "highlight", "sourced"})
 
 
 def total_slot_count() -> int:
