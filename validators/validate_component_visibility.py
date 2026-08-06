@@ -32,7 +32,7 @@ from pathlib import Path
 # OBS-145(档71C-R2):QUARANTINED 语义由「哨兵未进 final.html」收紧为「not render_ok」;
 # 新增 ANCHOR_GAP = render_ok 且 not anchor_ok(渲染器吐字但 pipeline 锚缺口)。
 # 实测导出快照(档71C-R3 实测):锚闭环(OBS-154)后 _COMPONENT_PARA_RES 从
-# component_anchors.json 全量导出(11 条 style),9 类全部 render_ok+struct_ok+
+# component_anchors.json 全量导出(条数以 component_anchors.json 现算为准,当前 17),9 类全部 render_ok+struct_ok+
 # anchor_ok -> QUARANTINED/MULTILINE/ANCHOR_GAP 全空,APPROVED = 9 类全部。
 # 测试以 R19 断言 == 现场导出,防快照过期。
 QUARANTINED_COMPONENTS = frozenset()
@@ -183,6 +183,13 @@ def sentinels_for(component: str, kinds=("required", "optional", "url")) -> list
 
 
 _URL_SENTINEL_SET = frozenset(s for lst in URL_SENTINELS.values() for s in lst)
+
+
+class SlotLookupMiss(ValueError):
+    """3b(71C-R7):哨兵无法从 SLOTS 反查到 (slot_name, mode) 时抛此异常。
+
+    与普通 ValueError 区分:main() 只捕获本异常,其它 ValueError 照常向上抛。
+    """
 
 
 def _lookup_slot(sentinel: str) -> tuple[str, str]:
@@ -351,7 +358,7 @@ def export_body_anchors_from_measurement(renderer: Path, out_dir: Path) -> dict[
     # 4c(OBS-163):SLOT_LOOKUP_MISS 真失败 —— 反查不中的哨兵收集后 raise。
     miss = sorted(s for s, info in anchors.items() if info.get("slot") == "SLOT_LOOKUP_MISS")
     if miss:
-        raise ValueError(f"SLOT_LOOKUP_MISS: {miss}")
+        raise SlotLookupMiss(f"SLOT_LOOKUP_MISS: {miss}")
     return anchors
 
 
@@ -456,8 +463,8 @@ def main(argv=None) -> int:
     from wxgzh_pipeline.stages.gzh_design import _body_plain_text
     try:
         anchors = export_body_anchors_from_measurement(Path(a.renderer), out)
-    except ValueError as _ve:
-        # 4c:SLOT_LOOKUP_MISS 打印并 return 1(不静默)。
+    except SlotLookupMiss as _ve:
+        # 3b:只捕获 SlotLookupMiss(其它 ValueError 照常向上抛)。
         print(f"ERROR: {_ve}")
         return 1
     # 3a(OBS-154):落成 component_anchors.json(五列 + renderer sha + 生成时间)。

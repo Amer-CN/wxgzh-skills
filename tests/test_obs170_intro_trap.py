@@ -74,3 +74,6 @@ def test_obs170_full_false_green_constructible(tmp_path):
     guard = gd._intro_content_fidelity(md, html)
     # 修复后期望(OBS-170 翻转):完全假绿被拆穿
     assert guard["ok"] is False, f"修复后 guard 应 FAIL;ok={guard['ok']} missing={guard['missing_text']!r}"
+    # 3c(71C-R7):同名导语段必须在 missing_text 中(补位失效)
+    assert TRAP_PARA in guard["missing_text"], \
+        f"修复后「风险提示」应在 missing_text;missing={guard['missing_text']!r}"
