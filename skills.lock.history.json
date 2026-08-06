@@ -244,5 +244,27 @@
     "new_source_tree_sha": "b81b7e8d7e096bde0c1ecc40acdc09e1c1336dec",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260806T122316Z-003f86f3",
+    "skill": "gzh-design",
+    "reason": "档71C-R2: 渲染器接线修复(alert/quote多行+code-compare续行+long-image caption+type枚举硬化+OBS-146 dialogue/quote source接线) + 版本 hammer.8",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-06T12:23:16Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "a51a551b6437d39b7c2e1cf4aedfebf4287fa2f61b3b80ee9417a72f1cb55c3d",
+    "new_root_sha256": "795b5ea2292eee6cfcbcf512fd83aa9ebe5e02cdfd33d54b293a8245661b81c3",
+    "old_entrypoint_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
+    "new_entrypoint_sha256": "4b6fc20e4491719a85652bbf8f7823707385a4dce437e11ca79c8355a9bf87f7",
+    "old_render_entry_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
+    "new_render_entry_sha256": "4b6fc20e4491719a85652bbf8f7823707385a4dce437e11ca79c8355a9bf87f7",
+    "old_full_commit_sha": "5791e637110ed941406ee371c96d3b1b115f9131",
+    "new_full_commit_sha": "ea2fb70ab84785dd8a6d91880acfe31444855cf3",
+    "old_source_tree_sha": "b81b7e8d7e096bde0c1ecc40acdc09e1c1336dec",
+    "new_source_tree_sha": "19258b83d885a77c24464f071679c24581df8442",
+    "old_skill_version": "v2026.08.02-hammer.7",
+    "new_skill_version": "v2026.08.02-hammer.8",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]

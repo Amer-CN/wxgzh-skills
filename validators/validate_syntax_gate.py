@@ -216,6 +216,26 @@ def validate_syntax_gate(article_path: Path, renderer: Path,
                     "snippet": text.strip()[:120],
                     "probe_reason": "；".join(reasons) if reasons else "probe 判定不支持",
                 })
+    # 1e(OBS-145,R26):组件 type 枚举校验 —— 未定义值 -> FAIL 并给源稿行号。
+    # 枚举:alert = references/advanced/alerts.md L17-21;quote = quotes.md L9-21。
+    _ALERT_TYPES = {"note", "tip", "important", "warning", "caution"}
+    _QUOTE_TYPES = {"normal", "highlight", "sourced"}
+    for i, ln in enumerate(lines):
+        st = ln.strip()
+        if not st.startswith(":::"):
+            continue
+        head = st[3:].strip()
+        name = head.split()[0] if head.split() else ""
+        m_type = re.search(r'type\s*=\s*"([^"]*)"', head)
+        if not m_type:
+            continue
+        tval = m_type.group(1)
+        if name == "alert" and tval not in _ALERT_TYPES:
+            problems.append({"category": "alert type 枚举", "line": i + 1,
+                             "snippet": st[:120], "probe_reason": f"未定义 alert type={tval!r}"})
+        elif name == "quote" and tval not in _QUOTE_TYPES:
+            problems.append({"category": "quote type 枚举", "line": i + 1,
+                             "snippet": st[:120], "probe_reason": f"未定义 quote type={tval!r}"})
     ok = not problems
     return (0 if ok else 1), {
         "OBS102_SYNTAX_GATE": "PASS" if ok else "FAIL",

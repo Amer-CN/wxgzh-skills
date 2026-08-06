@@ -1,70 +1,86 @@
 {
-  "criteria_version": "v1",
-  "renderer_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
-  "renderer_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
-  "generated_at_utc": "2026-08-06T08:10:19+00:00",
+  "criteria_version": "v2",
+  "criteria_changelog": [
+    "v1 -> v2 (档71C-R2, OBS-147): 判据分裂 render_ok/anchor_ok/per_item_ok v2(删_BASE_EL_COUNT与魔数3); 新增 ANCHOR_GAP=render_ok且not anchor_ok; QUARANTINED收紧为not render_ok; 探针样本按文档化槽重建(30槽)"
+  ],
+  "renderer_path": "F:\\AIXM\\wxgzh\\gzh-design-skill\\scripts\\render_article.py",
+  "renderer_sha256": "437fb8aa04916b2cb88d96626cad9b128a584700a96e230898b2ca76daf95378",
+  "generated_at_utc": "2026-08-06T12:12:10+00:00",
   "lists_exported": {
-    "quarantined": [
-      "code-compare",
-      "long-image"
-    ],
-    "multiline": [
+    "quarantined": [],
+    "multiline": [],
+    "anchor_gap": [
       "alert",
+      "code-compare",
+      "dialogue",
+      "gallery",
+      "long-image",
       "media-text",
-      "quote"
+      "quote",
+      "resources"
     ],
     "approved": [
-      "dialogue",
-      "footnotes",
-      "gallery",
-      "resources"
+      "footnotes"
     ]
   },
   "assertions_executed": true,
+  "exported_anchor_styles": [
+    "margin:0 0 16px;font-size:12px;color:#737373;text-align:center;",
+    "margin:0 0 24px;font-size:12px;color:#737373;text-align:center;",
+    "margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;",
+    "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;",
+    "margin:0 0 8px;font-size:12px;color:#737373;text-align:center;",
+    "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;",
+    "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;",
+    "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;",
+    "margin:0;font-size:14px;color:#555555;line-height:1.8;",
+    "margin:0;font-size:15px;font-weight:600;color:#555555;line-height:1.8;",
+    "margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;"
+  ],
   "components": {
     "alert": {
-      "text_ok": true,
-      "struct_ok": false,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": null
     },
     "code-compare": {
-      "text_ok": false,
-      "struct_ok": false,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": null
     },
     "dialogue": {
-      "text_ok": true,
-      "struct_ok": true,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": true
     },
     "footnotes": {
-      "text_ok": true,
-      "struct_ok": true,
-      "per_item_ok": false
+      "render_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": true
     },
     "gallery": {
-      "text_ok": true,
-      "struct_ok": true,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": true
     },
     "long-image": {
-      "text_ok": false,
-      "struct_ok": false,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": null
     },
     "media-text": {
-      "text_ok": true,
-      "struct_ok": false,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": null
     },
     "quote": {
-      "text_ok": true,
-      "struct_ok": false,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": null
     },
     "resources": {
-      "text_ok": true,
-      "struct_ok": true,
+      "render_ok": true,
+      "anchor_ok": false,
       "per_item_ok": true
     }
   }
