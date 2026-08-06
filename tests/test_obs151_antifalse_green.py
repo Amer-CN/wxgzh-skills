@@ -168,3 +168,30 @@ def test_obs157_dual_run_installed_vs_repo(tmp_path):
     for comp in m_repo:
         assert m_repo[comp] == m_inst[comp], \
             f"{comp}: repo={m_repo[comp]} inst={m_inst[comp]}"
+
+
+# ── 2a/2b(OBS-160,R32/R45):ANCHOR_GAP / QUARANTINED 反证 ────
+
+FAKE_OFFANCHOR = SKILL_ROOT / "tests" / "fixtures" / "fake_offanchor.py"
+FAKE_PARTIAL = SKILL_ROOT / "tests" / "fixtures" / "fake_partial.py"
+
+
+def test_obs160_fake_offanchor_gap_nonempty(tmp_path):
+    """反证:哨兵在锚集外 style 里 -> ANCHOR_GAP 非空、APPROVED 不足 9 类。"""
+    assert FAKE_OFFANCHOR.is_file()
+    measured = vcv.component_structure_check(FAKE_OFFANCHOR, tmp_path / "off")
+    lists = vcv.export_lists_from_measurement(measured)
+    assert lists["anchor_gap"], "fake_offanchor 下 ANCHOR_GAP 应为非空"
+    assert len(lists["approved"]) < 9, f"APPROVED 应不足 9 类: {sorted(lists['approved'])}"
+
+
+def test_obs160_fake_partial_quarantined_nonempty_and_distinct(tmp_path):
+    """反证:只渲染一半哨兵 -> QUARANTINED 非空且不等于全 9 类(有区分度)。"""
+    assert FAKE_PARTIAL.is_file()
+    measured = vcv.component_structure_check(FAKE_PARTIAL, tmp_path / "part")
+    lists = vcv.export_lists_from_measurement(measured)
+    assert lists["quarantined"], "fake_partial 下 QUARANTINED 应为非空"
+    assert lists["quarantined"] != frozenset(
+        {"alert", "code-compare", "dialogue", "footnotes", "gallery",
+         "long-image", "media-text", "quote", "resources"}), \
+        "QUARANTINED 不应是全 9 类(需有区分度)"

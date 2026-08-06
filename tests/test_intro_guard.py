@@ -152,14 +152,6 @@ def test_obs120_unknown_component_fail_closed(tmp_path):
 
 # ── OBS-119(档71C-2 C路线):隔离组件 fail-closed + 恒等断言 ──
 
-def test_obs145_quarantined_gate_empty_list_returns_empty(tmp_path):
-    """OBS-145(2f 翻转):QUARANTINED 实测导出为空集 -> 门禁保持挂载但返回空命中。"""
-    from validators.validate_component_visibility import quarantine_gate, QUARANTINED_COMPONENTS
-    assert QUARANTINED_COMPONENTS == frozenset(), "QUARANTINED 应为空集(2f 预期)"
-    md = "# 标题\n\n## 章节\n\n:::code-compare\n@before\nx\n@end\n:::\n"
-    hits = quarantine_gate(md)
-    assert hits == []
-
 
 def test_obs119_approved_component_not_triggered(tmp_path):
     """只用批准组件(alert) -> 不触发隔离门禁。"""
@@ -170,14 +162,6 @@ def test_obs119_approved_component_not_triggered(tmp_path):
 
 
 # ── OBS-129/132(档71C-2 收尾):多行不支持组件门禁 ──
-
-def test_obs145_multiline_gate_empty_list_returns_empty():
-    """OBS-145(2f 翻转):MULTILINE 实测导出为空集 -> 门禁保持挂载但返回空命中。"""
-    from validators.validate_component_visibility import multiline_gate, MULTILINE_UNSUPPORTED_COMPONENTS
-    assert MULTILINE_UNSUPPORTED_COMPONENTS == frozenset(), "MULTILINE 应为空集(2f 预期)"
-    md = "# 标题\n\n## 章节\n\n:::alert type=\"warning\"\nS1\nS2\nS3\n:::\n"
-    hits = multiline_gate(md)
-    assert hits == []
 
 
 def test_obs129_single_line_alert_not_triggered():

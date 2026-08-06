@@ -278,7 +278,9 @@ def test_obs145_matrix_metadata_shape():
         pytest.skip("矩阵 JSON 未生成")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
     assert matrix.get("criteria_version") == "v3"
-    assert Path(matrix.get("renderer_path", "")).is_absolute()
+    # 5b(OBS-166):renderer_path 随 bundle 发布,不得含机器绝对路径。
+    rp = matrix.get("renderer_path", "")
+    assert rp and not Path(rp).is_absolute() and ":" not in rp, f"renderer_path 含绝对路径: {rp}"
     assert re.fullmatch(r"[0-9a-f]{64}", matrix.get("renderer_sha256", ""))
 
 

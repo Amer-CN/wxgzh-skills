@@ -121,6 +121,8 @@ def content_validate(ctx, sd: Path, state):
                                 network_mode=ctx.network_mode)
     report["chapters_source"] = "frozen final_article.md (## headings)"
     report["INTRO_GUARD"] = "PASS"
+    # 4c(OBS-164):锚 JSON 状态注入(只可见,不阻断)。
+    report["ANCHORS_JSON_STATUS"] = dict(_ANCHORS_STATUS)
     # program-generated theme identity report (never hand-declared)
     (sd / "theme_identity_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -216,12 +218,38 @@ _CODE_ROW_RE = _re.compile(
 _ANCHORS_JSON = Path(__file__).resolve().parents[2] / "validators" / "component_anchors.json"
 
 
+# 4c(OBS-164):锚 JSON 状态(只可见不阻断;与 observability 只检测口径一致)。
+_ANCHORS_STATUS: dict = {"key": "ANCHORS_JSON_OK", "detail": ""}
+
+
 def _load_component_para_res() -> list["_re.Pattern"]:
+    import hashlib as _hashlib
     try:
         data = json.loads(_ANCHORS_JSON.read_text(encoding="utf-8"))
         styles = sorted({row["style"] for row in data.get("anchors", [])
                          if row.get("style") and row["style"] != "URL_SLOT"})
+        # renderer_sha256 漂移检测(只记录,不阻断)
+        installed_renderer = Path(__file__).resolve().parents[2].parent / \
+            ".agents" / "skills" / "gzh-design" / "scripts" / "render_article.py"
+        if installed_renderer.is_file():
+            actual = _hashlib.sha256(installed_renderer.read_bytes()).hexdigest()
+            if data.get("renderer_sha256") != actual:
+                _ANCHORS_STATUS.update(
+                    key="ANCHORS_SHA_DRIFT",
+                    detail=f"JSON sha {data.get('renderer_sha256')[:12]} != 安装侧 "
+                           f"{actual[:12]}")
+            else:
+                _ANCHORS_STATUS.update(key="ANCHORS_JSON_OK", detail="")
+        else:
+            _ANCHORS_STATUS.update(key="ANCHORS_JSON_MISSING",
+                                   detail=f"安装侧渲染器不存在: {installed_renderer}")
+    except FileNotFoundError:
+        _ANCHORS_STATUS.update(key="ANCHORS_JSON_MISSING",
+                               detail=f"JSON 缺失: {_ANCHORS_JSON}")
+        styles = []
     except (OSError, ValueError):
+        _ANCHORS_STATUS.update(key="ANCHORS_JSON_CORRUPT",
+                               detail="JSON 损坏或不可解析")
         styles = []
     return [_re.compile(f'<p style="{_re.escape(s)}">(.*?)</p>', _re.S) for s in styles]
 

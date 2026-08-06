@@ -1,6 +1,6 @@
 {
   "renderer_sha256": "437fb8aa04916b2cb88d96626cad9b128a584700a96e230898b2ca76daf95378",
-  "generated_at_utc": "2026-08-06T13:05:39+00:00",
+  "generated_at_utc": "2026-08-06T13:35:16+00:00",
   "anchors": [
     {
       "sentinel": "S_ALERT_BODY_CAUTION",
@@ -80,6 +80,13 @@
       "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
     },
     {
+      "sentinel": "S_CODE_COMPARE_TITLE_YES",
+      "component": "code-compare",
+      "slot": "s-code-compare-title",
+      "mode": "lang=有",
+      "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
       "sentinel": "S_DIALOGUE_MSG_1",
       "component": "dialogue",
       "slot": "s-dialogue-msg",
@@ -94,7 +101,28 @@
       "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
     },
     {
+      "sentinel": "S_DIALOGUE_MSG_3",
+      "component": "dialogue",
+      "slot": "s-dialogue-msg",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
       "sentinel": "S_DIALOGUE_NAME_1",
+      "component": "dialogue",
+      "slot": "s-dialogue-name",
+      "mode": "默认",
+      "style": "margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;text-align:right;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_NAME_2",
+      "component": "dialogue",
+      "slot": "s-dialogue-name",
+      "mode": "默认",
+      "style": "margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_NAME_3",
       "component": "dialogue",
       "slot": "s-dialogue-name",
       "mode": "默认",
@@ -116,6 +144,13 @@
     },
     {
       "sentinel": "S_FOOTNOTES_FN_TEXT_2",
+      "component": "footnotes",
+      "slot": "s-footnotes-fn-text",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;"
+    },
+    {
+      "sentinel": "S_FOOTNOTES_FN_TEXT_3",
       "component": "footnotes",
       "slot": "s-footnotes-fn-text",
       "mode": "默认",
@@ -220,6 +255,13 @@
       "style": "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;"
     },
     {
+      "sentinel": "S_RESOURCES_LINK_TEXT_3",
+      "component": "resources",
+      "slot": "s-resources-link-text",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;"
+    },
+    {
       "sentinel": "S_RESOURCES_TITLE",
       "component": "resources",
       "slot": "s-resources",
@@ -237,6 +279,13 @@
       "sentinel": "S_RESOURCES_URL_2",
       "component": "resources",
       "slot": "s_resources_url_2",
+      "mode": "默认",
+      "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_RESOURCES_URL_3",
+      "component": "resources",
+      "slot": "s_resources_url_3",
       "mode": "默认",
       "style": "URL_SLOT"
     }
