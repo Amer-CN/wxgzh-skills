@@ -40,7 +40,7 @@ APPROVED_CARRIER_COMPONENTS = frozenset({"gallery", "resources", "footnotes", "d
 
 # 单段可见性样本(位1,哨兵 SENTINEL_A1 放组件正文槽)。
 _COMPONENT_SAMPLES = {
-    "alert": ":::alert type=\"warn\"\nSENTINEL_A1\n:::\n",
+    "alert": ":::alert type=\"warning\"\nSENTINEL_A1\n:::\n",
     "quote": ":::quote\nSENTINEL_A1\n:::\n",
     "code-compare": ":::code-compare\n@before lang=\"python\"\nSENTINEL_A1\n@end\n:::\n",
     "media-text": ":::media-text\n![图](https://x.com/a.png)\nSENTINEL_A1\n:::\n",
@@ -53,9 +53,9 @@ _COMPONENT_SAMPLES = {
 
 # 结构位样本(OBS-133 第 1 步 1c):三行哨兵,文档语法 + 实现能解析,双满足。
 _MULTI_SAMPLES = {
-    "alert": ":::alert type=\"warn\"\nSENTINEL_S1 第一行\nSENTINEL_S2 第二行\nSENTINEL_S3 第三行\n:::\n",
+    "alert": ":::alert type=\"warning\"\nSENTINEL_S1 第一行\nSENTINEL_S2 第二行\nSENTINEL_S3 第三行\n:::\n",
     "quote": ":::quote\nSENTINEL_S1 第一行\nSENTINEL_S2 第二行\nSENTINEL_S3 第三行\n:::\n",
-    "code-compare": ":::code-compare\n@before lang=\"python\"\nSENTINEL_S1\n@end\n@after lang=\"python\"\nSENTINEL_S2\n@end\n:::\n",
+    "code-compare": ":::code-compare\n@before lang=\"python\"\nSENTINEL_S1 第一行\nSENTINEL_S2 第二行\n@end\n@after lang=\"python\"\nSENTINEL_S3 第三行\n@end\n:::\n",
     "media-text": ":::media-text\n![图](https://x.com/a.png)\nSENTINEL_S1 第一行\nSENTINEL_S2 第二行\nSENTINEL_S3 第三行\n:::\n",
     "gallery": ":::gallery title=\"图集\"\n![SENTINEL_S1](https://x.com/1.png)\n![SENTINEL_S2](https://x.com/2.png)\n![SENTINEL_S3](https://x.com/3.png)\n:::\n",
     "long-image": ":::long-image image=\"https://x.com/1.png\" caption=\"SENTINEL_S1\"\n:::\n",
