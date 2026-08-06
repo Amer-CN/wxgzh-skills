@@ -13,13 +13,21 @@ content_validate 挂载):
    metric_name + series_label 非空)。支持中文数字(四→五)。文章没有的对比对
    不要求(不伪造);文章有的而 registry 没登记 → FAIL_CLOSED。
 2. `validate_codeblock_fidelity`:注入素材中的 deny/ask 拦截文案(guard-bash.sh
-   的 deny/ask 拦截文案(实测 16 条,⛔/⚠️ 前缀模板在 _common.sh)至少 10 条必须以 fenced code
-   block 逐字进入文章,且代码块内必须出现 ⛔ 与 ⚠️ 模板前缀;改写/散文化不计数。
+   的 deny/ask 拦截文案(实测 16 条,⛔/⚠️ 前缀模板在 _common.sh)至少 10 条必须以
+   【载体块】逐字进入文章,且载体内必须出现 ⛔ 与 ⚠️ 模板前缀;改写/散文化不计数。
+
+OBS-176(档71E)载体放宽的正当性:档 65 取证的原始意图是【防散文化】——原文:
+「代码块缺失因写作无形态指示,15 条 deny/ask 拦截文案被转写为散文」;不是
+【必须用代码块】。故载体集合 = fenced code block ∪ 已批准 A 组组件块
+(:::<name> … :::,name 必须来自 validators/validate_component_visibility 的
+APPROVED_CARRIER_COMPONENTS,R48:单一来源 import,禁止手抄组件名)。
+载体块体以外的正文一律不计数(R47);MIN_DENY_ASK_COVERAGE 保持 10,不得降低。
 
 两者都只读 RUN 产物,不修改任何文件。
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -35,7 +43,37 @@ _PAIR_RE = re.compile(
     r"([0-9一二三四五六七八九十百两]+)\s*([条个项张组]?)")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 MIN_NUMBER_PAIRS = 3        # 本次预期:19→25 / 8→11 / 四→五
-MIN_DENY_ASK_COVERAGE = 10  # 15 条中至少 10 条逐字进入代码块
+MIN_DENY_ASK_COVERAGE = 10  # 16 条中至少 10 条逐字进入载体块
+
+
+def _load_approved_carrier_components() -> frozenset[str]:
+    """R48(OBS-176):已批准载体集合从 validators/validate_component_visibility
+    单一来源 import,禁止手抄组件名常量。与 stages.load_validator / tests
+    conftest 同机制(importlib 文件加载),避免包循环依赖。
+
+    S63(档71E):import 失败(路径/循环依赖)→ 由调用方停机上报,禁止改手填常量绕过。
+    """
+    root = Path(__file__).resolve().parents[1]
+    path = root / "validators" / "validate_component_visibility.py"
+    spec = importlib.util.spec_from_file_location("validate_component_visibility", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(
+            f"S63 OBS-176 cannot import validate_component_visibility from {path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except Exception as exc:  # noqa: BLE001 —— 原样上抛供 S63 停机贴原文
+        raise RuntimeError(
+            f"S63 OBS-176 import validate_component_visibility failed: {exc!r}") from exc
+    approved = getattr(module, "APPROVED_CARRIER_COMPONENTS", None)
+    if not isinstance(approved, frozenset):
+        raise RuntimeError(
+            "S63 OBS-176 APPROVED_CARRIER_COMPONENTS missing/not frozenset: "
+            f"{approved!r}")
+    return approved
+
+
+_APPROVED_CARRIER_COMPONENTS = _load_approved_carrier_components()
 
 
 def cn_to_int(token: str) -> int | None:
@@ -151,11 +189,59 @@ def extract_deny_ask_lines(items_path: Path) -> list[str]:
     return lines
 
 
+def _carrier_blocks(article_text: str) -> tuple[list[str], list[str]]:
+    """OBS-176(档71E):返回【载体块体文本】列表与其载体类型清单。
+
+    载体 = ① fenced code block(三反引号,沿用 _FENCE_RE,向后兼容)
+            ∪ ② 已批准 A 组组件块:从 ':::<name>' 开标签行到配对 ':::' 收尾行之间
+              的内容,<name> 必须在 APPROVED_CARRIER_COMPONENTS 内。
+
+    组件块提取与安装侧 gzh-design render_article.py parse_article() 的
+    in_component 状态机口径一致(逐行:strip 后以 ::: 开头的行进入/关闭组件块,
+    块体 = 开关行之间的原文行);嵌套/未配对 ':::' 一律不计为载体(宁可漏,不可多)。
+
+    返回 (block_texts, kinds):kinds 为命中的载体类型名(如 ["fence","alert"])。
+    """
+    blocks: list[str] = []
+    kinds: list[str] = []
+    # ① fenced code block
+    for m in _FENCE_RE.finditer(article_text or ""):
+        blocks.append(m.group(1))
+        kinds.append("fence")
+    # ② 已批准组件块(状态机与安装侧 parse_article in_component 同口径)
+    in_component = False
+    comp_name = ""
+    buf: list[str] = []
+    for ln in (article_text or "").replace("\r\n", "\n").split("\n"):
+        st = ln.strip()
+        if in_component:
+            if st.startswith(":::"):
+                if comp_name in _APPROVED_CARRIER_COMPONENTS:
+                    blocks.append("\n".join(buf))
+                    kinds.append(comp_name)
+                buf = []
+                in_component = False
+            else:
+                buf.append(ln)
+            continue
+        if st.startswith(":::"):
+            in_component = True
+            buf = []
+            head = st[3:].strip()
+            comp_name = head.split()[0] if head.split() else ""
+            continue
+    return blocks, kinds
+
+
 def validate_codeblock_fidelity(article_path: Path, items_path: Path) -> tuple[bool, dict]:
-    """≥10 条 deny/ask 文案必须以 fenced code block 逐字进入文章,且代码块内
-    必须出现 ⛔ 与 ⚠️ 模板前缀(_common.sh deny()/ask() 模板)。"""
+    """≥10 条 deny/ask 文案必须以【载体块】(fenced code block ∪ 已批准 A 组
+    组件块)逐字进入文章,且载体内必须出现 ⛔ 与 ⚠️ 模板前缀。
+
+    OBS-176(档71E):covered / 前缀判定只在载体块体内进行(R47);载体内正文
+    一律不计数;MIN_DENY_ASK_COVERAGE 保持 10。返回新增 carrier_kinds 与
+    carrier_block_count。"""
     article = article_path.read_text(encoding="utf-8")
-    blocks = _FENCE_RE.findall(article)
+    blocks, kinds = _carrier_blocks(article)
     block_text = "\n".join(blocks)
     lines = extract_deny_ask_lines(items_path)
     covered = [line for line in lines if line in block_text]
@@ -170,5 +256,7 @@ def validate_codeblock_fidelity(article_path: Path, items_path: Path) -> tuple[b
         "deny_prefix_present": has_deny_prefix,
         "ask_prefix_present": has_ask_prefix,
         "missing_lines": [l for l in lines if l not in covered],
+        "carrier_kinds": sorted(set(kinds)),
+        "carrier_block_count": len(blocks),
         "OBS88_CODEBLOCK": "PASS" if ok else "FAIL",
     }

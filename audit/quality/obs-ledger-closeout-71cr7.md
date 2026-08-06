@@ -8,7 +8,7 @@
 | 台账口径缺失 | 无「本台账口径」小节 | 补口径:报告名区间法/空号证据要求/更新责任 |
 | 反证测试未跟进 | — | test_obs170_full_false_green 补「风险提示 in missing_text」断言 |
 | main 异常过宽 | except ValueError 吞一切 | 自定义 SlotLookupMiss(ValueError 子类),main 只捕获它 |
-| skip 覆盖未透明 | 键测试可能被 skip 无提示 | test_obs173_all_keys_have_tests 输出执行层未验证警告 |
+| skip 覆盖未透明 | 键测试可能被 skip 无提示 | test_obs173_all_keys_have_tests 输出执行层未验证警告【71E 更正:该警告已于 71D/1a 撤除(R43/R44),执行层覆盖登记为【未覆盖】】 |
 
 ## ② 每条「已覆盖」声明 → 测试函数名 + 断言行原文（R36）
 
@@ -62,14 +62,14 @@
 | test_obs157_dual_run(安装侧) | 安装侧缺失 | 合理 skip |
 | test_obs173_status_sha_drift | 安装侧缺失 | 合理 skip(状态键本身在测缺失场景) |
 | test_obs173_status_ok | 安装侧缺失 | 合理 skip |
-| test_obs173_all_keys_have_tests | 无 skip(文本层) | 已实施执行层警告(2b) |
+| test_obs173_all_keys_have_tests | 无 skip(文本层) | 已实施执行层警告(2b)【71E 更正:该警告已于 71D/1a 撤除(R43/R44),执行层覆盖登记为【未覆盖】】 |
 
 2b 实施:all_keys_have_tests 输出「文本层覆盖,执行层未验证」显式警告(无法用 pytest request.session 精确断言每条键测试已执行,渲染器不可得时 skip 合法;不引入新框架)。
 
 ## 第 3 步 三条小修
 
 - 3a: docstring「(11 条 style)」→「条数以 component_anchors.json 现算为准,当前 17」
-- 3b: `class SlotLookupMiss(ValueError)`;export 抛它;main 只捕获它;反证测试保留 `pytest.raises(ValueError)` 基类断言(SlotLookupMiss 是其子类,基类断言同时覆盖新旧异常,选基类理由:不绑定实现细节)
+- 3b: `class SlotLookupMiss(ValueError)`;export 抛它;main 只捕获它;反证测试保留 `pytest.raises(ValueError)` 基类断言(SlotLookupMiss 是其子类,基类断言同时覆盖新旧异常,选基类理由:不绑定实现细节)【71E 更正:71D/1b① 已改为 pytest.raises(vcv.SlotLookupMiss);原「不绑定实现细节」理由不成立——基类断言下把 SlotLookupMiss 改回普通 ValueError 测试照样绿,等于零保护】
 - 3c: test_obs170_full_false_green 补 `assert TRAP_PARA in guard["missing_text"]`
 
 ## 第 4 步 回归与安装
@@ -91,7 +91,7 @@
 | 未修项 | 71D 阻塞 |
 |---|---|
 | OBS-122 B 组 10 类未接线 | 【不阻塞 71D】(71D 用 alert type=warning 承载 16 行,alert 属 A 组已接线;71D 不使用 B 组任何类) |
-| OBS-131 A 组无并列短句载体(已裁决未实施) | 【不阻塞 71D】(71C-2A' 裁决「71D 不换载体,等 71C-R 修 alert 多行」;OBS-129 已修复,16 行实测为 16 个独立 <p>,struct_ok=True) |
+| OBS-131 A 组无并列短句载体(已裁决未实施) | 【不阻塞 71D】(审核方 71E 判定:OBS-129 已修,alert 结构位成立且语义最近,故 71D/71E 用 alert 承载;71C-2 的『A 组无语义载体』结论系 alert 多行未修时点的结论) |
 | OBS-148 探针样本住生产文件 | 【不阻塞 71D】(测试资产,工程债) |
 | OBS-158 _nearest_p_style 只取 ps[-1] 不校验哨兵在该 <p> 内 | 【不阻塞 71D】(如实:该导出是生产侧 _COMPONENT_PARA_RES 的来源,缺陷偏「假绿」方向;71D 由 anchor_ok + 实测可见性门禁兜底) |
 | OBS-159 relock 不同步 OBS-69 基线 | 【不阻塞 71D】(下一档 relock 前手动同步) |

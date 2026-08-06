@@ -70,13 +70,18 @@
 | OBS/项 | 问题 | 阻塞 71D |
 |---|---|---|
 | 122 | B 组 10 类未接线(71C-3 范围) | 不阻塞(71D 用 alert type=warning 承载 16 行,alert 属 A 组已接线;71D 不使用 B 组任何类) |
-| 131 | A 组无并列短句载体(已裁决未实施;71D 承载见上) | 不阻塞(71C-2A' 裁决「71D 不换载体,等 71C-R 修 alert 多行」;OBS-129 已修复,16 行实测为 16 个独立 <p>,struct_ok=True) |
+| 131 | A 组无并列短句载体(已裁决未实施;71D 承载见上) | 不阻塞(审核方 71E 判定:OBS-129 已修,alert 结构位成立且语义最近,故 71D/71E 用 alert 承载;71C-2 的『A 组无语义载体』结论系 alert 多行未修时点的结论;无出处直引已于 71E 删除) |
 | 148 | 探针样本住在随包发布的生产文件 | 不阻塞(仅测试资产,随包发布是工程债) |
 | 158 | _nearest_p_style 只取 ps[-1],不校验哨兵是否真在该 <p>…</p> 内 | 不阻塞(如实:该导出是生产侧 _COMPONENT_PARA_RES 的来源,缺陷偏「假绿」方向;71D 由 anchor_ok + 实测可见性门禁兜底,本档真实渲染已过 component_visibility,故维持不阻塞,但理由不再写「仅探针用」) |
 | 159 | relock 不自动同步 OBS-69 基线 | 不阻塞(下一档 relock 前手动同步即可) |
-| — | 微信端渲染未验证(需人工预览) | **阻塞**(71D 发文前必须人工预览) |
+| — | 微信端渲染 | **已关闭**(2026-08-07 02:18 用户人工预览三项全过:alert 16 行逐行显示 / /plugin 命令可复制 / 无异常删除线;用户原话「1 过 2 过 3 过」;R51 证据) |
 | — | fake_live 仍不过语法门禁(R9 保留项) | 不阻塞(仅测试路径) |
 | — | 键测试执行层覆盖(1a/71D):test_obs173 撤 rg 后执行层覆盖无断言 | 不阻塞(文本层 impl_keys==test_keys 断言仍在;执行层未验证已如实登记【未覆盖】,不再输出恒真警告) |
+| 175 | 配图位置无机器判据(bindings placement anchor 空/confidence=0,chart-003 跨章) | 已修(独立判据+CLI+测试落地;按 S65/3d 例外不挂主门禁,第 6 步仍实测) | validators/validate_image_section_affinity.py;test_obs175_image_affinity.py | 71E |
+| 176 | validate_codeblock_fidelity 只认 fenced code block,16 行同一批文案出现两遍 | 已修(载体放宽 = fence ∪ 已批准组件块,R48 单一来源导入;MIN=10 未动) | wxgzh_pipeline/writing_contract.py;test_obs176_carrier_widen.py | 71E |
+| 177 | 8 条 ⛔ 与 8 条 ⚠️ 压平进同一 alert type=warning | 已修(第 6 步拆两块:caution=⛔ / warning=⚠️,16 行全文出现次数=1) | producers.py 指令;本档第 6 步 | 71E |
+| 178 | closeout 报告被就地改成跨档混合文档,三处过期陈述 | 已修(三处加「71E 更正」标注,本档新建独立报告文件) | obs-ledger-closeout-71cr7.md;obs175-179-carrier-widen-71e.md | 71E |
+| 179 | OBS-131 行引用无出处直引「71D 不换载体…」 | 已修(删除无出处直引,改写为审核方 71E 判定口径) | obs-ledger.md;obs-ledger-closeout-71cr7.md | 71E |
 
 ## 本台账口径
 
@@ -88,3 +93,4 @@
    需由后续档回查指令原文或审核方补充。
 4. 下次更新责任:任何新档新增/修复 OBS 号,须同步更新本台账并标注认领档号。
 5. R45(71D):「已裁决未实施」= 未修的一种,必须进未修分区并给 71D 阻塞判定。
+6. R51(71E):「已关闭」必须附闭环证据(时间 + 验收人 + 验收内容原文),无证据不得标已关闭。
