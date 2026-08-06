@@ -1,0 +1,71 @@
+{
+  "criteria_version": "v1",
+  "renderer_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+  "renderer_sha256": "cb2e186c75c327f7d3df0938bca5058de6a6fc26b04c8c62191c976f883ba908",
+  "generated_at_utc": "2026-08-06T08:10:19+00:00",
+  "lists_exported": {
+    "quarantined": [
+      "code-compare",
+      "long-image"
+    ],
+    "multiline": [
+      "alert",
+      "media-text",
+      "quote"
+    ],
+    "approved": [
+      "dialogue",
+      "footnotes",
+      "gallery",
+      "resources"
+    ]
+  },
+  "assertions_executed": true,
+  "components": {
+    "alert": {
+      "text_ok": true,
+      "struct_ok": false,
+      "per_item_ok": null
+    },
+    "code-compare": {
+      "text_ok": false,
+      "struct_ok": false,
+      "per_item_ok": null
+    },
+    "dialogue": {
+      "text_ok": true,
+      "struct_ok": true,
+      "per_item_ok": true
+    },
+    "footnotes": {
+      "text_ok": true,
+      "struct_ok": true,
+      "per_item_ok": false
+    },
+    "gallery": {
+      "text_ok": true,
+      "struct_ok": true,
+      "per_item_ok": true
+    },
+    "long-image": {
+      "text_ok": false,
+      "struct_ok": false,
+      "per_item_ok": null
+    },
+    "media-text": {
+      "text_ok": true,
+      "struct_ok": false,
+      "per_item_ok": null
+    },
+    "quote": {
+      "text_ok": true,
+      "struct_ok": false,
+      "per_item_ok": null
+    },
+    "resources": {
+      "text_ok": true,
+      "struct_ok": true,
+      "per_item_ok": true
+    }
+  }
+}
