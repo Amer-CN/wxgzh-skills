@@ -77,7 +77,8 @@ def _mode_enforce() -> bool:
 
 def _enforce_expected_counts(pipeline_count: int, manifest_count: int,
                              bundle_count: int, enforce: bool,
-                             skip_count: int = 0) -> None:
+                             skip_count: int = 0,
+                             skip_names: list[str] | None = None) -> None:
     """动态实算校验:以构建产物自身计数为基线,拒绝写死常量。"""
     print(f"[build] 实算计数: pipeline={pipeline_count} manifest={manifest_count} "
           f"bundle_zip={bundle_count} enforce={enforce}")
@@ -89,25 +90,22 @@ def _enforce_expected_counts(pipeline_count: int, manifest_count: int,
     if manifest_count != bundle_count - skip_count:
         raise SystemExit(
             f"manifest count mismatch: manifest={manifest_count} "
-            f"bundle_zip={bundle_count} skip_count={skip_count}")
-    # OBS-117:恢复被删维度 —— pipeline_count 必须等于磁盘独立枚举数。
-    # 不复用 copy_tree/deterministic_zip,按 PIPELINE_RELEASE_INCLUDES/EXCLUDES
-    # 独立走一遍 _skip 语义得到 disk_count;两者不等说明打包环节有真实偏差。
-    disk_count = _disk_enum_count()
-    if pipeline_count != disk_count:
-        raise SystemExit(
-            f"pipeline/disk count mismatch: pipeline={pipeline_count} "
-            f"disk={disk_count}")
+            f"bundle_zip={bundle_count} skip_count={skip_count} "
+            f"skip_names={skip_names or []}")
+    # OBS-117(档71C-2):由「比 count」升级为「比 set」——磁盘独立枚举集合与
+    # zip 内条目集合的双向差集校验在 verify_release_artifacts 内执行
+    # (only_in_disk / only_in_zip 全清单,任一非空即 SystemExit)。
 
 
-def _disk_enum_count() -> int:
-    """OBS-117:按 PIPELINE_RELEASE_INCLUDES/EXCLUDES 独立枚举磁盘文件数。
+def _disk_enum_set() -> set[str]:
+    """OBS-117(档71C-2):按 PIPELINE_RELEASE_INCLUDES/EXCLUDES 独立枚举磁盘
+    release 文件相对路径集合。
 
     与 zipping._skip 的排除语义保持一致但不复用其函数(独立实现,防「同一份
     代码两个副本」与「校验与被校验同源」)。"""
     from wxgzh_pipeline import zipping as _zip_mod
     src = SKILL_ROOT
-    n = 0
+    result = set()
     for p in sorted(src.rglob("*")):
         if not p.is_file():
             continue
@@ -116,14 +114,14 @@ def _disk_enum_count() -> int:
         if posix in {Path(x).as_posix() for x in _zip_mod.PIPELINE_RELEASE_EXCLUDES}:
             continue
         if posix in {Path(x).as_posix() for x in _zip_mod.PIPELINE_RELEASE_INCLUDES}:
-            n += 1
+            result.add(posix)
             continue
         if any(part in _zip_mod.EXCLUDE_DIRS for part in p.parts):
             continue
         if p.suffix.lower() in _zip_mod.EXCLUDE_SUFFIXES or p.name in _zip_mod.FORBIDDEN_NAMES:
             continue
-        n += 1
-    return n
+        result.add(posix)
+    return result
 
 
 def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Path) -> dict:
@@ -144,10 +142,25 @@ def verify_release_artifacts(skill_zip: Path, bundle_zip: Path, extract_root: Pa
         manifest = json.loads(bundle_z.read("portable-bundle/MANIFEST.json"))
         bundle_files = [i for i in bundle_z.infolist() if not i.is_dir()]
         # OBS-65:动态实算校验(见 _enforce_expected_counts;常量已废除)
-        skip_count = sum(1 for i in bundle_z.infolist()
-                        if not i.is_dir() and Path(i.filename).name == "MANIFEST.json")
+        # 5a(OBS-116):失败信息补全 —— 记录 skip_names 全清单,失配时逐条打印。
+        skip_names = sorted({
+            Path(i.filename).as_posix()
+            for i in bundle_z.infolist()
+            if not i.is_dir() and Path(i.filename).name == "MANIFEST.json"
+        })
+        skip_count = len(skip_names)
         _enforce_expected_counts(len(skill_tree), len(manifest.get("files", [])),
-                                 len(bundle_files), _mode_enforce(), skip_count)
+                                 len(bundle_files), _mode_enforce(), skip_count,
+                                 skip_names)
+        # 5b(OBS-117):磁盘独立枚举集合 vs zip 条目集合,双向差集任一非空即失败。
+        disk_set = _disk_enum_set()
+        zip_set = set(skill_tree)
+        only_in_disk = sorted(disk_set - zip_set)
+        only_in_zip = sorted(zip_set - disk_set)
+        if only_in_disk or only_in_zip:
+            raise SystemExit(
+                f"pipeline/disk set mismatch: only_in_disk={only_in_disk} "
+                f"only_in_zip={only_in_zip}")
         manifest_paths = {item["path"] for item in manifest.get("files", [])}
         workflow_manifest_path = "wxgzh-pipeline/" + workflow_rel
         if workflow_manifest_path not in manifest_paths:

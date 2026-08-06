@@ -74,7 +74,9 @@ def test_obs102_baseline_no_needle_hit(tmp_path):
                    capture_output=True, text=True, encoding="utf-8",
                    errors="replace", timeout=120)
     html = (out / "final.html").read_text(encoding="utf-8")
-    body = _normalize_text(_body_plain_text(html))
+    # 5c(档71C-2):去掉双重归一化 —— _body_plain_text 已归一化,再套
+    # _normalize_text 属二次归一化(OBS-118 同源),与实现侧修正保持一致。
+    body = _body_plain_text(html)
     for key, label, token, needle, _ in CATALOG:
         assert token not in body, f"baseline token pollution: {key}"
         assert needle not in body, f"baseline needle pollution: {key}"

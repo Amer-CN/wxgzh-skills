@@ -49,6 +49,39 @@ def content_validate(ctx, sd: Path, state):
     if gate is not None and gate["exit_code"] != 0:
         return 1, {"reason": "OBS102_SYNTAX_GATE=FAIL",
                    "syntax_gate": gate["report"]}, vpath, vsha
+    # 冻结文章路径(2h'/OBS-73 共用,提前定义)
+    fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
+    # OBS-119(档71C-2,2h'):隔离组件 fail-closed —— 冻结文章出现 QUARANTINED
+    # 组件(code-compare/long-image,渲染器缺陷 OBS-124/125)即拦截。
+    from . import load_validator as _lv2
+    vis_gate = _lv2("validate_component_visibility")
+    q_hits = vis_gate.quarantine_gate(fa.read_text(encoding="utf-8")) if fa.is_file() else []
+    if q_hits:
+        names = ",".join(f"{h['name']}@L{h['line']}" for h in q_hits)
+        return 1, {"reason": f"COMPONENT_QUARANTINED:{names}",
+                   "quarantined": q_hits}, vpath, vsha
+    # OBS-129/132(档71C-2 收尾,2.6c):多行不支持组件门禁 —— alert/quote 块体
+    # 有效文本 >=2 行即拦截(单 <p> 塌陷,微信端失行分隔)。
+    ml_hits = vis_gate.multiline_gate(fa.read_text(encoding="utf-8")) if fa.is_file() else []
+    if ml_hits:
+        names = ",".join(f"{h['name']}@L{h['start_line']}-L{h['end_line']}({h['line_count']}行)"
+                         for h in ml_hits)
+        return 1, {"reason": f"COMPONENT_MULTILINE_UNSUPPORTED:{names}",
+                   "multiline": ml_hits}, vpath, vsha
+    # OBS-120(档71C-2,1d):未知组件 FAIL_CLOSED —— 读取渲染产出的
+    # component_usage_report.json;unknown_count != 0 即拦截(R12:键存在才校验,
+    # 文件不存在则行为不变)。
+    usage_rep = sd / "component_usage_report.json"
+    if usage_rep.is_file():
+        try:
+            usage_data = json.loads(usage_rep.read_text(encoding="utf-8"))
+            comps = usage_data.get("components", {}) if isinstance(usage_data, dict) else {}
+            unknown = comps.get("unknown", []) if isinstance(comps, dict) else []
+            if isinstance(comps, dict) and comps.get("unknown_count", 0):
+                return 1, {"reason": "COMPONENT_UNKNOWN=FAIL",
+                           "unknown_components": unknown}, vpath, vsha
+        except (OSError, ValueError):
+            pass  # 解析失败不阻断(文件损坏另由 receipt 校验兜底)
     # OBS-110(档71C-1):final.html <img src> 白名单——只允许 https://;命中
     # ../ 、file:// 、盘符、data: -> FAIL_CLOSED。挂载于此因 final.html 在
     # gzh_design content_validate 路径上(validate_delivery 不在该路径)。
@@ -60,7 +93,6 @@ def content_validate(ctx, sd: Path, state):
         return 1, {"reason": "OBS110_IMG_SRC=FAIL", "img_src": img_report}, vpath, vsha
     # OBS-73: same frozen final_article.md the media_enrichment stage binds (the
     # zh_human_writing output). Unavailable = FAIL, never skip.
-    fa = Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
     if not fa.is_file():
         return 1, {"reason": "frozen final_article.md missing — OBS-73 intro guard cannot run"}, vpath, vsha
     guard = _intro_content_fidelity(fa.read_text(encoding="utf-8"),
@@ -106,12 +138,25 @@ def _count_h2(md_path: Path) -> int:
 def _intro_paras(md_text: str) -> list[str]:
     """Intro-region paragraphs: non-empty non-heading lines between the H1 and
     the first "## " (same region parse_article renders; see _INTRO_MAX_LEN note
-    above — the renderer now emits every line, so nothing is dropped)."""
+    above — the renderer now emits every line, so nothing is dropped).
+
+    OBS-120(档71C-2):::: 组件块(从开标签 ::: 行到配对收尾 ::: 行,含两端)
+    整块排除,不进入导语段落清单。块边界规则与安装侧
+    render_article.parse_article 逐字一致(见其 L107-128:in_component 状态机,
+    开行 st.startswith(":::") 置位,收行 st.startswith(":::") 复位)。"""
     lines = md_text.replace("\r\n", "\n").split("\n")
     title_seen = False
     paras: list[str] = []
+    in_component = False
     for ln in lines:
         st = ln.strip()
+        if in_component:
+            if st.startswith(":::"):
+                in_component = False
+            continue
+        if st.startswith(":::"):
+            in_component = True
+            continue
         if not title_seen and st.startswith("# ") and not st.startswith("## "):
             title_seen = True
             continue
@@ -155,13 +200,26 @@ _PRE_RE = _re.compile(r"<pre[^>]*>(.*?)</pre>", _re.S)  # 兼容 67D 之前历�
 _CODE_ROW_RE = _re.compile(
     "<p style=\"margin:0;font-family:'SF Mono',Consolas[^\"]*?color:#E2E8F0;\">"
     "(.*?)</p>", _re.S)
-# OBS-106(档71C-1,7b 备选②):高级组件正文段落锚 —— 从 generate_advanced_html.py
-# builder 真实产物抄录的开标签(A 组 9 类的 body 段落共用的形态)。负对照:
-# 现 RUN 无组件 final.html 中该锚 0 命中(封面/目录/署名/页脚均不匹配)。选备选
-# ② 因 R11 禁止手写组件 HTML,且 builder 段落非 hammer_para 形态(路径①不可行)。
-_COMPONENT_PARA_RE = _re.compile(
-    "<p style=\"margin:0;font-size:14px;color:#555555;line-height:1.8;\">"
-    "(.*?)</p>", _re.S)
+# OBS-106(档71C-1,7b 备选②)+OBS-119(档71C-2 C路线):组件正文段落锚,逐类
+# 从 generate_advanced_html.py builder 真实产物抄录(每类各自形态,禁止通配):
+#   alert      -> margin:0;font-size:14px;color:#555555;line-height:1.8;(alert() hammer)
+#   dialogue   -> margin:0;font-size:14px;color:#555555;line-height:1.8;(dialogue() hammer)
+#   footnotes  -> margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;(footnotes() hammer)
+#   quote      -> margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;(quote() hammer)
+#   media-text -> margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;(media_text() hammer)
+#   gallery    -> margin:0 0 16px;font-size:12px;color:#737373;text-align:center;(gallery() hammer)
+#   resources  -> margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;(resources() hammer)
+# code-compare / long-image 归 QUARANTINED(2d' 类B:哨兵未进 final.html,渲染器缺陷
+# OBS-124/OBS-125,见 validators/validate_component_visibility.py)。
+# 负对照:现 RUN 无组件 final.html 中这些锚 0 命中(封面/目录/署名/页脚均不匹配)。
+_COMPONENT_PARA_RES = [
+    _re.compile("<p style=\"margin:0;font-size:14px;color:#555555;line-height:1.8;\">(.*?)</p>", _re.S),   # alert/dialogue
+    _re.compile("<p style=\"margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;\">(.*?)</p>", _re.S),  # footnotes
+    _re.compile("<p style=\"margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;\">(.*?)</p>", _re.S),  # quote
+    _re.compile("<p style=\"margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;\">(.*?)</p>", _re.S),  # media-text
+    _re.compile("<p style=\"margin:0 0 16px;font-size:12px;color:#737373;text-align:center;\">(.*?)</p>", _re.S),  # gallery
+    _re.compile("<p style=\"margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;\">(.*?)</p>", _re.S),  # resources
+]
 
 
 def _body_plain_text(html_text: str) -> str:
@@ -169,7 +227,7 @@ def _body_plain_text(html_text: str) -> str:
     <pre> 历史代码块(whitespace-normalized, HTML entities decoded)。
     Cover/TOC/signature/footer regions are excluded on purpose (OBS-83)。"""
     parts = (_PARA_RE.findall(html_text) + _CODE_ROW_RE.findall(html_text)
-             + _COMPONENT_PARA_RE.findall(html_text)
+             + [m for rx in _COMPONENT_PARA_RES for m in rx.findall(html_text)]
              + _PRE_RE.findall(html_text))
     return _normalize_text("".join(parts))
 

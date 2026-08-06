@@ -171,20 +171,47 @@ def _strike_check(html: str) -> tuple[bool, bool, int]:
 
 
 def _img_type_occurrences(html: str, shadow_token: str) -> int:
-    """OBS-109:图片组件指纹去碰撞 —— 阴影令牌命中处后续 400 字符内必须出现
-    <img 才计为图片组件。media-text/long-image 高级组件(含占位 <img)仍命中;
-    alert/quote 等纯文本组件共享阴影令牌但不含 <img,不计入。"""
+    """OBS-123(档71C-2):图片组件指纹去魔数窗口 —— 改结构包含。
+
+    定位含该类型令牌的 <section 开标签 → 深度计数向后找配对 </section> →
+    要求 <img 出现在该区间内部。与旧「令牌后 400 字符窗口」(OBS-109) 不同:
+    section 闭合之后的 <img 不再误命中;alert/quote 等纯文本组件共享阴影
+    令牌但无 <img,仍不计入。无 <section 包裹的令牌不计(组件产物必在
+    section 容器内)。"""
     n = 0
     start = 0
     while True:
         i = html.find(shadow_token, start)
         if i < 0:
             break
-        window = html[i:i + len(shadow_token) + 400]
-        if "<img" in window:
+        sec = html.rfind("<section", 0, i)
+        if sec < 0:
+            start = i + len(shadow_token)
+            continue
+        end = _matching_section_end(html, sec)
+        if end >= 0 and "<img" in html[i:end]:
             n += 1
         start = i + len(shadow_token)
     return n
+
+
+def _matching_section_end(html: str, open_pos: int) -> int:
+    """从 <section 开标签位置向后深度计数,返回配对 </section> 位置;无配对返回 -1。"""
+    depth = 0
+    pos = open_pos
+    while True:
+        o = html.find("<section", pos)
+        c = html.find("</section>", pos)
+        if o < 0 and c < 0:
+            return -1
+        if o >= 0 and (c < 0 or o < c):
+            depth += 1
+            pos = o + len("<section")
+        else:
+            depth -= 1
+            pos = c + len("</section>")
+            if depth == 0:
+                return c
 
 
 def validate(final_html: str | Path, expected_chapters: int | None = None,
