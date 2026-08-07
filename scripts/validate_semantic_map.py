@@ -43,6 +43,7 @@ Usage:
 
 Output: JSON + human-readable summary.
 """
+# 72A-F: runtime_manifest 响应性验证，语义中性。
 import argparse
 import hashlib
 import json
