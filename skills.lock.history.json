@@ -282,5 +282,21 @@
     "new_source_tree_sha": "a1d93412cf347a96b13231540b6251f69b8699cf",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/super-writer"
+  },
+  {
+    "entry_id": "relock-super-writer-20260807T150758Z-0a78d307",
+    "skill": "super-writer",
+    "reason": "72A-F 回滚 SKILL.md front-matter 注释 + validate_semantic_map.py 语义中性注释(required_files 响应性)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-07T15:07:58Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "c482b8c6aa25f7765288206bef1ebb6174f1e7cbc599d0b1ccb9d95aef06b5d5",
+    "new_root_sha256": "b5dc5b9230eada9c87d258078f1775548f62f46d03f08e1a9c6a0a647439773c",
+    "old_full_commit_sha": "33c9a60edefdda9cba19aecfddd88eb7466296ec",
+    "new_full_commit_sha": "a943cfdcc9d95205ef1e6fe8fc88093269345592",
+    "old_source_tree_sha": "a1d93412cf347a96b13231540b6251f69b8699cf",
+    "new_source_tree_sha": "36f94dd7c15f3c90b8f2589ed78985e484f26a6a",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/super-writer"
   }
 ]
