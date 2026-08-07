@@ -1083,17 +1083,17 @@ def _select_live_cover(ctx):
     approvals = _load_copyright_approvals(rd)
     if not approvals["single_asset"]:
         raise MediaRequestError(
-            "cover FAIL_CLOSED: no stable single_asset approval in contract")
+            "cover: no stable single_asset approval in contract")
     frozen = media_root / "discover" / "asset_discovery_manifest.json"
     if not frozen.is_file():
         raise MediaRequestError(
-            "cover FAIL_CLOSED: frozen asset_discovery_manifest.json missing")
+            "cover: frozen asset_discovery_manifest.json missing")
     manifest = json.loads(frozen.read_text(encoding="utf-8"))
     by_id = {a["asset_id"]: a for a in manifest.get("assets", [])}
     events_path = media_root / "continue" / "upload_events.json"
     if not events_path.is_file():
         raise MediaRequestError(
-            "cover FAIL_CLOSED: continue/upload_events.json missing")
+            "cover: continue/upload_events.json missing")
     events = json.loads(events_path.read_text(encoding="utf-8"))
     success_ids = []
     for ev in events.get("events", []):
@@ -1102,11 +1102,11 @@ def _select_live_cover(ctx):
             success_ids.append(aid)
     if not success_ids:
         raise MediaRequestError(
-            "cover FAIL_CLOSED: no successful upload in continue/upload_events.json")
+            "cover: no successful upload in continue/upload_events.json")
     bindings_path = media_root / "article_image_bindings.json"
     if not bindings_path.is_file():
         raise MediaRequestError(
-            "cover FAIL_CLOSED: article_image_bindings.json missing")
+            "cover: article_image_bindings.json missing")
     bindings = json.loads(bindings_path.read_text(encoding="utf-8"))
     candidates = []
     for img in bindings.get("body_images", []):
@@ -1115,7 +1115,7 @@ def _select_live_cover(ctx):
             candidates.append(aid)
     if not candidates:
         raise MediaRequestError(
-            "cover FAIL_CLOSED: no approved and uploaded asset in bindings")
+            "cover: no approved and uploaded asset in bindings")
 
     # OBS-99:候选目录集合 = 冻结清单实际引用到的资产目录(images/ + charts/)。
     # 以 asset_discovery_manifest 的 asset_origin 为确定性依据;media_manifest
@@ -1192,27 +1192,27 @@ def _select_live_cover(ctx):
                 lpr = Path(lp).resolve()
             except OSError:
                 raise MediaRequestError(
-                    f"cover FAIL_CLOSED: {asset_id} local_path invalid")
+                    f"cover: {asset_id} local_path invalid")
             if not lpr.is_relative_to(media_root_resolved):
                 raise MediaRequestError(
-                    f"cover FAIL_CLOSED: {asset_id} local_path outside media_root")
+                    f"cover: {asset_id} local_path outside media_root")
             if lpr.exists() and not lpr.is_file():
                 raise MediaRequestError(
-                    f"cover FAIL_CLOSED: {asset_id} local_path not a regular file")
+                    f"cover: {asset_id} local_path not a regular file")
             # 记录的文件不存在:不作为定位来源(等同无记录);最终无任何命中 -> missing
             if lpr.is_file():
                 lp_resolved = lpr
         if not glob_hits and lp_resolved is None:
             raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} local frozen file missing")
+                f"cover: {asset_id} local frozen file missing")
         if glob_hits and lp_resolved is not None and lp_resolved not in glob_hits:
             raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} local_path record does not match hit file")
+                f"cover: {asset_id} local_path record does not match hit file")
         local = lp_resolved if lp_resolved is not None else glob_hits[0]
         # (d) 字节 sha 必须与冻结清单一致
         if sha256_file(local) != expected_sha:
             raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} local frozen file sha256 mismatch")
+                f"cover: {asset_id} local frozen file sha256 mismatch")
         return local
 
     for asset_id in candidates:
@@ -1220,13 +1220,13 @@ def _select_live_cover(ctx):
         manifest_rec = by_id.get(asset_id)
         if manifest_rec is None:
             raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} missing from frozen discovery manifest")
+                f"cover: {asset_id} missing from frozen discovery manifest")
         if manifest_rec.get("asset_sha256") != rec.get("asset_sha256"):
             raise MediaRequestError(
-                f"cover FAIL_CLOSED: {asset_id} approval sha diverges from frozen manifest")
+                f"cover: {asset_id} approval sha diverges from frozen manifest")
         local = _find_frozen_file(asset_id, rec["asset_sha256"])
         return local, asset_id
-    raise MediaRequestError("cover FAIL_CLOSED: no usable approved cover asset")
+    raise MediaRequestError("cover: no usable approved cover asset")
 
 
 def _wechat(ctx, stage, sd, expected, state):

@@ -2,6 +2,8 @@
 
 > 微信公众号总编排 Skill。一句话发文，自动跑完六阶段并创建微信草稿。
 
+> ⚠️ CI 口径（OBS-193，71I 正式化）：CI 自有记录以来零 success、长期红，根因四类环境性失败（硬编码开发机路径 12 项 / CI 未安装被锁子技能 / bs4 依赖缺失 / 陈旧 LOCKED_HEADS 与 OBS-69 基线）。CI 绿不构成验收依据，CI 红也不构成停机依据；一切验收以本机 junit 为准。详见 [audit/quality/obs-ledger.md](audit/quality/obs-ledger.md) 的「CI 口径正式化」节。
+
 ## 日常使用
 
 ```

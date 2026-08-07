@@ -78,7 +78,7 @@ def test_obs180_non_live_unaffected(tmp_path, mode):
 
 def test_obs180_wechat_stage_gate_live_unset(tmp_path):
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     ctx = SimpleNamespace(network_mode="live", create_wechat_draft=True,
                           skills_home=str(REAL_SKILLS), run_dir=str(run_dir), env={})
@@ -113,7 +113,7 @@ def test_obs180_wechat_stage_gate_zero_overrides_dotenv(tmp_path):
 
 def test_obs180_wechat_stage_non_live_not_blocked(tmp_path):
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     ctx = SimpleNamespace(network_mode="integration", create_wechat_draft=False,
                           skills_home=str(REAL_SKILLS), run_dir=str(run_dir), env={})
@@ -126,7 +126,7 @@ def test_obs180_wechat_stage_non_live_not_blocked(tmp_path):
 
 def test_obs180_media_continue_gate_live_unset(tmp_path):
     from wxgzh_pipeline.producers import MediaRequestError, _media_two_phase
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     sd = run_dir / "media_enrichment"
     (sd / "discover").mkdir(parents=True)
     (sd / "discover" / "asset_discovery_manifest.json").write_text(
@@ -176,7 +176,7 @@ def test_obs180_wechat_no_env_attr_fails_closed_no_attributeerror(tmp_path):
     """① ctx 不带 env 属性 + live → 不得抛 AttributeError;必须 FAIL_CLOSED(exit_code=2),
     meta 不得复用 skipped 语义。"""
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     ctx = _NoEnvCtx(str(run_dir), str(REAL_SKILLS), env_marker="absent")
     out, meta = _wechat(ctx, "wechat_draft", run_dir, [], SimpleNamespace(topic="t"))
@@ -189,7 +189,7 @@ def test_obs180_wechat_no_env_attr_fails_closed_no_attributeerror(tmp_path):
 def test_obs180_wechat_env_empty_fails_closed(tmp_path):
     """② ctx.env = {} + live → FAIL_CLOSED。"""
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     ctx = _NoEnvCtx(str(run_dir), str(REAL_SKILLS), env_marker={})
     out, meta = _wechat(ctx, "wechat_draft", run_dir, [], SimpleNamespace(topic="t"))
@@ -202,7 +202,7 @@ def test_obs180_wechat_env_allowed_not_blocked_by_gate(tmp_path):
     """③ ctx.env = {"WXGZH_WECHAT_API_ALLOWED":"1"} + live → 不被 gate 拦。
     (后续可因其他原因失败,但失败原因不得是 gate。)"""
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     ctx = _NoEnvCtx(str(run_dir), str(REAL_SKILLS),
                     env_marker={"WXGZH_WECHAT_API_ALLOWED": "1"})
@@ -216,7 +216,7 @@ def test_obs180_wechat_env_allowed_not_blocked_by_gate(tmp_path):
 
 def test_obs180_media_continue_gate_live_allowed_passes_gate(tmp_path):
     from wxgzh_pipeline.producers import _media_two_phase
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     sd = run_dir / "media_enrichment"
     (sd / "discover").mkdir(parents=True)
     (sd / "discover" / "asset_discovery_manifest.json").write_text(
