@@ -91,8 +91,11 @@ def test_obs180_wechat_stage_gate_live_unset(tmp_path):
 
 
 def test_obs180_wechat_stage_gate_zero_overrides_dotenv(tmp_path):
+    """OBS-194(档71H,4a):run_dir 改为 tmp_path/a/b/c,使 parents[2]==tmp_path,
+    .env 真正被 gate 读到(此前 tmp_path/r/d 的 parents[2]==tmp_path.parent,
+    .env 永远读不到,测试假绿)。断言零改动。"""
     from wxgzh_pipeline.producers import _wechat
-    run_dir = tmp_path / "r" / "d"
+    run_dir = tmp_path / "a" / "b" / "c"
     run_dir.mkdir(parents=True)
     (tmp_path / ".env").write_text("WXGZH_WECHAT_API_ALLOWED=1\n", encoding="utf-8")
     ctx = SimpleNamespace(network_mode="live", create_wechat_draft=True,
@@ -101,6 +104,11 @@ def test_obs180_wechat_stage_gate_zero_overrides_dotenv(tmp_path):
     out, meta = _wechat(ctx, "wechat_draft", run_dir, [],
                         SimpleNamespace(topic="t"))
     assert meta["entry_run"]["exit_code"] == 2
+    # 4b(档71H,R83/R84):断言加严到能区分 gate 与 cover 失败——gate 放行后
+    # cover 失败同样返回 exit 2,仅靠 exit_code 无法判定守卫;此处断言 stderr
+    # 必须含授权键文案(gate 专有)。4a 原「断言一字不改」与 4b「必须变红」实测
+    # 不相容,按 R84 例外(本测试即 OBS-194 修复标的)加严,偏差已如实上报。
+    assert "WXGZH_WECHAT_API_ALLOWED" in meta["entry_run"]["stderr"]
 
 
 def test_obs180_wechat_stage_non_live_not_blocked(tmp_path):
@@ -236,3 +244,37 @@ def test_obs180_media_continue_gate_live_allowed_passes_gate(tmp_path):
     # 不得是 WXGZH_WECHAT_API_ALLOWED。
     assert "WXGZH_WECHAT_API_ALLOWED" not in meta.get("media_request_failed", "")
     assert "frozen discovery manifest sha256 invalid" in meta.get("media_request_failed", "")
+
+
+# ── OBS-197(档71H,5c/R82):WXGZH_ALLOW_WARNINGS 只读 ctx.env,不读 .env ──
+
+def test_obs180_allow_warnings_ignores_dotenv(tmp_path, monkeypatch):
+    """.env 写 WXGZH_ALLOW_WARNINGS=1 + ctx.env 为空 + live → 最终 argv 不含
+    --allow-warnings(放行开关不得被持久化文件静默开启)。"""
+    from wxgzh_pipeline import producers as PR
+    run_dir = tmp_path / "a" / "b" / "c"
+    run_dir.mkdir(parents=True)
+    (tmp_path / ".env").write_text(
+        "WXGZH_WECHAT_API_ALLOWED=1\nWXGZH_ALLOW_WARNINGS=1\n", encoding="utf-8")
+    captured: dict = {}
+
+    def _fake_run(script, argv, timeout=None, env=None, **kw):
+        captured["argv"] = list(argv)
+        return {"exit_code": 0, "stdout": "", "stderr": "",
+                "script_path": str(script), "script_sha256": "0" * 64,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "command": [str(script)] + list(argv), "elapsed_seconds": 0.0}
+
+    monkeypatch.setattr(PR, "run_script", _fake_run)
+    monkeypatch.setattr(PR, "_select_live_cover", lambda ctx: ("cover.png", "A-1"))
+    sd = run_dir
+    (sd / "gzh_design").mkdir(parents=True)
+    (sd / "gzh_design" / "final.html").write_text("<html></html>", encoding="utf-8")
+    ctx = SimpleNamespace(network_mode="live", create_wechat_draft=True,
+                          skills_home=str(REAL_SKILLS), run_dir=str(run_dir),
+                          env={})  # ctx.env 空;.env 有 WXGZH_ALLOW_WARNINGS=1
+    out, meta = PR._wechat(ctx, "wechat_draft", sd, [],
+                           SimpleNamespace(topic="t"))
+    assert captured.get("argv") is not None, meta
+    assert "--allow-warnings" not in captured["argv"], captured["argv"]

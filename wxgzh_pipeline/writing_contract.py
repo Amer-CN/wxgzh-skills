@@ -35,7 +35,7 @@ from pathlib import Path
 # 中文数字 → 阿拉伯(本次所需范围 1-99,含常见组合)
 _CN_DIGITS = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
               "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
-_DENY_ASK_RE = re.compile(r"(?:deny|ask)\s+'([^']+)'")
+_DENY_ASK_RE = re.compile(r"(deny|ask)\s+'([^']+)'")
 # 数字对比对:从? X 单位? (扩到|到|→) Y 单位?
 _PAIR_RE = re.compile(
     r"从?\s*([0-9一二三四五六七八九十百两]+)\s*([条个项张组]?)\s*"
@@ -174,17 +174,33 @@ def validate_registry_numbers(article_path: Path, registry_path: Path) -> tuple[
     }
 
 
-def extract_deny_ask_lines(items_path: Path) -> list[str]:
-    """从注入 items 的 summary(shell 原文)提取 deny/ask 拦截文案(逐字)。"""
+def extract_deny_ask_entries(items_path: Path) -> list[tuple[str, str]]:
+    """OBS-195(档71H,3b):(kind, text) 逐字抽取;kind ∈ {"deny","ask"}。
+
+    按 text 去重、首次出现的 kind 胜出。关键字由正则捕获组给出,
+    不再退回「整个文件里有没有 emoji」的宽口径判断。
+    """
     items = json.loads(items_path.read_text(encoding="utf-8"))
-    lines: list[str] = []
+    entries: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for item in items if isinstance(items, list) else []:
         summary = item.get("summary", "") if isinstance(item, dict) else ""
         for m in _DENY_ASK_RE.finditer(summary or ""):
-            text = m.group(1).strip()
-            if text and text not in lines:
-                lines.append(text)
-    return lines
+            kind = m.group(1)
+            text = m.group(2).strip()
+            if text and text not in seen:
+                seen.add(text)
+                entries.append((kind, text))
+    return entries
+
+
+def extract_deny_ask_lines(items_path: Path) -> list[str]:
+    """从注入 items 的 summary(shell 原文)提取 deny/ask 拦截文案(逐字)。
+
+    公开签名与返回值逐字不变;OBS-195(档71H,3c)改为委派
+    extract_deny_ask_entries,调用点无需改动。
+    """
+    return [t for _, t in extract_deny_ask_entries(items_path)]
 
 
 def _carrier_blocks(article_text: str) -> tuple[list[str], list[str]]:
@@ -241,10 +257,10 @@ def validate_codeblock_fidelity(article_path: Path, items_path: Path) -> tuple[b
     ⛔/⚠️ 前缀仅当素材实际含对应模板时才要求(素材没有的,文章缺了不判 FAIL)。
     OBS-176(档71E):covered / 前缀判定只在载体块体内进行(R47)。"""
     article = article_path.read_text(encoding="utf-8")
-    items_raw = items_path.read_text(encoding="utf-8")
     blocks, kinds = _carrier_blocks(article)
     block_text = "\n".join(blocks)
-    lines = extract_deny_ask_lines(items_path)
+    entries = extract_deny_ask_entries(items_path)
+    lines = [t for _, t in entries]
     if not lines:
         return True, {
             "deny_ask_total": 0,
@@ -265,8 +281,10 @@ def validate_codeblock_fidelity(article_path: Path, items_path: Path) -> tuple[b
     covered = [line for line in lines if line in block_text]
     has_deny_prefix = "⛔" in block_text
     has_ask_prefix = "⚠️" in block_text
-    material_has_deny = "⛔" in items_raw
-    material_has_ask = "⚠️" in items_raw
+    # OBS-195(档71H,3d):前缀要求由实测条目导出——条目 kind 是 deny/ask 才算,
+    # emoji 出现在文件无关位置不再触发要求(残留 R57 温床已除)。
+    material_has_deny = any(k == "deny" for k, _ in entries)
+    material_has_ask = any(k == "ask" for k, _ in entries)
     deny_ok = (not material_has_deny) or has_deny_prefix
     ask_ok = (not material_has_ask) or has_ask_prefix
     ok = len(covered) >= required and deny_ok and ask_ok

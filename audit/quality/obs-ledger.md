@@ -82,6 +82,12 @@
 | 190 | 反硬编码测试实为 13 个禁用字面量,71F 汇报与 commit message 均写 12 | 已修(仅文档口径,代码本就正确;本档报告按 13 表述) | tests/test_obs183_no_hardcoded_article.py | 71G |
 | 191 | 新增 gate 直接访问 ctx.env,无视仓内手写 fake ctx 约定,导致 16 个既有 live 测试 AttributeError / FAIL_CLOSED(S76) | 已修(本档 1a/2a-2e:统一 _wechat_api_env 防御式读法 + 16 个测试补前置授权 + 对照负例) | producers.py;orchestrator.py;test_obs72_cover_selection.py;test_obs99_cover_path.py;test_obs180_wechat_api_gate.py | 71G-F |
 | 192 | _media_two_phase 落点测试覆盖情况 | 已覆盖(证据:test_obs180_media_continue_gate_live_unset 实测命中 gate 行并断言 media_request_failed 含键名;本档补 test_obs180_media_continue_gate_live_allowed_passes_gate 证明授权放行) | tests/test_obs180_wechat_api_gate.py | 71G-F |
+| 193 | CI 全红定性(100 次运行零 success,长期红) | 未修(本档只查不修,R80;根因四类并存:未安装被锁子技能/bs4 缺失/陈旧 LOCKED_HEADS 与 OBS-69 基线/硬编码开发机路径) | .github/workflows/ci.yml(本档未改) | 71H |
+| 194 | 惰性守卫测试(假绿第 27 例):test_obs180_wechat_stage_gate_zero_overrides_dotenv 的 run_dir parents[2] 读不到 .env,断言 exit 2 由 ctx.env 的 0 单方满足 | 已修(4a run_dir→a/b/c 使 .env 真被读;R84 例外加严 stderr 断言;4b 反转优先级即红实测) | tests/test_obs180_wechat_api_gate.py | 71H |
+| 195 | deny/ask 前缀条件式残留 R57:正则非捕获组判不出 kind,退回整个文件 emoji 判断,无关位置的 ⚠️ 会误要求 ask 前缀致 RUN 中止 | 已修(3a 捕获组 + extract_deny_ask_entries + 删除 items_raw 死代码 + 3e 无漂移 + 3f 单变量反例) | wxgzh_pipeline/writing_contract.py;tests/fixtures/obs88/items.deny_only_stray_warn.json;test_obs185 | 71H |
+| 196 | .env 解析两份独立实现(_wechat_api_env / _media_subprocess_env)同语义 | 已修(2a _media_subprocess_env 一行委派 _wechat_api_env;2b 调用点 2 生产+1 测试,行为逐字不变) | wxgzh_pipeline/producers.py | 71H |
+| 197 | WXGZH_ALLOW_WARNINGS 解析范围未声明(只读 ctx.env 是巧合,docstring 自称照抄但没照抄范围) | 已修(5a docstring 精确化;5b 注释钉死窄口径;5c 钉死测试:.env 写 1 也不传 --allow-warnings;R82 未放宽) | wxgzh_pipeline/producers.py;test_obs180_wechat_api_gate.py | 71H |
+| 198 | 微信 API 未授权错误文案双重 FAIL_CLOSED 前缀(_wechat_api_blocked_meta 拼一次 + 外层 except 再拼一次) | 已修(2c WECHAT_API_BLOCKED_MSG 单一来源;raise 去前缀;2d 既有测试零改动仍绿) | wxgzh_pipeline/producers.py | 71H |
 
 ## 未修清单（独立分区）
 
@@ -100,6 +106,7 @@
 | 181 | placement_planner.find_anchors 的 claim_text[:30] 匹配对图表 claim 几乎必然落空 | 未修(待 relock 档由媒体侧图表 spec 直出锚点) | 不阻塞(驱动侧补写锚点+章节亲和判据兜底) |
 | 182 | _APPROVED_CARRIER_COMPONENTS 模块导入时求值 | 未修,不阻塞(环境/路径变化会导致整模块 import 失败) | 不阻塞 |
 | 186 | resume() 硬编码 create_wechat_draft=True,create=False 不可达 | 未修(风险已由 180 的键覆盖) | 不阻塞(真实发文路径 resume 恒 create=True,键已 fail-closed) |
+| 193 | CI 全红定性(长期红,本档只查不修) | 未修(根因四类环境性失败,修复待升级/CI 环境档) | 不阻塞发文主线(CI 红不影响本地流水线发文;但升级/CI 修复前不可把 CI 绿当作验收依据) |
 
 ## 本台账口径
 
@@ -124,3 +131,4 @@
 16. R61(71G-F):新增门禁不得依赖 ctx 属性存在;env 一律防御式读取,任何 ctx.env 直接属性访问视为缺陷。
 17. R62(71G-F):凡读环境键的测试必须 hermetic:先显式 delenv 再注入,结果不得依赖开发机 shell。
 18. 71G 汇报 passed 计数更正:junit 440-16-1 = 423(非 424)。
+19. 71H:CI 全红定性(193)只查不修(R80);OBS-194 断言加严按 R84 例外(修复标的)并如实上报。

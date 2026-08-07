@@ -17,8 +17,8 @@ import json
 from pathlib import Path
 
 from wxgzh_pipeline.writing_contract import (
-    extract_deny_ask_lines, validate_codeblock_fidelity,
-    validate_registry_numbers,
+    extract_deny_ask_entries, extract_deny_ask_lines,
+    validate_codeblock_fidelity, validate_registry_numbers,
 )
 
 # 16 条护栏文案(与 71E/71F 同一来源,仅测试内自建)
@@ -182,3 +182,43 @@ def test_obs185_one_pair_unregistered_fails(tmp_path):
     assert ok is False, rep
     assert rep["required_pairs"] == 1
     assert any(m["start"] == 8 and m["end"] == 11 for m in rep["missing"])
+
+
+# ── OBS-195(档71H):前缀要求由实测条目导出 ────────────────────
+
+_FIX_DENY_ONLY = Path(__file__).parent / "fixtures" / "obs88" / "items.deny_only_stray_warn.json"
+
+
+def test_obs185_no_drift_vs_71gf(tmp_path):
+    """3e(档71H):items.four.json 上 entries/lines 等价 + 五字段与 71G-F 完全一致。"""
+    p = Path(__file__).parent / "fixtures" / "obs88" / "items.four.json"
+    assert [t for _, t in extract_deny_ask_entries(p)] == extract_deny_ask_lines(p)
+    art = _write(tmp_path, "article.md", _alert_article(ALL16))
+    ok, rep = validate_codeblock_fidelity(art, p)
+    assert ok is True, rep
+    assert rep["deny_ask_total"] == 16
+    assert rep["covered_in_codeblocks"] == 16
+    assert rep["required_coverage"] == 10
+    assert rep["deny_prefix_required"] is True
+    assert rep["ask_prefix_required"] is True
+
+
+def test_obs185_deny_only_stray_warn_ask_not_required(tmp_path):
+    """3f(档71H,R83 单变量):素材只有 deny 条目、⚠️ 出现在无关位置 →
+    ask_prefix_required=False;文章载体无 ⚠️ 也 OBS88_CODEBLOCK=PASS。"""
+    entries = extract_deny_ask_entries(_FIX_DENY_ONLY)
+    assert [k for k, _ in entries] == ["deny", "deny"]
+    assert not any(k == "ask" for k, _ in entries)
+    raw = _FIX_DENY_ONLY.read_text(encoding="utf-8")
+    assert "⚠️" in raw  # 无关位置确实含 ⚠️ 字符
+    assert "ask '" not in raw and "ask(" not in raw
+    # 载体内只有两条 deny 行(含 ⛔),无 ⚠️
+    art = _write(tmp_path, "article.md", _alert_article([ALL16[0], ALL16[1]]))
+    ok, rep = validate_codeblock_fidelity(art, _FIX_DENY_ONLY)
+    assert ok is True, rep
+    assert rep["ask_prefix_required"] is False
+    assert rep["deny_prefix_required"] is True
+    assert rep["ask_prefix_present"] is False
+    assert rep["covered_in_codeblocks"] == 2
+    assert rep["required_coverage"] == 2
+    assert rep["OBS88_CODEBLOCK"] == "PASS"

@@ -48,6 +48,16 @@ AGENT_INSTRUCTIONS = {
 
 
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
+# OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。
+# _wechat_api_blocked_meta 拼 "FAIL_CLOSED: " 前缀;_media_two_phase 的 raise
+# 不带前缀(外层 except 已拼 f"FAIL_CLOSED: {exc}",避免双重前缀)。
+WECHAT_API_BLOCKED_MSG = (
+    "WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
+    "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
+    "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
+    "可覆盖 .env 的 1)以放行。")
+
+
 AIHOT_INJECTION_INSTRUCTIONS = (
     "素材已由正式注入入口提供(--items-file,自有素材注入)。"
     "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="
@@ -75,7 +85,10 @@ def _wechat_api_env(ctx, project_root=None) -> dict:
 def wechat_api_allowed(env: dict | None) -> tuple[bool, str]:
     """OBS-180(档71G):WXGZH_WECHAT_API_ALLOWED 解析(合并由 _wechat_api_env 负责)。
 
-    取值口径照抄 WXGZH_ALLOW_WARNINGS:strip().lower() in ("1","true","yes")。
+    仅【取值解析】照抄 WXGZH_ALLOW_WARNINGS:strip().lower() in ("1","true","yes");
+    【解析范围刻意不同】(OBS-197/R82):WXGZH_WECHAT_API_ALLOWED 走 _wechat_api_env
+    (os.environ + ctx.env + .env),而 WXGZH_ALLOW_WARNINGS 刻意只读 ctx.env(命令行
+    时点),不读 .env——放行开关不得被持久化文件静默开启,放宽需用户单独授权。
     返回 (allowed, raw_value)。
     """
     raw = (env or {}).get("WXGZH_WECHAT_API_ALLOWED", "")
@@ -92,11 +105,7 @@ def _wechat_api_blocked_meta(entry, raw: str) -> dict:
         "entry_run": {
             "exit_code": 2,
             "stdout": "",
-            "stderr": (
-                "FAIL_CLOSED: WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
-                "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
-                "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
-                "可覆盖 .env 的 1)以放行。" % raw),
+            "stderr": "FAIL_CLOSED: " + WECHAT_API_BLOCKED_MSG % raw,
             "elapsed_seconds": 0.0,
         },
     }
@@ -840,15 +849,9 @@ def _media_fake_live(ctx, sd, expected, state, entry, validator):
 
 
 def _media_subprocess_env(ctx) -> dict:
-    """Use the exact credential source doctor validates: process/context env,
-    then project .env as setdefault. Values are passed only to the subprocess."""
-    env = dict(os.environ)
-    env.update(getattr(ctx, "env", {}) or {})
-    dotenv = Path(ctx.run_dir).parents[2] / ".env"
-    if dotenv.is_file():
-        for key, value in SEC.parse_env_file(dotenv).items():
-            env.setdefault(key, value)
-    return env
+    """OBS-196(档71H,2a):单一实现委派——env 解析统一走 _wechat_api_env。
+    行为与旧实现逐字等价(os.environ → ctx.env → .env setdefault)。"""
+    return _wechat_api_env(ctx)
 
 
 def _media_two_phase(ctx, sd, expected, state, entry, validator):
@@ -958,11 +961,8 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         if ctx.network_mode == "live":
             allowed, raw = wechat_api_allowed(_wechat_api_env(ctx))
             if not allowed:
-                raise MediaRequestError(
-                    "FAIL_CLOSED: WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
-                    "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
-                    "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
-                    "可覆盖 .env 的 1)以放行。" % raw)
+                # OBS-198:raise 不带 FAIL_CLOSED 前缀(外层 except 已拼 f"FAIL_CLOSED: {exc}")。
+                raise MediaRequestError(WECHAT_API_BLOCKED_MSG % raw)
 
         discovery = json.loads(frozen.read_text(encoding="utf-8"))
         if discovery.get("discovery_manifest_sha256") != _canonical_discovery_sha(discovery):
@@ -1260,6 +1260,8 @@ def _wechat(ctx, stage, sd, expected, state):
             }
         args.extend(["--cover", str(cover)])
         # 档54R:显式放行开关——仅当环境变量显式开启时向被锁脚本传 --allow-warnings
+        # OBS-197(档71H,5b/R82):WXGZH_ALLOW_WARNINGS 刻意只读 ctx.env(命令行时点),
+        # 不读 .env——放行开关不得被持久化文件静默开启。
         # (默认关闭;双层显式:env 开关 + 脚本参数;放行留痕由脚本写入 allowance_record.json)
         ctx_env = getattr(ctx, "env", {}) or {}
         allow_raw = str(ctx_env.get("WXGZH_ALLOW_WARNINGS") or "").strip().lower()
