@@ -95,11 +95,13 @@
 | 203 | 余下 7 处 run_dir = tmp_path/"r"/"d" 的 parents[2] 逃逸到 pytest 会话共享目录;今天无害,但任何人给其中一条加 .env 即复发 OBS-194 | 已修(71I 3b:7 处统一改 tmp_path/"a"/"b"/"c",parents[2]==tmp_path;断言零改动,7 条原样绿) | tests/test_obs180_wechat_api_gate.py | 71I |
 | 204 | 71I 首次汇报的 numstat 与提交实际不符(同一 sha 两组数字:汇报 124/25,实际 86/23;test_obs180 7/0 对 7 处原地替换在算术上不可能);数字未取自 git diff --numstat 回显 | 已处理(72A 起 R92:sha/numstat/计数一律贴回显原文) | 档 71I 汇报;R92 红线 | 72A |
 | 205 | 71I 后 198 状态陈旧:两条实例均已修,仍标部分修并占未修清单,R59 集合虚高 1(13 应为 12)。成因为审核方指令缺陷第 74 处(1b 未写"若第 4 段执行则 198 回升已修"的条件分支) | 已修(72A 3b:198 回升已修并退出分区) | audit/quality/obs-ledger.md | 72A |
-| 206 | 72A 语义中性改动落在 SKILL.md(front-matter 前)且非 required_files,无法验证进入运行时;3b 实测 runtime_manifest_sha256 对 required_files 内容变化不响应(4e5ed525 未变,锁完整性指标形同虚设) | 部分修(1b 证实安装链生效+回滚精确;补测已落 required_files;runtime_manifest_sha256 不响应问题待修) | super-writer SKILL.md/scripts/validate_semantic_map.py;skills.lock.json | 72A-F |
+| 206 | 72A 语义中性改动落在 SKILL.md(front-matter 前)且非 required_files,无法验证进入运行时 | 已修(72A-F 回滚精确 S98 + 补测落 required_files R96 + 1b 证实安装链生效;runtime_manifest 语义澄清移入 211) | super-writer SKILL.md/scripts/validate_semantic_map.py | 72A-F/72B-0 |
 | 207 | SKILL.md 首行注释破坏 front-matter 解析(1c 三态实测:当前版 name=None,删行后/1e58d01 原版均 OK) | 已修(72A-F 回滚,installed 第 1 行恢复 ---,S99 验证) | super-writer SKILL.md | 72A-F |
 | 208 | fake_live 端到端产物不变不得作为提示词升级/机制成立的证据(fixture 驱动,技能内容与产物无关;72A 曾以此举证) | 已裁决(判据作废:72A-F 起 RUN 只照记 sha 不举证;真实提示词升级须用真实 RUN 验证) | 档 72A/72A-F 报告 | 72A-F |
 | 209 | observability.py 基线上方两行陈旧注释(a9e07ef4…/档57 relock,与当前基线不符) | 已修(72A-F 3c 改为 72A-F relock 口径,与基线同步同次完成) | wxgzh_pipeline/observability.py | 72A-F |
 | 210 | OBS_68 计数范围未明确:relock 生成的 audit/upgrade-capability/lock-backups/*.json 计入 repo 计数(655→656),audit/quality/*.md 不计(OBS-107 口径) | 已修(口径明确:lock-backup json 计入,报告 md 不计;本档实测 656) | OBS_68 计数口径 | 72A-F |
+| 211 | runtime_manifest_sha256 不提供 required_files 内容哈希(0A-1/0A-2 实证:该值=compute_runtime_manifest_sha 的运行时文件【清单】哈希,skill_discovery.py:67,relock 写锁为重算赋值 relock.py:567/622;0A-3 三组探测 root 变/manifest 不变,四 skill 行为一致);72A-F「形同虚设」结论修正为「口径澄清,内容由 skill_root_sha256 覆盖」;但 required_files 单文件内容漂移无独立指标 | 未修(留升级机制档决定是否新增 required_files 内容哈希指标;当前内容完整性由 root sha 覆盖) | wxgzh_pipeline/skill_discovery.py:67;scripts/relock.py:567/622 | 72B-0 |
+| 212 | 写作阶段 fake/real 无独立开关(0B-1 实证:由 network_mode 单一决定,producers.py:277 fake_live/integration=FakeAgent fixture 重放,live=人工交接);真跑需 live 模式+人工交接,无自动化真写开关;0C 实测还受 TUN DNS 影响媒体发现(github.com→198.18.0.9 被 URL 安全检查拦截) | 未修(登记:72B 采用 live+停媒体批准点的真跑法;DNS 拦截为环境问题,非代码) | wxgzh_pipeline/producers.py:277;orchestrator.py network_mode | 72B-0 |
 
 ## 未修清单（独立分区）
 
@@ -120,7 +122,8 @@
 | 186 | resume() 硬编码 create_wechat_draft=True,create=False 不可达 | 未修(风险已由 180 的键覆盖) | 不阻塞(真实发文路径 resume 恒 create=True,键已 fail-closed) |
 | 193 | CI 全红定性(长期红,本档只查不修) | 未修(根因四类环境性失败,修复待升级/CI 环境档) | 不阻塞发文主线(CI 红不影响本地流水线发文;但升级/CI 修复前不可把 CI 绿当作验收依据) |
 | 200 | 71H 5c 测试硬编码 REAL_SKILLS,类 A 12 项待 CI 环境档统一处理 | 未修(R90:只登记不单修) | 不阻塞发文主线(CI 红不构成验收依据,71I 口径正式化) |
-| 206 | 72A 改动无法验证进入运行时 + runtime_manifest_sha256 不响应 required_files | 部分修(回滚+补测已落 required_files;manifest 响应性待修) | 不阻塞发文主线(锁完整性指标缺陷,待升级机制档修) |
+| 211 | runtime_manifest_sha256 无 required_files 内容哈希 | 未修(口径已澄清:清单哈希,内容由 root sha 覆盖;单文件漂移无独立指标) | 不阻塞发文主线(内容完整性现有 root sha 兜底) |
+| 212 | 写作阶段 fake/real 无独立开关 | 未修(72B 用 live+停媒体批准点真跑;DNS 拦截为环境问题) | 不阻塞发文主线(72B 已定真跑法) |
 
 ## 本台账口径
 
@@ -149,6 +152,7 @@
 20. 71I:OBS-201 口径拆分——「唯一 OBS 编号数」与「台账文件行数」分列;分区重复行与口径说明行不计入缺陷计数。R89 判据禁改;R90 类 A 只登记不单修。
 21. 72A:升级机制单变量对照(语义中性改动→产物必须逐字不变,S93);R91-R94;RELOCK_ALLOWED 授权范围与恢复条件见下。
 22. 72A-F:R95 front-matter 禁区;R96 中性改动须落在 required_files;OBS-208 判据作废,fake_live 不得用于验证提示词升级;OBS_68 计数范围见 210。
+23. 72B-0:OBS-211 runtime_manifest_sha256 为运行时文件清单哈希(内容由 skill_root_sha256 覆盖,0A 三组探测实证,四 skill 一致);OBS-212 写作阶段 fake/real 由 network_mode 单一决定,无独立开关;0C 升级前对照基线 RUN 70efs9(final_article sha 3e829be0…,素材 71e-items.json),72B 升级后须用同一素材重跑比对。
 
 ### ★授权变更登记(72A,不可省)
 
