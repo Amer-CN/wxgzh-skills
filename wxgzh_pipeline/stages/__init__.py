@@ -232,7 +232,20 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         if exit_code == 0:
             exit_code = 1
     ovs = meta.get("official_validators") or []
-    failed_ovs = [v for v in ovs if v.get("exit_code") not in (0, None)]
+    failed_ovs = []
+    warn_ovs = []
+    for v in ovs:
+        if v.get("exit_code") not in (0, None):
+            # 0-4(72B-1/OBS-214):fidelity_guard.py exit 1 =「有事项需人工确认」警告,
+            # 不抬升 exit_code;exit 2/3 仍失败。判据:fidelity_guard 的 warning 判据是
+            # 否定/条件/因果/不确定词四组约 40 词出现次数必须完全相等(FS-003/FS-004
+            # 单元级契约);这是「警告」与「失败」两个退出码的语义拆分,不是放松门禁。
+            if (Path(v.get("path") or "").name == "fidelity_guard.py") and v.get("exit_code") == 1:
+                warn_ovs.append(v)
+            else:
+                failed_ovs.append(v)
+    if warn_ovs:
+        vreport["official_validator_warnings"] = warn_ovs
     if failed_ovs:
         vreport["official_validators_failed"] = failed_ovs
         if exit_code == 0:

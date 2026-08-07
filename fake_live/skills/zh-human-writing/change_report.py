@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """FAKE-LIVE shim mirroring zh-human-writing `scripts/change_report.py`.
-EXACT real CLI: --original / --edited. SIMULATED."""
+Mirrors real CLI: --original / --edited / --length-retention. SIMULATED.
+CLI 一致性由 tests/test_obs223_shim_cli_contract.py 守护,勿手工维护此行。"""
 from __future__ import annotations
 
 import argparse
@@ -12,6 +13,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="change_report (fake-live shim)")
     ap.add_argument("--original", required=True)
     ap.add_argument("--edited", required=True)
+    ap.add_argument("--length-retention", default="balanced",
+                    choices=["strict", "balanced"])
     a = ap.parse_args(argv)
     for label, p in (("original", a.original), ("edited", a.edited)):
         if not Path(p).is_file():

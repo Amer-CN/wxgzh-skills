@@ -43,7 +43,9 @@ AGENT_INSTRUCTIONS = {
                      "--full-mode --json and save its exact JSON stdout as "
                      "full_mode_validator_report.json before ACK. "
                      "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。"),
-    "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
+    "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). "
+                     "fidelity_report.json 自报 length_retention 必须为 balanced"
+                     "(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。",
 }
 
 
@@ -227,10 +229,17 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
         return [
             ("zh-human-writing", "scripts/fidelity_guard.py",
              ["--original", str(orig), "--edited", str(sd / "final_article.md")]),
+            # 0-1(72B-1/OBS-215/216):--check-level full 让 strong_contextual /
+            # advisory_only 两级真正执行(默认 hard_residue_only 是假零来源);
+            # --profile 本档写死 essay(公众号长文场景),不做可配置(Batch 3 范围)。
             ("zh-human-writing", "scripts/pattern_audit.py",
-             ["--text", str(sd / "final_article.md")]),
+             ["--text", str(sd / "final_article.md"),
+              "--check-level", "full",
+              "--profile", "essay"]),
+            # 0-2(72B-1/OBS-220):--length-retention balanced 写死,与 agent 自报口径对齐。
             ("zh-human-writing", "scripts/change_report.py",
-             ["--original", str(orig), "--edited", str(sd / "final_article.md")]),
+             ["--original", str(orig), "--edited", str(sd / "final_article.md"),
+              "--length-retention", "balanced"]),
         ]
     return []
 
@@ -317,10 +326,15 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                           "stdout_sha256": hashlib.sha256(b"").hexdigest(),
                           "stderr_sha256": hashlib.sha256(str(exc).encode("utf-8")).hexdigest(),
                           "elapsed_seconds": 0.0, "error": str(exc)})
+    validator_stdout_files: list[Path] = []
     for skill, rel, argv in validators:
         script = EM.resolve_agent_validator(skill, rel, ctx.network_mode, ctx.skills_home)
         run = run_script(script, argv, timeout=180)
         officials.append(_vresult(run))
+        # 0-3(72B-1):官方校验器 stdout 落盘为 <脚本名>.stdout.json(Batch 2 量化验收通道)。
+        stdout_file = sd / (Path(rel).name.replace(".py", ".stdout.json"))
+        stdout_file.write_text(run.get("stdout") or "", encoding="utf-8")
+        validator_stdout_files.append(stdout_file)
         if stage == "super_writer" and rel == "scripts/validate_article_length.py":
             try:
                 official_report = json.loads(run.get("stdout") or "{}")
@@ -333,7 +347,7 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                 run["stderr"] = (run.get("stderr") or "") + "\nagent report != official validator JSON"
                 run["stderr_sha256"] = hashlib.sha256(run["stderr"].encode("utf-8")).hexdigest()
                 officials[-1] = _vresult(run)
-    outputs = [sd / o for o in expected if (sd / o).is_file()]
+    outputs = [sd / o for o in expected if (sd / o).is_file()] + validator_stdout_files
     meta["official_validators"] = officials
     if any(v["exit_code"] != 0 for v in officials):
         meta["official_validator_failed"] = [v for v in officials if v["exit_code"] != 0]
