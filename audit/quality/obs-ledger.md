@@ -64,11 +64,16 @@
 | 172 | 生成器改了产物未重跑(源头 slot 旧格式) | 已修 | _lookup_slot();test_obs154 五列全比 | 71C-R5 |
 | 173 | 锚状态键硬编码/惰性化 | 已修 | refresh_anchor_status();test_obs171_anchor_status | 71C-R5/R6 |
 | 174 | 矩阵产物时间戳/版本 | 已修 | component_capability_matrix.json v4 | 71C-R5 |
-| 175 | 配图位置无机器判据(bindings placement anchor 空/confidence=0,chart-003 跨章) | 已修(独立判据+CLI+测试落地;按 S65/3d 例外不挂主门禁,第 6 步仍实测) | validators/validate_image_section_affinity.py;test_obs175_image_affinity.py | 71E |
+| 175 | 配图位置无机器判据(bindings placement anchor 空/confidence=0,chart-003 跨章) | 部分修(判据已落地但未挂主门禁(S65),根因 _distribute() round-robin 未动,71E 的同章结果系文章结构迎合所致) | validators/validate_image_section_affinity.py;test_obs175_image_affinity.py | 71E/71F |
 | 176 | validate_codeblock_fidelity 只认 fenced code block,16 行同一批文案出现两遍 | 已修(载体放宽 = fence ∪ 已批准组件块,R48 单一来源导入;MIN=10 未动) | wxgzh_pipeline/writing_contract.py;test_obs176_carrier_widen.py | 71E |
-| 177 | 8 条 ⛔ 与 8 条 ⚠️ 压平进同一 alert type=warning | 已修(第 6 步拆两块:caution=⛔ / warning=⚠️,16 行全文出现次数=1) | producers.py 指令;本档第 6 步 | 71E |
+| 177 | 8 条 ⛔ 与 8 条 ⚠️ 压平进同一 alert type=warning | 部分修(拆两块已生效,但实现方式为单篇硬编码指令,71F 已去硬编码,通用性待 4e 验证) | producers.py 指令;test_obs183_no_hardcoded_article.py | 71E/71F |
 | 178 | closeout 报告被就地改成跨档混合文档,三处过期陈述 | 已修(三处加「71E 更正」标注,本档新建独立报告文件) | obs-ledger-closeout-71cr7.md;obs175-179-carrier-widen-71e.md | 71E |
 | 179 | OBS-131 行引用无出处直引「71D 不换载体…」 | 已修(删除无出处直引,改写为审核方 71E 判定口径) | obs-ledger.md;obs-ledger-closeout-71cr7.md | 71E |
+| 180 | 授权键零代码强制力(指令声明的 ALLOWED/禁止无代码层强制) | 未修(★唯一不可逆风险,留 71G 单独做) | —(不写代码) | 71F |
+| 181 | placement_planner.find_anchors 的 claim_text[:30] 匹配对图表 claim 几乎必然落空(半角冒号 vs 全角逗号) | 未修(待 relock 档由媒体侧图表 spec 直出锚点) | media-enrichment placement_planner.py(锁内) | 71F |
+| 182 | _APPROVED_CARRIER_COMPONENTS 模块导入时求值 | 未修,不阻塞(环境/路径变化会导致整模块 import 失败) | wxgzh_pipeline/writing_contract.py | 71F |
+| 183 | 反例 F 恒真(改写在普通段落,未证明「载体内改写不计数」) | 已修(重写为与正例 A 唯一差异=文本被改写,covered 16→0 实测) | tests/test_obs176_carrier_widen.py::test_obs176_f_rewritten_prose_false | 71F |
+| 184 | 测试名/docstring 与实测行为不符(unpaired_and_nested_ignored 实为「被 ::: 提前关闭的块仍计数」) | 已修(改名 test_obs176_carrier_blocks_state_machine_matches_parse_article + docstring 对齐) | tests/test_obs176_carrier_widen.py;writing_contract.py | 71F |
 
 ## 未修清单（独立分区）
 
@@ -82,6 +87,7 @@
 | — | 微信端渲染 | **已关闭**(2026-08-07 02:18 用户人工预览三项全过:alert 16 行逐行显示 / /plugin 命令可复制 / 无异常删除线;用户原话「1 过 2 过 3 过」;R51 证据) |
 | — | fake_live 仍不过语法门禁(R9 保留项) | 不阻塞(仅测试路径) |
 | — | 键测试执行层覆盖(1a/71D):test_obs173 撤 rg 后执行层覆盖无断言 | 不阻塞(文本层 impl_keys==test_keys 断言仍在;执行层未验证已如实登记【未覆盖】,不再输出恒真警告) |
+| 175 | 配图位置无机器判据 | 部分修(判据已落地但未挂主门禁(S65),根因 _distribute() round-robin 未动,71E 的同章结果系文章结构迎合所致) | 不阻塞(独立判据+文章结构可满足;挂主门禁待渲染器位置控制点) |
 
 ## 本台账口径
 
@@ -94,3 +100,8 @@
 4. 下次更新责任:任何新档新增/修复 OBS 号,须同步更新本台账并标注认领档号。
 5. R45(71D):「已裁决未实施」= 未修的一种,必须进未修分区并给 71D 阻塞判定。
 6. R51(71E):「已关闭」必须附闭环证据(时间 + 验收人 + 验收内容原文),无证据不得标已关闭。
+7. R52(71F):裁决直引必须给出可核验的仓内出处(文件 + 章节号),无出处不得引用。
+8. R53(71F):停机条件是否触发由审核方判定;执行端只贴原文并停,不得自行判「未触发」后继续。
+9. R54(71F):注入指令/提示词不得含单篇文章的专有字面量(数字对/条目数/章节映射/逐字标题),通用规则须用占位表述。
+10. R55(71F):反例测试只允许改动被测的那一个变量,其余条件与对应正例逐项一致。
+11. R56(71F):函数名/测试名/docstring 必须与实测行为一致,不符即缺陷。

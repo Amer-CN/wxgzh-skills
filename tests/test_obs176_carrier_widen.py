@@ -122,15 +122,27 @@ def test_obs176_e_unapproved_component_false(tmp_path):
     assert rep["carrier_block_count"] == 0
 
 
-# ── 反例 F:16 行改写/散文化 → S66 若 PASS 则停机 ─────────────
+# ── 反例 F:16 行改写后放进 :::alert 块 → S66 若 PASS 则停机 ──────
 
 def test_obs176_f_rewritten_prose_false(tmp_path):
-    rewritten = "\n\n".join(
-        l.replace("⛔ ", "").replace("（铁律 1）", "(铁律 1)") for l in ALL16)
-    art = _write(tmp_path, "article.md", "# 标题\n\n" + rewritten + "\n")
+    # R55:与正例 A 唯一差异 = 块内文本被改写;载体(alert type=warning)、
+    # 行数、结构逐项与 A 一致。改写:去前缀 + 全角括号转半角 + 动词替换,
+    # 保证 16 条 deny/ask 内文(含全角括号)不再以子串出现。
+    rewritten = [
+        l.replace("⛔ ", "").replace("⚠️ ", "")
+         .replace("（", "(").replace("）", ")")
+         .replace("拦截", "阻断").replace("提醒", "提示")
+        for l in ALL16
+    ]
+    # 演示:同一 alert 载体,唯一变量=文本,covered 从 16 掉到 0
+    ok_a, rep_a = validate_codeblock_fidelity(
+        _write(tmp_path, "article.a.md", _alert_article(ALL16)), ITEMS)
+    assert ok_a is True and rep_a["covered_in_codeblocks"] == 16, rep_a
+    art = _write(tmp_path, "article.md", _alert_article(rewritten))
     ok, rep = validate_codeblock_fidelity(art, ITEMS)
     assert ok is False, rep
-    assert rep["covered_in_codeblocks"] < 16
+    assert rep["covered_in_codeblocks"] == 0, rep
+    assert rep["carrier_kinds"] == ["alert"], rep
 
 
 # ── 反例 G:只有 9 条 → FAIL;有 ⛔ 无 ⚠️ → FAIL ────────────────
@@ -152,9 +164,10 @@ def test_obs176_g_nine_lines_and_prefix_gap_false(tmp_path):
 
 # ── 辅助:载体提取状态机口径(嵌套/未配对不计)─────────────────
 
-def test_obs176_carrier_blocks_unpaired_and_nested_ignored():
-    # 状态机与安装侧 parse_article 同口径:组件内任何 ::: 行都是关闭行(无嵌套);
-    # 末尾孤立 ::: 开标签永不关闭 → 不计为载体(宁可漏,不可多)。
+def test_obs176_carrier_blocks_state_machine_matches_parse_article():
+    # 状态机与安装侧 parse_article 同口径:组件内任何 ::: 行都是关闭行(无嵌套),
+    # 被意外 ::: 关闭的块仍计入(块体=开关行之间);仅到文末仍未闭合的块丢弃。
+    # OBS-184:测试名与 docstring 已与实测行为对齐。
     text = (":::alert type=\"warning\"\n闭合块\n:::\n"
             ":::alert type=\"warning\"\n未配对块\n"
             ":::quote\n组件内的 ::: 行关闭当前 alert,不开启 quote\n:::\n")

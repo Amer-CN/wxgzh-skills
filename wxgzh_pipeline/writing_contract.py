@@ -198,7 +198,8 @@ def _carrier_blocks(article_text: str) -> tuple[list[str], list[str]]:
 
     组件块提取与安装侧 gzh-design render_article.py parse_article() 的
     in_component 状态机口径一致(逐行:strip 后以 ::: 开头的行进入/关闭组件块,
-    块体 = 开关行之间的原文行);嵌套/未配对 ':::' 一律不计为载体(宁可漏,不可多)。
+    块体 = 开关行之间的原文行);组件内任何 ::: 行即关闭行(与安装侧一致,无嵌套语义);
+    仅到文末仍未闭合的块被丢弃、不计为载体(宁可漏,不可多)。
 
     返回 (block_texts, kinds):kinds 为命中的载体类型名(如 ["fence","alert"])。
     """

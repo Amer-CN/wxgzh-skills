@@ -42,19 +42,7 @@ AGENT_INSTRUCTIONS = {
                      "product, then run the locked official validate_article_length.py with "
                      "--full-mode --json and save its exact JSON stdout as "
                      "full_mode_validator_report.json before ACK. "
-                     "注入路径强制(OBS-88/档66,档71E 修订):1) 含数字对比的事实(如「从 8 条扩到 11 条」"
-                     "「从 19 条扩到 25 条」「从四条扩到五条」)必须登记为结构化 numbers"
-                     "(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;"
-                     "2) shell 命令/脚本片段/终端输出(16 条护栏文案除外,见 3))必须以 fenced code block 原文"
-                     "呈现,不得转写为散文;3) 注入素材中的 deny/ask 拦截文案(含 ⛔/⚠️ "
-                     "前缀模板,_common.sh deny()/ask())16 条逐字拆进两个 :::alert 块——"
-                     ":::alert type=\"caution\" title=\"8 条 ⛔ 拦截（直接阻断，不询问）\" 放 8 条 ⛔,"
-                     ":::alert type=\"warning\" title=\"8 条 ⚠️ 提醒（询问后可继续）\" 放 8 条 ⚠️,"
-                     "每条独占一行逐字不得改写;同一批文案不得再以 fenced code block 重复出现(全文只出现一次);"
-                     "4) 安装/关闭命令(/plugin marketplace add … /plugin install … /plugin disable …)以 fenced code block 呈现,可复制;"
-                     "5) 章节结构:第一章只讲红线条数(8→11),第二章讲自检清单条数(19→25)并放两个 alert 块,"
-                     "第三章讲铁律条数(四→五)与安装/关闭命令——三组数字各自【首次】出现在对应章节,"
-                     "导语与第一章不得出现 19→25 / 四→五 的对比表述。"),
+                     "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。"),
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
 }
 
