@@ -266,5 +266,21 @@
     "new_skill_version": "v2026.08.02-hammer.8",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-super-writer-20260807T143755Z-2c9131cc",
+    "skill": "super-writer",
+    "reason": "72A upgrade-capability 单变量对照(语义中性注释,不影响输出)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-07T14:37:55Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+    "new_root_sha256": "c482b8c6aa25f7765288206bef1ebb6174f1e7cbc599d0b1ccb9d95aef06b5d5",
+    "old_full_commit_sha": "1e58d01e38346018886ab1ad6a183228263eae49",
+    "new_full_commit_sha": "33c9a60edefdda9cba19aecfddd88eb7466296ec",
+    "old_source_tree_sha": "b2d44c431042c2b7719e89bf84097f201a8ea168",
+    "new_source_tree_sha": "a1d93412cf347a96b13231540b6251f69b8699cf",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/super-writer"
   }
 ]

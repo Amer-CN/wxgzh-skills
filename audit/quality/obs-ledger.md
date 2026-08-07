@@ -87,12 +87,14 @@
 | 195 | deny/ask 前缀条件式残留 R57:正则非捕获组判不出 kind,退回整个文件 emoji 判断,无关位置的 ⚠️ 会误要求 ask 前缀致 RUN 中止 | 已修(3a 捕获组 + extract_deny_ask_entries + 删除 items_raw 死代码 + 3e 无漂移 + 3f 单变量反例) | wxgzh_pipeline/writing_contract.py;tests/fixtures/obs88/items.deny_only_stray_warn.json;test_obs185 | 71H |
 | 196 | .env 解析两份独立实现(_wechat_api_env / _media_subprocess_env)同语义 | 已修(2a _media_subprocess_env 一行委派 _wechat_api_env;2b 调用点 2 生产+1 测试,行为逐字不变) | wxgzh_pipeline/producers.py | 71H |
 | 197 | WXGZH_ALLOW_WARNINGS 解析范围未声明(只读 ctx.env 是巧合,docstring 自称照抄但没照抄范围) | 已修(5a docstring 精确化;5b 注释钉死窄口径;5c 钉死测试:.env 写 1 也不传 --allow-warnings;R82 未放宽) | wxgzh_pipeline/producers.py;test_obs180_wechat_api_gate.py | 71H |
-| 198 | 微信 API 未授权错误文案双重 FAIL_CLOSED 前缀(机制:_media_two_phase 的 raise 自带前缀 + 外层 except 再拼一次;_wechat_api_blocked_meta 一直只有一层,71H 描述误指) | 部分修(2c 已修 _media_two_phase 路径;OBS-199 的 _wechat cover 路径同病,71I 4b 已修) | wxgzh_pipeline/producers.py;test_obs180_wechat_api_gate.py | 71H/71I |
+| 198 | 微信 API 未授权错误文案双重 FAIL_CLOSED 前缀(机制:_media_two_phase 的 raise 自带前缀 + 外层 except 再拼一次;_wechat_api_blocked_meta 一直只有一层,71H 描述误指) | 已修(两条实例均已闭合:_media_two_phase 71H 2c / _wechat cover 路径 71I 4b;72A 3b 回升) | wxgzh_pipeline/producers.py;test_obs180_wechat_api_gate.py | 71H/71I/72A |
 | 199 | OBS-198 修复不完全:_wechat 的 cover 失败路径仍是双 FAIL_CLOSED: 前缀(_select_live_cover 抛 "cover FAIL_CLOSED: …" + 外层 except 再拼一层) | 已修(71I 4b:15 处前缀改 "cover: ";改后实测 stderr="FAIL_CLOSED: cover: …" 单前缀;tests/ 无完整串断言) | wxgzh_pipeline/producers.py::_select_live_cover | 71I |
 | 200 | 71H 的 5c 新测试硬编码 REAL_SKILLS,CI 上必红,类 A 由 11 项增至 12 项;71H 的 i 段未自报 | 未修(R90:本档只登记不修,类 A 12 项待 CI 环境档统一处理;禁 skip/xfail/importorskip) | tests/test_obs180_wechat_api_gate.py::test_obs180_allow_warnings_ignores_dotenv | 71I |
 | 201 | 台账「总数」名实不符(R56):同时计入主表行、未修清单分区重复行、口径说明行;193 被计两次;既非条目数也非唯一编号数 | 已修(71I 1c:拆分为「唯一 OBS 编号数」与「台账文件行数」两指标) | audit/quality/obs-ledger.md 口径 | 71I |
 | 202 | 台账 198 行机制描述错误:双前缀来自 _media_two_phase 的 raise + 外层 except,_wechat_api_blocked_meta 一直只有一层 | 已修(71I 1b:198 行描述改为正确机制,状态降级部分修) | audit/quality/obs-ledger.md | 71I |
 | 203 | 余下 7 处 run_dir = tmp_path/"r"/"d" 的 parents[2] 逃逸到 pytest 会话共享目录;今天无害,但任何人给其中一条加 .env 即复发 OBS-194 | 已修(71I 3b:7 处统一改 tmp_path/"a"/"b"/"c",parents[2]==tmp_path;断言零改动,7 条原样绿) | tests/test_obs180_wechat_api_gate.py | 71I |
+| 204 | 71I 首次汇报的 numstat 与提交实际不符(同一 sha 两组数字:汇报 124/25,实际 86/23;test_obs180 7/0 对 7 处原地替换在算术上不可能);数字未取自 git diff --numstat 回显 | 已处理(72A 起 R92:sha/numstat/计数一律贴回显原文) | 档 71I 汇报;R92 红线 | 72A |
+| 205 | 71I 后 198 状态陈旧:两条实例均已修,仍标部分修并占未修清单,R59 集合虚高 1(13 应为 12)。成因为审核方指令缺陷第 74 处(1b 未写"若第 4 段执行则 198 回升已修"的条件分支) | 已修(72A 3b:198 回升已修并退出分区) | audit/quality/obs-ledger.md | 72A |
 
 ## 未修清单（独立分区）
 
@@ -112,7 +114,6 @@
 | 182 | _APPROVED_CARRIER_COMPONENTS 模块导入时求值 | 未修,不阻塞(环境/路径变化会导致整模块 import 失败) | 不阻塞 |
 | 186 | resume() 硬编码 create_wechat_draft=True,create=False 不可达 | 未修(风险已由 180 的键覆盖) | 不阻塞(真实发文路径 resume 恒 create=True,键已 fail-closed) |
 | 193 | CI 全红定性(长期红,本档只查不修) | 未修(根因四类环境性失败,修复待升级/CI 环境档) | 不阻塞发文主线(CI 红不影响本地流水线发文;但升级/CI 修复前不可把 CI 绿当作验收依据) |
-| 198 | 微信 API 未授权错误文案双重 FAIL_CLOSED 前缀 | 部分修(2c 已修 _media_two_phase 路径;OBS-199 已由 71I 4b 修 cover 路径) | 不阻塞(纯文案,无判定影响;最终 stderr 均以 FAIL_CLOSED: 开头) |
 | 200 | 71H 5c 测试硬编码 REAL_SKILLS,类 A 12 项待 CI 环境档统一处理 | 未修(R90:只登记不单修) | 不阻塞发文主线(CI 红不构成验收依据,71I 口径正式化) |
 
 ## 本台账口径
@@ -140,6 +141,11 @@
 18. 71G 汇报 passed 计数更正:junit 440-16-1 = 423(非 424)。
 19. 71H:CI 全红定性(193)只查不修(R80);OBS-194 断言加严按 R84 例外(修复标的)并如实上报。
 20. 71I:OBS-201 口径拆分——「唯一 OBS 编号数」与「台账文件行数」分列;分区重复行与口径说明行不计入缺陷计数。R89 判据禁改;R90 类 A 只登记不单修。
+21. 72A:升级机制单变量对照(语义中性改动→产物必须逐字不变,S93);R91-R94;RELOCK_ALLOWED 授权范围与恢复条件见下。
+
+### ★授权变更登记(72A,不可省)
+
+> `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),**恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0**。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
