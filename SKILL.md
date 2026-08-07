@@ -1,3 +1,4 @@
+# upgrade-capability 机制验证（档 72A）：语义中性改动，不影响任何输出。
 ---
 name: super-writer
 description: >-
