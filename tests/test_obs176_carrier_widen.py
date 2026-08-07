@@ -1,16 +1,19 @@
-"""档71E OBS-176:载体放宽正反例测试(7 条,R49)。
+"""档71E/71F/71G OBS-176:载体放宽正反例测试(9 个测试函数,R49)。
 
 放宽:validate_codeblock_fidelity 的载体 = fenced code block ∪ 已批准 A 组组件块
 (:::<name> … :::,name ∈ APPROVED_CARRIER_COMPONENTS,R48 单一来源导入)。
-载体块体以外的正文一律不计数(R47);MIN_DENY_ASK_COVERAGE 保持 10。
+载体块体以外的正文一律不计数(R47);阈值由素材实测导出(OBS-185,档71G)。
 
 正例 A 16 行在 :::alert 块内 → PASS
 正例 B 16 行在三反引号 bash 围栏内 → PASS(向后兼容)
 正例 C 8 条在 alert、8 条在围栏(跨载体合并计数)→ PASS
 反例 D 16 行逐字但全在普通段落(无任何载体块)→ FAIL
 反例 E 16 行在未批准组件块内(:::facts,B 组未接线)→ FAIL
-反例 F 16 行改写/散文化 → FAIL
+反例 F 16 行改写后仍放在 :::alert 载体内 → FAIL(与正例 A 唯一差异=文本被改写,R55)
 反例 G 载体内只有 9 条 → FAIL;载体内有 ⛔ 无 ⚠️ → FAIL
+辅助 组件块状态机与安装侧 parse_article 一致(被 ::: 提前关闭的块仍计数,仅文末
+     未闭合块丢弃;OBS-184 改名对齐)
+辅助 素材 16 条提取验证
 
 D/F 若 PASS = 放宽变成取消门禁 → S66。
 """

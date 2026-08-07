@@ -1,4 +1,4 @@
-# OBS 台账（119–174，档71C-R7 重建版）
+# OBS 台账（119 起持续追加，档71C-R7 重建版，71G 收口）
 
 > 五列:OBS 号 / 一句话问题 / 状态 / 承载文件与测试函数名 / 首次认领档号。
 > 状态取值:已修 | 未修 | 已裁决未实施 | 待查 | 空号(附证据)。
@@ -69,15 +69,23 @@
 | 177 | 8 条 ⛔ 与 8 条 ⚠️ 压平进同一 alert type=warning | 部分修(拆两块已生效,但实现方式为单篇硬编码指令,71F 已去硬编码,通用性待 4e 验证) | producers.py 指令;test_obs183_no_hardcoded_article.py | 71E/71F |
 | 178 | closeout 报告被就地改成跨档混合文档,三处过期陈述 | 已修(三处加「71E 更正」标注,本档新建独立报告文件) | obs-ledger-closeout-71cr7.md;obs175-179-carrier-widen-71e.md | 71E |
 | 179 | OBS-131 行引用无出处直引「71D 不换载体…」 | 已修(删除无出处直引,改写为审核方 71E 判定口径) | obs-ledger.md;obs-ledger-closeout-71cr7.md | 71E |
-| 180 | 授权键零代码强制力(指令声明的 ALLOWED/禁止无代码层强制) | 未修(★唯一不可逆风险,留 71G 单独做) | —(不写代码) | 71F |
+| 180 | 授权键零代码强制力(指令声明的 ALLOWED/禁止无代码层强制)。审核方 71G 更正:此前标注的『唯一不可逆风险』为误判。误群发已被三重结构性排除——orchestrator._scan_forbidden_endpoints扫描六个禁用端点且 release_audit 要求 no_formal_publish_capability;wechat_draft.post() 中state.formally_published=False 且无任何代码路径置真;cli.py 只有 发文/续发/进度/验收编排 四条命令、无发布入口。真实缺口仅为『WECHAT_API_ALLOWED 与 RELOCK_ALLOWED 无代码强制力』,后果可逆(删草稿 / lock-backups 回滚)。 | 已修(本档:WXGZH_WECHAT_API_ALLOWED 已代码化;其余九键判定为不在本包管辖范围,不写 gate) | wxgzh_pipeline/orchestrator.py;producers.py;test_obs180_wechat_api_gate.py | 71F/71G |
 | 181 | placement_planner.find_anchors 的 claim_text[:30] 匹配对图表 claim 几乎必然落空(半角冒号 vs 全角逗号) | 未修(待 relock 档由媒体侧图表 spec 直出锚点) | media-enrichment placement_planner.py(锁内) | 71F |
 | 182 | _APPROVED_CARRIER_COMPONENTS 模块导入时求值 | 未修,不阻塞(环境/路径变化会导致整模块 import 失败) | wxgzh_pipeline/writing_contract.py | 71F |
 | 183 | 反例 F 恒真(改写在普通段落,未证明「载体内改写不计数」) | 已修(重写为与正例 A 唯一差异=文本被改写,covered 16→0 实测) | tests/test_obs176_carrier_widen.py::test_obs176_f_rewritten_prose_false | 71F |
 | 184 | 测试名/docstring 与实测行为不符(unpaired_and_nested_ignored 实为「被 ::: 提前关闭的块仍计数」) | 已修(改名 test_obs176_carrier_blocks_state_machine_matches_parse_article + docstring 对齐) | tests/test_obs176_carrier_widen.py;writing_contract.py | 71F |
+| 185 | 门禁阈值为单篇素材常量(MIN_DENY_ASK_COVERAGE=10 / MIN_NUMBER_PAIRS=3,经 stages/super_writer.py content_validate 对任何 --items-file RUN 无条件生效,失败即 StageError 中止 RUN,换话题必死) | 已修(本档 1a/1b 参数化:required=min(10,len(lines))、ok=not missing、素材 0 条显式 N/A) | wxgzh_pipeline/writing_contract.py;test_obs185_material_derived_thresholds.py | 71G |
+| 186 | resume() 硬编码 create_wechat_draft=True,完整 RUN 必经 resume,故 create=False 不可达(审核方 71F 误设前提,已认领) | 未修(风险已由 180 的键覆盖:live+键未允许 → wechat_draft FAIL_CLOSED) | wxgzh_pipeline/orchestrator.py::resume | 71G |
+| 187 | 反硬编码守卫只扫 AGENT_INSTRUCTIONS["super_writer"] 一个字符串,aihot 注入路径运行时指令串与 zh_human_writing 键未纳入 | 已修(本档 5b 扩范围:全部三个值 + AIHOT_INJECTION_INSTRUCTIONS 常量) | tests/test_obs183_no_hardcoded_article.py;producers.py | 71G |
+| 188 | 台账全表与未修清单不对账、175 行四格塞三列、标题范围与列名过期 | 已修(本档 4:R59 对账 + 175 三格 + 标题/列名更新) | audit/quality/obs-ledger.md | 71G |
+| 189 | test_obs176_carrier_widen.py 头部写「7 条」实为 9 个测试函数,「反例 F 改写/散文化」与改后行为不符 | 已修(本档 5a:头部改为实际函数数与 F 新口径) | tests/test_obs176_carrier_widen.py | 71G |
+| 190 | 反硬编码测试实为 13 个禁用字面量,71F 汇报与 commit message 均写 12 | 已修(仅文档口径,代码本就正确;本档报告按 13 表述) | tests/test_obs183_no_hardcoded_article.py | 71G |
+| 191 | 新增 gate 直接访问 ctx.env,无视仓内手写 fake ctx 约定,导致 16 个既有 live 测试 AttributeError / FAIL_CLOSED(S76) | 已修(本档 1a/2a-2e:统一 _wechat_api_env 防御式读法 + 16 个测试补前置授权 + 对照负例) | producers.py;orchestrator.py;test_obs72_cover_selection.py;test_obs99_cover_path.py;test_obs180_wechat_api_gate.py | 71G-F |
+| 192 | _media_two_phase 落点测试覆盖情况 | 已覆盖(证据:test_obs180_media_continue_gate_live_unset 实测命中 gate 行并断言 media_request_failed 含键名;本档补 test_obs180_media_continue_gate_live_allowed_passes_gate 证明授权放行) | tests/test_obs180_wechat_api_gate.py | 71G-F |
 
 ## 未修清单（独立分区）
 
-| OBS/项 | 问题 | 阻塞 71D |
+| OBS/项 | 问题 | 阻塞发文主线 |
 |---|---|---|
 | 122 | B 组 10 类未接线(71C-3 范围) | 不阻塞(71D 用 alert type=warning 承载 16 行,alert 属 A 组已接线;71D 不使用 B 组任何类) |
 | 131 | A 组无并列短句载体(已裁决未实施;71D 承载见上) | 不阻塞(审核方 71E 判定:OBS-129 已修,alert 结构位成立且语义最近,故 71D/71E 用 alert 承载;71C-2 的『A 组无语义载体』结论系 alert 多行未修时点的结论;无出处直引已于 71E 删除) |
@@ -87,7 +95,11 @@
 | — | 微信端渲染 | **已关闭**(2026-08-07 02:18 用户人工预览三项全过:alert 16 行逐行显示 / /plugin 命令可复制 / 无异常删除线;用户原话「1 过 2 过 3 过」;R51 证据) |
 | — | fake_live 仍不过语法门禁(R9 保留项) | 不阻塞(仅测试路径) |
 | — | 键测试执行层覆盖(1a/71D):test_obs173 撤 rg 后执行层覆盖无断言 | 不阻塞(文本层 impl_keys==test_keys 断言仍在;执行层未验证已如实登记【未覆盖】,不再输出恒真警告) |
-| 175 | 配图位置无机器判据 | 部分修(判据已落地但未挂主门禁(S65),根因 _distribute() round-robin 未动,71E 的同章结果系文章结构迎合所致) | 不阻塞(独立判据+文章结构可满足;挂主门禁待渲染器位置控制点) |
+| 175 | 配图位置无机器判据(判据已落地但未挂主门禁(S65),根因 _distribute() round-robin 未动,71E 的同章结果系文章结构迎合所致) | 部分修 | 不阻塞(独立判据+文章结构可满足;挂主门禁待渲染器位置控制点) |
+| 177 | 8 条 ⛔ 与 8 条 ⚠️ 压平进同一 alert type=warning | 部分修(拆两块已生效,但实现方式为单篇硬编码指令,71F 已去硬编码,通用性待 4e 验证) | 不阻塞(通用指令+反硬编码门禁已落地,重跑 16/16 覆盖) |
+| 181 | placement_planner.find_anchors 的 claim_text[:30] 匹配对图表 claim 几乎必然落空 | 未修(待 relock 档由媒体侧图表 spec 直出锚点) | 不阻塞(驱动侧补写锚点+章节亲和判据兜底) |
+| 182 | _APPROVED_CARRIER_COMPONENTS 模块导入时求值 | 未修,不阻塞(环境/路径变化会导致整模块 import 失败) | 不阻塞 |
+| 186 | resume() 硬编码 create_wechat_draft=True,create=False 不可达 | 未修(风险已由 180 的键覆盖) | 不阻塞(真实发文路径 resume 恒 create=True,键已 fail-closed) |
 
 ## 本台账口径
 
@@ -105,3 +117,10 @@
 9. R54(71F):注入指令/提示词不得含单篇文章的专有字面量(数字对/条目数/章节映射/逐字标题),通用规则须用占位表述。
 10. R55(71F):反例测试只允许改动被测的那一个变量,其余条件与对应正例逐项一致。
 11. R56(71F):函数名/测试名/docstring 必须与实测行为一致,不符即缺陷。
+12. R57(71G):门禁阈值不得是单篇素材的常量,必须由本 RUN 素材/文章实测量导出;素材不含该要素时显式判 N/A 并写 report,不得静默 PASS 也不得硬失败。
+13. R58(71G):新增/修改环境开关必须给出「未设 / 设为允许 / 设为禁止」三态实测,缺任一态视为未验证。
+14. R59(71G):台账全表与未修清单必须对账:全表所有「未修/部分修/已裁决未实施」行号必须全部出现在未修清单分区。
+15. R60(71G):表格行单元格数必须等于表头列数,多格少格都是缺陷。
+16. R61(71G-F):新增门禁不得依赖 ctx 属性存在;env 一律防御式读取,任何 ctx.env 直接属性访问视为缺陷。
+17. R62(71G-F):凡读环境键的测试必须 hermetic:先显式 delenv 再注入,结果不得依赖开发机 shell。
+18. 71G 汇报 passed 计数更正:junit 440-16-1 = 423(非 424)。

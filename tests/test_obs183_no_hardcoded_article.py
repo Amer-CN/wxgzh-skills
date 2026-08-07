@@ -5,7 +5,9 @@
 """
 from __future__ import annotations
 
-from wxgzh_pipeline.producers import AGENT_INSTRUCTIONS
+from wxgzh_pipeline.producers import (
+    AGENT_INSTRUCTIONS, AIHOT_INJECTION_INSTRUCTIONS,
+)
 
 _FORBIDDEN = [
     "8→11", "19→25", "四→五", "16 条", "8 条 ⛔", "8 条 ⚠️",
@@ -15,15 +17,24 @@ _FORBIDDEN = [
 _REQUIRED = [":::alert", "fenced code block", "逐字"]
 
 
+def _scan_targets() -> list[tuple[str, str]]:
+    """OBS-187(档71G,5b):扫描范围 = AGENT_INSTRUCTIONS 全部三个值
+    + producers._agent() 中 aihot 注入路径运行时拼装指令常量(模块级导出,
+    不复制)。"""
+    targets = [(key, str(value)) for key, value in AGENT_INSTRUCTIONS.items()]
+    targets.append(("AIHOT_INJECTION_INSTRUCTIONS", AIHOT_INJECTION_INSTRUCTIONS))
+    return targets
+
+
 def test_obs183_instructions_no_article_literals():
-    """逐个断言禁用字面量不存在;失败信息打印命中的那个字面量。"""
-    instr = AGENT_INSTRUCTIONS["super_writer"]
-    for token in _FORBIDDEN:
-        assert token not in instr, f"命中禁用字面量: {token}"
+    """逐个断言禁用字面量不存在(全部指令字符串);失败信息打印命中的字面量与宿主。"""
+    for host, instr in _scan_targets():
+        for token in _FORBIDDEN:
+            assert token not in instr, f"命中禁用字面量: {token} (宿主: {host})"
 
 
 def test_obs183_instructions_keep_generic_keywords():
-    """正向断言:通用规则关键词仍在。"""
+    """正向断言:通用规则关键词仍在(super_writer 指令)。"""
     instr = AGENT_INSTRUCTIONS["super_writer"]
     for token in _REQUIRED:
         assert token in instr, f"缺失通用关键词: {token}"

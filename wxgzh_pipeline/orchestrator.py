@@ -145,6 +145,18 @@ class Orchestrator:
         ok = ok_skills and writable and aihot_ok and (wechat_ok or not require_wechat)
         if self.network_mode == "live":
             ok = ok and live_pipeline_allowed
+            # OBS-180(档71G,2c①):live 模式微信 API 键未显式允许 → FAIL_CLOSED。
+            from .producers import wechat_api_allowed, _wechat_api_env
+            api_allowed, raw = wechat_api_allowed(
+                _wechat_api_env(self, self.project_root))
+            report["wechat_api_allowed"] = api_allowed
+            if not api_allowed:
+                ok = False
+                report["wechat_api_blocked"] = (
+                    "FAIL_CLOSED: WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
+                    "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
+                    "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
+                    "可覆盖 .env 的 1)以放行。" % raw)
         report["FAIL_CLOSED"] = not ok
         report["doctor"] = "PASS" if ok else "FAIL"
         # OBS-68/69 (档42): detection-only WARN section. Never changes `ok`.

@@ -47,6 +47,61 @@ AGENT_INSTRUCTIONS = {
 }
 
 
+# OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
+AIHOT_INJECTION_INSTRUCTIONS = (
+    "素材已由正式注入入口提供(--items-file,自有素材注入)。"
+    "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="
+    "items_file_injection)与哈希后 ACK。"
+)
+
+
+def _wechat_api_env(ctx, project_root=None) -> dict:
+    """OBS-180/191(档71G-F,1a/R61):统一 env 读法,顺序与 _media_subprocess_env
+    完全一致:dict(os.environ) → update(getattr(ctx, "env", None) or {}) →
+    项目 .env setdefault。★禁止直接访问 ctx.env(仓内手写 fake ctx 无该属性,
+    必须防御式读取)。合并优先级:os.environ < ctx.env < .env(setdefault)——
+    命令行临时导出 0 可覆盖 .env 里的 1。
+    """
+    resolved = dict(os.environ)
+    resolved.update(getattr(ctx, "env", None) or {})
+    root = Path(project_root) if project_root is not None else Path(ctx.run_dir).parents[2]
+    dotenv = Path(root) / ".env"
+    if dotenv.is_file():
+        for k, v in SEC.parse_env_file(dotenv).items():
+            resolved.setdefault(k, v)
+    return resolved
+
+
+def wechat_api_allowed(env: dict | None) -> tuple[bool, str]:
+    """OBS-180(档71G):WXGZH_WECHAT_API_ALLOWED 解析(合并由 _wechat_api_env 负责)。
+
+    取值口径照抄 WXGZH_ALLOW_WARNINGS:strip().lower() in ("1","true","yes")。
+    返回 (allowed, raw_value)。
+    """
+    raw = (env or {}).get("WXGZH_WECHAT_API_ALLOWED", "")
+    return raw.strip().lower() in ("1", "true", "yes"), raw
+
+
+def _wechat_api_blocked_meta(entry, raw: str) -> dict:
+    """live + 键未显式允许 → FAIL_CLOSED meta(exit_code=2,不得复用 skipped 语义)。"""
+    return {
+        "exec_kind": EM.WECHAT,
+        "invoked_entrypoint": str(entry),
+        "entrypoint_path": str(entry),
+        "entrypoint_sha256": sha256_file(entry),
+        "entry_run": {
+            "exit_code": 2,
+            "stdout": "",
+            "stderr": (
+                "FAIL_CLOSED: WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
+                "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
+                "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
+                "可覆盖 .env 的 1)以放行。" % raw),
+            "elapsed_seconds": 0.0,
+        },
+    }
+
+
 def _frozen_article(ctx) -> Path:
     return Path(ctx.run_dir) / "zh_human_writing" / "final_article.md"
 
@@ -203,11 +258,7 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
         else:
             injection_meta = write_injected_aihot(
                 sd, state.items_file, state.run_id, state.topic)
-        instructions = (
-            "素材已由正式注入入口提供(--items-file,自有素材注入)。"
-            "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="
-            "items_file_injection)与哈希后 ACK。"
-        )
+        instructions = AIHOT_INJECTION_INSTRUCTIONS
         inputs["items_file"] = state.items_file
         inputs["material_injection"] = injection_meta
     AH.write_request(sd, stage, identity["skill_name"], instructions,
@@ -903,6 +954,16 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 "approval_file": str(approval_file),
             }
 
+        # OBS-180(档71G,2c③):live 进入 continue(真正 uploadimg)前检查;discover 不检查。
+        if ctx.network_mode == "live":
+            allowed, raw = wechat_api_allowed(_wechat_api_env(ctx))
+            if not allowed:
+                raise MediaRequestError(
+                    "FAIL_CLOSED: WXGZH_WECHAT_API_ALLOWED 未显式允许(当前环境值 %r)。"
+                    "live 模式默认拒绝微信 API 调用。在 .env 中加入 "
+                    "WXGZH_WECHAT_API_ALLOWED=1(取值 1/true/yes;命令行临时导出 0 "
+                    "可覆盖 .env 的 1)以放行。" % raw)
+
         discovery = json.loads(frozen.read_text(encoding="utf-8"))
         if discovery.get("discovery_manifest_sha256") != _canonical_discovery_sha(discovery):
             raise MediaRequestError("frozen discovery manifest sha256 invalid")
@@ -1169,6 +1230,12 @@ def _select_live_cover(ctx):
 
 
 def _wechat(ctx, stage, sd, expected, state):
+    # OBS-180(档71G,2c②):live + 键未允许 → FAIL_CLOSED,先于 create_wechat_draft 检查。
+    if ctx.network_mode == "live":
+        entry0, _ = EM.resolve_entry(stage, ctx.network_mode, ctx.skills_home)
+        allowed, raw = wechat_api_allowed(_wechat_api_env(ctx))
+        if not allowed:
+            return [], _wechat_api_blocked_meta(entry0, raw)
     if not ctx.create_wechat_draft:
         return [], {"exec_kind": EM.WECHAT, "skipped": "create_wechat_draft=False"}
     entry, _ = EM.resolve_entry(stage, ctx.network_mode, ctx.skills_home)

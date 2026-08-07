@@ -70,7 +70,7 @@ def content_validate(ctx, sd: Path, state):
                 ok = False
                 report["reason"] = ("OBS-88 FAIL: deny/ask codeblock coverage "
                                     f"{c_rep['covered_in_codeblocks']}/{c_rep['deny_ask_total']} "
-                                    f"(min {c_rep['min_coverage']}) or prefixes missing")
+                                f"(min {c_rep['required_coverage']}) or prefixes missing")
         report["SUPER_WRITER"] = "PASS" if ok else "FAIL"
     return (0 if ok else 1), report, vpath, vsha
 

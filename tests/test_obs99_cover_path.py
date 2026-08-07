@@ -15,6 +15,15 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_wechat_api_key(monkeypatch):
+    """OBS-180(档71G-F,2c/R62):读环境键的测试必须 hermetic——
+    显式删除开发机 shell 可能存在的键,再依赖夹具内注入。"""
+    monkeypatch.delenv("WXGZH_WECHAT_API_ALLOWED", raising=False)
+
 from wxgzh_pipeline import execmodel as EM
 from wxgzh_pipeline import producers as PR
 
@@ -51,6 +60,8 @@ class _Ctx:
         self.skills_home = skills_home
         self.network_mode = network_mode
         self.create_wechat_draft = True
+        # OBS-180(档71G-F,2a):live 测试前置授权(仅授权键,零断言改动)。
+        self.env = {"WXGZH_WECHAT_API_ALLOWED": "1"}
 
 
 class _State:

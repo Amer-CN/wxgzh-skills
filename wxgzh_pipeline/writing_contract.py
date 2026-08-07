@@ -1,9 +1,9 @@
 """OBS-88(档66):注入路径写作合同校验 —— 数字结构化 + 代码块保真。
 
-背景:档 65 取证定位,vibe-coding-guide 注入 RUN 的数字丢失在 c 层——super_writer
-构建 canonical_claim_registry 时未把文章中的数字对比(8→11 / 19→25 / 四→五)登记
-为结构化 numbers/chart_group/metric_name/series_label,导致 media 图表零生成;
-代码块缺失因写作无形态指示,15 条 deny/ask 拦截文案被转写为散文。
+背景:档 65 取证定位,注入 RUN 的数字丢失在 c 层——super_writer
+构建 canonical_claim_registry 时未把文章中的数字对比对登记为结构化
+numbers/chart_group/metric_name/series_label,导致 media 图表零生成;
+代码块缺失因写作无形态指示,同一批 deny/ask 拦截文案被转写为散文。
 
 本模块在 Pipeline 侧提供两个校验(仅注入路径强制,由 stages/super_writer.py
 content_validate 挂载):
@@ -12,16 +12,16 @@ content_validate 挂载):
    结构化登记(每对要求起/终两个数据点:numbers.value + chart_group +
    metric_name + series_label 非空)。支持中文数字(四→五)。文章没有的对比对
    不要求(不伪造);文章有的而 registry 没登记 → FAIL_CLOSED。
-2. `validate_codeblock_fidelity`:注入素材中的 deny/ask 拦截文案(guard-bash.sh
-   的 deny/ask 拦截文案(实测 16 条,⛔/⚠️ 前缀模板在 _common.sh)至少 10 条必须以
-   【载体块】逐字进入文章,且载体内必须出现 ⛔ 与 ⚠️ 模板前缀;改写/散文化不计数。
+2. `validate_codeblock_fidelity`:注入素材中的 deny/ask 拦截文案必须以【载体块】
+   逐字进入文章;要求条数由素材实测导出(上限 10),素材不含该要素时显式 N/A;仅当
+   素材实际含 ⛔/⚠️ 模板前缀时才要求载体内出现对应前缀;改写/散文化不计数。
 
 OBS-176(档71E)载体放宽的正当性:档 65 取证的原始意图是【防散文化】——原文:
-「代码块缺失因写作无形态指示,15 条 deny/ask 拦截文案被转写为散文」;不是
+「代码块缺失因写作无形态指示,同一批 deny/ask 拦截文案被转写为散文」;不是
 【必须用代码块】。故载体集合 = fenced code block ∪ 已批准 A 组组件块
 (:::<name> … :::,name 必须来自 validators/validate_component_visibility 的
 APPROVED_CARRIER_COMPONENTS,R48:单一来源 import,禁止手抄组件名)。
-载体块体以外的正文一律不计数(R47);MIN_DENY_ASK_COVERAGE 保持 10,不得降低。
+载体块体以外的正文一律不计数(R47)。OBS-185(档71G):阈值由素材实测导出。
 
 两者都只读 RUN 产物,不修改任何文件。
 """
@@ -42,8 +42,9 @@ _PAIR_RE = re.compile(
     r"(?:扩到|变为|改成|到|→)\s*"
     r"([0-9一二三四五六七八九十百两]+)\s*([条个项张组]?)")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
-MIN_NUMBER_PAIRS = 3        # 本次预期:19→25 / 8→11 / 四→五
-MIN_DENY_ASK_COVERAGE = 10  # 16 条中至少 10 条逐字进入载体块
+# OBS-185(档71G):阈值由素材/文章实测导出,不再使用单篇素材常量。
+# 覆盖上限(非地板):required = min(COVERAGE_CAP, len(lines))。
+COVERAGE_CAP = 10
 
 
 def _load_approved_carrier_components() -> frozenset[str]:
@@ -162,16 +163,13 @@ def validate_registry_numbers(article_path: Path, registry_path: Path) -> tuple[
                                "chart_group": a["chart_group"]})
         else:
             missing.append({"start": start, "end": end, "unit": unit})
-    if not pairs:
-        # 文章无数字对比对:无登记要求,不伪造(缺数字时不要求任何 numbers)
-        ok = True
-    else:
-        ok = not missing and len(registered) >= MIN_NUMBER_PAIRS
+    # OBS-185(档71G):判定 = 文章出现的每一对都必须登记;文章没有的不要求(不伪造)。
+    ok = not missing
     return ok, {
         "pairs_in_article": [{"start": s, "end": e, "unit": u} for s, e, u in unique_pairs],
         "registered": registered,
         "missing": missing,
-        "min_pairs": MIN_NUMBER_PAIRS,
+        "required_pairs": len(unique_pairs),
         "OBS88_NUMBERS": "PASS" if ok else "FAIL",
     }
 
@@ -235,27 +233,52 @@ def _carrier_blocks(article_text: str) -> tuple[list[str], list[str]]:
 
 
 def validate_codeblock_fidelity(article_path: Path, items_path: Path) -> tuple[bool, dict]:
-    """≥10 条 deny/ask 文案必须以【载体块】(fenced code block ∪ 已批准 A 组
-    组件块)逐字进入文章,且载体内必须出现 ⛔ 与 ⚠️ 模板前缀。
+    """素材中的 deny/ask 拦截文案必须以【载体块】(fenced code block ∪ 已批准 A 组
+    组件块)逐字进入文章。
 
-    OBS-176(档71E):covered / 前缀判定只在载体块体内进行(R47);载体内正文
-    一律不计数;MIN_DENY_ASK_COVERAGE 保持 10。返回新增 carrier_kinds 与
-    carrier_block_count。"""
+    OBS-185(档71G,R57):阈值由素材实测导出 —— required = min(COVERAGE_CAP,
+    len(lines));素材不含 deny/ask 文案时显式 N/A(不静默 PASS、不硬失败)。
+    ⛔/⚠️ 前缀仅当素材实际含对应模板时才要求(素材没有的,文章缺了不判 FAIL)。
+    OBS-176(档71E):covered / 前缀判定只在载体块体内进行(R47)。"""
     article = article_path.read_text(encoding="utf-8")
+    items_raw = items_path.read_text(encoding="utf-8")
     blocks, kinds = _carrier_blocks(article)
     block_text = "\n".join(blocks)
     lines = extract_deny_ask_lines(items_path)
+    if not lines:
+        return True, {
+            "deny_ask_total": 0,
+            "covered_in_codeblocks": 0,
+            "required_coverage": 0,
+            "coverage_basis": "not_applicable",
+            "not_applicable_reason": "injected material contains no deny/ask lines",
+            "deny_prefix_present": False,
+            "ask_prefix_present": False,
+            "deny_prefix_required": False,
+            "ask_prefix_required": False,
+            "missing_lines": [],
+            "carrier_kinds": sorted(set(kinds)),
+            "carrier_block_count": len(blocks),
+            "OBS88_CODEBLOCK": "N/A",
+        }
+    required = min(COVERAGE_CAP, len(lines))
     covered = [line for line in lines if line in block_text]
     has_deny_prefix = "⛔" in block_text
     has_ask_prefix = "⚠️" in block_text
-    ok = (len(covered) >= MIN_DENY_ASK_COVERAGE
-          and has_deny_prefix and has_ask_prefix)
+    material_has_deny = "⛔" in items_raw
+    material_has_ask = "⚠️" in items_raw
+    deny_ok = (not material_has_deny) or has_deny_prefix
+    ask_ok = (not material_has_ask) or has_ask_prefix
+    ok = len(covered) >= required and deny_ok and ask_ok
     return ok, {
         "deny_ask_total": len(lines),
         "covered_in_codeblocks": len(covered),
-        "min_coverage": MIN_DENY_ASK_COVERAGE,
+        "required_coverage": required,
+        "coverage_basis": "material_derived",
         "deny_prefix_present": has_deny_prefix,
         "ask_prefix_present": has_ask_prefix,
+        "deny_prefix_required": material_has_deny,
+        "ask_prefix_required": material_has_ask,
         "missing_lines": [l for l in lines if l not in covered],
         "carrier_kinds": sorted(set(kinds)),
         "carrier_block_count": len(blocks),
