@@ -17,6 +17,7 @@ from ..receipts import build_receipt, write_receipt, now
 from ..contracts import validate as schema_validate
 from ..contracts import enforce_contract
 from ..execmodel import STAGE_SKILL  # single source of truth (dev2-hotfix2)
+from ..execmodel import validator_exit_acceptable  # OBS-225 单一真源(R106)
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 
@@ -236,11 +237,13 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
     warn_ovs = []
     for v in ovs:
         if v.get("exit_code") not in (0, None):
-            # 0-4(72B-1/OBS-214):fidelity_guard.py exit 1 =「有事项需人工确认」警告,
-            # 不抬升 exit_code;exit 2/3 仍失败。判据:fidelity_guard 的 warning 判据是
-            # 否定/条件/因果/不确定词四组约 40 词出现次数必须完全相等(FS-003/FS-004
-            # 单元级契约);这是「警告」与「失败」两个退出码的语义拆分,不是放松门禁。
-            if (Path(v.get("path") or "").name == "fidelity_guard.py") and v.get("exit_code") == 1:
+            # 0-4(72B-1/OBS-214)+72B-2(OBS-225):退出码可接受性统一消费
+            # execmodel.validator_exit_acceptable(单一真源,R106)。fidelity_guard
+            # exit 1 =「有事项需人工确认」警告,不抬升 exit_code;exit 2/3 仍失败。
+            # 判据:fidelity_guard 的 warning 判据是四组约 40 词出现次数必须完全
+            # 相等(FS-003/FS-004 单元级契约);「警告」与「失败」是两个退出码。
+            name = Path(v.get("path") or "").name
+            if validator_exit_acceptable(name, v.get("exit_code")):
                 warn_ovs.append(v)
             else:
                 failed_ovs.append(v)

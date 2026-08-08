@@ -115,11 +115,15 @@ def validate_receipt(receipt: dict) -> list[str]:
     officials = list(receipt.get("official_validators") or [])
     if receipt.get("official_validator"):
         officials.append(receipt["official_validator"])
+    # 档72B-2 OBS-225:退出码可接受性走 execmodel 单一真源(R106),
+    # 不在此处再写一份判断;exit-1 警告的 receipt 是有效 receipt。
+    from .execmodel import validator_exit_acceptable  # 函数内 import,防循环
     for ov in officials:
         missing = [f for f in OFFICIAL_VALIDATOR_FIELDS if not ov.get(f) and ov.get(f) != 0]
         if missing:
             errs.append(f"official validator record incomplete: missing {missing}")
-        if ov.get("exit_code") != 0:
+        name = Path(ov.get("path") or "").name
+        if not validator_exit_acceptable(name, ov.get("exit_code")):
             errs.append(f"official validator exit_code != 0 ({ov.get('exit_code')})")
     return errs
 

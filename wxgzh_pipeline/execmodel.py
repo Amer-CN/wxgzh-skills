@@ -143,6 +143,19 @@ AGENT_VALIDATORS = {
     "aihot": [],
 }
 
+# 档72B-2 OBS-225:「哪个校验器允许 warning」的单一真源(R106)。
+# 退出码 1 =「有事项需人工确认」而非失败。stages/__init__.py 3c 与
+# receipts.validate_receipt 都必须消费 validator_exit_acceptable,
+# 禁止各自再写一份判断(OBS-223 教训)。
+WARNING_EXIT_ALLOWED = {"fidelity_guard.py": (1,)}
+
+
+def validator_exit_acceptable(script_name: str, exit_code) -> bool:
+    """True 表示该退出码不是阶段失败:0/None 恒可接受,其余按脚本白名单。"""
+    if exit_code in (0, None):
+        return True
+    return exit_code in WARNING_EXIT_ALLOWED.get(script_name, ())
+
 # fake_live shim homes for agent validators (skill name -> shim dir name)
 FAKE_SKILL_DIR = {"super-writer": "super-writer", "zh-human-writing": "zh-human-writing"}
 
