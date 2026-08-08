@@ -391,7 +391,8 @@ def test_unsupported_fiction():
 
     # UF-002: fiction profile 不在允许值中
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'fiction', '--output', 'json'])
-    passed = rc == 3 or 'invalid choice' in err
+    # 档72C-3/OBS-234:argparse 错误统一退出码 3(收紧,消除恒真写法)
+    passed = rc == 3
     results.append(TestResult('UF-002', 'unsupported-fiction', passed, f'fiction profile 被拒绝 rc={rc}'))
 
     return results
@@ -449,7 +450,7 @@ def test_profile_thresholds():
     # SC-008-MIGRATED 迁移守卫:三词文本的 strong 输出不得再含 SC-008(§3 已移入 HR-007)
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("说白了，这件事到此为止。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc_ids = [item['pattern_id'] for item in data['strong_contextual']['items']]
+    sc_ids = [item.get('rule_id') for item in data['strong_contextual']['items']]
     passed = 'SC-008' not in sc_ids and data['hard_residue']['count'] > 0
     results.append(TestResult('SC-008-MIGRATED', 'profile-thresholds', passed,
                               f'strong ids={sc_ids} hr={data["hard_residue"]["count"]}'))
@@ -481,8 +482,8 @@ def test_sc001_threshold_liveness():
     spec.loader.exec_module(mod)
     observed = {}
     for prof in ("essay", "technical", "social"):
-        findings = mod.detect_strong_contextual(SC001_TEXT, prof)
-        sc1 = [f for f in findings if f['pattern_id'] == 'SC-001']
+        findings = mod.detect_strong_contextual(SC001_TEXT, SC001_TEXT, prof, [])
+        sc1 = [f for f in findings if f.get('rule_id') == 'SC-001']
         observed[prof] = (len(sc1), [f['cluster_threshold'] for f in sc1])
 
     essay_n, essay_t = observed['essay']
@@ -518,7 +519,7 @@ def test_sc007b_upgrade():
     ok1 = 'SC-007b' not in single_ids and data['advisory_only']['count'] >= 1
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(SC007B_DOUBLE), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc007b = [f for f in data['strong_contextual']['items'] if f['pattern_id'] == 'SC-007b']
+    sc007b = [f for f in data['strong_contextual']['items'] if f.get('rule_id') == 'SC-007b']
     ok2 = len(sc007b) == 1 and sc007b[0].get('confidence') == 'low'
     ok = ok1 and ok2
     msg = (f"单发={'通过' if ok1 else '失败'}(ids={single_ids}) "
@@ -654,7 +655,7 @@ def test_sc007a_threshold1():
     text = "看似简单，实则复杂。"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc007a = [f for f in data['strong_contextual']['items'] if f['pattern_id'] == 'SC-007a']
+    sc007a = [f for f in data['strong_contextual']['items'] if f.get('rule_id') == 'SC-007a']
     ok = len(sc007a) == 1 and 'context_note' in sc007a[0]
     results.append(TestResult('PB-017', 'sc007a-threshold1', ok,
                               f'sc007a={len(sc007a)} note={"有" if sc007a and "context_note" in sc007a[0] else "无"}'))
@@ -681,6 +682,77 @@ def test_thresholds_identity():
                               '；'.join(mismatches) if mismatches else '18 格全等'))
     return results
 
+
+
+# ============================================================
+# 十字段/屏蔽层/argparse 测试（4 条,档72C-3 新增,PB-018~021）
+# ============================================================
+
+CROSS_FIELDS = {'rule_id', 'group', 'severity', 'confidence', 'profile',
+                'action', 'location', 'span_text', 'reason', 'suggestion'}
+
+
+def test_cross_section_fields():
+    results = []
+    text = "说白了，这不是问题而是机会。随着人工智能的发展，行业开始变化。随着大模型的发展，成本下降。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    all_items = (data['hard_residue']['items'] + data['strong_contextual']['items']
+                 + data['advisory_only']['items'])
+    ok = (len(all_items) >= 3
+          and all(CROSS_FIELDS <= set(it) for it in all_items)
+          and all(it.get('severity') in ('audit', 'strong', 'advisory') for it in all_items)
+          and all(it.get('confidence') in ('high', 'medium', 'low') for it in all_items)
+          and all(it.get('action') in ('mark', 'suggest', 'review_only') for it in all_items))
+    bad = [it.get('rule_id', '<缺失>') for it in all_items if not (CROSS_FIELDS <= set(it))]
+    results.append(TestResult('PB-018', 'cross-section', ok,
+                              f'items={len(all_items)} 缺字段={bad}'))
+    return results
+
+
+def test_protected_span_review_only():
+    results = []
+    text = "[[protected]]说白了[[/protected]]，其余内容没有变化。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    hr = data['hard_residue']['items']
+    ok = len(hr) == 1 and hr[0].get('action') == 'review_only'
+    results.append(TestResult('PB-019', 'protected-span', ok,
+                              f'hr={len(hr)} action={[f.get("action") for f in hr]}'))
+    return results
+
+
+def test_mask_liveness():
+    results = []
+    fenced = "```\n看似简单，实则复杂。\n```"
+    plain = "看似简单，实则复杂。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(fenced), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    fenced_count = data['strong_contextual']['count']
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(plain), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    plain_count = data['strong_contextual']['count']
+    ok = fenced_count == 0 and plain_count > 0
+    results.append(TestResult('PB-020', 'mask-liveness', ok,
+                              f'围栏内={fenced_count} 围栏外={plain_count}'))
+    return results
+
+
+def test_argparse_exit3():
+    results = []
+    text_p = write_temp("这是一段普通测试文本。")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', text_p, '--nonsense'])
+    ok1 = rc == 3
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', text_p, '--edited', text_p, '--nonsense'])
+    ok2 = rc == 3
+    rc, out, err = run_script(CHANGE_REPORT, ['--original', text_p, '--edited', text_p, '--nonsense'])
+    ok3 = rc == 3
+    ok = ok1 and ok2 and ok3
+    results.append(TestResult('PB-021', 'argparse-exit3', ok,
+                              f'pattern={ok1} fidelity={ok2} change={ok3}'))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -698,6 +770,10 @@ def main():
     all_results.extend(test_config_errors())
     all_results.extend(test_hr007())
     all_results.extend(test_sc007a_threshold1())
+    all_results.extend(test_cross_section_fields())
+    all_results.extend(test_protected_span_review_only())
+    all_results.extend(test_mask_liveness())
+    all_results.extend(test_argparse_exit3())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 

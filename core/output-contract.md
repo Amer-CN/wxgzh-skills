@@ -59,26 +59,36 @@
 
 ## 3. audit 模式
 
-不改全文。最多 5 个问题。允许"建议保留原文"。
+不改全文。允许"建议保留原文"。每条 finding 统一为十字段(任务书 §6,
+档72C-3 落地):
 
-### 结构
+### 结构(每条 finding)
 
 ```
-## 诊断报告
-### 问题 1
-- 位置：第 N 段，第 M 句
-- 类型：{hard-residue/strong-contextual/advisory-only}
-- 问题描述：{说明}
-- 原文片段：{片段}
-- 建议：{修改建议 或 "建议保留原文"}
-
-## 总结
-- 发现问题数：{N}（最多 5 个）
-- hard-residue：{N}
-- strong-contextual：{N}
-- advisory-only：{N}
-- 总体建议：{建议编辑/建议保留原文/建议使用 diff 模式}
+- rule_id：{HR-001…HR-007 / SC-001…SC-007b / AO-001…}
+- group：{hard_residue | strong_contextual | advisory_only}
+- severity：{audit | strong | advisory}
+- confidence：{high | medium | low}
+- profile：{essay | technical | social}
+- action：{mark | suggest | review_only}(命中保护区一律 review_only)
+- location：第 N 段，第 M 句
+- span_text：{原文片段,100 字截断,截断加 …}
+- reason：{为什么判它,一句话}
+- suggestion：{处置建议,一句话}
 ```
+
+保留的额外字段:language_origin、cluster_count、cluster_threshold、context_note。
+
+顶层结构:{hard_residue|strong_contextual|advisory_only}{count,items} +
+overall{pass_fail,description} 不变。count 为条目数(不设 5 条上限,
+档72C-3 起以全量输出为准;截断由消费侧处理)。
+
+### "建议保留原文"的条件
+
+1. 未发现 hard-residue
+2. strong-contextual 聚集未超过阈值
+3. advisory-only 模式不超过 3 个
+4. 文本没有明显的表达问题
 
 ### "建议保留原文"的条件
 

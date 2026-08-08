@@ -29,6 +29,13 @@ import re
 import sys
 
 
+class _P(argparse.ArgumentParser):
+    """档72C-3/OBS-234:argparse 错误统一退出码 3(exit 2 已被 fail 占用)。"""
+    def error(self, message):
+        sys.stderr.write(f"argument error: {message}\n")
+        sys.exit(3)
+
+
 # ============================================================
 # 提取器
 # ============================================================
@@ -612,7 +619,7 @@ def read_file(path):
         sys.exit(3)
 
 def main():
-    parser = argparse.ArgumentParser(
+    parser = _P(
         description='zh-human-writing v1 保真检查脚本',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''

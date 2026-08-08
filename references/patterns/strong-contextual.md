@@ -4,6 +4,8 @@
 
 ---
 
+> 本文件的 rule_id 与 scripts/pattern_audit.py 一一对应,新增或删改规则必须双侧同批提交。(档72C-3)
+
 ## SC-001: 无信息开场
 
 - **ID**: SC-001

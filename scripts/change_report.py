@@ -25,6 +25,13 @@ import re
 import sys
 
 
+class _P(argparse.ArgumentParser):
+    """档72C-3/OBS-234:argparse 错误统一退出码 3。"""
+    def error(self, message):
+        sys.stderr.write(f"argument error: {message}\n")
+        sys.exit(3)
+
+
 def read_file(path):
     """读取文件，处理编码错误。"""
     try:
@@ -132,7 +139,7 @@ def check_protected_span_changes(original, edited):
 
 
 def main():
-    parser = argparse.ArgumentParser(
+    parser = _P(
         description='zh-human-writing v1 变化统计脚本',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

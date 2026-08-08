@@ -35,6 +35,13 @@ except ImportError:
     sys.exit(3)
 
 
+class _P(argparse.ArgumentParser):
+    """档72C-3/OBS-234:argparse 错误统一退出码 3(exit 2 已被 hard-residue/fail 占用)。"""
+    def error(self, message):
+        sys.stderr.write(f"argument error: {message}\n")
+        sys.exit(3)
+
+
 def read_file(path):
     """读取文件，处理编码错误。"""
     try:
@@ -110,27 +117,150 @@ HARD_RESIDUE_PATTERNS = [
 ]
 
 
-def detect_hard_residue(text):
-    """检测 hard-residue 模式。单次出现即报告。"""
-    findings = []
-    paragraphs = split_paragraphs(text)
+# ============================================================
+# 屏蔽层与保护区（档72C-3/§2,任务书 §7）
+# ============================================================
 
-    for para_idx, para in enumerate(paragraphs):
-        sentences = split_sentences(para)
-        for sent_idx, sent in enumerate(sentences):
+def mask_non_prose(text):
+    """等长屏蔽五类非散文内容(保持字符偏移,location 依赖偏移)。
+
+    1. YAML frontmatter(文件开头 --- 到下一个 ---)
+    2. 围栏代码块(``` 与 ~~~ 变体)
+    3. 行内代码(单反引号成对)
+    4. Markdown 链接 URL 与裸 URL(https?://\S+)
+    5. HTML 标签及标签内内容(<tag ...>...</tag> 与自闭合标签)
+    """
+    spans = []
+    m = re.match(r'^---\r?\n', text)
+    if m:
+        end = text.find('\n---', m.end())
+        if end != -1:
+            spans.append((0, end + 4))
+    for pat in (r'```.*?```', r'~~~.*?~~~'):
+        spans.extend(x.span() for x in re.finditer(pat, text, re.S))
+    spans.extend(x.span() for x in re.finditer(r'`[^`\n]+`', text))
+    spans.extend(x.span(1) for x in re.finditer(r'\]\((https?://[^)\s]+)\)', text))
+    spans.extend(x.span() for x in re.finditer(r'https?://[^\s)\]>]+', text))
+    for x in re.finditer(r'<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?>', text):
+        tag = x.group(1)
+        if x.group(0).endswith('/>'):
+            spans.append((x.start(), x.end()))
+            continue
+        close = re.search(r'</' + re.escape(tag) + r'\s*>', text[x.end():], re.I)
+        spans.append((x.start(), x.end() + close.end() if close else x.end()))
+    spans.sort()
+    merged = []
+    for s, e in spans:
+        if merged and s <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], e))
+        else:
+            merged.append((s, e))
+    chars = list(text)
+    for s, e in merged:
+        for i in range(s, min(e, len(chars))):
+            chars[i] = ' '
+    return ''.join(chars)
+
+
+def _protected_spans(text):
+    """用户显式保护区:[[protected]]...[[/protected]] 与 <!--keep-->...<!--/keep-->。"""
+    spans = []
+    for pat in (r'\[\[protected\]\].*?\[\[/protected\]\]',
+                r'<!--keep-->.*?<!--/keep-->'):
+        spans.extend(x.span() for x in re.finditer(pat, text, re.S))
+    return spans
+
+
+def _para_spans(text):
+    """与 split_paragraphs 同口径的段落切分,附带 (para, start, end) 偏移。"""
+    spans = []
+    pos = 0
+    for part in re.split(r'(\n\s*\n)', text):
+        if re.fullmatch(r'\n\s*\n', part):
+            pos += len(part)
+            continue
+        stripped = part.strip()
+        if not stripped:
+            pos += len(part)
+            continue
+        start = pos + part.index(stripped)
+        spans.append((stripped, start, start + len(stripped)))
+        pos += len(part)
+    return spans
+
+
+def _sent_spans(para):
+    """与 split_sentences 同口径的句切分,附带 (sent, start, end) 偏移。"""
+    spans = []
+    pos = 0
+    for part in re.split(r'(?<=[。！？!?])', para):
+        stripped = part.strip()
+        if stripped:
+            start = pos + part.index(stripped)
+            spans.append((stripped, start, start + len(stripped)))
+        pos += len(part)
+    return spans
+
+
+_GROUP_META = {
+    'hard_residue': {'severity': 'audit', 'action': 'mark',
+                     'suggestion': '删除或替换该片段',
+                     'reason': '单次出现即可判定为AI残留'},
+    'strong_contextual': {'severity': 'strong', 'action': 'suggest',
+                          'suggestion': '结合上下文复核;确为无信息填充则改写或删除',
+                          'reason': '聚集出现时需结合上下文判断'},
+    'advisory_only': {'severity': 'advisory', 'action': 'suggest',
+                      'suggestion': '仅提示,不自动修改',
+                      'reason': '真人写作中也常见,仅作建议'},
+}
+
+
+def _excerpt(original, start, limit=100):
+    seg = original[start:start + limit]
+    return seg + ('…' if len(original) - start > limit else '')
+
+
+def _finding(group, profile, pattern_def, location, span, original, protected,
+             confidence='high', cluster_count=None, cluster_threshold=None,
+             reason=None, suggestion=None, context_note=None):
+    """构造十字段 finding(档72C-3/§1);命中保护区 → action 强制 review_only。"""
+    start, end = span
+    action = _GROUP_META[group]['action']
+    if any(s <= start < e or s < end <= e for s, e in protected):
+        action = 'review_only'
+    f = {
+        'rule_id': pattern_def['id'],
+        'group': group,
+        'severity': _GROUP_META[group]['severity'],
+        'confidence': confidence,
+        'profile': profile,
+        'action': action,
+        'location': location,
+        'span_text': _excerpt(original, start),
+        'reason': reason or f"{pattern_def['name']}:{_GROUP_META[group]['reason']}",
+        'suggestion': suggestion or _GROUP_META[group]['suggestion'],
+        'language_origin': pattern_def['language_origin'],
+    }
+    if cluster_count is not None:
+        f['cluster_count'] = cluster_count
+        f['cluster_threshold'] = cluster_threshold
+    if context_note:
+        f['context_note'] = context_note
+    return f
+
+
+def detect_hard_residue(masked, original, profile, protected):
+    """检测 hard-residue 模式。单次出现即报告(屏蔽层后文本,span_text 取原文)。"""
+    findings = []
+    for para_idx, (para, pstart, pend) in enumerate(_para_spans(masked)):
+        for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
             for pattern_def in HARD_RESIDUE_PATTERNS:
                 for pat in pattern_def['patterns']:
-                    matches = re.finditer(pat, sent)
-                    for m in matches:
-                        findings.append({
-            'pattern_id': pattern_def['id'],
-            'pattern_name': pattern_def['name'],
-                            'location': f'paragraph {para_idx+1}, sentence {sent_idx+1}',
-                            'excerpt': sent[:100],
-                            'action': 'allow_delete_or_replace',
-                            'language_origin': pattern_def['language_origin'],
-                        })
-
+                    for m in re.finditer(pat, sent):
+                        findings.append(_finding(
+                            'hard_residue', profile, pattern_def,
+                            f'第{para_idx+1}段第{sent_idx+1}句',
+                            (pstart + sstart, pstart + send), original, protected))
     return findings
 
 
@@ -266,69 +396,77 @@ _CONTEXT_NOTE = (
 
 
 
-def detect_strong_contextual(text, profile):
-    """检测 strong-contextual 模式。聚集时才报告。"""
+def detect_strong_contextual(masked, original, profile, protected):
+    """检测 strong-contextual 模式。聚集时才报告(屏蔽层后文本,span_text 取原文)。"""
     findings = []
-    paragraphs = split_paragraphs(text)
+    paragraphs = _para_spans(masked)
 
-    for para_idx, para in enumerate(paragraphs):
+    for para_idx, (para, pstart, pend) in enumerate(paragraphs):
         for pattern_def in STRONG_CONTEXTUAL_PATTERNS:
             if not pattern_def['patterns']:
                 # 仅 SC-005 走下方专用块(同一 thresholds 真源,见 _SC_BY_ID)。
                 continue
 
             count = 0
-            matches_detail = []
             for pat in pattern_def['patterns']:
-                matches = re.finditer(pat, para)
-                for m in matches:
-                    count += 1
-                    matches_detail.append(m.group())
+                count += len(re.findall(pat, para))
 
-            # 档72B-2 OBS-218:每条规则自带 thresholds 字典,按 profile 取值,
-            # 缺省回落到 essay;统一乘数 PROFILE_MULTIPLIERS 已删除。
             # 档72B-2R OBS-228/R111:直接下标,缺键即 KeyError,不许兜底。
-            # 模块加载期断言已保证三 profile 齐备;argparse choices 限定 profile。
             threshold = pattern_def['thresholds'][profile]
 
             if count >= threshold:
-                findings.append({
-                    'pattern_id': pattern_def['id'],
-                    'pattern_name': pattern_def['name'],
-                    'location': f'paragraph {para_idx+1}',
-                    'excerpt': para[:100],
-                    'cluster_count': count,
-                    'cluster_threshold': threshold,
-                    'action': 'review',
-                    'language_origin': pattern_def['language_origin'],
-                })
-                # 档72C-2/§5d:SC-007a 命中带 context_note(任务书 §2 硬要求)。
-                if pattern_def['id'] == 'SC-007a':
-                    findings[-1]['context_note'] = _CONTEXT_NOTE
+                first_span = None
+                first_si = 0
+                for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                    if any(re.search(pat, sent) for pat in pattern_def['patterns']):
+                        first_span = (pstart + sstart, pstart + send)
+                        first_si = sent_idx
+                        break
+                confidence = 'medium' if pattern_def['id'] == 'SC-007a' else 'high'
+                reason = f"{pattern_def['name']}:同段聚集{count}次,达到阈值{threshold}"
+                findings.append(_finding(
+                    'strong_contextual', profile, pattern_def,
+                    f'第{para_idx+1}段第{first_si+1}句', first_span,
+                    original, protected, confidence=confidence,
+                    cluster_count=count, cluster_threshold=threshold,
+                    reason=reason,
+                    context_note=_CONTEXT_NOTE if pattern_def['id'] == 'SC-007a' else None))
 
-    # 检测连续同构结构（SC-005）
-    sentences = split_sentences(text)
+    # 检测连续等长句（SC-005,档72C-2 名实对齐:实测句长差,非句式同构）
+    # 档72B-2F/OBS-229:阈值与其余 SC 规则共用同一 thresholds 真源。
+    sc005_def = _SC_BY_ID['SC-005']
+    sc005_threshold = sc005_def['thresholds'][profile]
+    all_sents = []
+    for _para, pstart, pend in paragraphs:
+        for sent, sstart, send in _sent_spans(_para):
+            all_sents.append((sent, pstart + sstart, pstart + send))
     consecutive_count = 1
     prev_len = 0
-    # 档72B-2F/OBS-229:SC-005 的 patterns 为空,被上面的取值循环 continue
-    # 跳过,阈值此前硬编码为 3,thresholds 字典是死配置(假绿#33)。
-    # 现改为与其余 SC 规则共用同一真源。essay 档配置值同为 3,行为不变。
-    sc005_threshold = _SC_BY_ID['SC-005']['thresholds'][profile]
-    for i, sent in enumerate(sentences):
+    for i, (sent, sstart, send) in enumerate(all_sents):
         curr_len = len(sent)
         if i > 0 and abs(curr_len - prev_len) <= 5 and curr_len > 10:
             consecutive_count += 1
             if consecutive_count >= sc005_threshold:
-                findings.append({
-                    'pattern_id': 'SC-005',
-                    'pattern_name': _SC_BY_ID['SC-005']['name'],
-                    'location': f'sentence {i-consecutive_count+2} to {i+1}',
-                    'excerpt': ' '.join(sentences[i-consecutive_count+1:i+1])[:100],
-                    'cluster_count': consecutive_count,
-                    'cluster_threshold': sc005_threshold,  # 不再硬编码
-                    'action': 'review',
-                    'language_origin': 'language_general',
-                })
+                start_i = i - consecutive_count + 1
+                # 全局句号 → (段,句内号):按段落句数累计定位
+                acc = 0
+                para_of = 0
+                sent_of = 0
+                for p_idx, (_para, _ps, _pe) in enumerate(paragraphs):
+                    n = len(_sent_spans(_para))
+                    if start_i < acc + n:
+                        para_of, sent_of = p_idx, start_i - acc
+                        break
+                    acc += n
+                span = (all_sents[start_i][1], all_sents[i][2])
+                reason = f"{sc005_def['name']}:连续{consecutive_count}句句长相近"
+                findings.append(_finding(
+                    'strong_contextual', profile, sc005_def,
+                    f'第{para_of+1}段第{sent_of+1}句', span,
+                    original, protected,
+                    cluster_count=consecutive_count, cluster_threshold=sc005_threshold,
+                    reason=reason,
+                    suggestion='复核是否真为同构句式;修辞排比应保留'))
         else:
             consecutive_count = 1
         prev_len = curr_len
@@ -338,21 +476,27 @@ def detect_strong_contextual(text, profile):
     ao001 = next((r for r in ADVISORY_ONLY_PATTERNS if r.get('id') == 'AO-001'), None)
     if ao001 is not None:
         ao_pats = ao001.get('patterns') or [ao001['pattern']]
-        for para_idx, para in enumerate(paragraphs):
+        for para_idx, (para, pstart, pend) in enumerate(paragraphs):
             ao_count = sum(len(re.findall(pat, para)) for pat in ao_pats)
             if ao_count >= 2:
-                findings.append({
-                    'pattern_id': 'SC-007b',
-                    'pattern_name': '不是…而是…(低置信升级)',
-                    'location': f'paragraph {para_idx+1}',
-                    'excerpt': para[:100],
-                    'cluster_count': ao_count,
-                    'cluster_threshold': 2,
-                    'confidence': 'low',
-                    'context_note': _CONTEXT_NOTE,
-                    'action': 'review',
-                    'language_origin': 'language_general',
-                })
+                first_span = None
+                first_si = 0
+                for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                    if any(re.search(pat, sent) for pat in ao_pats):
+                        first_span = (pstart + sstart, pstart + send)
+                        first_si = sent_idx
+                        break
+                sc007b_def = {'id': 'SC-007b',
+                              'name': '不是…而是…(低置信升级)',
+                              'language_origin': 'language_general'}
+                findings.append(_finding(
+                    'strong_contextual', profile, sc007b_def,
+                    f'第{para_idx+1}段第{first_si+1}句', first_span,
+                    original, protected, confidence='low',
+                    cluster_count=ao_count, cluster_threshold=2,
+                    reason=f'同段AO-001聚集{ao_count}次,低置信升级',
+                    suggestion='判断前半句是否被前文真实建立;仅正常分类/澄清则忽略',
+                    context_note=_CONTEXT_NOTE))
 
     return findings
 
@@ -379,14 +523,11 @@ ADVISORY_ONLY_PATTERNS = [
 ]
 
 
-def detect_advisory_only(text):
+def detect_advisory_only(masked, original, profile, protected):
     """检测 advisory-only 模式。只列出，不影响 pass/fail。"""
     findings = []
-    paragraphs = split_paragraphs(text)
-
-    for para_idx, para in enumerate(paragraphs):
-        sentences = split_sentences(para)
-        for sent_idx, sent in enumerate(sentences):
+    for para_idx, (para, pstart, pend) in enumerate(_para_spans(masked)):
+        for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
             for pattern_def in ADVISORY_ONLY_PATTERNS:
                 # 档72C-2:AO-001 用 patterns 列表(双正则),其余用单数 pattern 键。
                 pats = pattern_def.get('patterns') or [pattern_def['pattern']]
@@ -394,14 +535,11 @@ def detect_advisory_only(text):
                 for pat in pats:
                     matches.extend(re.finditer(pat, sent))
                 for m in matches:
-                    findings.append({
-                        'pattern_id': pattern_def['id'],
-                        'pattern_name': pattern_def['name'],
-                        'location': f'paragraph {para_idx+1}, sentence {sent_idx+1}',
-                        'excerpt': sent[:100],
-                        'action': 'advisory',
-                        'language_origin': pattern_def['language_origin'],
-                    })
+                    findings.append(_finding(
+                        'advisory_only', profile, pattern_def,
+                        f'第{para_idx+1}段第{sent_idx+1}句',
+                        (pstart + sstart, pstart + send), original, protected,
+                        confidence='medium'))
 
     return findings
 
@@ -411,7 +549,7 @@ def detect_advisory_only(text):
 # ============================================================
 
 def main():
-    parser = argparse.ArgumentParser(
+    parser = _P(
         description='zh-human-writing v1 模式审计脚本',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
@@ -439,13 +577,16 @@ def main():
     text = read_file(args.text)
 
     # 检测
-    hr_findings = detect_hard_residue(text)
+    # 档72C-3/§2:所有检测前先等长屏蔽非散文;span_text 取自原文(不取自 masked)。
+    masked = mask_non_prose(text)
+    protected = _protected_spans(text)
+    hr_findings = detect_hard_residue(masked, text, args.profile, protected)
     sc_findings = []
     ao_findings = []
 
     if args.check_level == 'full':
-        sc_findings = detect_strong_contextual(text, args.profile)
-        ao_findings = detect_advisory_only(text)
+        sc_findings = detect_strong_contextual(masked, text, args.profile, protected)
+        ao_findings = detect_advisory_only(masked, text, args.profile, protected)
 
     # pass/fail 只由 hard-residue 决定
     pass_fail = 'fail' if hr_findings else 'pass'
@@ -475,17 +616,17 @@ def main():
         print(f'=== 模式审计结果 ===')
         print(f'hard-residue: {len(hr_findings)} 个')
         for f in hr_findings:
-            print(f'  [{f["pattern_id"]}] {f["pattern_name"]} @ {f["location"]}')
-            print(f'    {f["excerpt"][:60]}')
+            print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]}')
+            print(f'    {f["span_text"][:60]}')
         if args.check_level == 'full':
             print(f'strong-contextual: {len(sc_findings)} 个')
             for f in sc_findings:
-                print(f'  [{f["pattern_id"]}] {f["pattern_name"]} @ {f["location"]} (聚集 {f["cluster_count"]}/{f["cluster_threshold"]})')
-                print(f'    {f["excerpt"][:60]}')
+                print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]} (聚集 {f["cluster_count"]}/{f["cluster_threshold"]})')
+                print(f'    {f["span_text"][:60]}')
             print(f'advisory-only: {len(ao_findings)} 个')
             for f in ao_findings:
-                print(f'  [{f["pattern_id"]}] {f["pattern_name"]} @ {f["location"]}')
-                print(f'    {f["excerpt"][:60]}')
+                print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]}')
+                print(f'    {f["span_text"][:60]}')
         print(f'总体: {pass_fail}')
 
     # 退出码只由 hard-residue 决定
