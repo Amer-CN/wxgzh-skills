@@ -108,7 +108,7 @@
 | 216 | advisory_only/strong_contextual 恒 0 系代码未执行所致,非文本干净(假绿#30) | 已修(72B-1R §0-1 接线;72B-2/72B-2R 0C 重跑实测 advisory_only=34 为证) | wxgzh_pipeline/producers.py;0C RUN 629w48 | 72B-2 |
 | 217 | de-AI 阶段无活性断言:change_report change_ratio=0.0 仍 meets_threshold=true 且 exit 0,零改写照样 PASS 并冻结产物 | 未修(本档不修) | zh-human-writing scripts/change_report.py | 72B-2 |
 | 218 | PROFILE_MULTIPLIERS 统一乘数已存在于代码,设计稿「禁用」实为删除任务 | 已修(72B-2 §4 删除乘数,改每条规则自带 thresholds 字典;72B-2R §1 修正 SC-005 technical=int(3*1.5)=4,int 截断非 ceil) | zh-human-writing scripts/pattern_audit.py | 72B-2/72B-2R |
-| 219 | pattern_audit 无任何读配置代码,config/default.yaml:68 的 check_level 是纯文档(死文件) | 未修(本档不修) | zh-human-writing config/default.yaml | 72B-2 |
+| 219 | pattern_audit 无任何读配置代码,config/default.yaml:68 的 check_level 是纯文档(死文件) | 已修(72C-2 §7:config 真源化——删死乘数,新增 pattern_thresholds 段;load_config() + --config 注入,缺失/错/缺键一律 exit 3 无兜底 R111;config/default.yaml 加入锁 required_files R96;PB-013~015 覆盖) | zh-human-writing scripts/pattern_audit.py;config/default.yaml | 72B-2/72C-2 |
 | 220 | change_report --length-retention:agent 自报 strict,管线未传参实跑 balanced,声明与实跑不符 | 已修(72B-1R §0-2:管线写死 balanced + 握手模板自报 balanced 对齐) | wxgzh_pipeline/producers.py | 72B-2 |
 | 221 | PB-001~006 六项 profile 测试全部无法因 profile 逻辑失败(PB-004 硬编码 passed=True,其余只受 hard_residue 控制;PB-001/002 同文本同断言仅 profile 不同;假绿#31) | 部分修(72B-2 §5 新增 PB-007~009 正反例,72B-2R §3 新增 PB-010 18 格恒等回归;原六条仍假绿) | zh-human-writing tests/run_tests.py | 72B-2/72B-2R |
 | 222 | UF-001 断言 rc in [0,2] 覆盖 pattern_audit 全部正常退出码,恒真;注释自承「pattern_audit 不直接处理 fiction」 | 未修(本档不修) | zh-human-writing tests/run_tests.py::UF-001 | 72B-2 |
@@ -116,9 +116,12 @@
 | 224 | fake_live 三个 validator shim 均为无条件通过桩(fidelity 永不产生 exit 1,pattern_audit 硬编码 hard_residue:0 永不 exit 2,三者 stdout schema 与真脚本完全不同),validator 语义在 pipeline 测试套件零覆盖 | 部分修(72B-1R §0-4R:WXGZH_FAKE_FIDELITY_EXIT 注入口 + exit-1/exit-2 两条用例;pattern_audit exit-2 路径与真 schema 仍零覆盖) | fake_live/skills/zh-human-writing/fidelity_guard.py;tests/test_obs214_validator_exit1_is_warning.py | 72B-2 |
 | 225 | validate_receipt 把任一 official validator exit!=0 判为 receipt 无效,verify_receipt 以其为第一步 → exit-1 警告 receipt 写下即无效 → resume 视该阶段未执行并重跑(与 OBS-217 叠加成死循环) | 已修(72B-2 §0-6:execmodel.validator_exit_acceptable/WARNING_EXIT_ALLOWED 单一真源 R106,receipts.validate_receipt 与 stages 3c 共消费;test_obs225 四条含「全跑不重跑」) | wxgzh_pipeline/execmodel.py;receipts.py;stages/__init__.py;tests/test_obs225_warning_receipt_is_valid.py | 72B-2 |
 | 226 | 同步树是 08-03 从本地路径克隆的快照:media-enrichment 同步树连锁 pin 18414cc9 都无法解析(cat-file 报 Not a valid object name);relock 若以同步树为源会静默 pin 到更旧祖先 commit;当前配方只打单目标故未触发,属潜伏陷阱 | 未修(审核方裁决:不推进 media-enrichment/gzh-design 同步树,保持 08-03 快照原样;S106 作废改 S106-R) | .temp/obs72-sync-src/* | 72B-2R |
-| 227 | SC-005 特殊逻辑双重计数:consecutive_count>=3 时逐句 append,5 句连续相似产出 3 条 finding;且只比紧邻前句,20→25→30→35 缓慢漂移也判为「同构」;与其余按次数计的规则不同质,共用 thresholds 机制语义可疑 | 未修(Batch 2 处理) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005) | 72B-2R |
+| 227 | SC-005 特殊逻辑量错了对象:不只是双重计数(consecutive_count>=3 逐句 append,5 句产出 3 条)与缓慢漂移误判(20→25→30→35 判同构),而是**实测的是句长差(<=5),不是文档声明的「相同句式」**;规则名已由 72C-2 改为「连续等长句」以名实对齐 | 未修(严重性上调:语义重写=句式同构检测留 Batch 3;双重计数/跨段分句同批处理) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005) | 72B-2R/72C-2 |
 | 228 | §4 首版 thresholds 查表用 `or` 链兜底:对 0 短路且缺键静默回退 essay/1,fail-open(R111) | 已修(72B-2R §2:模块加载期结构断言三 profile 齐备且 >=1 整数;取值直接下标 pattern_def['thresholds'][profile],缺键 KeyError) | zh-human-writing scripts/pattern_audit.py | 72B-2R |
 | 229 | SC-005 的 thresholds 字典为死配置:其 patterns 为空数组,被 detect_strong_contextual 主循环的 continue 跳过,专用检测块将阈值与输出的 cluster_threshold 双双硬编码为 3。profile 分档对 SC-005 从未生效(新旧代码皆然),输出字段与配置值名实不符;PB-010 的 SC-005 三格因此为假绿(#33) | 已修(72B-2F §3:接入 _SC_BY_ID['SC-005']['thresholds'][profile] 真源;essay 档配置值同为 3,0C 重跑八项数字逐字不变(S110);PB-011 活性断言 R112:红态 2/2/2 恒 3 → 绿态 2/1/0 thr 3/4/-。OBS-227 双重计数+跨段分句仍未修,留 Batch 3) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005);tests/run_tests.py::PB-011 | 72B-2F |
+| 231 | 文档-代码 18 项名实不符((a)8 项文档有代码没有:HR-006/AO-005/AO-008/AO-009/AO-010/AO-012/HR-001 的 <...>/AO-006 的「不是吗？」;(c)10 项内容不一致:SC-005 语义句长≠句式、SC-001~006 profile 档位与文档逐条声明不符(统一乘数遗毒)、SC-002/HR-003/HR-005 字面量前缀差异、HR-002/HR-004 变体集合、AO-011 粒度) | 已修(72C-2 §1~§6:阈值改文档逐条声明值;SC-005 改名「连续等长句」并标注实测语义;SC-007a 阈值 1+第 5 条正则;SC-008 移入 HR-007;SC-007b 升级机制;文档回写补齐 HR-007/SC-007a/SC-007b 并标注未实现项。SC-005 语义重写留 Batch 3(见 227)) | zh-human-writing scripts/pattern_audit.py;config/default.yaml;references/patterns/*.md | 72C-2 |
+| 232 | profiles/essay.md、technical.md、social.md 三个文件无人读取,是死文件;其声明的「×1.5/×2.0 放宽」「短句不检测」「第二人称不判假互动」等无代码落点;fidelity_guard.py 接受 --profile 但从未使用 | 未修(Batch 3:profile 语义落到代码/配置后回写或废除文档) | zh-human-writing profiles/*.md;scripts/fidelity_guard.py:628 | 72C-2 |
+| 233 | 任务书 §3 指定的 references/domain-lexicon.yaml 实为误杀防护词表(术语/命令逐字保护),不是检测词表,任务书目标文件错配 | 已裁决未实施(72C-2 裁决:另建检测词表文件,见 72C-3;现有 lexicon 继续供 protected-spans 语义使用) | 任务书 §3;references/domain-lexicon.yaml | 72C-2 |
 
 ## 未修清单（独立分区）
 
@@ -143,12 +146,13 @@
 | 212 | 写作阶段 fake/real 无独立开关 | 未修(72B 用 live+停媒体批准点真跑;DNS 拦截为环境问题) | 不阻塞发文主线(72B 已定真跑法) |
 | 213 | 六闸门自评(唯一真闸 _FORBIDDEN_TERMS),Stage 3 门禁=自评(假绿#29) | 未修 | 不阻塞发文主线(官方校验器 fidelity_guard 13 项数值闸为真闸;自评字段是 agent 报告) |
 | 217 | de-AI 阶段无活性断言,change_ratio=0.0 照样 PASS | 未修 | 不阻塞发文主线(0C 基线即 0.0;活性判据属 Batch 2 语义工作) |
-| 219 | pattern_audit 无读配置代码,config/default.yaml 是死文件 | 未修 | 不阻塞发文主线(阈值已在代码内 thresholds 字典,配置化属后续) |
 | 221 | PB-001~006 六项仍假绿 | 部分修 | 不阻塞(PB-007~009/010 已提供真实 profile 覆盖;旧六条属 zh 仓测试整理) |
 | 222 | UF-001 恒真 | 未修 | 不阻塞(测试资产问题) |
 | 224 | shim 无条件通过桩(exit-2 路径与真 schema 仍零覆盖) | 部分修 | 不阻塞(fake_live 仅测试用;真实语义由 live 校验器与 0C 重跑覆盖) |
 | 226 | 同步树快照潜伏陷阱(media 同步树连 pin 都无法解析) | 未修 | 不阻塞(当前配方单目标+远端见证+R109 先 push,陷阱未触发) |
-| 227 | SC-005 特殊逻辑双重计数/缓慢漂移误判,与 thresholds 机制不同质 | 未修 | 不阻塞(0C 基线 SC-005 未命中;Batch 2 处理) |
+| 232 | profiles/*.md 三个文件无人读取,是死文件;声明的放宽/不检测语义无代码落点 | 未修(Batch 3:profile 语义落地后回写或废除) | 不阻塞(阈值真源已移至 config,profile 文档只是描述层) |
+| 233 | 任务书 §3 指定的 domain-lexicon.yaml 实为误杀防护词表,目标文件错配 | 已裁决未实施(72C-3 另建检测词表文件) | 不阻塞(现有 lexicon 继续供 protected-spans 使用) |
+| 227 | SC-005 量错了对象(句长≠句式,72C-2 改名「连续等长句」),双重计数/漂移误判并存 | 未修(严重性上调;语义重写留 Batch 3) | 不阻塞(0C 基线 SC-005 未命中;改名后名实对齐) |
 
 ## 本台账口径
 
@@ -179,6 +183,7 @@
 22. 72A-F:R95 front-matter 禁区;R96 中性改动须落在 required_files;OBS-208 判据作废,fake_live 不得用于验证提示词升级;OBS_68 计数范围见 210。
 23. 72B-0:OBS-211 runtime_manifest_sha256 为运行时文件清单哈希(内容由 skill_root_sha256 覆盖,0A 三组探测实证,四 skill 一致);OBS-212 写作阶段 fake/real 由 network_mode 单一决定,无独立开关;0C 升级前对照基线 RUN 70efs9(final_article sha 3e829be0…,素材 71e-items.json),72B 升级后须用同一素材重跑比对。
 24. 72B-2/72B-2R:OBS-225 §0-6 退出码可接受性单一真源(R106,WARNING_EXIT_ALLOWED 全仓唯一);OBS-218/221/228 词表与阈值改造(SC-007a/SC-008 新增,SC-001~006 恒等变换 technical=int(×1.5) 截断,PB-010 硬编码 18 格期望值 R110,R111 禁 or 兜底);S106 作废改 S106-R(比对对象=installed vs 锁,仅 super-writer/zh-human-writing 不等才停机;media/gzh 既存差异只登记不修);R109 锁中 pin 必须 GitHub 远端可达(relock 前必 push)。唯一编号 94→110(119–228 连续,共 110),R59 未修分区 22 条。
+25. 72C-2:阈值真源=config/default.yaml pattern_thresholds(文档逐条声明值,SC-001~006 §1 表 + SC-007a 阈值 1);SC-008 移入 HR-007(命中 exit 2);SC-007b 升级机制(同段 AO-001 ≥2 → strong,confidence=low);SC-005 改名「连续等长句」(OBS-227 名实对齐);OBS-219 已修退出分区;OBS-232 未修 Batch 3;OBS-233 已裁决未实施(72C-3 另建文件)。R112:配置驱动字段必须有活性断言(PB-013)。
 
 ### ★授权变更登记(72A,不可省)
 

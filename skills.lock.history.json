@@ -330,5 +330,21 @@
     "new_source_tree_sha": "aeb68a3b81f4f4290ed4c5d3ddb69e17fcab8d7c",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260808T073449Z-f0f5baa9",
+    "skill": "zh-human-writing",
+    "reason": "72C-2 zh-human-writing 升级:阈值对齐文档 + config 真源化 + SC-007b/HR-007",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-08T07:34:49Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "112964de23de033aca23d7bf4cbf87f45f9da4db37123db8f1b1af26ce4d450f",
+    "new_root_sha256": "a5a3e4417813b3236dc0152289e5a4e4122d564b2e2ea09553f859073a51cb7f",
+    "old_full_commit_sha": "1db17b99be07715823941f740e3511811f7273f4",
+    "new_full_commit_sha": "6c950ac03641773d01ed0c5b306dfbc170ff4684",
+    "old_source_tree_sha": "aeb68a3b81f4f4290ed4c5d3ddb69e17fcab8d7c",
+    "new_source_tree_sha": "29bd6605091af07e93c4bdd2c6074d9f1812659f",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
   }
 ]
