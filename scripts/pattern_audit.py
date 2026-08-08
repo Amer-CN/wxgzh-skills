@@ -155,7 +155,8 @@ STRONG_CONTEXTUAL_PATTERNS = [
         'id': 'SC-005',
         'name': '连续同构结构',
         'patterns': [],  # 需要特殊检测逻辑
-        'thresholds': {'essay': 3, 'technical': 5, 'social': 6},  # 特殊逻辑仍用固定 3(恒等)
+        # 档72B-2R:technical = int(3*1.5) = 4(截断,非 ceil);特殊逻辑仍用固定 3(恒等)。
+        'thresholds': {'essay': 3, 'technical': 4, 'social': 6},
         'language_origin': 'language_general',
     },
     {
@@ -186,6 +187,17 @@ STRONG_CONTEXTUAL_PATTERNS = [
     },
 ]
 
+# 档72B-2R OBS-228/R111:模块加载期结构断言——thresholds 必须显式包含
+# 全部 profile 且为 >=1 整数;缺键即报错,禁止 or 兜底/静默默认(fail-open)。
+_PROFILES = ('essay', 'technical', 'social')
+for _r in STRONG_CONTEXTUAL_PATTERNS:
+    _t = _r.get('thresholds')
+    if not isinstance(_t, dict) or any(p not in _t for p in _PROFILES):
+        raise ValueError(
+            f"{_r.get('id')}: thresholds 必须显式包含 essay/technical/social")
+    if any(not isinstance(_t[p], int) or _t[p] < 1 for p in _PROFILES):
+        raise ValueError(f"{_r.get('id')}: thresholds 值必须为 >=1 的整数")
+
 
 
 def detect_strong_contextual(text, profile):
@@ -208,17 +220,18 @@ def detect_strong_contextual(text, profile):
 
             # 档72B-2 OBS-218:每条规则自带 thresholds 字典,按 profile 取值,
             # 缺省回落到 essay;统一乘数 PROFILE_MULTIPLIERS 已删除。
-            thresholds = pattern_def.get('thresholds') or {}
-            adjusted_threshold = thresholds.get(profile) or thresholds.get('essay') or 1
+            # 档72B-2R OBS-228/R111:直接下标,缺键即 KeyError,不许兜底。
+            # 模块加载期断言已保证三 profile 齐备;argparse choices 限定 profile。
+            threshold = pattern_def['thresholds'][profile]
 
-            if count >= adjusted_threshold:
+            if count >= threshold:
                 findings.append({
                     'pattern_id': pattern_def['id'],
                     'pattern_name': pattern_def['name'],
                     'location': f'paragraph {para_idx+1}',
                     'excerpt': para[:100],
                     'cluster_count': count,
-                    'cluster_threshold': adjusted_threshold,
+                    'cluster_threshold': threshold,
                     'action': 'review',
                     'language_origin': pattern_def['language_origin'],
                 })

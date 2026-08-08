@@ -25,6 +25,20 @@ FIDELITY_GUARD = os.path.join(SCRIPTS_DIR, 'fidelity_guard.py')
 CHANGE_REPORT = os.path.join(SCRIPTS_DIR, 'change_report.py')
 PATTERN_AUDIT = os.path.join(SCRIPTS_DIR, 'pattern_audit.py')
 
+# 档72B-2R PB-010:恒等回归的硬编码期望值(R110)——这 18 个数 =
+# 0c8962f 版 max(1, int(threshold * multiplier)) 的逐格结果,
+# multiplier = essay 1.0 / technical 1.5 / social 2.0。
+# int() 是截断,SC-005 technical 因此是 4 不是 5。
+# 禁止用公式现算期望值——用公式就会把同一个 bug 再算一遍。
+EXPECTED_SC_THRESHOLDS = {
+    'SC-001': {'essay': 2, 'technical': 3, 'social': 4},
+    'SC-002': {'essay': 2, 'technical': 3, 'social': 4},
+    'SC-003': {'essay': 2, 'technical': 3, 'social': 4},
+    'SC-004': {'essay': 2, 'technical': 3, 'social': 4},
+    'SC-005': {'essay': 3, 'technical': 4, 'social': 6},
+    'SC-006': {'essay': 2, 'technical': 3, 'social': 4},
+}
+
 PYTHON = sys.executable
 
 
@@ -442,6 +456,32 @@ def test_profile_thresholds():
 
     return results
 
+
+
+# ============================================================
+# identity-regression 测试（1 条,档72B-2R 新增,PB-010）
+# ============================================================
+
+def test_thresholds_identity():
+    results = []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pattern_audit", PATTERN_AUDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mismatches = []
+    for rule in mod.STRONG_CONTEXTUAL_PATTERNS:
+        rid = rule.get('id')
+        if rid not in EXPECTED_SC_THRESHOLDS:
+            continue
+        got = rule.get('thresholds') or {}
+        for prof, want in EXPECTED_SC_THRESHOLDS[rid].items():
+            if got.get(prof) != want:
+                mismatches.append(f"{rid}.{prof}: 期望 {want} 实得 {got.get(prof)}")
+    passed = not mismatches
+    results.append(TestResult('PB-010', 'identity-regression', passed,
+                              '；'.join(mismatches) if mismatches else '18 格全等'))
+    return results
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -451,6 +491,7 @@ def main():
     all_results.extend(test_fidelity_stress())
     all_results.extend(test_profile_boundaries())
     all_results.extend(test_profile_thresholds())
+    all_results.extend(test_thresholds_identity())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 
