@@ -462,6 +462,46 @@ def test_profile_thresholds():
 # identity-regression 测试（1 条,档72B-2R 新增,PB-010）
 # ============================================================
 
+
+
+# ============================================================
+# sc005-threshold-liveness 测试（1 条,档72B-2F 新增,PB-011/R112）
+# ============================================================
+
+# 4 个连续句:长度 20/23/23/26,相邻差 3/0/3(均<=5),句长均>10,
+# 不命中 SC-001~008 任何正则(中性陈述句,实测 sc_hits=[])。
+# 只数 pattern_id == 'SC-005' 的条目;consecutive_count 递推 2,3,4。
+SC005_TEXT = ("清晨的阳光洒满安静的街道，行人脚步从容。"
+              "午后的小雨落在青石板路上，屋檐滴答声清晰可闻。"
+              "傍晚的微风穿过长长小巷，远处亮起一片温暖灯光。"
+              "深夜的月光落进半开的窗台，书桌上的纸张被风轻轻翻动。")
+
+
+def test_sc005_threshold_liveness():
+    results = []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pattern_audit", PATTERN_AUDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    observed = {}
+    for prof in ("essay", "technical", "social"):
+        findings = mod.detect_strong_contextual(SC005_TEXT, prof)
+        sc5 = [f for f in findings if f['pattern_id'] == 'SC-005']
+        observed[prof] = (len(sc5), [f['cluster_threshold'] for f in sc5])
+
+    essay_n, essay_t = observed['essay']
+    tech_n, tech_t = observed['technical']
+    soc_n, soc_t = observed['social']
+    ok = (
+        essay_n == 2 and all(x == 3 for x in essay_t)
+        and tech_n == 1 and all(x == 4 for x in tech_t)
+        and soc_n == 0
+    )
+    msg = (f"essay={essay_n}(thr={essay_t}) technical={tech_n}(thr={tech_t}) "
+           f"social={soc_n}(thr={soc_t})")
+    results.append(TestResult('PB-011', 'sc005-threshold-liveness', ok, msg))
+    return results
+
 def test_thresholds_identity():
     results = []
     import importlib.util
@@ -492,6 +532,7 @@ def main():
     all_results.extend(test_profile_boundaries())
     all_results.extend(test_profile_thresholds())
     all_results.extend(test_thresholds_identity())
+    all_results.extend(test_sc005_threshold_liveness())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 

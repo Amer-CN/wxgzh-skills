@@ -198,6 +198,10 @@ for _r in STRONG_CONTEXTUAL_PATTERNS:
     if any(not isinstance(_t[p], int) or _t[p] < 1 for p in _PROFILES):
         raise ValueError(f"{_r.get('id')}: thresholds 值必须为 >=1 的整数")
 
+# 档72B-2F OBS-229:按 id 索引的查找表——SC-005 的 patterns 为空数组,
+# 主循环会 continue 跳过,专用检测块必须从这里取同一个 thresholds 真源。
+_SC_BY_ID = {_r['id']: _r for _r in STRONG_CONTEXTUAL_PATTERNS}
+
 
 
 def detect_strong_contextual(text, profile):
@@ -208,6 +212,7 @@ def detect_strong_contextual(text, profile):
     for para_idx, para in enumerate(paragraphs):
         for pattern_def in STRONG_CONTEXTUAL_PATTERNS:
             if not pattern_def['patterns']:
+                # 仅 SC-005 走下方专用块(同一 thresholds 真源,见 _SC_BY_ID)。
                 continue
 
             count = 0
@@ -240,18 +245,22 @@ def detect_strong_contextual(text, profile):
     sentences = split_sentences(text)
     consecutive_count = 1
     prev_len = 0
+    # 档72B-2F/OBS-229:SC-005 的 patterns 为空,被上面的取值循环 continue
+    # 跳过,阈值此前硬编码为 3,thresholds 字典是死配置(假绿#33)。
+    # 现改为与其余 SC 规则共用同一真源。essay 档配置值同为 3,行为不变。
+    sc005_threshold = _SC_BY_ID['SC-005']['thresholds'][profile]
     for i, sent in enumerate(sentences):
         curr_len = len(sent)
         if i > 0 and abs(curr_len - prev_len) <= 5 and curr_len > 10:
             consecutive_count += 1
-            if consecutive_count >= 3:
+            if consecutive_count >= sc005_threshold:
                 findings.append({
                     'pattern_id': 'SC-005',
                     'pattern_name': '连续同构结构',
                     'location': f'sentence {i-consecutive_count+2} to {i+1}',
                     'excerpt': ' '.join(sentences[i-consecutive_count+1:i+1])[:100],
                     'cluster_count': consecutive_count,
-                    'cluster_threshold': 3,
+                    'cluster_threshold': sc005_threshold,  # 不再硬编码
                     'action': 'review',
                     'language_origin': 'language_general',
                 })
