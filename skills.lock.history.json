@@ -406,5 +406,25 @@
     "new_source_tree_sha": "f4543ba6478256001b522e71263a450e27786f9a",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260808T155729Z-a1079e80",
+    "skill": "zh-human-writing",
+    "reason": "72C-6 zh-human-writing 升级:统计检测层九项指标(任务书 §4) + AO-007/011 每段聚合 + 样本 A 段落恢复",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-08T15:57:29Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "d2e219a64b166b0922dc46b47199d1a28cac367e4b3c02aafdefe360bdd14061",
+    "new_root_sha256": "47fafbe8c0a4a7eae58e07c46df7dfcf283ab74f0cff7f50f2a0988d2e8691f7",
+    "old_manifest_sha256": "92676c5af12abfd7a5922f66b29a7134e45142ec46128f50d72399adcd6955a9",
+    "new_manifest_sha256": "492b3afc7661c1b69b4f7b0eb8c1430818b28001196079fd2990e1dc2d68e5bd",
+    "old_file_count": 60,
+    "new_file_count": 61,
+    "old_full_commit_sha": "06665d41ef1b45243bd4966a0179353e1645e797",
+    "new_full_commit_sha": "34864fd46587d416b0ab5721b1dcee2c19fbcb06",
+    "old_source_tree_sha": "f4543ba6478256001b522e71263a450e27786f9a",
+    "new_source_tree_sha": "e4170fb5fff6a6e85dbff71b1fb2ecaa010239ec",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
   }
 ]

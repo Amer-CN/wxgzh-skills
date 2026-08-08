@@ -35,9 +35,9 @@ from pathlib import Path
 from . import zipping
 
 # OBS-69 baseline: sha256 of the REPO-side skills.lock.json
-# (dev/0.1.0-dev2, 72C-5 relock: zh-human-writing full_commit_sha c9c1ef3->06665d4). Update together with any lock change.
-# 上一处基线对应 72C-5 relock(06665d4)。R93:relock 后同次操作同步。
-REPO_LOCK_SHA256 = "10136c4a9dd4752042ad149d2081b34f622c722f2c306d33b7a0fca5c1c5f0d2"
+# (dev/0.1.0-dev2, 72C-6 relock #20: zh-human-writing full_commit_sha 06665d4->34864fd). Update together with any lock change.
+# 上一处基线对应 72C-6 relock #20(34864fd)。R93:relock 后同次操作同步。
+REPO_LOCK_SHA256 = "1d355fe4f1a247d693c3237a1b210e23a812e0f90c65db702fe0e1553197394a"
 
 _HEX64 = frozenset("0123456789abcdef")
 
