@@ -28,10 +28,10 @@
       "skill_name": "zh-human-writing",
       "repository_url": "https://github.com/Amer-CN/zh-human-writing",
       "branch": "chore/wxgzh-pipeline-dev2-integration",
-      "full_commit_sha": "8e7948cddb55c3130dac16bd440d4ea6bc856545",
-      "source_tree_sha": "1ab330279042b40eb2bff7accc09e097b6f49cca",
+      "full_commit_sha": "0c8962f354e9acc73f29bc57a8b328fc98695a10",
+      "source_tree_sha": "4f8b4b8deb0b2e8ce5607373dd33014e4db53d47",
       "skill_version": "0.1.0",
-      "skill_root_sha256": "e25b4f80792b47e784ca1ebf8200490feba2a21c1cbfbaff96e7733d7787ce7f",
+      "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
       "runtime_manifest_sha256": "022e62c54a4e4d544e3ecc7b2ce4ff8484ccb6927009db236db619286bf076f6",
       "runtime_file_count": 53,
       "entrypoint": "scripts/fidelity_guard.py",
@@ -42,9 +42,7 @@
         "scripts/change_report.py",
         "scripts/fidelity_guard.py",
         "scripts/pattern_audit.py"
-      ],
-      "render_entry_sha256": null,
-      "component_source_sha256": null
+      ]
     },
     "media-enrichment": {
       "skill_name": "media-enrichment",

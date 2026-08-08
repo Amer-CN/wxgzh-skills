@@ -102,6 +102,22 @@
 | 210 | OBS_68 计数范围未明确:relock 生成的 audit/upgrade-capability/lock-backups/*.json 计入 repo 计数(655→656),audit/quality/*.md 不计(OBS-107 口径) | 已修(口径明确:lock-backup json 计入,报告 md 不计;本档实测 656) | OBS_68 计数口径 | 72A-F |
 | 211 | runtime_manifest_sha256 不提供 required_files 内容哈希(0A-1/0A-2 实证:该值=compute_runtime_manifest_sha 的运行时文件【清单】哈希,skill_discovery.py:67,relock 写锁为重算赋值 relock.py:567/622;0A-3 三组探测 root 变/manifest 不变,四 skill 行为一致);72A-F「形同虚设」结论修正为「口径澄清,内容由 skill_root_sha256 覆盖」;但 required_files 单文件内容漂移无独立指标 | 未修(留升级机制档决定是否新增 required_files 内容哈希指标;当前内容完整性由 root sha 覆盖) | wxgzh_pipeline/skill_discovery.py:67;scripts/relock.py:567/622 | 72B-0 |
 | 212 | 写作阶段 fake/real 无独立开关(0B-1 实证:由 network_mode 单一决定,producers.py:277 fake_live/integration=FakeAgent fixture 重放,live=人工交接);真跑需 live 模式+人工交接,无自动化真写开关;0C 实测还受 TUN DNS 影响媒体发现(github.com→198.18.0.9 被 URL 安全检查拦截) | 未修(登记:72B 采用 live+停媒体批准点的真跑法;DNS 拦截为环境问题,非代码) | wxgzh_pipeline/producers.py:277;orchestrator.py network_mode | 72B-0 |
+| 213 | 六闸门自评:NEW_UNREGISTERED_FACTS/NUMBER_CHANGES/ATTRIBUTION_LOSS/QUALIFIER_LOSS/CLAIM_SEMANTIC_CHANGE/HARD_RESIDUE 六键在 zh-human-writing 仓零命中,由被检查方自写 fidelity_report.json 提供,Stage 3 门禁=自评;唯一真闸是 _FORBIDDEN_TERMS(假绿#29) | 未修(本档不修) | zh-human-writing scripts/fidelity_guard.py;wxgzh_pipeline/stages 3c | 72B-2 |
+| 214 | fidelity_guard exit 1(warning)与 3c「非 0 即失败」语义错配:真实 de-AI 改写只要动一个「所以/不/如果」Stage 3 必然失败 | 已修(72B-1R §0-4:exit 1 进 official_validator_warnings 不抬升 exit_code;判据=FS-003/FS-004 四组约 40 词出现次数完全相等的 warning 契约) | wxgzh_pipeline/stages/__init__.py 3c;tests/test_obs214_validator_exit1_is_warning.py | 72B-2 |
+| 215 | pattern_audit stdout 无消费者(死线),hard_residue 经 sys.exit(2) 为活线;sc/ao 因 --check-level 默认 hard_residue_only 根本不执行 | 已修(72B-1R §0-1:--check-level full --profile essay;stdout 落盘 <脚本名>.stdout.json 并入 receipt output_files) | wxgzh_pipeline/producers.py::_agent_validator_args | 72B-2 |
+| 216 | advisory_only/strong_contextual 恒 0 系代码未执行所致,非文本干净(假绿#30) | 已修(72B-1R §0-1 接线;72B-2/72B-2R 0C 重跑实测 advisory_only=34 为证) | wxgzh_pipeline/producers.py;0C RUN 629w48 | 72B-2 |
+| 217 | de-AI 阶段无活性断言:change_report change_ratio=0.0 仍 meets_threshold=true 且 exit 0,零改写照样 PASS 并冻结产物 | 未修(本档不修) | zh-human-writing scripts/change_report.py | 72B-2 |
+| 218 | PROFILE_MULTIPLIERS 统一乘数已存在于代码,设计稿「禁用」实为删除任务 | 已修(72B-2 §4 删除乘数,改每条规则自带 thresholds 字典;72B-2R §1 修正 SC-005 technical=int(3*1.5)=4,int 截断非 ceil) | zh-human-writing scripts/pattern_audit.py | 72B-2/72B-2R |
+| 219 | pattern_audit 无任何读配置代码,config/default.yaml:68 的 check_level 是纯文档(死文件) | 未修(本档不修) | zh-human-writing config/default.yaml | 72B-2 |
+| 220 | change_report --length-retention:agent 自报 strict,管线未传参实跑 balanced,声明与实跑不符 | 已修(72B-1R §0-2:管线写死 balanced + 握手模板自报 balanced 对齐) | wxgzh_pipeline/producers.py | 72B-2 |
+| 221 | PB-001~006 六项 profile 测试全部无法因 profile 逻辑失败(PB-004 硬编码 passed=True,其余只受 hard_residue 控制;PB-001/002 同文本同断言仅 profile 不同;假绿#31) | 部分修(72B-2 §5 新增 PB-007~009 正反例,72B-2R §3 新增 PB-010 18 格恒等回归;原六条仍假绿) | zh-human-writing tests/run_tests.py | 72B-2/72B-2R |
+| 222 | UF-001 断言 rc in [0,2] 覆盖 pattern_audit 全部正常退出码,恒真;注释自承「pattern_audit 不直接处理 fiction」 | 未修(本档不修) | zh-human-writing tests/run_tests.py::UF-001 | 72B-2 |
+| 223 | fake_live shim 与真脚本 CLI 一致性仅由 docstring 声明,change_report 缺 --length-retention 长期未发现,直到传参以 17 项无关测试集体变红暴露 | 已修(72B-1R §0-5:test_obs223 直接消费 _agent_validator_args 生成 argv,逐条 sys.executable 真跑 shim,returncode!=2) | tests/test_obs223_shim_cli_contract.py;fake_live/skills/zh-human-writing/change_report.py | 72B-2 |
+| 224 | fake_live 三个 validator shim 均为无条件通过桩(fidelity 永不产生 exit 1,pattern_audit 硬编码 hard_residue:0 永不 exit 2,三者 stdout schema 与真脚本完全不同),validator 语义在 pipeline 测试套件零覆盖 | 部分修(72B-1R §0-4R:WXGZH_FAKE_FIDELITY_EXIT 注入口 + exit-1/exit-2 两条用例;pattern_audit exit-2 路径与真 schema 仍零覆盖) | fake_live/skills/zh-human-writing/fidelity_guard.py;tests/test_obs214_validator_exit1_is_warning.py | 72B-2 |
+| 225 | validate_receipt 把任一 official validator exit!=0 判为 receipt 无效,verify_receipt 以其为第一步 → exit-1 警告 receipt 写下即无效 → resume 视该阶段未执行并重跑(与 OBS-217 叠加成死循环) | 已修(72B-2 §0-6:execmodel.validator_exit_acceptable/WARNING_EXIT_ALLOWED 单一真源 R106,receipts.validate_receipt 与 stages 3c 共消费;test_obs225 四条含「全跑不重跑」) | wxgzh_pipeline/execmodel.py;receipts.py;stages/__init__.py;tests/test_obs225_warning_receipt_is_valid.py | 72B-2 |
+| 226 | 同步树是 08-03 从本地路径克隆的快照:media-enrichment 同步树连锁 pin 18414cc9 都无法解析(cat-file 报 Not a valid object name);relock 若以同步树为源会静默 pin 到更旧祖先 commit;当前配方只打单目标故未触发,属潜伏陷阱 | 未修(审核方裁决:不推进 media-enrichment/gzh-design 同步树,保持 08-03 快照原样;S106 作废改 S106-R) | .temp/obs72-sync-src/* | 72B-2R |
+| 227 | SC-005 特殊逻辑双重计数:consecutive_count>=3 时逐句 append,5 句连续相似产出 3 条 finding;且只比紧邻前句,20→25→30→35 缓慢漂移也判为「同构」;与其余按次数计的规则不同质,共用 thresholds 机制语义可疑 | 未修(Batch 2 处理) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005) | 72B-2R |
+| 228 | §4 首版 thresholds 查表用 `or` 链兜底:对 0 短路且缺键静默回退 essay/1,fail-open(R111) | 已修(72B-2R §2:模块加载期结构断言三 profile 齐备且 >=1 整数;取值直接下标 pattern_def['thresholds'][profile],缺键 KeyError) | zh-human-writing scripts/pattern_audit.py | 72B-2R |
 
 ## 未修清单（独立分区）
 
@@ -124,6 +140,14 @@
 | 200 | 71H 5c 测试硬编码 REAL_SKILLS,类 A 12 项待 CI 环境档统一处理 | 未修(R90:只登记不单修) | 不阻塞发文主线(CI 红不构成验收依据,71I 口径正式化) |
 | 211 | runtime_manifest_sha256 无 required_files 内容哈希 | 未修(口径已澄清:清单哈希,内容由 root sha 覆盖;单文件漂移无独立指标) | 不阻塞发文主线(内容完整性现有 root sha 兜底) |
 | 212 | 写作阶段 fake/real 无独立开关 | 未修(72B 用 live+停媒体批准点真跑;DNS 拦截为环境问题) | 不阻塞发文主线(72B 已定真跑法) |
+| 213 | 六闸门自评(唯一真闸 _FORBIDDEN_TERMS),Stage 3 门禁=自评(假绿#29) | 未修 | 不阻塞发文主线(官方校验器 fidelity_guard 13 项数值闸为真闸;自评字段是 agent 报告) |
+| 217 | de-AI 阶段无活性断言,change_ratio=0.0 照样 PASS | 未修 | 不阻塞发文主线(0C 基线即 0.0;活性判据属 Batch 2 语义工作) |
+| 219 | pattern_audit 无读配置代码,config/default.yaml 是死文件 | 未修 | 不阻塞发文主线(阈值已在代码内 thresholds 字典,配置化属后续) |
+| 221 | PB-001~006 六项仍假绿 | 部分修 | 不阻塞(PB-007~009/010 已提供真实 profile 覆盖;旧六条属 zh 仓测试整理) |
+| 222 | UF-001 恒真 | 未修 | 不阻塞(测试资产问题) |
+| 224 | shim 无条件通过桩(exit-2 路径与真 schema 仍零覆盖) | 部分修 | 不阻塞(fake_live 仅测试用;真实语义由 live 校验器与 0C 重跑覆盖) |
+| 226 | 同步树快照潜伏陷阱(media 同步树连 pin 都无法解析) | 未修 | 不阻塞(当前配方单目标+远端见证+R109 先 push,陷阱未触发) |
+| 227 | SC-005 特殊逻辑双重计数/缓慢漂移误判,与 thresholds 机制不同质 | 未修 | 不阻塞(0C 基线 SC-005 未命中;Batch 2 处理) |
 
 ## 本台账口径
 
@@ -153,6 +177,7 @@
 21. 72A:升级机制单变量对照(语义中性改动→产物必须逐字不变,S93);R91-R94;RELOCK_ALLOWED 授权范围与恢复条件见下。
 22. 72A-F:R95 front-matter 禁区;R96 中性改动须落在 required_files;OBS-208 判据作废,fake_live 不得用于验证提示词升级;OBS_68 计数范围见 210。
 23. 72B-0:OBS-211 runtime_manifest_sha256 为运行时文件清单哈希(内容由 skill_root_sha256 覆盖,0A 三组探测实证,四 skill 一致);OBS-212 写作阶段 fake/real 由 network_mode 单一决定,无独立开关;0C 升级前对照基线 RUN 70efs9(final_article sha 3e829be0…,素材 71e-items.json),72B 升级后须用同一素材重跑比对。
+24. 72B-2/72B-2R:OBS-225 §0-6 退出码可接受性单一真源(R106,WARNING_EXIT_ALLOWED 全仓唯一);OBS-218/221/228 词表与阈值改造(SC-007a/SC-008 新增,SC-001~006 恒等变换 technical=int(×1.5) 截断,PB-010 硬编码 18 格期望值 R110,R111 禁 or 兜底);S106 作废改 S106-R(比对对象=installed vs 锁,仅 super-writer/zh-human-writing 不等才停机;media/gzh 既存差异只登记不修);R109 锁中 pin 必须 GitHub 远端可达(relock 前必 push)。唯一编号 94→110(119–228 连续,共 110),R59 未修分区 22 条。
 
 ### ★授权变更登记(72A,不可省)
 

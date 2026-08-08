@@ -298,5 +298,21 @@
     "new_source_tree_sha": "36f94dd7c15f3c90b8f2589ed78985e484f26a6a",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/super-writer"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260808T054012Z-6fc83ccc",
+    "skill": "zh-human-writing",
+    "reason": "72B-2/72B-2R zh-human-writing 升级:SC-007a/SC-008 词表 + thresholds 分档去乘数 + 恒等回归修正",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-08T05:40:12Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+    "new_root_sha256": "e25b4f80792b47e784ca1ebf8200490feba2a21c1cbfbaff96e7733d7787ce7f",
+    "old_full_commit_sha": "0c8962f354e9acc73f29bc57a8b328fc98695a10",
+    "new_full_commit_sha": "8e7948cddb55c3130dac16bd440d4ea6bc856545",
+    "old_source_tree_sha": "4f8b4b8deb0b2e8ce5607373dd33014e4db53d47",
+    "new_source_tree_sha": "1ab330279042b40eb2bff7accc09e097b6f49cca",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
   }
 ]
