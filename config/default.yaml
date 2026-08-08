@@ -72,6 +72,65 @@ residual_check:
   max_rounds: 1
   check_level: hard_residue_only
 
+# 档72C-6R/任务4:统计检测层(任务书 §4 逐字照抄)。阈值与词表全部在此,标注「待校准基线」。
+# H=屏蔽后总汉字数(D1);方向不一致,禁止统一乘数(D2);词表逐字照抄任务书。
+statistical:
+  st001_cv:
+    name: 句长变异系数
+    enabled: {essay: true, technical: true, social: false}
+    threshold: {essay: 0.42, technical: 0.30, social: null}  # 待校准基线
+    min_sentence_len: 4
+    min_sentences: 12
+    exempt_list_steps: true
+  st002_conjunction_density:
+    name: 连词密度
+    enabled: {essay: true, technical: true, social: false}
+    threshold: {essay: 7.0, technical: 10.0, social: null}  # 待校准基线
+    min_h: 600
+    exempt_list_steps: true
+    words: [因为, 所以, 但是, 然而, 同时, 此外, 而且, 并且, 因此, 不仅]
+  st003_quote_highlight:
+    name: 「」高亮
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 3  # 待校准基线
+    formula_divisor: 700  # 待校准基线
+  st004_soft_signposts:
+    name: 软路标
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 2  # 待校准基线
+    formula_divisor: 900  # 待校准基线
+    words: [真正, 本质上, 更深层次, 归根结底, 换句话说, 不可否认, 核心是, 关键在于, 这意味着]
+  st005_long_prelude:
+    name: 长前置成分
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 2  # 待校准基线
+    formula_divisor: 1200  # 待校准基线
+    min_hanzi: 12
+  st006_heavy_de:
+    name: 重"的"长句
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 1  # 待校准基线
+    formula_divisor: 1500  # 待校准基线
+    min_sentence_hanzi: 38
+    min_de: 4
+  st007_single_sentence_para:
+    name: 单句段占比
+    enabled: {essay: true, technical: true, social: false}
+    ratio: 0.75  # 待校准基线
+    min_paragraphs: 10
+    exempt_list_steps: true
+  st008_consecutive_short_paras:
+    name: 连续短段
+    enabled: {essay: true, technical: true, social: false}
+    min_run: 4  # 待校准基线
+    max_hanzi: 24
+    max_sentences: 1
+    exempt_list_steps: true
+  st009_para_opening_repeat:
+    name: 段落开场重复
+    enabled: {essay: true, technical: true, social: true}
+    min_hits: 4  # 待校准基线
+    words: [其实, 不过, 当然, 所以, 但是, 后来, 当时, 很多人, 问题是, 更重要的是, 说到这里]
 # 输出
 output:
   max_audit_issues: 5

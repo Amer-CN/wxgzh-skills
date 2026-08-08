@@ -82,15 +82,15 @@
         "language_origin": "language_general"
       },
       {
-        "rule_id": "AO-011",
+        "rule_id": "AO-001",
         "group": "advisory_only",
         "severity": "advisory",
         "confidence": "medium",
         "profile": "essay",
         "action": "suggest",
-        "location": "第5段第1句",
-        "span_text": "所以我的判断是：AI 编程工具不会让工程师失业，但它会加速淘汰那些只停留在“会写代码”层面的角色。行业的门槛并没有降低，而是转移了——从“能不能写出来”，变成了“知不知道为什么要写”。对于个人来说，与…",
-        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "location": "第5段第6句",
+        "span_text": "这种担心有一定道理，但同质化的根源从来不是工具，而是思考方式的懒惰。工具给出的是一个起点，而不是终点。真正拉开差距的，仍然是团队对问题的定义能力、对质量的坚持，以及在关键时刻做出取舍的判断力。工具的普…",
+        "reason": "不是…而是…:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
         "language_origin": "language_general"
       },
@@ -108,17 +108,68 @@
         "language_origin": "chinese_specific"
       },
       {
-        "rule_id": "AO-001",
+        "rule_id": "AO-011",
         "group": "advisory_only",
         "severity": "advisory",
         "confidence": "medium",
         "profile": "essay",
         "action": "suggest",
-        "location": "第5段第6句",
-        "span_text": "这种担心有一定道理，但同质化的根源从来不是工具，而是思考方式的懒惰。工具给出的是一个起点，而不是终点。真正拉开差距的，仍然是团队对问题的定义能力、对质量的坚持，以及在关键时刻做出取舍的判断力。工具的普…",
-        "reason": "不是…而是…:真人写作中也常见,仅作建议",
+        "location": "第5段第1句",
+        "span_text": "所以我的判断是：AI 编程工具不会让工程师失业，但它会加速淘汰那些只停留在“会写代码”层面的角色。行业的门槛并没有降低，而是转移了——从“能不能写出来”，变成了“知不知道为什么要写”。对于个人来说，与…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "language_origin": "language_general",
+        "occurrence_count": 1
+      }
+    ]
+  },
+  "statistical": {
+    "count": 3,
+    "items": [
+      {
+        "rule_id": "ST-004",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "软路标词 5 次,超过阈值 max(2, H//900)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 5,
+        "threshold": 2
+      },
+      {
+        "rule_id": "ST-005",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "长前置成分 7 处(句首至首逗号 >= 12 汉字),超过阈值 max(2, H//1200)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 7,
+        "threshold": 2
+      },
+      {
+        "rule_id": "ST-006",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "重'的'长句 2 句(>= 38 汉字且'的'>=4),超过阈值 max(1, H//1500)=1",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 2,
+        "threshold": 1
       }
     ]
   },

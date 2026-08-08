@@ -27,6 +27,13 @@ import re
 import sys
 from pathlib import Path
 
+# 档72C-6/任务4:统计检测层(任务书 §4,管道先行,指标待 §4 注入)。
+# 显式把本脚本目录加入 sys.path:CLI 直跑与 tests/run_tests.py 的
+# importlib 直载两种场景都能解析同目录的 stat_audit 模块。
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stat_audit
+
 try:
     import yaml
 except ImportError:
@@ -557,6 +564,10 @@ ADVISORY_ONLY_PATTERNS = [
 ]
 
 
+# 档72C-6/任务3:按段落聚合输出的人称规则(只改聚合方式)。
+_AO_PER_PARAGRAPH_IDS = {'AO-007', 'AO-011'}
+
+
 # ============================================================
 # 检测词表加载（档72C-4/§1,OBS-233 闭合）
 # ============================================================
@@ -645,13 +656,38 @@ _SC_LOW_IDS = {'SC-007b', 'SC-011'}
 
 
 def detect_advisory_only(masked, original, profile, protected):
-    """检测 advisory-only 模式。只列出，不影响 pass/fail。"""
+    """检测 advisory-only 模式。只列出，不影响 pass/fail。
+    档72C-6/任务3:AO-007/AO-011 按段落聚合——每段产出一条 finding,
+    occurrence_count 记录该段内命中次数, span_text 取该段首次命中处;
+    其余 AO 规则逐次命中各产出一条。只改聚合方式,不改检测逻辑/级别/退出码。"""
     findings = []
     for para_idx, (para, pstart, pend) in enumerate(_para_spans(masked)):
-        for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
-            for pattern_def in ADVISORY_ONLY_PATTERNS:
-                # 档72C-2:AO-001 用 patterns 列表(双正则),其余用单数 pattern 键。
-                pats = pattern_def.get('patterns') or [pattern_def['pattern']]
+        for pattern_def in ADVISORY_ONLY_PATTERNS:
+            # 档72C-2:AO-001 用 patterns 列表(双正则),其余用单数 pattern 键。
+            pats = pattern_def.get('patterns') or [pattern_def['pattern']]
+
+            # 档72C-6/任务3:人称规则按段落聚合输出,避免单篇数十条同规则
+            # finding 把真信号埋掉(0C 的 AO-007=22 即此类)。
+            if pattern_def['id'] in _AO_PER_PARAGRAPH_IDS:
+                total = 0
+                first_si, first_span = 0, None
+                for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                    cnt = sum(len(re.findall(pat, sent)) for pat in pats)
+                    if cnt:
+                        total += cnt
+                        if first_span is None:
+                            first_si, first_span = sent_idx, (pstart + sstart, pstart + send)
+                if total:
+                    f = _finding(
+                        'advisory_only', profile, pattern_def,
+                        f'第{para_idx+1}段第{first_si+1}句',
+                        first_span, original, protected,
+                        confidence='medium')
+                    f['occurrence_count'] = total
+                    findings.append(f)
+                continue
+
+            for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
                 matches = []
                 for pat in pats:
                     matches.extend(re.finditer(pat, sent))
@@ -730,6 +766,10 @@ def main():
         sc_findings = detect_strong_contextual(masked, text, args.profile, protected)
         ao_findings = detect_advisory_only(masked, text, args.profile, protected)
 
+    # 档72C-6/任务4:统计检测层(full 与 hard_residue_only 均计算——统计层
+    # 只读不判,恒 count=0 直至任务书 §4 指标注入;--config 覆盖时走同一 fail-closed 加载)。
+    stat_findings = stat_audit.run_stat_audit(masked, text, args.profile, args.config)
+
     # pass/fail 只由 hard-residue 决定
     # 档72C-4/§3-1(任务书 §3.1 例外):退出码判定——HR-001~006 任何策略下均 fail;
     # HR-007 仅 strategy=preserve 时只标记不判 fail(仍出现在 items 里)。
@@ -754,6 +794,11 @@ def main():
             'count': len(ao_findings),
             'items': ao_findings,
         },
+        'statistical': {
+            # 档72C-6/任务4-1:顶层第四段,独立于 strong/advisory,不污染既有计数基线。
+            'count': len(stat_findings),
+            'items': stat_findings,
+        },
         'overall': {
             'pass_fail': pass_fail,
             'description': 'pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。'
@@ -774,6 +819,7 @@ def main():
                 print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]} (聚集 {f["cluster_count"]}/{f["cluster_threshold"]})')
                 print(f'    {f["span_text"][:60]}')
             print(f'advisory-only: {len(ao_findings)} 个')
+            print(f'statistical: {len(stat_findings)} 个')
             for f in ao_findings:
                 print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]}')
                 print(f'    {f["span_text"][:60]}')

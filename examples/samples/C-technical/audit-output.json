@@ -9,7 +9,7 @@
     "low_confidence": []
   },
   "advisory_only": {
-    "count": 9,
+    "count": 8,
     "items": [
       {
         "rule_id": "AO-003",
@@ -35,7 +35,8 @@
         "span_text": "本文用一个最小可运行的示例，带你走完从本地开发到容器部署的完整流程。示例是一个返回健康检查信息的 Express 服务，我们会把构建、运行、发布三个环节分别讲清楚。\n\n## 1. 项目结构\n\n\n之所以…",
         "reason": "二人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "language_origin": "language_general",
+        "occurrence_count": 1
       },
       {
         "rule_id": "AO-011",
@@ -48,7 +49,8 @@
         "span_text": "示例是一个返回健康检查信息的 Express 服务，我们会把构建、运行、发布三个环节分别讲清楚。\n\n## 1. 项目结构\n\n\n之所以选择 Docker 而不是直接在宿主机上安装 Node，是因为容器能…",
         "reason": "第一人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "language_origin": "language_general",
+        "occurrence_count": 1
       },
       {
         "rule_id": "AO-011",
@@ -61,7 +63,8 @@
         "span_text": "开发机、测试机与生产机的系统版本经常不同，直接在机器上安装依赖，很容易出现“在我这里能跑”的经典问题；而容器把运行时、依赖和配置打包成镜像，任何一台装了 Docker 的机器都能得到相同的行为。这也是…",
         "reason": "第一人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "language_origin": "language_general",
+        "occurrence_count": 1
       },
       {
         "rule_id": "AO-013",
@@ -100,7 +103,8 @@
         "span_text": "如果健康检查连续失败，编排平台会自动重启容器，这也是我们在代码里保留健康检查接口的原因：没有它，平台就不知道服务到底是活着还是假死。## 4. 验证与发布\n\n构建完成后，用 `curl http://…",
         "reason": "第一人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "language_origin": "language_general",
+        "occurrence_count": 1
       },
       {
         "rule_id": "AO-007",
@@ -113,20 +117,28 @@
         "span_text": "依赖声明决定了构建的可复现性；日志输出决定了问题能不能被定位；健康检查决定了平台能不能替你恢复故障。这三件事都做扎实了，部署才谈得上稳定。本文的示例虽然很小，但每一处设计都是按这个标准来的，你可以直接…",
         "reason": "二人称:真人写作中也常见,仅作建议",
         "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
-      },
+        "language_origin": "language_general",
+        "occurrence_count": 2
+      }
+    ]
+  },
+  "statistical": {
+    "count": 1,
+    "items": [
       {
-        "rule_id": "AO-007",
-        "group": "advisory_only",
-        "severity": "advisory",
+        "rule_id": "ST-005",
+        "group": "statistical",
+        "severity": "audit",
         "confidence": "medium",
         "profile": "technical",
-        "action": "suggest",
-        "location": "第16段第4句",
-        "span_text": "本文的示例虽然很小，但每一处设计都是按这个标准来的，你可以直接把它作为自己项目的第一版骨架。",
-        "reason": "二人称:真人写作中也常见,仅作建议",
-        "suggestion": "仅提示,不自动修改",
-        "language_origin": "language_general"
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "# 用 Docker 部署 Node.js 服务的完整教程\n\n本文用一个最小可运行的示例，带你走完从本地开发到容器部署的完整流程。示例是一个返回健康检查信息的 Express 服务，我们会把构建、运行…",
+        "reason": "长前置成分 10 处(句首至首逗号 >= 12 汉字),超过阈值 max(2, H//1200)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 10,
+        "threshold": 2
       }
     ]
   },

@@ -917,6 +917,224 @@ def test_strong_grouping():
     return results
 
 
+def test_ao_aggregation():
+    """档72C-6/任务3:AO-007/AO-011 按段落聚合(每段一条 + occurrence_count)。"""
+    results = []
+    # PB-031:同段 5 个「我」→ AO-011 恰好 1 条 finding 且 occurrence_count=5
+    text = "我来了。我看见自己。我明白了。我走了。我回来了。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ao11 = [f for f in data['advisory_only']['items'] if f.get('rule_id') == 'AO-011']
+    ok1 = len(ao11) == 1 and ao11[0].get('occurrence_count') == 5
+    results.append(TestResult('PB-031', 'ao011-aggregate', ok1,
+                              f'findings={len(ao11)} count={ao11[0].get("occurrence_count") if ao11 else None}'))
+    # PB-032:三个段落各 1 个「你」→ AO-007 恰好 3 条 finding,每条 count=1
+    text = "你好。\n\n你在哪里。\n\n你走吧。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ao07 = [f for f in data['advisory_only']['items'] if f.get('rule_id') == 'AO-007']
+    ok2 = len(ao07) == 3 and all(f.get('occurrence_count') == 1 for f in ao07)
+    results.append(TestResult('PB-032', 'ao007-per-para', ok2,
+                              f'findings={len(ao07)} counts={[f.get("occurrence_count") for f in ao07]}'))
+    # PB-033:A 样本回归——AO-011 finding 条数 <= 段落数
+    sample = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'examples', 'samples', 'A-human', 'input.md')
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', sample, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ao11 = [f for f in data['advisory_only']['items'] if f.get('rule_id') == 'AO-011']
+    n_paras = len([ln for ln in open(sample, encoding='utf-8').read().split('\n') if ln.strip()])
+    ok3 = len(ao11) <= n_paras
+    results.append(TestResult('PB-033', 'ao011-sample-regression', ok3,
+                              f'findings={len(ao11)} paras={n_paras}'))
+    return results
+
+
+def test_stat_wiring():
+    """档72C-6/任务4:统计层管道活性(指标待任务书 §4 注入,机制先行)。"""
+    results = []
+    # PB-046:顶层 statistical 段存在、count 与 items 一致、当前为 0、
+    # 不影响 pass_fail 与退出码(干净文本 rc=0,hard-residue 文本 rc=2)。
+    text = "这是一段干净的中文文本。没有任何硬残留。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    st = data.get('statistical')
+    ok1 = rc == 0 and isinstance(st, dict) and st.get('count') == len(st.get('items', [])) == 0
+    results.append(TestResult('PB-046', 'stat-section-wiring', ok1,
+                              f'rc={rc} count={st.get("count") if st else None}'))
+    text = "说白了，这是硬残留。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out) if out else {}
+    ok2 = rc == 2 and data.get('statistical', {}).get('count') == 0
+    results.append(TestResult('PB-047', 'stat-passfail-neutral', ok2,
+                              f'rc={rc} stat_count={data.get("statistical", {}).get("count")}'))
+    # PB-048:缺 statistical 段的部分覆盖配置(72C-2 PB-013 契约)→ 正常 rc=0,
+    # statistical count=0;statistical 段非对象 → fail-closed exit 3。
+    full_pt = ("pattern_thresholds:\n"
+               "  SC-001: {essay: 2, technical: 3, social: 2}\n"
+               "  SC-002: {essay: 2, technical: 3, social: 2}\n"
+               "  SC-003: {essay: 2, technical: 3, social: 2}\n"
+               "  SC-004: {essay: 2, technical: 2, social: 2}\n"
+               "  SC-005: {essay: 3, technical: 3, social: 3}\n"
+               "  SC-006: {essay: 2, technical: 2, social: 4}\n"
+               "  SC-007a: {essay: 1, technical: 1, social: 1}\n"
+               "  SC-009: {essay: 1, technical: 1, social: 1}\n"
+               "  SC-010: {essay: 1, technical: 1, social: 1}\n"
+               "  SC-011: {essay: 2, technical: 2, social: 2}\n")
+    clean = "这是一段干净的中文文本。没有任何硬残留。"
+    fd, tmp = tempfile.mkstemp(suffix='.yaml')
+    os.write(fd, full_pt.encode('utf-8'))
+    os.close(fd)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(clean), '--config', tmp, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok3 = rc == 0 and json.loads(out).get('statistical', {}).get('count') == 0
+    os.unlink(tmp)
+    fd, tmp = tempfile.mkstemp(suffix='.yaml')
+    os.write(fd, (full_pt + "statistical: []\n").encode('utf-8'))
+    os.close(fd)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--config', tmp, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok4 = rc == 3
+    os.unlink(tmp)
+    ok = ok3 and ok4
+    results.append(TestResult('PB-048', 'stat-config-contract', ok,
+                              f'缺段={"通过" if ok3 else "失败"} 非对象={"通过" if ok4 else "失败"}'))
+    return results
+
+
+def _stat_items(data):
+    """统计层 finding 列表(档72C-6R)。"""
+    return data.get('statistical', {}).get('items', [])
+
+
+def test_stat_indicators():
+    """档72C-6R/任务书 §4:九项指标活性断言(R112,每项必然命中+必然不命中)。"""
+    results = []
+    cases = []
+    # PB-034 ST-001 句长变异系数:12 句等长 → CV=0 < 0.42 命中;等差长度 → 不命中
+    hit34 = "甲乙丙丁戊己庚辛壬癸。" * 12
+    miss34 = "".join("甲乙" * (2 + 2 * i) + "。" for i in range(12))
+    cases.append(('PB-034', 'ST-001', hit34, miss34, 'essay'))
+    # PB-035 ST-002 连词密度:H=610>=600,5 连词 → 16.4‰ > 7‰ 命中;无连词 → 不命中
+    hit35 = "一二三四五六七八九十" * 60 + "因为因为因为因为因为。"
+    miss35 = "一二三四五六七八九十" * 60 + "。"
+    cases.append(('PB-035', 'ST-002', hit35, miss35, 'essay'))
+    # PB-036 ST-003 「」高亮:4 对 > max(3, H//700) 命中;3 对 → 不命中
+    hit36 = "「你好」。「世界」。「测试」。「文本」。"
+    miss36 = "「你好」。「世界」。「测试」。"
+    cases.append(('PB-036', 'ST-003', hit36, miss36, 'essay'))
+    # PB-037 ST-004 软路标:3 词 > max(2, H//900) 命中;2 词 → 不命中
+    hit37 = "真正重要的是这个。本质上也是。换句话说如此。"
+    miss37 = "真正重要的是这个。本质上也是。"
+    cases.append(('PB-037', 'ST-004', hit37, miss37, 'essay'))
+    # PB-038 ST-005 长前置成分:3 句前置 >=12 汉字 > max(2, H//1200) 命中;2 句 → 不命中
+    pre38 = "一二三四五六七八九十甲乙丙丁"
+    hit38 = pre38 + "，这是第一句。" + pre38 + "，这是第二句。" + pre38 + "，这是第三句。"
+    miss38 = pre38 + "，这是第一句。" + pre38 + "，这是第二句。"
+    cases.append(('PB-038', 'ST-005', hit38, miss38, 'essay'))
+    # PB-039 ST-006 重"的"长句:2 句(>=38 汉字且的>=4) > max(1, H//1500) 命中;1 句 → 不命中
+    long39 = "我的你的他的她的它的这些那些我们的大家的，一二三四五六七八九十甲乙丙丁戊己庚辛壬癸子丑。"
+    cases.append(('PB-039', 'ST-006', long39 * 2, long39, 'essay'))
+    # PB-040 ST-007 单句段占比:9/12=75% >=75% 命中;8/12 → 不命中
+    one40 = "这是单句段落。"
+    two40 = "这是第一句。这是第二句。"
+    hit40 = "\n\n".join([one40] * 9 + [two40] * 3)
+    miss40 = "\n\n".join([one40] * 8 + [two40] * 4)
+    cases.append(('PB-040', 'ST-007', hit40, miss40, 'essay'))
+    # PB-041 ST-008 连续短段:连续 4 段(<=24 汉字且 1 句) 命中;3 段 → 不命中
+    hit41 = "\n\n".join(["甲。", "乙。", "丙。", "丁。"])
+    miss41 = "\n\n".join(["甲。", "乙。", "丙。"])
+    cases.append(('PB-041', 'ST-008', hit41, miss41, 'essay'))
+    # PB-042 ST-009 段落开场重复:4 段以"其实"开头 >=4 命中;3 段 → 不命中
+    hit42 = "\n\n".join(["其实，这是第一段。"] * 4)
+    miss42 = "\n\n".join(["其实，这是第一段。"] * 3)
+    cases.append(('PB-042', 'ST-009', hit42, miss42, 'essay'))
+
+    for tid, rid, hit, miss, prof in cases:
+        rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(hit), '--profile', prof, '--check-level', 'full', '--output', 'json'])
+        data = json.loads(out)
+        n_hit = len([f for f in _stat_items(data) if f.get('rule_id') == rid])
+        rc2, out2, err2 = run_script(PATTERN_AUDIT, ['--text', write_temp(miss), '--profile', prof, '--check-level', 'full', '--output', 'json'])
+        data2 = json.loads(out2)
+        n_miss = len([f for f in _stat_items(data2) if f.get('rule_id') == rid])
+        ok = n_hit > 0 and n_miss == 0
+        results.append(TestResult(tid, 'stat-liveness', ok,
+                                  f'{rid} 命中={n_hit} 不命中={n_miss}'))
+    return results
+
+
+def test_stat_technical_exempt():
+    """档72C-6R/任务书 §4:technical 下列表项与有序步骤段不参与 CV/连词密度/单句段占比/连续短段。"""
+    results = []
+    ok_all = True
+    msgs = []
+    # CV:等长正文 + 1 个 48 字列表段 → essay 混合 CV=0.815 不命中,technical 剔除后 CV=0 命中
+    cv_text = "\n\n".join(["甲乙丙丁戊己庚辛壬癸。"] * 12 + ["- " + "一二三四五六七八九十" * 4 + "甲乙丙丁戊己庚辛。"])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(cv_text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    n_essay = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-001'])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(cv_text), '--profile', 'technical', '--check-level', 'full', '--output', 'json'])
+    n_tech = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-001'])
+    ok1 = n_essay == 0 and n_tech == 1
+    ok_all &= ok1
+    msgs.append(f'CV:essay={n_essay} tech={n_tech}')
+    # 连词密度:5 次连词全放进列表段 → essay 密度=5/606*1000=8.25>7 命中,
+    # technical 分子剔除后 0<10 不命中(分母全局 H=606,门 600 通过)
+    conj_text = "一二三四五六七八九十" * 60 + "\n\n- 因为所以但是然而同时。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(conj_text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    n_essay = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-002'])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(conj_text), '--profile', 'technical', '--check-level', 'full', '--output', 'json'])
+    n_tech = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-002'])
+    ok2 = n_essay == 1 and n_tech == 0
+    ok_all &= ok2
+    msgs.append(f'连词密度:essay={n_essay} tech={n_tech}')
+    # 单句段占比:9 单句(含 3 列表单句)/12 → essay 命中;technical 剔除后 6/9=66.7% 且门 9<10 → 不命中
+    ratio_text = "\n\n".join(["- 这是单句段落。"] * 3 + ["这是单句段落。"] * 6 + ["这是第一句。这是第二句。"] * 3)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(ratio_text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    n_essay = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-007'])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(ratio_text), '--profile', 'technical', '--check-level', 'full', '--output', 'json'])
+    n_tech = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-007'])
+    ok3 = n_essay == 1 and n_tech == 0
+    ok_all &= ok3
+    msgs.append(f'单句段占比:essay={n_essay} tech={n_tech}')
+    # 连续短段:4 个列表短段 → essay 命中,technical 剔除后不命中
+    short_text = "\n\n".join(["- 甲。", "- 乙。", "- 丙。", "- 丁。"])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(short_text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    n_essay = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-008'])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(short_text), '--profile', 'technical', '--check-level', 'full', '--output', 'json'])
+    n_tech = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-008'])
+    ok4 = n_essay == 1 and n_tech == 0
+    ok_all &= ok4
+    msgs.append(f'连续短段:essay={n_essay} tech={n_tech}')
+    results.append(TestResult('PB-043', 'stat-technical-exempt', ok_all, '; '.join(msgs)))
+    return results
+
+
+def test_stat_social_disabled():
+    """档72C-6R/任务书 §4:social 关闭 CV/连词密度/单句段占比/连续短段四项。"""
+    results = []
+    text = "甲乙丙丁戊己庚辛壬癸。" * 12 + "\n\n" + "\n\n".join(["甲。", "乙。", "丙。", "丁。"])
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'social', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ids = {f.get('rule_id') for f in _stat_items(data)}
+    closed = {'ST-001', 'ST-002', 'ST-007', 'ST-008'}
+    ok = not (ids & closed)
+    results.append(TestResult('PB-044', 'stat-social-disabled', ok,
+                              f'social_ids={sorted(ids)}'))
+    return results
+
+
+def test_stat_neutral():
+    """档72C-6R/任务书 §4:统计层命中不改变 pass_fail、不改变退出码(三档各验一次)。"""
+    results = []
+    text = "甲乙丙丁戊己庚辛壬癸。" * 12  # essay/technical 下 ST-001 必命中
+    ok_all = True
+    msgs = []
+    for prof in ('essay', 'technical', 'social'):
+        rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', prof, '--check-level', 'full', '--output', 'json'])
+        data = json.loads(out)
+        ok = rc == 0 and data.get('overall', {}).get('pass_fail') == 'pass'
+        ok_all &= ok
+        msgs.append(f'{prof}:rc={rc} n={data.get("statistical", {}).get("count")}')
+    results.append(TestResult('PB-045', 'stat-neutral', ok_all, '; '.join(msgs)))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -947,6 +1165,12 @@ def main():
     all_results.extend(test_long_word_priority())
     all_results.extend(test_strategy_hr007())
     all_results.extend(test_strong_grouping())
+    all_results.extend(test_ao_aggregation())
+    all_results.extend(test_stat_wiring())
+    all_results.extend(test_stat_indicators())
+    all_results.extend(test_stat_technical_exempt())
+    all_results.extend(test_stat_social_disabled())
+    all_results.extend(test_stat_neutral())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 
