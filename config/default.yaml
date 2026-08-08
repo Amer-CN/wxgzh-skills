@@ -30,15 +30,16 @@ cluster_thresholds:
   strong_contextual: 2  # 同段 ≥2 次才标记
   consecutive_isomorphic: 3  # 连续 ≥3 个相同句式
 
-# profile 调整系数
-profile_adjustments:
-  essay:
-    strong_contextual_multiplier: 1.0
-  technical:
-    strong_contextual_multiplier: 1.5  # 导航和总结在技术文档中更合理
-  social:
-    strong_contextual_multiplier: 2.0  # 假互动在社媒中是常态
-    short_sentence_check: false  # 短句不检测
+# 档72C-2/§7:逐规则逐 profile 阈值(单一真源,由 pattern_audit.load_config 注入)。
+# 取值=references/patterns/strong-contextual.md 逐条声明;SC-007a 阈值 1(§4)。
+pattern_thresholds:
+  SC-001: {essay: 2, technical: 3, social: 2}
+  SC-002: {essay: 2, technical: 3, social: 2}
+  SC-003: {essay: 2, technical: 3, social: 2}
+  SC-004: {essay: 2, technical: 2, social: 2}
+  SC-005: {essay: 3, technical: 3, social: 3}
+  SC-006: {essay: 2, technical: 2, social: 4}
+  SC-007a: {essay: 1, technical: 1, social: 1}
 
 # 保真检查
 fidelity:

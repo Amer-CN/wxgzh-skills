@@ -25,6 +25,14 @@ import argparse
 import json
 import re
 import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    # 档72C-2/OBS-219:配置真源化后 PyYAML 为硬依赖;缺依赖=退出 3,不兜底。
+    print("错误: 缺少 PyYAML 依赖,无法读取配置 (pip install pyyaml)", file=sys.stderr)
+    sys.exit(3)
 
 
 def read_file(path):
@@ -91,6 +99,14 @@ HARD_RESIDUE_PATTERNS = [
         'patterns': [r'model=gpt', r'temperature=', r'top_p=', r'max_tokens='],
         'language_origin': 'language_general',
     },
+    {
+        # 档72C-2/§3(任务书 §3.1):元话语路标由 strong-contextual 移入 hard-residue,
+        # 新 id HR-007,命中即 exit 2(0C 基线三词零命中,行为不受影响)。
+        'id': 'HR-007',
+        'name': '元话语路标',
+        'patterns': [r'先说结论', r'说白了', r'说穿了'],
+        'language_origin': 'chinese_specific',
+    },
 ]
 
 
@@ -127,43 +143,45 @@ STRONG_CONTEXTUAL_PATTERNS = [
         'id': 'SC-001',
         'name': '无信息开场',
         'patterns': [r'让我们来看看', r'在当今.{0,10}的时代', r'随着.{0,10}的发展'],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 2},  # 档72C-2:文档逐条声明
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-002',
         'name': '无信息导航',
         'patterns': [r'接下来我们将', r'下面我们来看', r'首先.{0,20}其次.{0,20}最后'],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 2},  # 档72C-2
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-003',
         'name': '无信息总结',
         'patterns': [r'总而言之', r'综上所述', r'总结来说', r'通过以上分析可以看出'],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 2},  # 档72C-2
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-004',
         'name': '无来源权威铺垫',
         'patterns': [r'研究表明', r'数据显示', r'据统计'],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'thresholds': {'essay': 2, 'technical': 2, 'social': 2},  # 档72C-2:三档均正常
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-005',
-        'name': '连续同构结构',
+        'name': '连续等长句',  # 档72C-2/§2:名实对齐,见下方 OBS-227 注释
         'patterns': [],  # 需要特殊检测逻辑
-        # 档72B-2R:technical = int(3*1.5) = 4(截断,非 ceil);特殊逻辑仍用固定 3(恒等)。
-        'thresholds': {'essay': 3, 'technical': 4, 'social': 6},
+        # 档72C-2/OBS-227:本规则实测的是相邻句长差(<=5),不是句式同构。
+        # references/patterns/strong-contextual.md 声明的「相同句式」检测
+        # 尚未实现。语义重写留 Batch 3,本档只做名实对齐,不动算法。
+        'thresholds': {'essay': 3, 'technical': 3, 'social': 3},  # 档72C-2:文档三档均正常
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-006',
         'name': '明显假互动',
         'patterns': [r'你可能会问', r'你想想看', r'你有没有想过'],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'thresholds': {'essay': 2, 'technical': 2, 'social': 4},  # 档72C-2:social ×2.0
         'language_origin': 'language_general',
     },
     {
@@ -174,15 +192,10 @@ STRONG_CONTEXTUAL_PATTERNS = [
             r'与其说[^。！？\n]{1,60}(?:不如|毋宁|倒不如)',
             r'表面(?:上)?[^。！？\n]{1,60}(?:其实|实际|实则)',
             r'看似[^。！？\n]{1,60}(?:其实|实际|实则)',
+            r'[。！？!?]\s*而是',
         ],
-        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
-        'language_origin': 'chinese_specific',
-    },
-    {
-        'id': 'SC-008',
-        'name': '元话语路标',
-        'patterns': [r'先说结论', r'说白了', r'说穿了'],
-        'thresholds': {'essay': 1, 'technical': 2, 'social': 3},
+        # 档72C-2/§4:阈值改 1(单次命中即 strong),并补第 5 条正则。
+        'thresholds': {'essay': 1, 'technical': 1, 'social': 1},
         'language_origin': 'chinese_specific',
     },
 ]
@@ -190,17 +203,66 @@ STRONG_CONTEXTUAL_PATTERNS = [
 # 档72B-2R OBS-228/R111:模块加载期结构断言——thresholds 必须显式包含
 # 全部 profile 且为 >=1 整数;缺键即报错,禁止 or 兜底/静默默认(fail-open)。
 _PROFILES = ('essay', 'technical', 'social')
-for _r in STRONG_CONTEXTUAL_PATTERNS:
-    _t = _r.get('thresholds')
-    if not isinstance(_t, dict) or any(p not in _t for p in _PROFILES):
-        raise ValueError(
-            f"{_r.get('id')}: thresholds 必须显式包含 essay/technical/social")
-    if any(not isinstance(_t[p], int) or _t[p] < 1 for p in _PROFILES):
-        raise ValueError(f"{_r.get('id')}: thresholds 值必须为 >=1 的整数")
+
+# 档72B-2F OBS-229:按 id 索引的查找表——SC-005 的 patterns 为空数组,
+# 主循环会 continue 跳过,专用检测块必须从这里取同一个 thresholds 真源。
+
+def load_config(config_path=None):
+    """读取配置;缺失/yaml 错/schema 错 → 打印错误并 sys.exit(3),无兜底(R111)。"""
+    path = (Path(config_path) if config_path
+            else Path(__file__).resolve().parents[1] / 'config' / 'default.yaml')
+    try:
+        text = path.read_text(encoding='utf-8')
+    except OSError as exc:
+        print(f'错误: 配置文件读取失败: {path}: {exc}', file=sys.stderr)
+        sys.exit(3)
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        print(f'错误: 配置文件 YAML 解析失败: {path}: {exc}', file=sys.stderr)
+        sys.exit(3)
+    if not isinstance(data, dict) or not isinstance(data.get('pattern_thresholds'), dict):
+        print('错误: 配置必须包含 pattern_thresholds 段', file=sys.stderr)
+        sys.exit(3)
+    return data
+
+
+def _validate_thresholds():
+    """模块加载期结构断言:每个 strong 规则 thresholds 三 profile 齐备且 >=1 整数。"""
+    for _r in STRONG_CONTEXTUAL_PATTERNS:
+        _t = _r.get('thresholds')
+        if not isinstance(_t, dict) or any(p not in _t for p in _PROFILES):
+            print(f"错误: {_r.get('id')}: thresholds 必须显式包含 essay/technical/social",
+                  file=sys.stderr)
+            sys.exit(3)
+        if any(not isinstance(_t[p], int) or _t[p] < 1 for p in _PROFILES):
+            print(f"错误: {_r.get('id')}: thresholds 值必须为 >=1 的整数", file=sys.stderr)
+            sys.exit(3)
+
+
+def _apply_pattern_thresholds(config):
+    """把 config.pattern_thresholds 注入 STRONG_CONTEXTUAL_PATTERNS(单一真源,R111)。"""
+    pt = config['pattern_thresholds']
+    missing = [r['id'] for r in STRONG_CONTEXTUAL_PATTERNS if r['id'] not in pt]
+    if missing:
+        print(f'错误: 配置 pattern_thresholds 缺失规则: {missing}', file=sys.stderr)
+        sys.exit(3)
+    for rule in STRONG_CONTEXTUAL_PATTERNS:
+        rule['thresholds'] = dict(pt[rule['id']])
+    _validate_thresholds()
+
+
+# 模块加载即注入默认配置;缺文件/错 schema 直接 exit 3,不存在内置兜底。
+_apply_pattern_thresholds(load_config())
 
 # 档72B-2F OBS-229:按 id 索引的查找表——SC-005 的 patterns 为空数组,
 # 主循环会 continue 跳过,专用检测块必须从这里取同一个 thresholds 真源。
 _SC_BY_ID = {_r['id']: _r for _r in STRONG_CONTEXTUAL_PATTERNS}
+
+# 档72C-2/§5d(任务书 §2 硬要求):翻案腔判定的上下文提示,SC-007a/SC-007b 命中时携带。
+_CONTEXT_NOTE = (
+    "该结构是否为翻案腔,取决于前半句是否被前文或材料真实建立;"
+    "若只是正常分类或澄清,应忽略。")
 
 
 
@@ -240,6 +302,9 @@ def detect_strong_contextual(text, profile):
                     'action': 'review',
                     'language_origin': pattern_def['language_origin'],
                 })
+                # 档72C-2/§5d:SC-007a 命中带 context_note(任务书 §2 硬要求)。
+                if pattern_def['id'] == 'SC-007a':
+                    findings[-1]['context_note'] = _CONTEXT_NOTE
 
     # 检测连续同构结构（SC-005）
     sentences = split_sentences(text)
@@ -256,7 +321,7 @@ def detect_strong_contextual(text, profile):
             if consecutive_count >= sc005_threshold:
                 findings.append({
                     'pattern_id': 'SC-005',
-                    'pattern_name': '连续同构结构',
+                    'pattern_name': _SC_BY_ID['SC-005']['name'],
                     'location': f'sentence {i-consecutive_count+2} to {i+1}',
                     'excerpt': ' '.join(sentences[i-consecutive_count+1:i+1])[:100],
                     'cluster_count': consecutive_count,
@@ -268,6 +333,27 @@ def detect_strong_contextual(text, profile):
             consecutive_count = 1
         prev_len = curr_len
 
+    # 档72C-2/§5:SC-007b 升级机制——同一段落内 AO-001(不是…而是 / 并非…而是)
+    # 命中 >= 2 时升级为 strong finding(confidence=low);单发只留 advisory。
+    ao001 = next((r for r in ADVISORY_ONLY_PATTERNS if r.get('id') == 'AO-001'), None)
+    if ao001 is not None:
+        ao_pats = ao001.get('patterns') or [ao001['pattern']]
+        for para_idx, para in enumerate(paragraphs):
+            ao_count = sum(len(re.findall(pat, para)) for pat in ao_pats)
+            if ao_count >= 2:
+                findings.append({
+                    'pattern_id': 'SC-007b',
+                    'pattern_name': '不是…而是…(低置信升级)',
+                    'location': f'paragraph {para_idx+1}',
+                    'excerpt': para[:100],
+                    'cluster_count': ao_count,
+                    'cluster_threshold': 2,
+                    'confidence': 'low',
+                    'context_note': _CONTEXT_NOTE,
+                    'action': 'review',
+                    'language_origin': 'language_general',
+                })
+
     return findings
 
 
@@ -278,7 +364,12 @@ def detect_strong_contextual(text, profile):
 ADVISORY_ONLY_PATTERNS = [
     # 档72B-2 OBS-177/3-3:原地扩宽(不进 strong_contextual,ME-010 继续绿);
     # 可选「并」前缀 + 中间 0~90 字(不跨句),置信度排序不再倒置。
-    {'id': 'AO-001', 'name': '不是…而是…', 'pattern': r'(?:并)?不是[^。！？\n]{0,90}而是', 'language_origin': 'language_general'},
+    # 档72C-2/§5:patterns 列表承载两条正则;同段命中 >=2 升级 SC-007b(见
+    # detect_strong_contextual),单发只留 advisory。AO-001 不再用单数 pattern 键。
+    {'id': 'AO-001', 'name': '不是…而是…',
+     'patterns': [r'(?:并)?不是[^。！？\n]{0,90}而是',
+                  r'并非[^。！？\n]{0,90}而是'],
+     'language_origin': 'language_general'},
     {'id': 'AO-002', 'name': '先…再…', 'pattern': r'先.{0,20}再', 'language_origin': 'language_general'},
     {'id': 'AO-003', 'name': '从…到…', 'pattern': r'从.{0,20}到', 'language_origin': 'language_general'},
     {'id': 'AO-004', 'name': '破折号', 'pattern': r'——', 'language_origin': 'chinese_specific'},
@@ -297,7 +388,11 @@ def detect_advisory_only(text):
         sentences = split_sentences(para)
         for sent_idx, sent in enumerate(sentences):
             for pattern_def in ADVISORY_ONLY_PATTERNS:
-                matches = re.finditer(pattern_def['pattern'], sent)
+                # 档72C-2:AO-001 用 patterns 列表(双正则),其余用单数 pattern 键。
+                pats = pattern_def.get('patterns') or [pattern_def['pattern']]
+                matches = []
+                for pat in pats:
+                    matches.extend(re.finditer(pat, sent))
                 for m in matches:
                     findings.append({
                         'pattern_id': pattern_def['id'],
@@ -334,8 +429,12 @@ def main():
                         choices=['hard_residue_only', 'full'],
                         help='检测范围（hard_residue_only 只检测 hard-residue；full 检测全部级别）')
     parser.add_argument('--output', default='json', choices=['json', 'text'], help='输出格式')
+    parser.add_argument('--config', default=None, help='配置文件路径(默认 config/default.yaml)')
 
     args = parser.parse_args()
+    # 档72C-2/§7:显式 --config 覆盖默认配置;错误路径在 load_config/_apply 内 exit 3。
+    if args.config:
+        _apply_pattern_thresholds(load_config(args.config))
 
     text = read_file(args.text)
 

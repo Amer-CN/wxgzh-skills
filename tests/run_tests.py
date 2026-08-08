@@ -25,18 +25,17 @@ FIDELITY_GUARD = os.path.join(SCRIPTS_DIR, 'fidelity_guard.py')
 CHANGE_REPORT = os.path.join(SCRIPTS_DIR, 'change_report.py')
 PATTERN_AUDIT = os.path.join(SCRIPTS_DIR, 'pattern_audit.py')
 
-# 档72B-2R PB-010:恒等回归的硬编码期望值(R110)——这 18 个数 =
-# 0c8962f 版 max(1, int(threshold * multiplier)) 的逐格结果,
-# multiplier = essay 1.0 / technical 1.5 / social 2.0。
-# int() 是截断,SC-005 technical 因此是 4 不是 5。
-# 禁止用公式现算期望值——用公式就会把同一个 bug 再算一遍。
+# 档72C-2 PB-010:期望值来源=references/patterns/strong-contextual.md 逐条
+# profile 声明(非统一乘数)。基线 2(SC-005 为 3),technical ×1.5 / social
+# ×2.0 只在文档明写该档放宽的规则上生效。SC-007a 阈值 1 见档 72C-2 §4。
+# 禁止用公式现算期望值——用公式就会把同一个 bug 再算一遍(R110)。
 EXPECTED_SC_THRESHOLDS = {
-    'SC-001': {'essay': 2, 'technical': 3, 'social': 4},
-    'SC-002': {'essay': 2, 'technical': 3, 'social': 4},
-    'SC-003': {'essay': 2, 'technical': 3, 'social': 4},
-    'SC-004': {'essay': 2, 'technical': 3, 'social': 4},
-    'SC-005': {'essay': 3, 'technical': 4, 'social': 6},
-    'SC-006': {'essay': 2, 'technical': 3, 'social': 4},
+    'SC-001': {'essay': 2, 'technical': 3, 'social': 2},
+    'SC-002': {'essay': 2, 'technical': 3, 'social': 2},
+    'SC-003': {'essay': 2, 'technical': 3, 'social': 2},
+    'SC-004': {'essay': 2, 'technical': 2, 'social': 2},
+    'SC-005': {'essay': 3, 'technical': 3, 'social': 3},
+    'SC-006': {'essay': 2, 'technical': 2, 'social': 4},
 }
 
 PYTHON = sys.executable
@@ -411,17 +410,17 @@ def test_unsupported_fiction():
 def test_profile_thresholds():
     results = []
 
-    # PB-007 正例:essay 下 3 处 SC-001「随着…的发展」聚集 → 命中
-    text_007 = (
-        "随着人工智能的发展，整个行业正在发生明显而深刻的变化。"
-        "随着大模型的发展，成本下降。"
-        "随着应用的发展，落地过程正在明显加速。")
+    # PB-007 正例:essay 下 2 处 SC-006「你可能会问」聚集 → 命中
+    # 档72C-2:SC-001 的 social 阈值=2(文档声明 social 正常),不再适合做
+    # essay/social 分档演示;改用 SC-006(essay 2 / social 4,文档明写 social ×2.0)。
+    text_007 = "你可能会问，这个产品好用吗？你可能会问，价格合理吗？"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_007), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
     passed = data['strong_contextual']['count'] > 0
-    results.append(TestResult('PB-007', 'profile-thresholds', passed, f'essay SC-001 聚集 sc={data["strong_contextual"]["count"]}'))
+    results.append(TestResult('PB-007', 'profile-thresholds', passed, f'essay SC-006 聚集 sc={data["strong_contextual"]["count"]}'))
 
-    # PB-008 反例:同一段文本,宽松 profile social 下不误报(R55 单变量=profile)
+    # PB-008 反例:同一段文本,宽松 profile social 下不误报(R55 单变量=profile;
+    # SC-006 social 阈值 4,2 处命中不触发)
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_007), '--profile', 'social', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
     passed = data['strong_contextual']['count'] == 0
@@ -429,8 +428,9 @@ def test_profile_thresholds():
 
     # PB-009 关键:同一段文本 essay 与 technical 两次运行,count 不相等
     # —— 唯一能证明 profile 分档在工作的测试(旧 PB-001~006 全部做不到)。
-    # SC-008 单命中:essay 阈值 1 → 命中;technical 阈值 2 → 不命中。
-    text_009 = "说白了，真正的风险在于没有人验证它。"
+    # 档72C-2:SC-008 已移入 HR-007,改用 SC-001(essay 2 / technical 3):
+    # 2 处命中 → essay 触发(2>=2)、technical 不触发(2<3)。
+    text_009 = "随着人工智能的发展，行业开始变化。随着大模型的发展，成本下降。"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_009), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
     essay_count = data['strong_contextual']['count']
@@ -440,19 +440,19 @@ def test_profile_thresholds():
     passed = essay_count != technical_count
     results.append(TestResult('PB-009', 'profile-thresholds', passed, f'essay={essay_count} technical={technical_count} 不相等'))
 
-    # SC-008 正例:含「说白了」,essay 下 SC-008 命中
+    # HR-007 反例:不含三词,essay 下 hard_residue 零命中(与 PB-016 构成正反例)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("这件事到此为止，没有别的了。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    passed = data['hard_residue']['count'] == 0 and rc == 0
+    results.append(TestResult('HR-007-NEG', 'profile-thresholds', passed, f'HR-007 零命中 hr={data["hard_residue"]["count"]} rc={rc}'))
+
+    # SC-008-MIGRATED 迁移守卫:三词文本的 strong 输出不得再含 SC-008(§3 已移入 HR-007)
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("说白了，这件事到此为止。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
     sc_ids = [item['pattern_id'] for item in data['strong_contextual']['items']]
-    passed = 'SC-008' in sc_ids
-    results.append(TestResult('SC-008-POS', 'profile-thresholds', passed, f'SC-008 命中 ids={sc_ids}'))
-
-    # SC-008 反例:不含三词,essay 下 SC-008 零命中
-    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("这件事到此为止，没有别的了。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
-    data = json.loads(out)
-    sc_ids = [item['pattern_id'] for item in data['strong_contextual']['items']]
-    passed = 'SC-008' not in sc_ids
-    results.append(TestResult('SC-008-NEG', 'profile-thresholds', passed, f'SC-008 零命中 ids={sc_ids}'))
+    passed = 'SC-008' not in sc_ids and data['hard_residue']['count'] > 0
+    results.append(TestResult('SC-008-MIGRATED', 'profile-thresholds', passed,
+                              f'strong ids={sc_ids} hr={data["hard_residue"]["count"]}'))
 
     return results
 
@@ -462,22 +462,18 @@ def test_profile_thresholds():
 # identity-regression 测试（1 条,档72B-2R 新增,PB-010）
 # ============================================================
 
-
-
 # ============================================================
-# sc005-threshold-liveness 测试（1 条,档72B-2F 新增,PB-011/R112）
+# sc001-threshold-liveness 测试（1 条,档72C-2 重挂,PB-011/R112）
 # ============================================================
 
-# 4 个连续句:长度 20/23/23/26,相邻差 3/0/3(均<=5),句长均>10,
-# 不命中 SC-001~008 任何正则(中性陈述句,实测 sc_hits=[])。
-# 只数 pattern_id == 'SC-005' 的条目;consecutive_count 递推 2,3,4。
-SC005_TEXT = ("清晨的阳光洒满安静的街道，行人脚步从容。"
-              "午后的小雨落在青石板路上，屋檐滴答声清晰可闻。"
-              "傍晚的微风穿过长长小巷，远处亮起一片温暖灯光。"
-              "深夜的月光落进半开的窗台，书桌上的纸张被风轻轻翻动。")
+# 档72C-2:SC-005 阈值改为 3/3/3 后无法区分 profile,PB-011 改挂 SC-001
+# (essay 2 / technical 3 / social 2)。文本含恰好 2 处 SC-001「随着…的发展」,
+# 同一段落;两句长度 17/15,SC-005 连续计数最大 2<3 不会触发。
+# 预期:essay 命中 1(cluster_threshold 2)、technical 0、social 命中 1。
+SC001_TEXT = ("随着人工智能的发展，行业开始变化。随着大模型的发展，成本下降。")
 
 
-def test_sc005_threshold_liveness():
+def test_sc001_threshold_liveness():
     results = []
     import importlib.util
     spec = importlib.util.spec_from_file_location("pattern_audit", PATTERN_AUDIT)
@@ -485,22 +481,185 @@ def test_sc005_threshold_liveness():
     spec.loader.exec_module(mod)
     observed = {}
     for prof in ("essay", "technical", "social"):
-        findings = mod.detect_strong_contextual(SC005_TEXT, prof)
-        sc5 = [f for f in findings if f['pattern_id'] == 'SC-005']
-        observed[prof] = (len(sc5), [f['cluster_threshold'] for f in sc5])
+        findings = mod.detect_strong_contextual(SC001_TEXT, prof)
+        sc1 = [f for f in findings if f['pattern_id'] == 'SC-001']
+        observed[prof] = (len(sc1), [f['cluster_threshold'] for f in sc1])
 
     essay_n, essay_t = observed['essay']
     tech_n, tech_t = observed['technical']
     soc_n, soc_t = observed['social']
     ok = (
-        essay_n == 2 and all(x == 3 for x in essay_t)
-        and tech_n == 1 and all(x == 4 for x in tech_t)
-        and soc_n == 0
+        essay_n == 1 and essay_t == [2]
+        and tech_n == 0
+        and soc_n == 1 and soc_t == [2]
     )
     msg = (f"essay={essay_n}(thr={essay_t}) technical={tech_n}(thr={tech_t}) "
            f"social={soc_n}(thr={soc_t})")
-    results.append(TestResult('PB-011', 'sc005-threshold-liveness', ok, msg))
+    results.append(TestResult('PB-011', 'sc001-threshold-liveness', ok, msg))
     return results
+
+
+# ============================================================
+# sc007b-upgrade 测试（1 条,档72C-2 新增,PB-012）
+# ============================================================
+
+# 同一段落内 AO-001(不是…而是 / 并非…而是)命中 >= 2 → 升级为
+# strong_contextual finding SC-007b(confidence=low);单发只留 advisory。
+SC007B_SINGLE = "他不是因为失败才放弃，而是因为方向错了。"
+SC007B_DOUBLE = ("他不是因为失败才放弃，而是因为方向错了。"
+                 "并非能力不足，而是时机未到。")
+
+
+def test_sc007b_upgrade():
+    results = []
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(SC007B_SINGLE), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    single_ids = [f['pattern_id'] for f in data['strong_contextual']['items']]
+    ok1 = 'SC-007b' not in single_ids and data['advisory_only']['count'] >= 1
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(SC007B_DOUBLE), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc007b = [f for f in data['strong_contextual']['items'] if f['pattern_id'] == 'SC-007b']
+    ok2 = len(sc007b) == 1 and sc007b[0].get('confidence') == 'low'
+    ok = ok1 and ok2
+    msg = (f"单发={'通过' if ok1 else '失败'}(ids={single_ids}) "
+           f"双发={'通过' if ok2 else '失败'}(sc007b={len(sc007b)} conf={[f.get('confidence') for f in sc007b]})")
+    results.append(TestResult('PB-012', 'sc007b-upgrade', ok, msg))
+    return results
+
+
+# ============================================================
+# config-liveness 测试（1 条,档72C-2 新增,PB-013/R112）
+# ============================================================
+
+def test_config_liveness():
+    results = []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pattern_audit", PATTERN_AUDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    # 构造临时配置:SC-001 essay=9,其余与默认一致
+    import tempfile
+    fd, cfg_path = tempfile.mkstemp(suffix='.yaml')
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write("""pattern_thresholds:
+  SC-001: {essay: 9, technical: 3, social: 2}
+  SC-002: {essay: 2, technical: 3, social: 2}
+  SC-003: {essay: 2, technical: 3, social: 2}
+  SC-004: {essay: 2, technical: 2, social: 2}
+  SC-005: {essay: 3, technical: 3, social: 3}
+  SC-006: {essay: 2, technical: 2, social: 4}
+  SC-007a: {essay: 1, technical: 1, social: 1}
+""")
+    text = ("随着人工智能的发展，整个行业正在发生明显而深刻的变化。"
+            "随着大模型的发展，成本下降。"
+            "随着应用的发展，落地过程正在明显加速。")
+    text_p = write_temp(text)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', text_p, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    default_hits = data['strong_contextual']['count']
+    rc2, out2, err2 = run_script(PATTERN_AUDIT, ['--config', cfg_path, '--text', text_p, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok = default_hits > 0 and rc2 == 0
+    if ok:
+        data2 = json.loads(out2)
+        ok = data2['strong_contextual']['count'] == 0
+    temp_count = None
+    if rc2 == 0 and out2:
+        temp_count = json.loads(out2)['strong_contextual']['count']
+    results.append(TestResult('PB-013', 'config-liveness', ok,
+                              f'默认={default_hits} 临时配置={temp_count} rc2={rc2}'))
+    os.unlink(cfg_path)
+    return results
+
+
+# ============================================================
+# config-default 测试（1 条,档72C-2 新增,PB-014/R104）
+# ============================================================
+
+def test_config_default():
+    results = []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pattern_audit", PATTERN_AUDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mismatches = []
+    for rule in mod.STRONG_CONTEXTUAL_PATTERNS:
+        rid = rule.get('id')
+        if rid not in EXPECTED_SC_THRESHOLDS:
+            continue
+        got = rule.get('thresholds') or {}
+        for prof, want in EXPECTED_SC_THRESHOLDS[rid].items():
+            if got.get(prof) != want:
+                mismatches.append(f"{rid}.{prof}: 期望 {want} 实得 {got.get(prof)}")
+    ok = not mismatches
+    results.append(TestResult('PB-014', 'config-default', ok,
+                              '；'.join(mismatches) if mismatches else '默认配置 18 格与 §1 表逐格相同'))
+    return results
+
+
+# ============================================================
+# config-error 测试（1 条,档72C-2 新增,PB-015）
+# ============================================================
+
+def test_config_errors():
+    results = []
+    text_p = write_temp("这是一段普通测试文本。")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--config', os.path.join(tempfile.gettempdir(), 'no-such-config-72c2.yaml'), '--text', text_p, '--output', 'json'])
+    ok1 = rc == 3
+    fd, bad_path = tempfile.mkstemp(suffix='.yaml')
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write("pattern_thresholds: [broken\n")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--config', bad_path, '--text', text_p, '--output', 'json'])
+    ok2 = rc == 3
+    os.unlink(bad_path)
+    fd, miss_path = tempfile.mkstemp(suffix='.yaml')
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write("""pattern_thresholds:
+  SC-001: {essay: 2}
+  SC-002: {essay: 2, technical: 3, social: 2}
+  SC-003: {essay: 2, technical: 3, social: 2}
+  SC-004: {essay: 2, technical: 2, social: 2}
+  SC-005: {essay: 3, technical: 3, social: 3}
+  SC-006: {essay: 2, technical: 2, social: 4}
+  SC-007a: {essay: 1, technical: 1, social: 1}
+""")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--config', miss_path, '--text', text_p, '--output', 'json'])
+    ok3 = rc == 3
+    os.unlink(miss_path)
+    ok = ok1 and ok2 and ok3
+    results.append(TestResult('PB-015', 'config-error', ok,
+                              f'缺失={ok1}(rc={rc if not ok1 else 3}) yaml错={ok2} 缺键={ok3}'))
+    return results
+
+
+# ============================================================
+# hr007 测试（1 条,档72C-2 新增,PB-016）
+# ============================================================
+
+def test_hr007():
+    results = []
+    text = "说白了，这件事到此为止。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ok = rc == 2 and data['hard_residue']['count'] > 0
+    results.append(TestResult('PB-016', 'hr007', ok, f'rc={rc} hr={data["hard_residue"]["count"]}'))
+    return results
+
+
+# ============================================================
+# sc007a-threshold1 测试（1 条,档72C-2 新增,PB-017）
+# ============================================================
+
+def test_sc007a_threshold1():
+    results = []
+    text = "看似简单，实则复杂。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc007a = [f for f in data['strong_contextual']['items'] if f['pattern_id'] == 'SC-007a']
+    ok = len(sc007a) == 1 and 'context_note' in sc007a[0]
+    results.append(TestResult('PB-017', 'sc007a-threshold1', ok,
+                              f'sc007a={len(sc007a)} note={"有" if sc007a and "context_note" in sc007a[0] else "无"}'))
+    return results
+
 
 def test_thresholds_identity():
     results = []
@@ -532,7 +691,13 @@ def main():
     all_results.extend(test_profile_boundaries())
     all_results.extend(test_profile_thresholds())
     all_results.extend(test_thresholds_identity())
-    all_results.extend(test_sc005_threshold_liveness())
+    all_results.extend(test_sc001_threshold_liveness())
+    all_results.extend(test_sc007b_upgrade())
+    all_results.extend(test_config_liveness())
+    all_results.extend(test_config_default())
+    all_results.extend(test_config_errors())
+    all_results.extend(test_hr007())
+    all_results.extend(test_sc007a_threshold1())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 
