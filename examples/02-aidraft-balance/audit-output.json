@@ -71,7 +71,8 @@
   },
   "strong_contextual": {
     "count": 0,
-    "items": []
+    "high_confidence": [],
+    "low_confidence": []
   },
   "advisory_only": {
     "count": 3,

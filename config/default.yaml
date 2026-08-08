@@ -40,6 +40,10 @@ pattern_thresholds:
   SC-005: {essay: 3, technical: 3, social: 3}
   SC-006: {essay: 2, technical: 2, social: 4}
   SC-007a: {essay: 1, technical: 1, social: 1}
+  # 档72C-4:词表规则阈值(词本体在 references/lexicon-deai.yaml)
+  SC-009: {essay: 1, technical: 1, social: 1}  # 绝对黑话
+  SC-010: {essay: 1, technical: 1, social: 1}  # 模型路标
+  SC-011: {essay: 2, technical: 2, social: 2}  # 抒情聚集(同段 AO-014 >=2)
 
 # 保真检查
 fidelity:

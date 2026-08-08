@@ -25,6 +25,11 @@ FIDELITY_GUARD = os.path.join(SCRIPTS_DIR, 'fidelity_guard.py')
 CHANGE_REPORT = os.path.join(SCRIPTS_DIR, 'change_report.py')
 PATTERN_AUDIT = os.path.join(SCRIPTS_DIR, 'pattern_audit.py')
 
+def _sc_items(data):
+    """档72C-4/§3-2:strong_contextual.items 拆为 high_confidence + low_confidence。"""
+    sc = data['strong_contextual']
+    return sc.get('high_confidence', []) + sc.get('low_confidence', [])
+
 # 档72C-2 PB-010:期望值来源=references/patterns/strong-contextual.md 逐条
 # profile 声明(非统一乘数)。基线 2(SC-005 为 3),technical ×1.5 / social
 # ×2.0 只在文档明写该档放宽的规则上生效。SC-007a 阈值 1 见档 72C-2 §4。
@@ -450,7 +455,7 @@ def test_profile_thresholds():
     # SC-008-MIGRATED 迁移守卫:三词文本的 strong 输出不得再含 SC-008(§3 已移入 HR-007)
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("说白了，这件事到此为止。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc_ids = [item.get('rule_id') for item in data['strong_contextual']['items']]
+    sc_ids = [item.get('rule_id') for item in _sc_items(data)]
     passed = 'SC-008' not in sc_ids and data['hard_residue']['count'] > 0
     results.append(TestResult('SC-008-MIGRATED', 'profile-thresholds', passed,
                               f'strong ids={sc_ids} hr={data["hard_residue"]["count"]}'))
@@ -515,11 +520,11 @@ def test_sc007b_upgrade():
     results = []
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(SC007B_SINGLE), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    single_ids = [f['pattern_id'] for f in data['strong_contextual']['items']]
+    single_ids = [f['pattern_id'] for f in _sc_items(data)]
     ok1 = 'SC-007b' not in single_ids and data['advisory_only']['count'] >= 1
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(SC007B_DOUBLE), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc007b = [f for f in data['strong_contextual']['items'] if f.get('rule_id') == 'SC-007b']
+    sc007b = [f for f in _sc_items(data) if f.get('rule_id') == 'SC-007b']
     ok2 = len(sc007b) == 1 and sc007b[0].get('confidence') == 'low'
     ok = ok1 and ok2
     msg = (f"单发={'通过' if ok1 else '失败'}(ids={single_ids}) "
@@ -550,6 +555,9 @@ def test_config_liveness():
   SC-005: {essay: 3, technical: 3, social: 3}
   SC-006: {essay: 2, technical: 2, social: 4}
   SC-007a: {essay: 1, technical: 1, social: 1}
+  SC-009: {essay: 1, technical: 1, social: 1}
+  SC-010: {essay: 1, technical: 1, social: 1}
+  SC-011: {essay: 2, technical: 2, social: 2}
 """)
     text = ("随着人工智能的发展，整个行业正在发生明显而深刻的变化。"
             "随着大模型的发展，成本下降。"
@@ -655,7 +663,7 @@ def test_sc007a_threshold1():
     text = "看似简单，实则复杂。"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    sc007a = [f for f in data['strong_contextual']['items'] if f.get('rule_id') == 'SC-007a']
+    sc007a = [f for f in _sc_items(data) if f.get('rule_id') == 'SC-007a']
     ok = len(sc007a) == 1 and 'context_note' in sc007a[0]
     results.append(TestResult('PB-017', 'sc007a-threshold1', ok,
                               f'sc007a={len(sc007a)} note={"有" if sc007a and "context_note" in sc007a[0] else "无"}'))
@@ -697,7 +705,7 @@ def test_cross_section_fields():
     text = "说白了，这不是问题而是机会。随着人工智能的发展，行业开始变化。随着大模型的发展，成本下降。"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     data = json.loads(out)
-    all_items = (data['hard_residue']['items'] + data['strong_contextual']['items']
+    all_items = (data['hard_residue']['items'] + _sc_items(data)
                  + data['advisory_only']['items'])
     ok = (len(all_items) >= 3
           and all(CROSS_FIELDS <= set(it) for it in all_items)
@@ -753,6 +761,162 @@ def test_argparse_exit3():
     return results
 
 
+
+
+# ============================================================
+# 词表规则测试（9 条,档72C-4 新增,PB-022~030）
+# ============================================================
+
+def test_sc009_single_hit():
+    results = []
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("赋能一下这个项目。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ids = [f.get('rule_id') for f in _sc_items(data)]
+    ok = data['strong_contextual']['count'] == 1 and 'SC-009' in ids
+    results.append(TestResult('PB-022', 'sc009', ok, f'sc={data["strong_contextual"]["count"]} ids={ids}'))
+    return results
+
+
+def test_ao013_never_upgrades():
+    results = []
+    text = ("颗粒度的问题在于颗粒度。颗粒度决定颗粒度，颗粒度影响颗粒度，颗粒度始终是颗粒度。")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ao_ids = [f.get('rule_id') for f in data['advisory_only']['items']]
+    sc_ids = [f.get('rule_id') for f in _sc_items(data)]
+    ok = data['advisory_only']['count'] >= 5 and 'AO-013' in ao_ids and 'SC-009' not in sc_ids and 'SC-011' not in sc_ids
+    results.append(TestResult('PB-023', 'ao013', ok, f'ao={data["advisory_only"]["count"]} ao_ids={set(ao_ids)} sc_ids={set(sc_ids)}'))
+    return results
+
+
+def test_ao014_single_and_sc011():
+    results = []
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("微光落在窗台上。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    single_ok = data['advisory_only']['count'] == 1 and all(f.get('rule_id') == 'AO-014' for f in data['advisory_only']['items'])
+    sc_ids = [f.get('rule_id') for f in _sc_items(data)]
+    single_ok = single_ok and 'SC-011' not in sc_ids
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("微光落在褶皱里，滚烫的丰盈被轻盈地安放。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc011 = [f for f in _sc_items(data) if f.get('rule_id') == 'SC-011']
+    double_ok = len(sc011) == 1 and sc011[0].get('confidence') == 'low'
+    ok = single_ok and double_ok
+    results.append(TestResult('PB-024', 'ao014-sc011', ok,
+                              f'单发={"通过" if single_ok else "失败"} 双发={"通过" if double_ok else "失败"}(sc011={len(sc011)})'))
+    return results
+
+
+def test_sc010_prefix():
+    results = []
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("还有一层，问题在于成本。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    hit_ids = [f.get('rule_id') for f in _sc_items(data)]
+    ok1 = 'SC-010' in hit_ids
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("还有一层"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    ok2 = data['strong_contextual']['count'] == 0
+    ok = ok1 and ok2
+    results.append(TestResult('PB-025', 'sc010-prefix', ok, f'带内容={"通过" if ok1 else "失败"} 单独成句={"通过" if ok2 else "失败"}'))
+    return results
+
+
+def test_lexicon_liveness():
+    results = []
+    text_p = write_temp("赋能一下这个项目。")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', text_p, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    default_hits = data['strong_contextual']['count']
+    import tempfile as _tf
+    fd, lex_path = _tf.mkstemp(suffix='.yaml')
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write("""version: 1
+absolute_jargon:
+  - 抓手
+contextual_jargon:
+  - 颗粒度
+lyrical:
+  - 微光
+model_signposts:
+  - 更微妙的是
+""")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--lexicon', lex_path, '--text', text_p, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok = default_hits > 0 and rc == 0
+    temp_hits = None
+    if ok and out:
+        temp_hits = json.loads(out)['strong_contextual']['count']
+        ok = temp_hits == 0
+    results.append(TestResult('PB-026', 'lexicon-liveness', ok, f'默认={default_hits} 临时词表={temp_hits} rc2={rc}'))
+    os.unlink(lex_path)
+    return results
+
+
+def test_mask_lexicon():
+    results = []
+    words = "赋能 颗粒度 闭环 链路 沉淀"
+    fenced = "```\n赋能 颗粒度 闭环 链路 沉淀\n```"
+    inline = "正文里有 `赋能 颗粒度 闭环 链路 沉淀` 这一段。"
+    plain = "赋能 颗粒度 闭环 链路 沉淀"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(fenced), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    fenced_total = data['strong_contextual']['count'] + data['advisory_only']['count']
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(inline), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    inline_total = data['strong_contextual']['count'] + data['advisory_only']['count']
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(plain), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    plain_total = data['strong_contextual']['count'] + data['advisory_only']['count']
+    ok = fenced_total == 0 and inline_total == 0 and plain_total == 5
+    results.append(TestResult('PB-027', 'mask-lexicon', ok,
+                              f'围栏={fenced_total} 行内={inline_total} 正文={plain_total}'))
+    return results
+
+
+def test_long_word_priority():
+    results = []
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("商业闭环很重要。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc009 = [f for f in _sc_items(data) if f.get('rule_id') == 'SC-009']
+    ao013 = [f for f in data['advisory_only']['items'] if f.get('rule_id') == 'AO-013']
+    ok = len(sc009) == 1 and len(ao013) == 0
+    results.append(TestResult('PB-028', 'long-word-priority', ok, f'sc009={len(sc009)} ao013={len(ao013)}'))
+    return results
+
+
+def test_strategy_hr007():
+    results = []
+    text = "说白了，这件事到此为止。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--strategy', 'preserve', '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out) if out else {}
+    hr_ids = [f.get('rule_id') for f in data.get('hard_residue', {}).get('items', [])]
+    ok1 = rc == 0 and 'HR-007' in hr_ids
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--strategy', 'balance', '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok2 = rc == 2
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    ok3 = rc == 2
+    ok = ok1 and ok2 and ok3
+    results.append(TestResult('PB-029', 'strategy-hr007', ok,
+                              f'preserve={"通过" if ok1 else "失败"}(rc={rc if not ok1 else 0},ids={hr_ids}) balance={"通过" if ok2 else "失败"} 默认={"通过" if ok3 else "失败"}'))
+    return results
+
+
+def test_strong_grouping():
+    results = []
+    text = "赋能与颗粒度并存。褶皱与微光同在。说白了，这不是问题而是机会。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc = data['strong_contextual']
+    high = sc.get('high_confidence', [])
+    low = sc.get('low_confidence', [])
+    high_ids = {f.get('rule_id') for f in high}
+    low_ids = {f.get('rule_id') for f in low}
+    ok = (sc['count'] == len(high) + len(low)
+          and 'SC-009' in high_ids and 'SC-009' not in low_ids
+          and all(f.get('rule_id') in ('SC-007b', 'SC-011') for f in low))
+    results.append(TestResult('PB-030', 'strong-grouping', ok,
+                              f'count={sc["count"]} high={sorted(high_ids)} low={sorted(low_ids)}'))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -774,6 +938,15 @@ def main():
     all_results.extend(test_protected_span_review_only())
     all_results.extend(test_mask_liveness())
     all_results.extend(test_argparse_exit3())
+    all_results.extend(test_sc009_single_hit())
+    all_results.extend(test_ao013_never_upgrades())
+    all_results.extend(test_ao014_single_and_sc011())
+    all_results.extend(test_sc010_prefix())
+    all_results.extend(test_lexicon_liveness())
+    all_results.extend(test_mask_lexicon())
+    all_results.extend(test_long_word_priority())
+    all_results.extend(test_strategy_hr007())
+    all_results.extend(test_strong_grouping())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 

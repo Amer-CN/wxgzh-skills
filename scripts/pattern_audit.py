@@ -328,6 +328,15 @@ STRONG_CONTEXTUAL_PATTERNS = [
         'thresholds': {'essay': 1, 'technical': 1, 'social': 1},
         'language_origin': 'chinese_specific',
     },
+    {
+        # 档72C-4/§2:抒情聚集——同段 AO-014 命中 >=2 时额外产出一条 strong,
+        # confidence=low。patterns 为空,走下方专用块(同 SC-005 模式);
+        # 阈值由 config pattern_thresholds.SC-011 注入。
+        'id': 'SC-011',
+        'name': '抒情聚集',
+        'patterns': [],
+        'language_origin': 'chinese_specific',
+    },
 ]
 
 # 档72B-2R OBS-228/R111:模块加载期结构断言——thresholds 必须显式包含
@@ -498,6 +507,31 @@ def detect_strong_contextual(masked, original, profile, protected):
                     suggestion='判断前半句是否被前文真实建立;仅正常分类/澄清则忽略',
                     context_note=_CONTEXT_NOTE))
 
+    # 档72C-4/§2:SC-011 抒情聚集——同一段落内 AO-014(抒情词)命中 >= 阈值时
+    # 额外产出一条 strong finding(confidence=low);阈值来自 config 的 SC-011 行。
+    ao014 = next((r for r in ADVISORY_ONLY_PATTERNS if r.get('id') == 'AO-014'), None)
+    sc011_def = _SC_BY_ID.get('SC-011')
+    if ao014 is not None and sc011_def is not None:
+        sc011_threshold = sc011_def['thresholds'][profile]
+        ao14_pats = ao014.get('patterns') or [ao014['pattern']]
+        for para_idx, (para, pstart, pend) in enumerate(paragraphs):
+            ao14_count = sum(len(re.findall(pat, para)) for pat in ao14_pats)
+            if ao14_count >= sc011_threshold:
+                first_span = None
+                first_si = 0
+                for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                    if any(re.search(pat, sent) for pat in ao14_pats):
+                        first_span = (pstart + sstart, pstart + send)
+                        first_si = sent_idx
+                        break
+                findings.append(_finding(
+                    'strong_contextual', profile, sc011_def,
+                    f'第{para_idx+1}段第{first_si+1}句', first_span,
+                    original, protected, confidence='low',
+                    cluster_count=ao14_count, cluster_threshold=sc011_threshold,
+                    reason=f'同段抒情词聚集{ao14_count}次,达到阈值{sc011_threshold}',
+                    suggestion='复核是否确为矫饰抒情;承载真实感受的保留'))
+
     return findings
 
 
@@ -523,6 +557,93 @@ ADVISORY_ONLY_PATTERNS = [
 ]
 
 
+# ============================================================
+# 检测词表加载（档72C-4/§1,OBS-233 闭合）
+# ============================================================
+
+# 词表 → 规则映射:SC-009/SC-010 进 strong,AO-013/AO-014 进 advisory。
+# SC-011 是 AO-014 的聚集升级(专用块),无词表条目。
+_LEXICON_RULES = {
+    'SC-009': {'name': '绝对黑话', 'key': 'absolute_jargon', 'group': 'strong'},   # 27 词
+    'SC-010': {'name': '模型路标', 'key': 'model_signposts', 'group': 'strong'},  # 6 词
+    'AO-013': {'name': '语境黑话', 'key': 'contextual_jargon', 'group': 'advisory'},  # 14 词
+    'AO-014': {'name': '抒情词', 'key': 'lyrical', 'group': 'advisory'},  # 12 词
+}
+
+# 「还有一层」按前缀模式(任务书 §3.5 注):后接实际内容才命中,单独成句不命中。
+_MODEL_SIGNPOST_PREFIX = {'还有一层': r'还有一层[^。！？!?\n]'}
+
+
+def _lexicon_patterns(words):
+    """词表条目 → 正则列表;普通词 re.escape,前缀词走专用模式。"""
+    out = []
+    for word in words:
+        if not isinstance(word, str) or not word:
+            raise ValueError(f'词表条目必须为非空字符串: {word!r}')
+        if word in _MODEL_SIGNPOST_PREFIX:
+            out.append(_MODEL_SIGNPOST_PREFIX[word])
+        else:
+            out.append(re.escape(word))
+    return out
+
+
+def load_lexicon(lexicon_path=None):
+    """读取检测词表;缺失/yaml 错/schema 不合 → 打印错误并 sys.exit(3),无兜底(R111)。"""
+    path = (Path(lexicon_path) if lexicon_path
+            else Path(__file__).resolve().parents[1] / 'references' / 'lexicon-deai.yaml')
+    try:
+        text = path.read_text(encoding='utf-8')
+    except OSError as exc:
+        print(f'错误: 词表文件读取失败: {path}: {exc}', file=sys.stderr)
+        sys.exit(3)
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        print(f'错误: 词表 YAML 解析失败: {path}: {exc}', file=sys.stderr)
+        sys.exit(3)
+    if not isinstance(data, dict):
+        print('错误: 词表顶层必须为对象', file=sys.stderr)
+        sys.exit(3)
+    for rid, meta in _LEXICON_RULES.items():
+        words = data.get(meta['key'])
+        if not isinstance(words, list) or not words:
+            print(f'错误: 词表缺少非空列表 {meta["key"]}(规则 {rid})', file=sys.stderr)
+            sys.exit(3)
+    return data
+
+
+def _apply_lexicon(data):
+    """把词表注入 STRONG_CONTEXTUAL_PATTERNS / ADVISORY_ONLY_PATTERNS(单一真源)。"""
+    for rid, meta in _LEXICON_RULES.items():
+        pats = _lexicon_patterns(data[meta['key']])
+        entry = {'id': rid, 'name': meta['name'], 'patterns': pats,
+                 'language_origin': 'chinese_specific'}
+        if meta['group'] == 'strong':
+            STRONG_CONTEXTUAL_PATTERNS[:] = [
+                r for r in STRONG_CONTEXTUAL_PATTERNS if r['id'] != rid]
+            STRONG_CONTEXTUAL_PATTERNS.append(entry)
+        else:
+            ADVISORY_ONLY_PATTERNS[:] = [
+                r for r in ADVISORY_ONLY_PATTERNS if r['id'] != rid]
+            ADVISORY_ONLY_PATTERNS.append(entry)
+    # 词表注入后重建查找表(SC-009 供 AO-013 长词优先去重引用)。
+    global _SC_BY_ID
+    _SC_BY_ID = {_r['id']: _r for _r in STRONG_CONTEXTUAL_PATTERNS}
+
+
+# 模块加载即注入词表(默认路径);--lexicon 覆盖时 main() 里重注入。
+_apply_lexicon(load_lexicon())
+# 词表注入后再应用配置阈值(SC-009/010/011 阈值只在 config;R111 无兜底),
+# 并重跑结构断言(覆盖词表规则)。
+_apply_pattern_thresholds(load_config())
+
+# 档72C-4/§3-2:strong 输出的高/低置信分组(按规则归属,非按 confidence 字段值;
+# SC-007a 的 confidence 字段为 medium 但按指令归入 high 桶)。
+_SC_HIGH_IDS = {'SC-001', 'SC-002', 'SC-003', 'SC-004', 'SC-005', 'SC-006',
+                'SC-007a', 'SC-009', 'SC-010'}
+_SC_LOW_IDS = {'SC-007b', 'SC-011'}
+
+
 def detect_advisory_only(masked, original, profile, protected):
     """检测 advisory-only 模式。只列出，不影响 pass/fail。"""
     findings = []
@@ -534,6 +655,17 @@ def detect_advisory_only(masked, original, profile, protected):
                 matches = []
                 for pat in pats:
                     matches.extend(re.finditer(pat, sent))
+                # 档72C-4/§1:长词优先——AO-013 命中若落在 SC-009 已命中区间内
+                # (如「闭环」被「商业闭环」覆盖)则跳过,不重复计数。
+                if pattern_def['id'] == 'AO-013':
+                    sc009 = _SC_BY_ID.get('SC-009')
+                    sc009_spans = []
+                    if sc009:
+                        for sp in sc009.get('patterns') or []:
+                            sc009_spans.extend(x.span() for x in re.finditer(sp, sent))
+                    matches = [m for m in matches
+                              if not any(s < m.end() and m.start() < e
+                                         for s, e in sc009_spans)]
                 for m in matches:
                     findings.append(_finding(
                         'advisory_only', profile, pattern_def,
@@ -568,10 +700,20 @@ def main():
                         help='检测范围（hard_residue_only 只检测 hard-residue；full 检测全部级别）')
     parser.add_argument('--output', default='json', choices=['json', 'text'], help='输出格式')
     parser.add_argument('--config', default=None, help='配置文件路径(默认 config/default.yaml)')
+    parser.add_argument('--lexicon', default=None, help='检测词表路径(默认 references/lexicon-deai.yaml)')
+    # 档72C-4/§3-1(任务书 §3.1 后半句):preserve 策略下 HR-007 只标记不判 fail。
+    parser.add_argument('--strategy', default='balance',
+                        choices=['preserve', 'balance', 'rebuild'], help='编辑策略')
 
     args = parser.parse_args()
     # 档72C-2/§7:显式 --config 覆盖默认配置;错误路径在 load_config/_apply 内 exit 3。
     if args.config:
+        _apply_pattern_thresholds(load_config(args.config))
+    # 档72C-4/§1:显式 --lexicon 覆盖默认词表;错误路径在 load_lexicon 内 exit 3。
+    if args.lexicon:
+        _apply_lexicon(load_lexicon(args.lexicon))
+        # 词表重注入后阈值必须一并重注入(SC-009/010/011 阈值只在 config),
+        # 否则新注入的条目无 thresholds → 运行时 KeyError。
         _apply_pattern_thresholds(load_config(args.config))
 
     text = read_file(args.text)
@@ -589,7 +731,12 @@ def main():
         ao_findings = detect_advisory_only(masked, text, args.profile, protected)
 
     # pass/fail 只由 hard-residue 决定
-    pass_fail = 'fail' if hr_findings else 'pass'
+    # 档72C-4/§3-1(任务书 §3.1 例外):退出码判定——HR-001~006 任何策略下均 fail;
+    # HR-007 仅 strategy=preserve 时只标记不判 fail(仍出现在 items 里)。
+    hr_non007 = [f for f in hr_findings if f['rule_id'] != 'HR-007']
+    has_hr007 = any(f['rule_id'] == 'HR-007' for f in hr_findings)
+    exit_code = 2 if (hr_non007 or (has_hr007 and args.strategy != 'preserve')) else 0
+    pass_fail = 'fail' if exit_code == 2 else 'pass'
 
     result = {
         'hard_residue': {
@@ -597,8 +744,11 @@ def main():
             'items': hr_findings,
         },
         'strong_contextual': {
+            # 档72C-4/§3-2(任务书 §6 后半句):高置信与低置信分组展示,count 为两者之和。
+            # high 桶=SC-001~006/007a/009/010;low 桶=SC-007b/011。
             'count': len(sc_findings),
-            'items': sc_findings,
+            'high_confidence': [f for f in sc_findings if f['rule_id'] in _SC_HIGH_IDS],
+            'low_confidence': [f for f in sc_findings if f['rule_id'] in _SC_LOW_IDS],
         },
         'advisory_only': {
             'count': len(ao_findings),
@@ -630,10 +780,8 @@ def main():
         print(f'总体: {pass_fail}')
 
     # 退出码只由 hard-residue 决定
-    if hr_findings:
-        sys.exit(2)
-    else:
-        sys.exit(0)
+    # 档72C-4/§3-1:退出码按策略判定(HR-007 preserve 例外)。
+    sys.exit(exit_code)
 
 if __name__ == '__main__':
     main()
