@@ -314,5 +314,21 @@
     "new_source_tree_sha": "1ab330279042b40eb2bff7accc09e097b6f49cca",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260808T063603Z-2659db84",
+    "skill": "zh-human-writing",
+    "reason": "72B-2F zh-human-writing 升级:SC-005 阈值接入 thresholds 真源(OBS-229)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-08T06:36:03Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "e25b4f80792b47e784ca1ebf8200490feba2a21c1cbfbaff96e7733d7787ce7f",
+    "new_root_sha256": "112964de23de033aca23d7bf4cbf87f45f9da4db37123db8f1b1af26ce4d450f",
+    "old_full_commit_sha": "8e7948cddb55c3130dac16bd440d4ea6bc856545",
+    "new_full_commit_sha": "1db17b99be07715823941f740e3511811f7273f4",
+    "old_source_tree_sha": "1ab330279042b40eb2bff7accc09e097b6f49cca",
+    "new_source_tree_sha": "aeb68a3b81f4f4290ed4c5d3ddb69e17fcab8d7c",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
   }
 ]

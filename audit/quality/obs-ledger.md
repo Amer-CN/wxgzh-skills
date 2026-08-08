@@ -118,6 +118,7 @@
 | 226 | 同步树是 08-03 从本地路径克隆的快照:media-enrichment 同步树连锁 pin 18414cc9 都无法解析(cat-file 报 Not a valid object name);relock 若以同步树为源会静默 pin 到更旧祖先 commit;当前配方只打单目标故未触发,属潜伏陷阱 | 未修(审核方裁决:不推进 media-enrichment/gzh-design 同步树,保持 08-03 快照原样;S106 作废改 S106-R) | .temp/obs72-sync-src/* | 72B-2R |
 | 227 | SC-005 特殊逻辑双重计数:consecutive_count>=3 时逐句 append,5 句连续相似产出 3 条 finding;且只比紧邻前句,20→25→30→35 缓慢漂移也判为「同构」;与其余按次数计的规则不同质,共用 thresholds 机制语义可疑 | 未修(Batch 2 处理) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005) | 72B-2R |
 | 228 | §4 首版 thresholds 查表用 `or` 链兜底:对 0 短路且缺键静默回退 essay/1,fail-open(R111) | 已修(72B-2R §2:模块加载期结构断言三 profile 齐备且 >=1 整数;取值直接下标 pattern_def['thresholds'][profile],缺键 KeyError) | zh-human-writing scripts/pattern_audit.py | 72B-2R |
+| 229 | SC-005 的 thresholds 字典为死配置:其 patterns 为空数组,被 detect_strong_contextual 主循环的 continue 跳过,专用检测块将阈值与输出的 cluster_threshold 双双硬编码为 3。profile 分档对 SC-005 从未生效(新旧代码皆然),输出字段与配置值名实不符;PB-010 的 SC-005 三格因此为假绿(#33) | 已修(72B-2F §3:接入 _SC_BY_ID['SC-005']['thresholds'][profile] 真源;essay 档配置值同为 3,0C 重跑八项数字逐字不变(S110);PB-011 活性断言 R112:红态 2/2/2 恒 3 → 绿态 2/1/0 thr 3/4/-。OBS-227 双重计数+跨段分句仍未修,留 Batch 3) | zh-human-writing scripts/pattern_audit.py::detect_strong_contextual(SC-005);tests/run_tests.py::PB-011 | 72B-2F |
 
 ## 未修清单（独立分区）
 
