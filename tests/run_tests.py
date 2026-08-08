@@ -388,6 +388,60 @@ def test_unsupported_fiction():
 # 主函数
 # ============================================================
 
+
+
+# ============================================================
+# profile-thresholds 测试（5 条,档72B-2 新增,OBS-218/221）
+# ============================================================
+
+def test_profile_thresholds():
+    results = []
+
+    # PB-007 正例:essay 下 3 处 SC-001「随着…的发展」聚集 → 命中
+    text_007 = (
+        "随着人工智能的发展，整个行业正在发生明显而深刻的变化。"
+        "随着大模型的发展，成本下降。"
+        "随着应用的发展，落地过程正在明显加速。")
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_007), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    passed = data['strong_contextual']['count'] > 0
+    results.append(TestResult('PB-007', 'profile-thresholds', passed, f'essay SC-001 聚集 sc={data["strong_contextual"]["count"]}'))
+
+    # PB-008 反例:同一段文本,宽松 profile social 下不误报(R55 单变量=profile)
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_007), '--profile', 'social', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    passed = data['strong_contextual']['count'] == 0
+    results.append(TestResult('PB-008', 'profile-thresholds', passed, f'social 同文本 sc={data["strong_contextual"]["count"]}'))
+
+    # PB-009 关键:同一段文本 essay 与 technical 两次运行,count 不相等
+    # —— 唯一能证明 profile 分档在工作的测试(旧 PB-001~006 全部做不到)。
+    # SC-008 单命中:essay 阈值 1 → 命中;technical 阈值 2 → 不命中。
+    text_009 = "说白了，真正的风险在于没有人验证它。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_009), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    essay_count = data['strong_contextual']['count']
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text_009), '--profile', 'technical', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    technical_count = data['strong_contextual']['count']
+    passed = essay_count != technical_count
+    results.append(TestResult('PB-009', 'profile-thresholds', passed, f'essay={essay_count} technical={technical_count} 不相等'))
+
+    # SC-008 正例:含「说白了」,essay 下 SC-008 命中
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("说白了，这件事到此为止。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc_ids = [item['pattern_id'] for item in data['strong_contextual']['items']]
+    passed = 'SC-008' in sc_ids
+    results.append(TestResult('SC-008-POS', 'profile-thresholds', passed, f'SC-008 命中 ids={sc_ids}'))
+
+    # SC-008 反例:不含三词,essay 下 SC-008 零命中
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp("这件事到此为止，没有别的了。"), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data = json.loads(out)
+    sc_ids = [item['pattern_id'] for item in data['strong_contextual']['items']]
+    passed = 'SC-008' not in sc_ids
+    results.append(TestResult('SC-008-NEG', 'profile-thresholds', passed, f'SC-008 零命中 ids={sc_ids}'))
+
+    return results
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -396,6 +450,7 @@ def main():
     all_results.extend(test_must_edit())
     all_results.extend(test_fidelity_stress())
     all_results.extend(test_profile_boundaries())
+    all_results.extend(test_profile_thresholds())
     all_results.extend(test_long_form())
     all_results.extend(test_unsupported_fiction())
 

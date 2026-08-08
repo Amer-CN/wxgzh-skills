@@ -127,59 +127,71 @@ STRONG_CONTEXTUAL_PATTERNS = [
         'id': 'SC-001',
         'name': '无信息开场',
         'patterns': [r'让我们来看看', r'在当今.{0,10}的时代', r'随着.{0,10}的发展'],
-        'threshold': 2,
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-002',
         'name': '无信息导航',
         'patterns': [r'接下来我们将', r'下面我们来看', r'首先.{0,20}其次.{0,20}最后'],
-        'threshold': 2,
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-003',
         'name': '无信息总结',
         'patterns': [r'总而言之', r'综上所述', r'总结来说', r'通过以上分析可以看出'],
-        'threshold': 2,
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-004',
         'name': '无来源权威铺垫',
         'patterns': [r'研究表明', r'数据显示', r'据统计'],
-        'threshold': 2,
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-005',
         'name': '连续同构结构',
         'patterns': [],  # 需要特殊检测逻辑
-        'threshold': 3,
+        'thresholds': {'essay': 3, 'technical': 5, 'social': 6},  # 特殊逻辑仍用固定 3(恒等)
         'language_origin': 'language_general',
     },
     {
         'id': 'SC-006',
         'name': '明显假互动',
         'patterns': [r'你可能会问', r'你想想看', r'你有没有想过'],
-        'threshold': 2,
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
         'language_origin': 'language_general',
+    },
+    {
+        'id': 'SC-007a',
+        'name': '伪对比结构',
+        'patterns': [
+            r'不在于[^。！？\n]{1,60}而在于',
+            r'与其说[^。！？\n]{1,60}(?:不如|毋宁|倒不如)',
+            r'表面(?:上)?[^。！？\n]{1,60}(?:其实|实际|实则)',
+            r'看似[^。！？\n]{1,60}(?:其实|实际|实则)',
+        ],
+        'thresholds': {'essay': 2, 'technical': 3, 'social': 4},
+        'language_origin': 'chinese_specific',
+    },
+    {
+        'id': 'SC-008',
+        'name': '元话语路标',
+        'patterns': [r'先说结论', r'说白了', r'说穿了'],
+        'thresholds': {'essay': 1, 'technical': 2, 'social': 3},
+        'language_origin': 'chinese_specific',
     },
 ]
 
-# Profile 调整系数
-PROFILE_MULTIPLIERS = {
-    'essay': 1.0,
-    'technical': 1.5,
-    'social': 2.0,
-}
 
 
 def detect_strong_contextual(text, profile):
     """检测 strong-contextual 模式。聚集时才报告。"""
     findings = []
     paragraphs = split_paragraphs(text)
-    multiplier = PROFILE_MULTIPLIERS.get(profile, 1.0)
 
     for para_idx, para in enumerate(paragraphs):
         for pattern_def in STRONG_CONTEXTUAL_PATTERNS:
@@ -194,7 +206,10 @@ def detect_strong_contextual(text, profile):
                     count += 1
                     matches_detail.append(m.group())
 
-            adjusted_threshold = max(1, int(pattern_def['threshold'] * multiplier))
+            # 档72B-2 OBS-218:每条规则自带 thresholds 字典,按 profile 取值,
+            # 缺省回落到 essay;统一乘数 PROFILE_MULTIPLIERS 已删除。
+            thresholds = pattern_def.get('thresholds') or {}
+            adjusted_threshold = thresholds.get(profile) or thresholds.get('essay') or 1
 
             if count >= adjusted_threshold:
                 findings.append({
@@ -239,7 +254,9 @@ def detect_strong_contextual(text, profile):
 # ============================================================
 
 ADVISORY_ONLY_PATTERNS = [
-    {'id': 'AO-001', 'name': '不是…而是…', 'pattern': r'不是.{0,30}而是', 'language_origin': 'language_general'},
+    # 档72B-2 OBS-177/3-3:原地扩宽(不进 strong_contextual,ME-010 继续绿);
+    # 可选「并」前缀 + 中间 0~90 字(不跨句),置信度排序不再倒置。
+    {'id': 'AO-001', 'name': '不是…而是…', 'pattern': r'(?:并)?不是[^。！？\n]{0,90}而是', 'language_origin': 'language_general'},
     {'id': 'AO-002', 'name': '先…再…', 'pattern': r'先.{0,20}再', 'language_origin': 'language_general'},
     {'id': 'AO-003', 'name': '从…到…', 'pattern': r'从.{0,20}到', 'language_origin': 'language_general'},
     {'id': 'AO-004', 'name': '破折号', 'pattern': r'——', 'language_origin': 'chinese_specific'},
