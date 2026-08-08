@@ -346,5 +346,25 @@
     "new_source_tree_sha": "29bd6605091af07e93c4bdd2c6074d9f1812659f",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260808T102315Z-112acadd",
+    "skill": "zh-human-writing",
+    "reason": "72C-3 zh-human-writing 升级:十字段输出 + mask_non_prose + argparse exit 3(OBS-234)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-08T10:23:15Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "a5a3e4417813b3236dc0152289e5a4e4122d564b2e2ea09553f859073a51cb7f",
+    "new_root_sha256": "c2977c1610f040162dc55728c09ac35752214a809005d2c73a20220d45332f55",
+    "old_entrypoint_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+    "new_entrypoint_sha256": "0910da65ca637cd6e31d72c75f9fce756128791f8f8f0df1d930d8f5f012a6f0",
+    "old_validator_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+    "new_validator_sha256": "0910da65ca637cd6e31d72c75f9fce756128791f8f8f0df1d930d8f5f012a6f0",
+    "old_full_commit_sha": "6c950ac03641773d01ed0c5b306dfbc170ff4684",
+    "new_full_commit_sha": "92ad93db952ecbc7a3da964f510d7ff824f85a39",
+    "old_source_tree_sha": "29bd6605091af07e93c4bdd2c6074d9f1812659f",
+    "new_source_tree_sha": "a030486cd8ca7730bc9f1a369d297866b465e86b",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
   }
 ]
