@@ -426,5 +426,25 @@
     "new_source_tree_sha": "e4170fb5fff6a6e85dbff71b1fb2ecaa010239ec",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/zh-human-writing"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260809T115417Z-047011f3",
+    "skill": "media-enrichment",
+    "reason": "HF-4 源图提取与批准链根治(OBS-245/246/247)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-09T11:54:17Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "181752eb553906945aa29153aeb8ef9dc70260b76b9ff862297fea69fd3a72b8",
+    "new_root_sha256": "48a51d207f36cbd88984ecbb913fa53341fdce91da1915a56c044bc18836e58e",
+    "old_entrypoint_sha256": "ab97f1efa05b14cbe202f98f5e28dac88d70a70669f174ed79c9283e32d33223",
+    "new_entrypoint_sha256": "a4e1330bc15eb497520d7e1218a85a1de10b02da9383c9b485cd26f1ce1adf98",
+    "old_full_commit_sha": "18414cc9cddb2a9be6782535a9f57ca1860a47d3",
+    "new_full_commit_sha": "26f4fecad97951c0bf5ffd4d08b29921dcf87fde",
+    "old_source_tree_sha": "64755773317267059a25a18e59419a761825f018",
+    "new_source_tree_sha": "d883d2fe473b2fb04fb38bfb4850ac3748b3ad13",
+    "old_skill_version": "0.1.0-dev9",
+    "new_skill_version": "0.1.0-dev10",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]

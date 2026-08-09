@@ -134,8 +134,9 @@
 | 242 | run_tests.py 两处注释算术小疵:PB-035 注释「5 连词→16.4‰」实为 8.2‰(5/610);PB-043 注释「5/606」实为 5/610;断言均不受影响 | 未修(注释级,随 241 同批) | zh-human-writing tests/run_tests.py | 72C-6F |
 | 243 | pipeline 把 media discover 任何非零退出一律判 STAGE_FAILED:可恢复的部分 fetch 失败(锁 pin 18414cc9 下 errors 全为「Failed to fetch page for 」前缀且仍有可批准候选)无法路由到批准点,整次发文被卡死 | 已修(HF-1:producers._discover_degraded_recoverable 判定 + meta 留痕 discover_degraded/discover_exit_code/discover_errors,继续既有 paused 路径;测试 5 条新增) | wxgzh_pipeline/producers.py;tests/test_hf1_discover_degraded.py | HF-1 |
 | 244 | media-enrichment 退出码语义不区分「跑出候选但需审批」与「真失败」(run_media_enrichment.py exit 1 if errors else 0;gate.input_contract_pass/security_checks_pass 只是 has_errors 的投影,非独立判定) | 未修(契约债务;锁 pin 仓,归 media-enrichment 自身批次处理,本档只在 pipeline 侧做可恢复降级) | media-enrichment run_media_enrichment.py(锁 pin 18414cc9) | HF-1 |
-| 245 | OBS-87 闸门对源图结构性关闭:content_description 字段只有 generated 图表写(档61-62 半截工程),源图永不写 → 源图 single_asset 批准链焊死 | 已修(HF-3:readiness 构建器按 source_page_url 抓取时提取 img alt/title(page_alt,白名单来源),过 claim 派生判定后采纳;触发条件=位置未知或内容缺失;HF-2 lane3 实证 skill 侧车道完好;skill 侧 discover 直写留 media-enrichment 自身批次,与 OBS-244 同批) | wxgzh_pipeline/approval_evidence.py | HF-3 |
-| 246 | material 批准车道双堵:守卫 len(candidates)>len(asset_approvals) 把纯 material 批准判死 + material 批准不重跑分类致 review_required 永不上传 | 未修(登记;实证=HF-2 lane1/lane2 副本直跑;归 media-enrichment 批次) | media-enrichment run_media_enrichment.py(锁 pin 18414cc9) | HF-3 |
+| 245 | OBS-87 闸门对源图结构性关闭:content_description 字段只有 generated 图表写(档61-62 半截工程),源图永不写 → 源图 single_asset 批准链焊死 | 已修(HF-3:readiness 构建器按 source_page_url 抓取时提取 img alt/title(page_alt,白名单来源),过 claim 派生判定后采纳;触发条件=位置未知或内容缺失;HF-2 lane3 实证 skill 侧车道完好;skill 侧 discover 直写已于 HF-4 完成(img alt/title=page_alt > 提取上下文=page_context,meta 通道用 og:title/og:description)) | wxgzh_pipeline/approval_evidence.py | HF-3 |
+| 246 | material 批准车道双堵:守卫 len(candidates)>len(asset_approvals) 把纯 material 批准判死 + material 批准不重跑分类致 review_required 永不上传 | 已修(HF-4:守卫改「每个上传候选必须有批准依据(single_asset 或 material/source_url),无依据即 FAIL_CLOSED 列明」;material/source_url 批准资产 continue 重跑分类 decision 可转 eligible;restricted/no-repost 永不可覆盖;回归=HF-2 lane1/lane2 实证 + test_approval_scopes/test_hf4_meta_channel 全绿) | media-enrichment run_media_enrichment.py(26f4fec) | HF-3/HF-4 |
+| 247 | og:image/twitter:image meta 提取通道被分类器一票否决(x.com 等 SPA 源正文图只能经 meta 标签提取,原始 HTML 无正文 DOM img;A-032 1638x2048 真内容图被冤杀) | 已修(HF-4:meta 通道仅当 URL 命中动态伪卡片端点(/opengraph-image-xxxx 等)时拒绝;正常 URL 放行到安全/尺寸/质量/去重关卡;page_position 记 page-meta=页面 title,取不到则 known=false;回归 fixture=test_hf4_meta_channel) | media-enrichment image_classifier.py/image_extractor.py(26f4fec) | HF-4 |
 
 ## 未修清单（独立分区）
 
@@ -169,7 +170,6 @@
 | 241 | pattern_audit 统计层接线注释陈旧(R56,九指标已注册) | 未修(随 Batch 2 首个 zh 改动档同批) | 不阻塞(注释级,不影响行为) |
 | 242 | run_tests 两处注释算术小疵(8.2‰/5-610,断言不受影响) | 未修(随 241 同批) | 不阻塞(注释级) |
 | 244 | media-enrichment 退出码不区分「候选待审批」与「真失败」 | 未修(契约债务,归其自身批次) | 不阻塞(HF-1 已在 pipeline 侧做可恢复降级,发文不再被卡) |
-| 246 | material 批准车道双堵(守卫计数比较 + 不重跑分类) | 未修(归 media-enrichment 批次) | 不阻塞(single_asset 车道 HF-3 已通,发文可走该车道) |
 
 ## 本台账口径
 
@@ -208,6 +208,7 @@
 30. Batch 1 验收通过(72C-6R/72C-6F):S118 未触发(1<3),批次末实读四节全过。三条保留:统计层阈值待校准基线;词表低产率保险(56/59 零命中);0C 统计命中未人工核验。
 31. HF-1:media discover 可恢复降级——errors 全为「Failed to fetch page for 」前缀且 eligible+review_required>0 时降级进批准点(meta 留痕)。根因修正:gate.input_contract_pass/security_checks_pass 是 errors 的投影,非独立判定;copyright_review.status=unknown 只给 review_required 不产 error;发文 agent 原根因链「eligible=0→exit 1」在该 pin(18414cc9)上不成立——那次 RUN(20260808T220417-qwen3-8-max-76ty1p)exit 1 真凶是 errors 数组 3 条 fetch 失败(TUN 网络段)。
 32. HF-3/HF-3R/HF-3R2:OBS-87 内容描述接缝——pipeline 侧 build_approval_readiness 补 page_alt 提取(触发条件=位置未知或 content_description 缺失/为空;claim 派生防自证照旧;来源白名单已含 page_alt);尺寸门槛 480×200(用户裁决 2026-08-09);档 62 与 test_obs55 断言按裁决更新(审核方指令缺陷 #87:触发条件未预告与档 62 既有断言冲突;#88:尺寸变更未预扫 test_obs55);OBS-245 已修(pipeline 侧;skill 侧直写留 media-enrichment 批次),OBS-246 未修(material 车道双堵,HF-2 lane1/lane2 实证)。HF-3 全量 pytest 467/465/0/0/1/1。
+33. HF-4:media-enrichment 锁仓正修(26f4fec,relock #21)——用户根治裁决(2026-08-09:根治不绕行,本篇 Qwen 稿是发现 bug 的载体);page-meta 位置语义裁定(推文页=内容单元本身,页级主图位置即页面,heading=页面 title,取不到则 known=false);OBS-247/245/246 已修(meta 通道去冤 + content_description 直写 page_alt/page_context + material 车道守卫语义修正);范围控制:OBS-244 退出码契约债务仍归后续,HF-1 已管线侧收口,HF-4 不动退出码语义。76ty1p 续跑操作步骤(发文侧执行,不在 HF-4):①删除 RUN 的 media_enrichment/ 阶段目录 → ②续跑 discover(修复后提取器重跑,文章冻结不动) → ③检查 approval_readiness 候选与内容描述 → ④重建 copyright_approval.json(single_asset,绑新冻结清单 sha 与新 readiness sha;旧 11 条合同对新清单自动失效属预期) → ⑤续跑 continue/上传/gzh/草稿。生产发文不在 HF-4 范围。
 
 ### ★授权变更登记(72A,不可省)
 
