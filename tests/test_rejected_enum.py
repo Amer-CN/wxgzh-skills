@@ -56,10 +56,8 @@ REJECTION_CASES = [
     ("14_below_min_dimensions", "https://example.com/p.png", dict(width=100, height=100), {}),
     ("15_restricted_copyright", "https://example.com/p.png", {}, {"copyright_status": "restricted"}),
     # dev6: social share cards / link preview images
-    ("16_og_image_extraction", "https://example.com/p.png", {},
-     {"extraction_method": "og:image"}),
-    ("17_twitter_image_extraction", "https://example.com/p.png", {},
-     {"extraction_method": "twitter:image"}),
+    # 档HF-4/OBS-247:og:image/twitter:image 通道本身不再是拒绝路径(正常 URL
+    # 放行),从 rejection 枚举移除;仅 URL 命中动态伪卡片端点仍拒绝(18)。
     ("18_opengraph_card_url", "https://example.com/items/abc/opengraph-image-1az256?x", {}, {}),
 ]
 

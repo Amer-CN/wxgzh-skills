@@ -50,6 +50,9 @@ AD_PATTERNS = [
 PLACEHOLDER_PATTERNS = [r"placeholder", r"default.*image", r"no-image", r"blank"]
 
 # dev6: social share cards / link preview images.
+# 档HF-4/OBS-247:x.com 等 SPA 源的正文图只能经 meta 标签提取(原始 HTML 无
+# 正文 DOM img),og:image/twitter:image 通道对正常 URL 放行;仅 URL 命中
+# 动态伪卡片端点(如 AI HOT /items/<id>/opengraph-image-xxxx)时拒绝。
 # Extraction methods that come from <meta> tags (not rendered in the page
 # body): og:image, twitter:image. Sites like AI HOT dynamically generate a
 # per-item OpenGraph card (title + source + date) at URLs such as
@@ -129,8 +132,8 @@ def classify_image(
         context: HTML context around the image (alt text, surrounding text).
         copyright_status: Known copyright status.
         extraction_method: How the candidate was discovered (e.g. img.src,
-            og:image, twitter:image). Meta-tag methods mean the image is a
-            link preview card not rendered in the page body.
+            og:image, twitter:image). Meta-tag methods alone no longer reject
+            (HF-4/OBS-247); only URLs matching dynamic social-card endpoints do.
 
     Returns:
         ClassificationResult with category, decision, and reasons.
@@ -147,7 +150,10 @@ def classify_image(
     # page body — reject regardless of size/quality/copyright.
     # dev7-hotfix1: extraction_method normalized; URL match is segment-based.
     method = (extraction_method or "").strip().lower()
-    if method in SOCIAL_PREVIEW_EXTRACTION_METHODS:
+    # 档HF-4/OBS-247:meta 通道图仅当 URL 本身命中动态伪卡片端点时才拒绝
+    # (AI HOT /opengraph-image-xxxx 类);正常 URL 的 meta 通道图不再因通道
+    # 被拒,进入后续安全/尺寸/质量/去重关卡(review_required)。
+    if method in SOCIAL_PREVIEW_EXTRACTION_METHODS and is_social_preview_url(url):
         result.category = "social_share_card"
         result.decision = "rejected"
         result.rejection_reasons.append(

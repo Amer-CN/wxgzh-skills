@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0-dev10 (2026-08-09)
+
+- OBS-247(档HF-4):meta 提取通道去冤——og:image/twitter:image 通道不再因通道
+  本身被一票否决(x.com 等 SPA 源正文图只能经 meta 标签提取);仅 URL 命中动态
+  伪卡片端点(/opengraph-image-xxxx 等)时拒绝。meta 通道资产 page_position
+  记为 {"known": true, "heading": <页面 title>, "level": "page-meta"}。
+- OBS-245(档HF-4):源图 content_description 直写——img alt/title(page_alt)>
+  提取上下文(page_context,meta 通道用 og:title/og:description);严禁 claim 文本
+  填充;都取不到则保持 null(readiness 判 empty 属诚实结果)。
+- OBS-246(档HF-4):material 车道守卫语义修正——不再用「候选数 > 显式批准数」
+  计数比较误杀纯 material 车道;改为每个上传候选必须有批准依据(single_asset 或
+  material/source_url),存在无依据候选即 FAIL_CLOSED 并列明。material/source_url
+  批准的资产在 continue 重跑分类,decision 可转 eligible;restricted/no-repost
+  永不可被覆盖。
+
+
 ## 0.1.0-dev9 (2026-08-04)
 
 - OBS-71(档63):生成图表纳入批准链——图表不再硬编码 known_allowed/eligible,

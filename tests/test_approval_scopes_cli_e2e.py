@@ -131,7 +131,10 @@ def _discover_continue(tmp_path: Path, fixture: Path, request: Path):
     return continued, continue_out, continue_manifest, continue_events
 
 
-def test_material_approval_without_explicit_asset_approval_fails_closed(tmp_path):
+def test_material_approval_uploads_without_explicit_asset_approval(tmp_path):
+    """档HF-4/OBS-246:守卫语义修正后,纯 material 车道不再被计数比较误杀——
+    M-001(material 批准)的资产是唯一候选且有依据 → exit 0 并上传;
+    M-002 资产因感知哈希去重 rejected(非候选),不上传。"""
     fixture = tmp_path / "fixture"
     _make_fixture(fixture, "url-a", "material-a.png", (210, 40, 40))
     _make_fixture(fixture, "url-b", "material-b.png", (40, 40, 210))
@@ -140,12 +143,16 @@ def test_material_approval_without_explicit_asset_approval_fails_closed(tmp_path
         _material("M-002", "url-b"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode != 0
-    assert events["events"] == []
-    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert [e["asset_id"] for e in events["events"]] == ["A-001"]
+    assets = {a["asset_id"]: a for a in manifest["assets"]}
+    assert assets["A-001"]["upload"]["status"] == "success"
+    assert assets["A-002"]["upload"]["status"] != "success"
 
 
-def test_source_url_approval_without_explicit_asset_approval_fails_closed(tmp_path):
+def test_source_url_approval_uploads_without_explicit_asset_approval(tmp_path):
+    """档HF-4/OBS-246:source_url 批准与 material 批准同为素材级依据,
+    纯 source_url 车道同样不再被计数比较误杀 → exit 0 并上传。"""
     fixture = tmp_path / "fixture"
     _make_fixture(fixture, "url-a", "url-a.png", (180, 80, 20))
     _make_fixture(fixture, "url-b", "url-b.png", (20, 160, 80))
@@ -154,9 +161,11 @@ def test_source_url_approval_without_explicit_asset_approval_fails_closed(tmp_pa
         _material("M-002", "url-b"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode != 0
-    assert events["events"] == []
-    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert [e["asset_id"] for e in events["events"]] == ["A-001"]
+    assets = {a["asset_id"]: a for a in manifest["assets"]}
+    assert assets["A-001"]["upload"]["status"] == "success"
+    assert assets["A-002"]["upload"]["status"] != "success"
 
 
 def test_no_repost_overrides_material_approval(tmp_path):
@@ -166,9 +175,11 @@ def test_no_repost_overrides_material_approval(tmp_path):
         _material("M-001", "blocked", "known_allowed", "material"),
     ])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode != 0
+    # 档HF-4/OBS-246:restricted/no-repost 资产 decision=rejected,不是上传候选,
+    # 不参与「无依据候选」检查;material 批准无法覆盖 restricted(优先级不变),
+    # 资产保持 restricted 且不上传,整体 exit 0。
+    assert result.returncode == 0, result.stdout + result.stderr
     assert events["events"] == []
-    assert any("approved upload candidate count exceeds" in e for e in manifest["errors"])
     asset = next(a for a in manifest["assets"] if a["asset_origin"] == "source")
     assert asset["copyright_status"] == "restricted"
     assert asset["upload"]["status"] != "success"
@@ -179,8 +190,11 @@ def test_unknown_without_approval_never_uploads(tmp_path):
     _make_fixture(fixture, "unknown", "unknown.png", (80, 120, 160))
     request = _request(tmp_path, [_material("M-001", "unknown")])
     result, _, manifest, events = _discover_continue(tmp_path, fixture, request)
-    assert result.returncode == 0, result.stdout + result.stderr
+    # 档HF-4/OBS-246:无批准依据的上传候选 → FAIL_CLOSED(验收②「含未批准
+    # 资产的材料仍被拦」);未知素材的资产不进上传。
+    assert result.returncode != 0
     assert events["events"] == []
+    assert any("upload candidates without approval basis" in e for e in manifest["errors"])
     asset = next(a for a in manifest["assets"] if a["asset_origin"] == "source")
     assert asset["copyright_status"] == "unknown"
     assert asset["upload"]["status"] != "success"

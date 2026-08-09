@@ -142,16 +142,17 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
+        approval2 = _approval(frozen, "A-002")
         Image.new("RGB", (900, 600), (11, 99, 177)).save(
             fixtures / "images" / "inserted.png", "PNG")
         html = (fixtures / "html" / "single-asset-e2e.html").read_text(encoding="utf-8")
         html = html.replace("<img src=", '<img src="https://img.example-source.test/inserted.png">\n<img src=', 1)
         (fixtures / "html" / "single-asset-e2e.html").write_text(html, encoding="utf-8")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
+        assert [e["asset_id"] for e in events["events"]] == ["A-001", "A-002"]
         a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
         assert a1["asset_approval_consumed"] is True
         assert a1["sha256"] == approval["asset_sha256"]
@@ -160,13 +161,14 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
+        approval2 = _approval(frozen, "A-002")
         Image.new("RGB", (1000, 700), (222, 17, 31)).save(
             fixtures / "images" / "e2e-photo-a.png", "PNG")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
+        assert [e["asset_id"] for e in events["events"]] == ["A-001", "A-002"]
         a1 = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
         assert a1["sha256"] == approval["asset_sha256"]
 
@@ -174,8 +176,9 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
+        approval2 = _approval(frozen, "A-002")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json", material_id="M-002")
         assert result.returncode != 0
         _assert_no_upload(manifest, events)
@@ -185,12 +188,13 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen)
+        approval2 = _approval(frozen, "A-002")
         frozen_path = out / "asset_discovery_manifest.json"
         tampered = json.loads(frozen_path.read_text(encoding="utf-8"))
         tampered["assets"][0]["source_page_url"] += "?tampered=1"
         frozen_path.write_text(json.dumps(tampered), encoding="utf-8")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval], frozen_path)
+            tmp_path, fixtures, "continue", [approval, approval2], frozen_path)
         assert result.returncode != 0
         _assert_no_upload(manifest, events)
         assert any("discovery manifest sha256 invalid" in e for e in manifest["errors"])
@@ -206,8 +210,9 @@ class TestStableSingleAssetIdentityCli:
         )
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
+        approval2 = _approval(frozen, "A-002")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json")
         assert result.returncode == 0, result.stdout + result.stderr
         _assert_no_upload(manifest, events)
@@ -220,36 +225,42 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
+        approval2 = _approval(frozen, "A-002")
         result, _, manifest, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert [e["asset_id"] for e in events["events"]] == ["A-001"]
+        assert [e["asset_id"] for e in events["events"]] == ["A-001", "A-002"]
         assets = {a["asset_id"]: a for a in manifest["assets"]}
         assert assets["A-001"]["asset_approval_consumed"] is True
         assert assets["A-001"]["copyright_status"] == "known_allowed"
         assert assets["A-001"]["upload"]["status"] == "success"
-        assert assets["A-002"]["copyright_status"] == "unknown"
-        assert assets["A-002"]["upload"]["status"] != "success"
+        assert assets["A-002"]["asset_approval_consumed"] is True
+        assert assets["A-002"]["copyright_status"] == "known_allowed"
+        assert assets["A-002"]["upload"]["status"] == "success"
 
     def test_tampered_persisted_discovery_file_fails_closed(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, manifest, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
+        approval2 = _approval(frozen, "A-002")
         target = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
         Path(target["local_path"]).write_bytes(b"tampered-discovery-bytes")
         result, _, continued, _, events = _cli(
-            tmp_path, fixtures, "continue", [approval],
+            tmp_path, fixtures, "continue", [approval, approval2],
             out / "asset_discovery_manifest.json")
         assert result.returncode != 0
-        _assert_no_upload(continued, events)
         assert any("frozen sha256 mismatch" in e for e in continued["errors"])
+        assets = {a["asset_id"]: a for a in continued["assets"]}
+        assert assets["A-001"]["upload"]["status"] != "success"
+        assert assets["A-002"]["upload"]["status"] == "success"
 
     def test_existing_success_event_skips_reupload_and_reuses_url(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
-        request = _write_request(tmp_path, [approval])
+        approval2 = _approval(frozen, "A-002")
+        request = _write_request(tmp_path, [approval, approval2])
         phase_out = tmp_path / "idempotent" / "continue"
         cmd = [
             sys.executable, "-X", "utf8",
@@ -261,19 +272,20 @@ class TestStableSingleAssetIdentityCli:
         first = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
         assert first.returncode == 0, first.stdout + first.stderr
         first_events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
-        first_url = next(e["url"] for e in first_events if e["status"] == "success")
+        first_urls = {e["url"] for e in first_events if e["status"] == "success"}
         second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
         assert second.returncode == 0, second.stdout + second.stderr
         events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
-        assert sum(e["status"] == "success" for e in events) == 1
+        assert sum(e["status"] == "success" for e in events) == 2
         skipped = [e for e in events if e["status"] == "skipped_already_uploaded"]
-        assert len(skipped) == 1 and skipped[0]["url"] == first_url
+        assert len(skipped) == 2 and {s["url"] for s in skipped} == first_urls
 
     def test_existing_success_does_not_bypass_frozen_file_sha(self, tmp_path):
         fixtures = _fixtures(tmp_path)
         _, out, manifest, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
-        request = _write_request(tmp_path, [approval])
+        approval2 = _approval(frozen, "A-002")
+        request = _write_request(tmp_path, [approval, approval2])
         phase_out = tmp_path / "tamper-after-success" / "continue"
         cmd = [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
                "--request", str(request), "--output-dir", str(phase_out),
@@ -291,7 +303,8 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
-        request = _write_request(tmp_path, [approval])
+        approval2 = _approval(frozen, "A-002")
+        request = _write_request(tmp_path, [approval, approval2])
         phase_out = tmp_path / "failed-event" / "continue"
         phase_out.mkdir(parents=True)
         (phase_out / "upload_events.json").write_text(
@@ -311,7 +324,8 @@ class TestStableSingleAssetIdentityCli:
         fixtures = _fixtures(tmp_path)
         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
         approval = _approval(frozen, "A-001")
-        request = _write_request(tmp_path, [approval])
+        approval2 = _approval(frozen, "A-002")
+        request = _write_request(tmp_path, [approval, approval2])
         phase_out = tmp_path / "stage" / "continue"
         result = subprocess.run([
             sys.executable, "-X", "utf8",

@@ -39,17 +39,19 @@ def _inspection(width=1200, height=630):
 
 class TestSocialPreviewRejection:
     @pytest.mark.parametrize("method", sorted(SOCIAL_PREVIEW_EXTRACTION_METHODS))
-    def test_meta_tag_extraction_rejected(self, method):
-        """og:image / twitter:image discoveries are rejected even when large,
-        valid and copyright known_allowed."""
+    def test_meta_tag_extraction_not_rejected_by_channel(self, method):
+        """档HF-4/OBS-247:meta 通道本身不再一票否决——正常 URL 的
+        og:image/twitter:image 发现不再因通道被拒(进入后续安全/尺寸/质量/
+        去重关卡,按版权给 review_required/eligible)。"""
         result = classify_image("https://example.com/some/large-photo.png",
-                                _inspection(), copyright_status="known_allowed",
+                                _inspection(), copyright_status="unknown",
                                 extraction_method=method)
-        assert result.decision == "rejected"
-        assert result.category == "social_share_card"
-        assert not result.requires_human_review
-        assert any("not rendered in page body" in r
-                   for r in result.rejection_reasons)
+        assert result.decision == "review_required"
+        assert result.category != "social_share_card"
+        result2 = classify_image("https://example.com/some/large-photo.png",
+                                 _inspection(), copyright_status="known_allowed",
+                                 extraction_method=method)
+        assert result2.decision == "eligible"
 
     def test_real_aihot_og_card_url_rejected(self):
         """Regression: the exact AI HOT opengraph card URL from the Qwen3.8
@@ -133,24 +135,32 @@ class TestSegmentBasedUrlDetection:
         assert result.decision == "rejected", f"{url} wrongly {result.decision}"
         assert result.category == "social_share_card"
 
-    def test_my_og_image_rejected_when_extraction_is_meta(self):
-        """A body-looking URL is STILL rejected if the extraction method
-        itself is og:image/twitter:image (meta tag wins)."""
+    def test_my_og_image_not_rejected_when_url_is_normal(self):
+        """档HF-4/OBS-247:body 样 URL 即使 extraction_method 是
+        og:image/twitter:image 也不再被拒(通道不再一票否决);仅 URL 命中
+        动态伪卡片端点时拒绝(见 test_social_card_url_rejected)。"""
         result = classify_image(
             "https://example.com/images/my-og-image-example.jpg",
             _inspection(), copyright_status="known_allowed",
             extraction_method="og:image")
-        assert result.decision == "rejected"
-        assert result.category == "social_share_card"
+        assert result.decision == "eligible"
+        assert result.category != "social_share_card"
 
     @pytest.mark.parametrize("method", ["  OG:IMAGE ", "Twitter:Image", "og:image"])
     def test_extraction_method_normalized(self, method):
-        """extraction_method is normalized (strip + lower) before matching."""
+        """extraction_method is normalized (strip + lower) before matching;
+        档HF-4/OBS-247:归一化后 meta 通道 + 正常 URL 不再被拒(伪卡片 URL
+        仍需归一化后命中才拒,见下一条)。"""
         result = classify_image("https://example.com/photos/real.png",
                                 _inspection(), copyright_status="known_allowed",
                                 extraction_method=method)
-        assert result.decision == "rejected"
-        assert result.category == "social_share_card"
+        assert result.decision == "eligible"
+        assert result.category != "social_share_card"
+        card = classify_image("https://x.com/opengraph-image-xxxx",
+                              _inspection(), copyright_status="known_allowed",
+                              extraction_method=method)
+        assert card.decision == "rejected"
+        assert card.category == "social_share_card"
 
 
 class TestHtmlExtractionIntegration:

@@ -41,6 +41,20 @@ from media_enrichment.asset_approval import (
 )
 
 
+def _source_content_description(candidate):
+    """档HF-4/OBS-245:源图内容描述直写——img alt/title(page_alt) >
+    提取上下文(page_context,含 meta 通道的 og:title/og:description)。
+    严禁用文章 claim 文本填充(OBS-87 的墙,下游 claim 派生判定照旧)。
+    都取不到 → (None, None),readiness 判 empty 属诚实结果。"""
+    text = (candidate.alt or candidate.title or "").strip()
+    if text:
+        return text, "page_alt"
+    ctx = (candidate.context or "").strip()
+    if ctx:
+        return ctx, "page_context"
+    return None, None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Media Enrichment Skill")
     parser.add_argument("--request", required=True)
@@ -170,12 +184,26 @@ def main():
                     and (materials_by_id.get(frozen["material_id"], {})
                          .get("copyright_review", {}).get("status") == "known_allowed")
                 }
-                upload_candidate_ids = set(asset_approvals) | material_approved_ids
-                if len(upload_candidate_ids) > len(asset_approvals):
+                # 档HF-4/OBS-246:守卫语义修正——不再用「候选数 > 显式
+                # single_asset 批准数」计数比较(纯 material 车道被误杀,HF-2
+                # lane1/lane2 实证);改为:每个上传候选(冻结清单中 decision 可
+                # 批准的非 generated 资产)必须有批准依据(single_asset 或
+                # material/source_url),存在无依据候选即 FAIL_CLOSED 并列明。
+                frozen_candidates = {
+                    asset_id for asset_id, rec in discovered_asset_records.items()
+                    if rec.asset_origin != "generated"
+                    and rec.decision in ("review_required", "eligible")
+                }
+                unbacked = sorted(
+                    aid for aid in frozen_candidates
+                    if aid not in asset_approvals and aid not in material_approved_ids)
+                if unbacked:
                     builder.errors.append(
-                        "approved upload candidate count exceeds explicit "
-                        "copyright approval asset count")
+                        "upload candidates without approval basis (FAIL_CLOSED): "
+                        + ", ".join(unbacked))
                     upload_candidate_ids = set()
+                else:
+                    upload_candidate_ids = set(asset_approvals) | material_approved_ids
 
                 for asset_id in sorted(upload_candidate_ids):
                     approval = asset_approvals.get(asset_id)
@@ -452,6 +480,21 @@ def main():
                 extraction_method=candidate.extraction_method,
             )
 
+            content_desc, content_desc_source = _source_content_description(candidate)
+            # 档HF-4/OBS-247:meta 通道图原始 HTML 无 DOM 位置——推文页=内容单元
+            # 本身,页级主图位置即页面(page-meta 语义,审核方裁定);取不到页面
+            # title 则 known=false。
+            if candidate.extraction_method in ("og:image", "twitter:image"):
+                if extraction.page_title:
+                    page_pos = {"known": True, "heading": extraction.page_title,
+                                "level": "page-meta"}
+                else:
+                    page_pos = {"known": False, "heading": None, "level": None}
+            elif candidate.section_heading:
+                page_pos = {"known": True, "heading": candidate.section_heading,
+                            "level": candidate.section_level}
+            else:
+                page_pos = {"known": False, "heading": None, "level": None}
             asset = AssetRecord(
                 asset_id=asset_id, asset_origin="source",
                 material_ids=[material_id], claim_ids=mat.get("selected_claim_ids", []),
@@ -469,11 +512,9 @@ def main():
                 decision=classification.decision,
                 reasons=classification.rejection_reasons or classification.relevance_reasons,
                 page_region=candidate.page_region,
-                page_position=(
-                    {"known": True, "heading": candidate.section_heading,
-                     "level": candidate.section_level}
-                    if candidate.section_heading
-                    else {"known": False, "heading": None, "level": None}),
+                page_position=page_pos,
+                content_description=content_desc,
+                content_description_source=content_desc_source,
             )
             pending_uploads.append((asset, download_result.local_path, inspection, candidate.extraction_method))
             builder.add_asset(asset)
@@ -634,6 +675,13 @@ def main():
                     asset.approval_evidence_sha256 = approval["approval_evidence_sha256"]
                     asset.asset_approval_consumed = True
                     asset.copyright_status = "known_allowed"
+
+                # 档HF-4/OBS-246:material/source_url 批准(approval 为 None 但
+                # copyright_status=known_allowed)与 single_asset 批准共用同一块
+                # 重跑分类逻辑;decision 可转 eligible。restricted/no-repost
+                # (copyright_status != known_allowed)永不可被覆盖(优先级不变)。
+                if asset.copyright_status == "known_allowed" and asset.decision in (
+                        "review_required", "rejected"):
                     classification = classify_image(
                         url=asset.resolved_original_url, inspection=inspection,
                         min_width=config.get("min_width", 640),

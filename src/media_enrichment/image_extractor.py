@@ -38,6 +38,7 @@ class ImageCandidate:
     width_hint: int | None = None
     height_hint: int | None = None
     alt: str = ""
+    title: str = ""  # 档HF-4/OBS-245:img title 属性(内容描述 page_alt 级证据)
     context: str = ""  # surrounding HTML context for classification
     # OBS-86(档62):正文边界判定。page_region ∈ body / peripheral / unknown;
     # section_heading/section_level 为该图在文档序中前最近 h1/h2/h3(跨章节归属)。
@@ -55,6 +56,16 @@ class ExtractionResult:
     errors: list[str] = field(default_factory=list)
     # OBS-86(档62):提取阶段排除的页面周边图(下载前排除,零第三方请求)
     excluded: list[dict] = field(default_factory=list)
+
+
+def _meta_content(soup, prop: str) -> str:
+    """档HF-4/OBS-245:取 meta[property=prop] 或 meta[name=prop] 的 content 文本。"""
+    for attrs in ({"property": prop}, {"name": prop}):
+        for meta in soup.find_all("meta", attrs=attrs):
+            text = (meta.get("content") or "").strip()
+            if text:
+                return text
+    return ""
 
 
 # Pattern for safe static background-image URLs
@@ -269,6 +280,7 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
                     url=resolved,
                     extraction_method=f"img.{attr}",
                     alt=img.get("alt", ""),
+                    title=img.get("title", ""),
                     context=str(img)[:200],
                 )
                 if not _apply_region(candidate, region_map, peripheral_ids, img):
@@ -278,6 +290,12 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
                 result.candidates.append(candidate)
 
     # 4. meta[property="og:image"]
+    # 档HF-4/OBS-247:meta 通道图对正常 URL 放行(不再因通道被拒)。
+    # 档HF-4/OBS-245:meta 通道 content_description 用 og:title/og:description
+    # 作 page_context(严禁 claim 文本填充)。
+    og_title = _meta_content(soup, "og:title")
+    og_desc = _meta_content(soup, "og:description")
+    meta_context = " ".join(t for t in (og_title, og_desc) if t).strip()
     for meta in soup.find_all("meta", attrs={"property": "og:image"}):
         content = meta.get("content", "").strip()
         if content:
@@ -285,7 +303,7 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
             result.candidates.append(ImageCandidate(
                 url=resolved,
                 extraction_method="og:image",
-                context=str(meta)[:200],
+                context=meta_context or str(meta)[:200],
             ))
 
     # 5. meta[name="twitter:image"]
@@ -296,7 +314,7 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
             result.candidates.append(ImageCandidate(
                 url=resolved,
                 extraction_method="twitter:image",
-                context=str(meta)[:200],
+                context=meta_context or str(meta)[:200],
             ))
 
     # 6. JSON-LD image
