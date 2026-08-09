@@ -132,6 +132,8 @@
 | 240 | PB-010 与 PB-014 同路径冗余:两者均 importlib 直载 pattern_audit 后读内存 STRONG_CONTEXTUAL_PATTERNS,与同一 EXPECTED_SC_THRESHOLDS 逐格比对,调用路径与断言同构(同一保险拉两次);非活性黑洞——模块加载真实消费 default.yaml,PB-013(--config CLI 活性)与 PB-009(默认阈值 CLI 分档)补足行为链路 | 已裁决未实施(Batch 3 测试整理时合并其一或改挂 CLI 行为断言) | zh-human-writing tests/run_tests.py | 72C-6F |
 | 241 | pattern_audit.py 统计层接线注释陈旧:仍写「恒 count=0 直至任务书 §4 指标注入」,九指标已注册,名实不符(R56) | 未修(注释级;随 Batch 2 首个 zh 改动档同批修,避免为注释单发 relock) | zh-human-writing scripts/pattern_audit.py | 72C-6F |
 | 242 | run_tests.py 两处注释算术小疵:PB-035 注释「5 连词→16.4‰」实为 8.2‰(5/610);PB-043 注释「5/606」实为 5/610;断言均不受影响 | 未修(注释级,随 241 同批) | zh-human-writing tests/run_tests.py | 72C-6F |
+| 243 | pipeline 把 media discover 任何非零退出一律判 STAGE_FAILED:可恢复的部分 fetch 失败(锁 pin 18414cc9 下 errors 全为「Failed to fetch page for 」前缀且仍有可批准候选)无法路由到批准点,整次发文被卡死 | 已修(HF-1:producers._discover_degraded_recoverable 判定 + meta 留痕 discover_degraded/discover_exit_code/discover_errors,继续既有 paused 路径;测试 5 条新增) | wxgzh_pipeline/producers.py;tests/test_hf1_discover_degraded.py | HF-1 |
+| 244 | media-enrichment 退出码语义不区分「跑出候选但需审批」与「真失败」(run_media_enrichment.py exit 1 if errors else 0;gate.input_contract_pass/security_checks_pass 只是 has_errors 的投影,非独立判定) | 未修(契约债务;锁 pin 仓,归 media-enrichment 自身批次处理,本档只在 pipeline 侧做可恢复降级) | media-enrichment run_media_enrichment.py(锁 pin 18414cc9) | HF-1 |
 
 ## 未修清单（独立分区）
 
@@ -164,6 +166,7 @@
 | 240 | PB-010/PB-014 同路径冗余(同一保险拉两次,非黑洞) | 已裁决未实施(Batch 3 测试整理合并) | 不阻塞(PB-013/PB-009 已补行为链路) |
 | 241 | pattern_audit 统计层接线注释陈旧(R56,九指标已注册) | 未修(随 Batch 2 首个 zh 改动档同批) | 不阻塞(注释级,不影响行为) |
 | 242 | run_tests 两处注释算术小疵(8.2‰/5-610,断言不受影响) | 未修(随 241 同批) | 不阻塞(注释级) |
+| 244 | media-enrichment 退出码不区分「候选待审批」与「真失败」 | 未修(契约债务,归其自身批次) | 不阻塞(HF-1 已在 pipeline 侧做可恢复降级,发文不再被卡) |
 
 ## 本台账口径
 
@@ -199,6 +202,8 @@
 27. 72C-4/72C-5:S116 释放记录——停机条件设计缺陷(比例阈值无样本量下限、且误用 advisory 级命中),审核方指令缺陷 #82;「链路」改判存疑,词表零改动。OBS-211 已坐实(路径清单哈希);OBS-236 顺序耦合规避步骤入档;三篇样本(A 真人散文/B AI 生成稿/C 技术教程)与 59 词词频表为下一档校准的唯一输入。
 28. 72C-6/72C-6R:统计检测层九项指标(任务书 §4 逐字,ST-001~009)阈值与词表全部在 config/default.yaml statistical 段(标注「待校准基线」,禁统一乘数 D2,H=屏蔽后总汉字数 D1);AO-007/011 每段聚合口径(occurrence_count);OBS-227 段落边界实证(238);词表低产率保险定性(239);指令缺陷 #85(引用任务书章节未随附原文,致三次同因阻塞)。统计层 severity=audit/action=review_only,不进 pass_fail 不影响退出码。
 29. 72C-6F:批次末一次性 GitHub 实读完成(核 10 commit numstat 全符、读 stat_audit/pattern_audit/default.yaml/run_tests 源码、PB-010/014 疑点坐实为冗余非黑洞、relock #20 三处同步验证、manifest 随清单 60→61 响应符合 OBS-211 口径);审核方沙箱独立复算 A/B/C 统计层,与仓内 audit-output.json 逐字一致(A=1:ST-005;B=3:ST-004/005/006;C=1:ST-005;A、B 的 ST-007 被段落门挡掉,C 无被挡);S118 判定未触发(1<3),方向正确。C 的 H/段落数按 masked 口径为 827/16(与审核方复算一致;72C-6R 汇报所用 raw 口径 895/23 已在本档修正)。
+30. Batch 1 验收通过(72C-6R/72C-6F):S118 未触发(1<3),批次末实读四节全过。三条保留:统计层阈值待校准基线;词表低产率保险(56/59 零命中);0C 统计命中未人工核验。
+31. HF-1:media discover 可恢复降级——errors 全为「Failed to fetch page for 」前缀且 eligible+review_required>0 时降级进批准点(meta 留痕)。根因修正:gate.input_contract_pass/security_checks_pass 是 errors 的投影,非独立判定;copyright_review.status=unknown 只给 review_required 不产 error;发文 agent 原根因链「eligible=0→exit 1」在该 pin(18414cc9)上不成立——那次 RUN(20260808T220417-qwen3-8-max-76ty1p)exit 1 真凶是 errors 数组 3 条 fetch 失败(TUN 网络段)。
 
 ### ★授权变更登记(72A,不可省)
 

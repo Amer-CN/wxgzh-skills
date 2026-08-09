@@ -868,6 +868,50 @@ def _media_subprocess_env(ctx) -> dict:
     return _wechat_api_env(ctx)
 
 
+# 档HF-1/OBS-243:discover 部分 fetch 失败的可恢复降级判定。
+# 前缀在锁 pin 18414cc9 的 run_media_enrichment.py 中只有一处生成点
+# (fetch 失败),锁不动即稳定;一律 startswith,不许 in/模糊匹配。
+_DISCOVER_FETCH_ERROR_PREFIX = "Failed to fetch page for "
+
+
+def _discover_degraded_recoverable(discover_dir):
+    """判定 discover 非零退出是否可恢复降级进批准点(全部满足才算可恢复):
+
+    1. discover/media_manifest.json 存在且 json 可解析;
+    2. manifest.run_id != "validation_failed" 且 input.claims_total > 0;
+    3. errors 非空,且每一条都以 "Failed to fetch page for " 开头;
+    4. summary.eligible_assets + summary.review_required_assets > 0
+       (至少存在一个可供人工批准的候选;为 0 则降级无意义)。
+
+    返回 {"errors": [...]}(errors 原文)或 None。
+    """
+    manifest_path = discover_dir / "media_manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(manifest, dict):
+        return None
+    if manifest.get("run_id") == "validation_failed":
+        return None
+    inputs = manifest.get("input")
+    if not isinstance(inputs, dict) or not (inputs.get("claims_total") or 0) > 0:
+        return None
+    errors = manifest.get("errors") or []
+    if not errors or not all(
+            isinstance(e, str) and e.startswith(_DISCOVER_FETCH_ERROR_PREFIX)
+            for e in errors):
+        return None
+    summary = manifest.get("summary")
+    if not isinstance(summary, dict):
+        return None
+    candidates = ((summary.get("eligible_assets") or 0)
+                  + (summary.get("review_required_assets") or 0))
+    if not candidates > 0:
+        return None
+    return {"errors": errors}
+
+
 def _media_two_phase(ctx, sd, expected, state, entry, validator):
     """State-machine-owned media discover/continue execution.
 
@@ -934,7 +978,14 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 "discovery_zero_upload_events": zero_upload,
             }
             if run["exit_code"] != 0:
-                return [], meta
+                # 档HF-1/OBS-243:可恢复降级——仅部分 fetch 失败且仍有可批准
+                # 候选时,继续走既有 paused 路径进批准点;否则维持 STAGE_FAILED。
+                degraded = _discover_degraded_recoverable(discover_dir)
+                if degraded is None:
+                    return [], meta
+                meta["discover_degraded"] = True
+                meta["discover_exit_code"] = run["exit_code"]
+                meta["discover_errors"] = degraded["errors"]
             if not frozen.is_file() or not zero_upload:
                 meta["entry_run"]["exit_code"] = 2
                 meta["entry_run"]["stderr"] = (
