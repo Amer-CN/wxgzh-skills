@@ -226,7 +226,7 @@
 > | 层 | 文案 | 视觉 |
 > |----|------|------|
 > | 1 收尾句 | 好了，今天就先聊到这儿。 | 正文色、正常字号，不做大标题 |
-> | 2 固定品牌句 | 热闹是 AI 的，淡定可以是我们的。不用马上跟上，知道一点，就不算掉队。 | 当前主题品牌句文字色做轻强调（左竖线 / 浅底 / 下划线），不要做成大型 CTA；14px/600 属于普通文字，对比度必须 ≥4.5:1 |
+> | 2 固定品牌句 | 热闹是 AI 的，淡定可以是我们的。用克制的语言讲清楚AI前沿正在发生的事。 | 当前主题品牌句文字色做轻强调（左竖线 / 浅底 / 下划线），不要做成大型 CTA；14px/600 属于普通文字，对比度必须 ≥4.5:1 |
 > | 3 作者与联系方式 | / 作者 给自己造把锤子 / 投稿或反馈，请联系邮箱：cd.hyxc.jz@foxmail.com | 次要文字色，字号 12～13px；邮箱纯文本，不自动构造外部链接 |
 >
 > **邮箱链接限制**：邮箱使用纯文本；如果要使用链接，**只允许** `mailto:cd.hyxc.jz@foxmail.com`，不得修改邮箱字符。
@@ -245,7 +245,7 @@
       <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
     </p>
     <p style="margin:8px 0 0;font-size:14px;line-height:1.8;color:{品牌句文字色};font-weight:600;">
-      <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+      <span leaf="">用克制的语言讲清楚AI前沿正在发生的事。</span>
     </p>
   </section>
   <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:{次要文字};">
@@ -287,7 +287,7 @@
       <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
     </p>
     <p style="margin:8px 0 0;font-size:14px;line-height:1.9;color:{品牌句文字色};font-weight:500;">
-      <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+      <span leaf="">用克制的语言讲清楚AI前沿正在发生的事。</span>
     </p>
   </section>
   <p style="margin:0 0 4px;font-size:12px;line-height:1.8;color:{次要文字};">
@@ -314,7 +314,7 @@
         <span leaf="">热闹是 AI 的，淡定可以是我们的。</span>
       </p>
       <p style="margin:8px 0 0;font-size:14px;line-height:1.8;color:#059669;font-weight:700;">
-        <span leaf="">不用马上跟上，知道一点，就不算掉队。</span>
+        <span leaf="">用克制的语言讲清楚AI前沿正在发生的事。</span>
       </p>
     </section>
     <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:#888;">

@@ -1,4 +1,13 @@
-# gzh-design v2026.08.09-hammer.9
+# gzh-design v2026.08.10-hammer.10
+
+## v2026.08.10-hammer.10(档HF-7)
+
+- OBS-250:署名第二句恢复用户传统落款——「不用马上跟上，知道一点，就不算
+  掉队。」(07-19 hammer.1 落成即写错)逐字替换为「用克制的语言讲清楚AI前沿
+  正在发生的事。」;改动=references/common-components.md §4(表格行+4a+4c+4d)
+  + hammer_fixed_signature + SKILL.md 示例 + showcase/测试字面,共 9 处;
+  第一句「热闹是 AI 的，淡定可以是我们的。」与署名结构一个字符不动;
+  render_article.py 不动(entrypoint/render_entry sha 不变)。
 
 ## v2026.08.09-hammer.9(档HF-6)
 

@@ -49,7 +49,7 @@ THEMES = [
 # 固定文案（逐字）
 FIXED_CLOSING = "好了，今天就先聊到这儿。"
 FIXED_BRAND_1 = "热闹是 AI 的，淡定可以是我们的。"
-FIXED_BRAND_2 = "不用马上跟上，知道一点，就不算掉队。"
+FIXED_BRAND_2 = "用克制的语言讲清楚AI前沿正在发生的事。"
 FIXED_AUTHOR = "给自己造把锤子"
 FIXED_EMAIL = "cd.hyxc.jz@foxmail.com"
 FIXED_AUTHOR_LINE = "/ 作者 给自己造把锤子"

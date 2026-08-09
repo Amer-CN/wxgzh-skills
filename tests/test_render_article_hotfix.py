@@ -186,6 +186,23 @@ class TestHf6CoverParams:
         assert fixed.replace("2026.07", f"{dt.now():%Y.%m}", 1) == auto
 
 
+class TestHf7Signature:
+    """档HF-7:署名第二句恢复用户传统落款——渲染产物含新句、不含旧句,
+    第一句与署名结构不动。"""
+
+    def test_render_contains_traditional_brand_2(self, tmp_path):
+        td = Path(tempfile.mkdtemp())
+        (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")
+        R = _load_render()
+        code = R.main(["--article", str(td / "final_article.md"),
+                      "--output-dir", str(td), "--theme", "smartisan"])
+        assert code == 0
+        html = (td / "final.html").read_text(encoding="utf-8")
+        assert "用克制的语言讲清楚AI前沿正在发生的事。" in html
+        assert "热闹是 AI 的，淡定可以是我们的。" in html
+        assert "不用马上跟上，知道一点，就不算掉队。" not in html
+
+
 class TestCliCompat:
     def test_argparse_flags(self):
         src = (SKILL_ROOT / "scripts" / "render_article.py").read_text(encoding="utf-8")
