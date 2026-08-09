@@ -137,6 +137,7 @@
 | 245 | OBS-87 闸门对源图结构性关闭:content_description 字段只有 generated 图表写(档61-62 半截工程),源图永不写 → 源图 single_asset 批准链焊死 | 已修(HF-3:readiness 构建器按 source_page_url 抓取时提取 img alt/title(page_alt,白名单来源),过 claim 派生判定后采纳;触发条件=位置未知或内容缺失;HF-2 lane3 实证 skill 侧车道完好;skill 侧 discover 直写已于 HF-4 完成(img alt/title=page_alt > 提取上下文=page_context,meta 通道用 og:title/og:description)) | wxgzh_pipeline/approval_evidence.py | HF-3 |
 | 246 | material 批准车道双堵:守卫 len(candidates)>len(asset_approvals) 把纯 material 批准判死 + material 批准不重跑分类致 review_required 永不上传 | 已修(HF-4:守卫改「每个上传候选必须有批准依据(single_asset 或 material/source_url),无依据即 FAIL_CLOSED 列明」;restricted/no-repost 永不可覆盖。HF-4R 勘误:HF-4 的重分类块仍嵌套在「elif approval is not None」分支内,注释声称两车道共用与结构不符(R56),material 批准(approval=None)实际触不到——审核方批次末端实读发现;HF-4R 将重分类块 dedent 到 for 循环体层级(与 if/elif 平级,条件逐字不变),material 车道自此真正贯通;回归=test_hf4_pure_material_lane_exit0_and_upload 忠实复现 HF-2 lane1 序列(discover 版权 unknown 冻结 review_required → continue known_allowed → eligible + 上传成功),红态实证:未 dedent 时 decision 卡 review_required) | media-enrichment run_media_enrichment.py(b3a70e7) | HF-3/HF-4/HF-4R |
 | 247 | og:image/twitter:image meta 提取通道被分类器一票否决(x.com 等 SPA 源正文图只能经 meta 标签提取,原始 HTML 无正文 DOM img;A-032 1638x2048 真内容图被冤杀) | 已修(HF-4:meta 通道仅当 URL 命中动态伪卡片端点(/opengraph-image-xxxx 等)时拒绝;正常 URL 放行到安全/尺寸/质量/去重关卡;page_position 记 page-meta=页面 title,取不到则 known=false;回归 fixture=test_hf4_meta_channel) | media-enrichment image_classifier.py/image_extractor.py(26f4fec) | HF-4 |
+| 248 | 来源域名质量过滤缺失:discover 无域名信誉机制,带水印/广告图可进批准链(76ty1p 的 A-265 img.ithome.com 实证);URL 广告关键词识别(AD_PATTERNS)既有,但对无标识图床 URL 不触发;HTML 容器级广告识别与水印检测均无 | 未修(候选修法=可配置域名黑名单,名单内容归用户裁决;归 media-enrichment 批次,与 OBS-244 同批) | media-enrichment image_classifier.py/image_extractor.py | HF-5 |
 
 ## 未修清单（独立分区）
 
@@ -170,6 +171,7 @@
 | 241 | pattern_audit 统计层接线注释陈旧(R56,九指标已注册) | 未修(随 Batch 2 首个 zh 改动档同批) | 不阻塞(注释级,不影响行为) |
 | 242 | run_tests 两处注释算术小疵(8.2‰/5-610,断言不受影响) | 未修(随 241 同批) | 不阻塞(注释级) |
 | 244 | media-enrichment 退出码不区分「候选待审批」与「真失败」 | 未修(契约债务,归其自身批次) | 不阻塞(HF-1 已在 pipeline 侧做可恢复降级,发文不再被卡) |
+| 248 | media-enrichment 无来源域名质量过滤(带水印/广告图可进批准链,A-265 img.ithome.com 实证) | 未修(与 OBS-244 同批归 media-enrichment 批次;候选修法=可配置域名黑名单,名单内容归用户裁决) | 不阻塞(76ty1p 已由人工批准点把关;发文主线不受阻) |
 
 ## 本台账口径
 
@@ -210,6 +212,7 @@
 32. HF-3/HF-3R/HF-3R2:OBS-87 内容描述接缝——pipeline 侧 build_approval_readiness 补 page_alt 提取(触发条件=位置未知或 content_description 缺失/为空;claim 派生防自证照旧;来源白名单已含 page_alt);尺寸门槛 480×200(用户裁决 2026-08-09);档 62 与 test_obs55 断言按裁决更新(审核方指令缺陷 #87:触发条件未预告与档 62 既有断言冲突;#88:尺寸变更未预扫 test_obs55);OBS-245 已修(pipeline 侧;skill 侧直写留 media-enrichment 批次),OBS-246 未修(material 车道双堵,HF-2 lane1/lane2 实证)。HF-3 全量 pytest 467/465/0/0/1/1。
 33. HF-4:media-enrichment 锁仓正修(26f4fec,relock #21)——用户根治裁决(2026-08-09:根治不绕行,本篇 Qwen 稿是发现 bug 的载体);page-meta 位置语义裁定(推文页=内容单元本身,页级主图位置即页面,heading=页面 title,取不到则 known=false);OBS-247/245/246 已修(meta 通道去冤 + content_description 直写 page_alt/page_context + material 车道守卫语义修正);范围控制:OBS-244 退出码契约债务仍归后续,HF-1 已管线侧收口,HF-4 不动退出码语义。76ty1p 续跑操作步骤(发文侧执行,不在 HF-4):①删除 RUN 的 media_enrichment/ 阶段目录 → ②续跑 discover(修复后提取器重跑,文章冻结不动) → ③检查 approval_readiness 候选与内容描述 → ④重建 copyright_approval.json(single_asset,绑新冻结清单 sha 与新 readiness sha;旧 11 条合同对新清单自动失效属预期) → ⑤续跑 continue/上传/gzh/草稿。生产发文不在 HF-4 范围。
 34. HF-4R(勘误档,b3a70e7,relock #22):审核方批次末端实读抓缺记录——①注释与实现不符的 R56 问题:run_media_enrichment.py 重分类块上方注释声称「material/source_url 批准与 single_asset 批准共用同一块重跑分类」,实际嵌套在 elif approval is not None 分支内,material 批准(approval=None)永远触不到;②测试夹具未复现生产序列:test_hf4 pure_material 在 discover 时已 known_allowed(冻结即 eligible),未复现 HF-2 lane1 真实序列(冻结 review_required + 后补批准);③审核方指令缺陷 #89 登记(HF-4 未预告 21 条预期红态清单);④执行端 HF 系列首个实现缺陷如实记(OBS-246 半修)。本档修复:重分类块 dedent(条件逐字不变;不变量=restricted 到不了这里/single_asset 身份核验失败到不了这里/single_asset 消费成功与 material 批准都会到这里)+ 测试重写(红态实证:未 dedent 时 decision 卡 review_required)+ image_classifier docstring 名实对齐(meta 通道不再一票否决,仅 URL 命中动态伪卡片端点拒绝)+ HF-4 半截升版版本串对齐 0.1.0-dev10(版本一致性两测试恢复绿)。relock #22(26f4fec->b3a70e7),R93 同步 observability.py(OBS-159=02119edf…,doctor OBS_69 MATCH 双侧)。
+35. HF-5:76ty1p 生产验收完成(2026-08-09 晚,发文侧执行)——discover 重跑后 6 张候选全部 single_asset 批准、6/6 eligible、6/6 上传 mmbiz 成功、装定校验过 6 张门、wechat_draft +1(draft_only=true、real_api_call=true、formally_published=false,标题「Qwen3.8-Max正式版」);A-032(og:image 冤案)与 A-034(480×200 裁决救回)均在列——HF-1/HF-3/HF-4/HF-4R 修复链生产实证成立。新守卫「全有或全无」语义操作提示:批准点无法单独剔除单张 vetted 图,剔除只能靠上游——本例即 OBS-248 的动因之一。审核方指令缺陷 #90 登记(HF-4R 指令「冻结清单携带 decision」措辞错误;冻结清单只含身份字段,执行端已按意图正确落到 discover manifest 断言)。OBS-248 未修登记(来源域名质量过滤缺失,归 media-enrichment 批次,与 OBS-244 同批)。
 
 ### ★授权变更登记(72A,不可省)
 
