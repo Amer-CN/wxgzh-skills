@@ -486,5 +486,25 @@
     "new_skill_version": "v2026.08.09-hammer.9",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260809T160946Z-623b6bcb",
+    "skill": "gzh-design",
+    "reason": "HF-7 署名第二句恢复用户传统落款(OBS-250)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-09T16:09:46Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "1358a667eaa06d234382cbeec19974fbd7c11dadb92af379467a04532319e0a0",
+    "new_root_sha256": "f3aa1959db6374d40af97e0aac66ea486a4464aa110e181ce4bab48269d11e53",
+    "old_component_source_sha256": "74218a699ee9a661ba7e2389baee5672815784339005d4e1770488dd8c7d2f18",
+    "new_component_source_sha256": "c888fc314ef6e889652936386fc3d3f6cbab9fa43b37dceb643bf1183c5f79f5",
+    "old_full_commit_sha": "d947116c7a529f4d3a7e551e444b172845f5f8d0",
+    "new_full_commit_sha": "faf2d0daa94834944e96f4857c3d0cca0ecf9523",
+    "old_source_tree_sha": "838f9da2506e62d640a8ea7c8c7b353aa0f485bc",
+    "new_source_tree_sha": "faf9d3ae89d144701324c917c1490ec2d65e5758",
+    "old_skill_version": "v2026.08.09-hammer.9",
+    "new_skill_version": "v2026.08.10-hammer.10",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
   }
 ]
