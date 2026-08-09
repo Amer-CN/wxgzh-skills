@@ -2,7 +2,7 @@
 
 Classifies images using deterministic, auditable rules:
 - rejected: tracking pixels, favicon, avatar, logo, ad, placeholder,
-  social share cards / link preview images (og:image, twitter:image),
+  link preview cards (URLs hitting dynamic og/twitter preview endpoints),
   undecodable, too small
 - review_required: unknown license, unclear source, possible news photo, SVG, low confidence
 - eligible: traceable source, quality pass, clearly relevant, no copyright block

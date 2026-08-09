@@ -6,7 +6,8 @@
   page_position=page-meta(页面 title)、content_description=og:title(page_context)
 - content_description 传递:discover 写入 → media_manifest 携带 → continue
   从冻结清单重建后字段保留、既有身份字段逐字不变
-- 纯 material 车道(known_allowed)exit 0 且模拟上传成功
+- 纯 material 车道:discover 冻结 review_required → continue known_allowed
+  → exit 0 且模拟上传成功(忠实复现 HF-2 lane1 生产序列,档HF-4R)
 """
 
 import json
@@ -42,7 +43,8 @@ def _make_x_fixture(root: Path) -> Path:
     return html
 
 
-def _make_request(tmp_path: Path, material_status: str) -> Path:
+def _make_request(tmp_path: Path, material_status: str,
+                  name: str = "media_request.json") -> Path:
     article = tmp_path / "final_article.md"
     article.write_text("# 标题\n\n推文正文摘要\n", encoding="utf-8")
     cr = {"status": material_status}
@@ -69,7 +71,7 @@ def _make_request(tmp_path: Path, material_status: str) -> Path:
                    "min_width": 480, "min_height": 200,
                    "allow_unknown_license_for_publish": False},
     }
-    path = tmp_path / "media_request.json"
+    path = tmp_path / name
     path.write_text(json.dumps(req, ensure_ascii=False, indent=2), encoding="utf-8")
     return path
 
@@ -127,13 +129,37 @@ def test_hf4_content_description_passed_through_continue(tmp_path):
 
 
 def test_hf4_pure_material_lane_exit0_and_upload(tmp_path):
-    """纯 material 车道(known_allowed)→ exit 0 且模拟上传成功(任务 3 验收①)。"""
+    """纯 material 车道忠实复现 HF-2 lane1 生产序列:discover 时版权 unknown
+    (discover 产出 decision=review_required 并冻结身份)→ continue 时
+    copyright_review.status=
+    known_allowed → 重分类块把 decision 转 eligible → exit 0 且模拟上传成功。
+
+    不变量(档HF-4R,与 run_media_enrichment.py 重分类块一致):
+    - restricted 资产永远到不了重分类块(Loop 1 不会把 restricted 置
+      known_allowed);
+    - single_asset 身份核验未通过的资产到不了这里(copyright 保持 unknown
+      且已记 mismatch 错误);
+    - single_asset 消费成功与 material/source_url 批准两类资产都会到这里。
+    """
     fixture_html = _make_x_fixture(tmp_path / "fixture")
-    request = _make_request(tmp_path, "known_allowed")
-    proc, out, manifest = _run(tmp_path, fixture_html, request, "discover")
+    discover_request = _make_request(tmp_path, "unknown",
+                                     name="media_request_discover.json")
+    proc, out, discover_manifest = _run(tmp_path, fixture_html, discover_request,
+                                        "discover")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     frozen = out / "asset_discovery_manifest.json"
-    proc2, _, manifest2 = _run(tmp_path, fixture_html, request, "continue", frozen)
+    discover_asset = next(
+        a for a in discover_manifest["assets"] if a["asset_origin"] == "source")
+    assert discover_asset["decision"] == "review_required", \
+        "生产序列:discover 时版权 unknown → 资产 decision=review_required"
+    frozen_ids = {a["asset_id"] for a in
+        json.loads(frozen.read_text(encoding="utf-8"))["assets"]}
+    assert discover_asset["asset_id"] in frozen_ids, \
+        "冻结清单必须含该 review_required 资产(identity 冻结)"
+    continue_request = _make_request(tmp_path, "known_allowed",
+                                     name="media_request_continue.json")
+    proc2, _, manifest2 = _run(tmp_path, fixture_html, continue_request,
+                               "continue", frozen)
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     asset = next(a for a in manifest2["assets"] if a["asset_origin"] == "source")
     assert asset["decision"] == "eligible"
@@ -143,12 +169,25 @@ def test_hf4_pure_material_lane_exit0_and_upload(tmp_path):
 
 
 def test_hf4_unapproved_material_blocked_fail_closed(tmp_path):
-    """未知素材的候选资产无批准依据 → FAIL_CLOSED(任务 3 验收②)。"""
+    """未知素材的候选资产无批准依据 → FAIL_CLOSED(任务 3 验收②)。
+
+    discover 产出 review_required 资产并冻结身份(版权 unknown 的 discover
+    序列,与
+    lane1 生产序列一致);continue 仍无任何批准依据 → 守卫拦下并 exit != 0。
+    """
     fixture_html = _make_x_fixture(tmp_path / "fixture")
     request = _make_request(tmp_path, "unknown")
-    proc, out, _ = _run(tmp_path, fixture_html, request, "discover")
+    proc, out, manifest = _run(tmp_path, fixture_html, request, "discover")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     frozen = out / "asset_discovery_manifest.json"
+    discover_asset = next(
+        a for a in manifest["assets"] if a["asset_origin"] == "source")
+    assert discover_asset["decision"] == "review_required", \
+        "冻结对应资产必须为 review_required(版权 unknown 的 discover 序列)"
+    frozen_ids = {a["asset_id"] for a in
+        json.loads(frozen.read_text(encoding="utf-8"))["assets"]}
+    assert discover_asset["asset_id"] in frozen_ids, \
+        "冻结清单必须含该 review_required 资产(identity 冻结)"
     proc2, _, manifest2 = _run(tmp_path, fixture_html, request, "continue", frozen)
     assert proc2.returncode != 0
     assert any("upload candidates without approval basis" in e

@@ -676,26 +676,28 @@ def main():
                     asset.asset_approval_consumed = True
                     asset.copyright_status = "known_allowed"
 
-                # 档HF-4/OBS-246:material/source_url 批准(approval 为 None 但
-                # copyright_status=known_allowed)与 single_asset 批准共用同一块
-                # 重跑分类逻辑;decision 可转 eligible。restricted/no-repost
-                # (copyright_status != known_allowed)永不可被覆盖(优先级不变)。
-                if asset.copyright_status == "known_allowed" and asset.decision in (
-                        "review_required", "rejected"):
-                    classification = classify_image(
-                        url=asset.resolved_original_url, inspection=inspection,
-                        min_width=config.get("min_width", 640),
-                        min_height=config.get("min_height", 360),
-                        context="", copyright_status="known_allowed",
-                        extraction_method=extraction_method,
-                    )
-                    asset.decision = classification.decision
-                    asset.relevance_status = (
-                        "relevant" if classification.decision == "eligible" else "uncertain")
-                    asset.copyright_risk = (
-                        "high" if classification.decision == "rejected" else "medium")
-                    asset.reasons = (
-                        classification.rejection_reasons or classification.relevance_reasons)
+            # 档HF-4R/OBS-246:重分类块从 single_asset 的 elif 分支内 dedent
+            # 到 for 循环体层级(与 if/elif 平级)——material/source_url 批准
+            # (approval=None 但 copyright_status=known_allowed)与 single_asset
+            # 批准自此真正共用同一块重跑分类逻辑;decision 可转 eligible。
+            # restricted/no-repost(copyright_status != known_allowed)永不可
+            # 被覆盖(优先级不变)。
+            if asset.copyright_status == "known_allowed" and asset.decision in (
+                    "review_required", "rejected"):
+                classification = classify_image(
+                    url=asset.resolved_original_url, inspection=inspection,
+                    min_width=config.get("min_width", 640),
+                    min_height=config.get("min_height", 360),
+                    context="", copyright_status="known_allowed",
+                    extraction_method=extraction_method,
+                )
+                asset.decision = classification.decision
+                asset.relevance_status = (
+                    "relevant" if classification.decision == "eligible" else "uncertain")
+                asset.copyright_risk = (
+                    "high" if classification.decision == "rejected" else "medium")
+                asset.reasons = (
+                    classification.rejection_reasons or classification.relevance_reasons)
 
             # Material/source_url approval is represented by the material's
             # copyright_review.status=known_allowed and needs no per-asset approval.
