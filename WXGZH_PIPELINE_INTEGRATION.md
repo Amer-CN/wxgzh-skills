@@ -8,7 +8,7 @@ deterministic root hash, and never modifies its business logic.
 | Field | Value |
 | --- | --- |
 | Skill | `zh-human-writing` |
-| Locked version | `0.1.0` |
+| Locked version | `0.1.1` |
 | Locked root SHA-256 | `ecd1db3e8eddc8ad943469ef1a73fe1b730eef5f7725450ba24eb5ffdaf57af8` |
 | Hash algorithm | sha256 over sorted `relpath:sha256(content)`, excluding `__pycache__/.git/.pytest_cache/.github` |
 

@@ -767,7 +767,7 @@ def main():
         ao_findings = detect_advisory_only(masked, text, args.profile, protected)
 
     # 档72C-6/任务4:统计检测层(full 与 hard_residue_only 均计算——统计层
-    # 只读不判,恒 count=0 直至任务书 §4 指标注入;--config 覆盖时走同一 fail-closed 加载)。
+    # 只读不判:命中只进 statistical 段,不参与 pass_fail/退出码;--config 覆盖时走同一 fail-closed 加载)。
     stat_findings = stat_audit.run_stat_audit(masked, text, args.profile, args.config)
 
     # pass/fail 只由 hard-residue 决定

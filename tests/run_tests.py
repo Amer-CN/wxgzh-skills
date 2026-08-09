@@ -1011,7 +1011,7 @@ def test_stat_indicators():
     hit34 = "甲乙丙丁戊己庚辛壬癸。" * 12
     miss34 = "".join("甲乙" * (2 + 2 * i) + "。" for i in range(12))
     cases.append(('PB-034', 'ST-001', hit34, miss34, 'essay'))
-    # PB-035 ST-002 连词密度:H=610>=600,5 连词 → 16.4‰ > 7‰ 命中;无连词 → 不命中
+    # PB-035 ST-002 连词密度:H=610>=600,5 连词 → 8.2‰ > 7‰ 命中;无连词 → 不命中
     hit35 = "一二三四五六七八九十" * 60 + "因为因为因为因为因为。"
     miss35 = "一二三四五六七八九十" * 60 + "。"
     cases.append(('PB-035', 'ST-002', hit35, miss35, 'essay'))
@@ -1073,8 +1073,8 @@ def test_stat_technical_exempt():
     ok1 = n_essay == 0 and n_tech == 1
     ok_all &= ok1
     msgs.append(f'CV:essay={n_essay} tech={n_tech}')
-    # 连词密度:5 次连词全放进列表段 → essay 密度=5/606*1000=8.25>7 命中,
-    # technical 分子剔除后 0<10 不命中(分母全局 H=606,门 600 通过)
+    # 连词密度:5 次连词全放进列表段 → essay 密度=5/610*1000=8.20>7 命中,
+    # technical 分子剔除后 0<10 不命中(分母全局 H=610,门 600 通过)
     conj_text = "一二三四五六七八九十" * 60 + "\n\n- 因为所以但是然而同时。"
     rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(conj_text), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     n_essay = len([f for f in _stat_items(json.loads(out)) if f.get('rule_id') == 'ST-002'])

@@ -3,6 +3,12 @@
 
 ---
 
+## 前置规则（Batch 2）
+
+输入 handoff 携带 `prose_craft_applied=true` 时：
+- strategy 一律 `preserve`（覆盖默认路由表任何来源行）；
+- 检测照跑、只报告不改写（audit 语义：pattern_audit / fidelity_guard / change_report 全量执行，但不产改写动作）。
+
 ## 默认路由表
 
 | source | 默认 strategy | 改动预算 | 审计范围 | 规则 |
