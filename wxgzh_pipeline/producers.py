@@ -374,7 +374,7 @@ VALID_APPROVAL_SCOPES = ("material", "source_url", "single_asset")
 def _approval_precheck(rd: Path) -> dict:
     """OBS-82(档55):discover 候选硬门槛预校验——不让不达标资产进入人工批准。
 
-    判定口径与 media-enrichment continue 阶段一致:正文图最小 640x360。
+    判定口径:正文图最小 480x200(用户裁决 2026-08-09,档 HF-3)。
     读 discover/media_manifest.json 的 width/height(discover 已下载并测尺寸),
     不依赖 decision/quality_status 字段(档50 实证:A-107 decision=rejected 仍被
     人工批准,quality=pass 语义混乱)。封面无独立尺寸门槛(从已批准正文图选择,
@@ -395,13 +395,13 @@ def _approval_precheck(rd: Path) -> dict:
             if not aid:
                 continue
             w, h = asset.get("width"), asset.get("height")
-            if isinstance(w, int) and isinstance(h, int) and (w < 640 or h < 360):
+            if isinstance(w, int) and isinstance(h, int) and (w < 480 or h < 200):
                 excluded.append({"asset_id": aid, "width": w, "height": h,
-                                "reason": "dimensions below minimum 640x360"})
+                                "reason": "dimensions below minimum 480x200"})
             else:
                 eligible.append(aid)
     return {"schema_version": "1.0", "eligible": eligible, "excluded": excluded,
-            "min_width": 640, "min_height": 360, "source": "discover/media_manifest.json"}
+            "min_width": 480, "min_height": 200, "source": "discover/media_manifest.json"}
 
 
 def _enforce_approval_precheck(rd: Path, precheck: dict) -> None:
@@ -744,6 +744,9 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
             ),
             "max_images_per_material": int(ctx_env.get("WXGZH_MEDIA_MAX_PER_MATERIAL", 8)),
             "max_total_images": int(ctx_env.get("WXGZH_MEDIA_MAX_TOTAL", 8)),
+            # 档HF-3:正文图尺寸门槛 480x200(用户裁决 2026-08-09);
+            # schemas/media_enrichment_request.schema.json 已声明合法键(默认 640/360)。
+            "min_width": 480, "min_height": 200,
             "allow_unknown_license_for_publish": False,
         },
         "provenance": {"canonical_registry_sha256": sha256_file(reg_p),

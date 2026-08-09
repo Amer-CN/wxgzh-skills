@@ -134,6 +134,8 @@
 | 242 | run_tests.py 两处注释算术小疵:PB-035 注释「5 连词→16.4‰」实为 8.2‰(5/610);PB-043 注释「5/606」实为 5/610;断言均不受影响 | 未修(注释级,随 241 同批) | zh-human-writing tests/run_tests.py | 72C-6F |
 | 243 | pipeline 把 media discover 任何非零退出一律判 STAGE_FAILED:可恢复的部分 fetch 失败(锁 pin 18414cc9 下 errors 全为「Failed to fetch page for 」前缀且仍有可批准候选)无法路由到批准点,整次发文被卡死 | 已修(HF-1:producers._discover_degraded_recoverable 判定 + meta 留痕 discover_degraded/discover_exit_code/discover_errors,继续既有 paused 路径;测试 5 条新增) | wxgzh_pipeline/producers.py;tests/test_hf1_discover_degraded.py | HF-1 |
 | 244 | media-enrichment 退出码语义不区分「跑出候选但需审批」与「真失败」(run_media_enrichment.py exit 1 if errors else 0;gate.input_contract_pass/security_checks_pass 只是 has_errors 的投影,非独立判定) | 未修(契约债务;锁 pin 仓,归 media-enrichment 自身批次处理,本档只在 pipeline 侧做可恢复降级) | media-enrichment run_media_enrichment.py(锁 pin 18414cc9) | HF-1 |
+| 245 | OBS-87 闸门对源图结构性关闭:content_description 字段只有 generated 图表写(档61-62 半截工程),源图永不写 → 源图 single_asset 批准链焊死 | 已修(HF-3:readiness 构建器按 source_page_url 抓取时提取 img alt/title(page_alt,白名单来源),过 claim 派生判定后采纳;触发条件=位置未知或内容缺失;HF-2 lane3 实证 skill 侧车道完好;skill 侧 discover 直写留 media-enrichment 自身批次,与 OBS-244 同批) | wxgzh_pipeline/approval_evidence.py | HF-3 |
+| 246 | material 批准车道双堵:守卫 len(candidates)>len(asset_approvals) 把纯 material 批准判死 + material 批准不重跑分类致 review_required 永不上传 | 未修(登记;实证=HF-2 lane1/lane2 副本直跑;归 media-enrichment 批次) | media-enrichment run_media_enrichment.py(锁 pin 18414cc9) | HF-3 |
 
 ## 未修清单（独立分区）
 
@@ -167,6 +169,7 @@
 | 241 | pattern_audit 统计层接线注释陈旧(R56,九指标已注册) | 未修(随 Batch 2 首个 zh 改动档同批) | 不阻塞(注释级,不影响行为) |
 | 242 | run_tests 两处注释算术小疵(8.2‰/5-610,断言不受影响) | 未修(随 241 同批) | 不阻塞(注释级) |
 | 244 | media-enrichment 退出码不区分「候选待审批」与「真失败」 | 未修(契约债务,归其自身批次) | 不阻塞(HF-1 已在 pipeline 侧做可恢复降级,发文不再被卡) |
+| 246 | material 批准车道双堵(守卫计数比较 + 不重跑分类) | 未修(归 media-enrichment 批次) | 不阻塞(single_asset 车道 HF-3 已通,发文可走该车道) |
 
 ## 本台账口径
 
@@ -204,6 +207,7 @@
 29. 72C-6F:批次末一次性 GitHub 实读完成(核 10 commit numstat 全符、读 stat_audit/pattern_audit/default.yaml/run_tests 源码、PB-010/014 疑点坐实为冗余非黑洞、relock #20 三处同步验证、manifest 随清单 60→61 响应符合 OBS-211 口径);审核方沙箱独立复算 A/B/C 统计层,与仓内 audit-output.json 逐字一致(A=1:ST-005;B=3:ST-004/005/006;C=1:ST-005;A、B 的 ST-007 被段落门挡掉,C 无被挡);S118 判定未触发(1<3),方向正确。C 的 H/段落数按 masked 口径为 827/16(与审核方复算一致;72C-6R 汇报所用 raw 口径 895/23 已在本档修正)。
 30. Batch 1 验收通过(72C-6R/72C-6F):S118 未触发(1<3),批次末实读四节全过。三条保留:统计层阈值待校准基线;词表低产率保险(56/59 零命中);0C 统计命中未人工核验。
 31. HF-1:media discover 可恢复降级——errors 全为「Failed to fetch page for 」前缀且 eligible+review_required>0 时降级进批准点(meta 留痕)。根因修正:gate.input_contract_pass/security_checks_pass 是 errors 的投影,非独立判定;copyright_review.status=unknown 只给 review_required 不产 error;发文 agent 原根因链「eligible=0→exit 1」在该 pin(18414cc9)上不成立——那次 RUN(20260808T220417-qwen3-8-max-76ty1p)exit 1 真凶是 errors 数组 3 条 fetch 失败(TUN 网络段)。
+32. HF-3/HF-3R/HF-3R2:OBS-87 内容描述接缝——pipeline 侧 build_approval_readiness 补 page_alt 提取(触发条件=位置未知或 content_description 缺失/为空;claim 派生防自证照旧;来源白名单已含 page_alt);尺寸门槛 480×200(用户裁决 2026-08-09);档 62 与 test_obs55 断言按裁决更新(审核方指令缺陷 #87:触发条件未预告与档 62 既有断言冲突;#88:尺寸变更未预扫 test_obs55);OBS-245 已修(pipeline 侧;skill 侧直写留 media-enrichment 批次),OBS-246 未修(material 车道双堵,HF-2 lane1/lane2 实证)。HF-3 全量 pytest 467/465/0/0/1/1。
 
 ### ★授权变更登记(72A,不可省)
 

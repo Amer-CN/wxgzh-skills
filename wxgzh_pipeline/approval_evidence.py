@@ -137,6 +137,24 @@ def assess_content(asset: dict, claim_texts: list[str]) -> dict:
             "source": None, "verified": False}
 
 
+def extract_image_alt_title(html: str, url: str) -> tuple[str | None, str | None]:
+    """档HF-3/OBS-245:从页面 HTML 提取与 url 匹配的 img 的 alt/title 文本。
+
+    匹配口径与 extract_section_map 一致(_matches_image + _image_attrs_text,
+    覆盖 src/srcset/data-src/data-original/data-lazy-src)。找不到返回 (None, None)。
+    """
+    if not html or not url:
+        return None, None
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    for node in soup.find_all("img"):
+        if _matches_image(_image_attrs_text(node), url):
+            alt = (node.get("alt") or "").strip()
+            title = (node.get("title") or "").strip()
+            return (alt or None), (title or None)
+    return None, None
+
+
 def fetch_html(url: str, timeout: int = 20) -> str | None:
     """抓取源页面 HTML 用于位置解析。失败返回 None(位置未知 -> 不得进入批准点,
     属 fail-closed,不允许降级为本地推断)。"""
@@ -223,6 +241,10 @@ def build_approval_readiness(
     # OBS-86(档62)联动:manifest 已带 page_position(提取层产出,章节归属)
     # 时优先直接消费,不再重抓页面;仅对缺字段的旧 manifest 回退到页面解析。
     # 闸门语义不变:位置必须 known 才可批准。
+    # 档HF-3/OBS-245:源图从不写 content_description(档61-62 半截工程),
+    # OBS-87 内容描述闸门对源图结构性关闭。本档放宽抓取触发条件——
+    # decision 可批准 且(位置未知 或 content_description 缺失/为空)的资产
+    # 都进入抓取集,同一次抓取内提取 img 的 alt/title(page_alt 级证据)。
     def _manifest_position(asset: dict) -> dict | None:
         pos = asset.get("page_position")
         if isinstance(pos, dict) and pos.get("known") is True and pos.get("heading"):
@@ -232,7 +254,11 @@ def build_approval_readiness(
             return {"known": False, "heading": None, "level": None}
         return None
 
-    # 按 source_page_url 分组抓取一次,缓存(仅缺 manifest 位置字段的资产)
+    def _needs_content_fetch(asset: dict) -> bool:
+        desc = asset.get("content_description")
+        return not (isinstance(desc, str) and desc.strip())
+
+    # 按 source_page_url 分组抓取一次,缓存(位置未知或内容描述缺失的资产)
     page_cache: dict[str, str | None] = {}
     by_page: dict[str, list[dict]] = {}
     for asset in assets:
@@ -241,7 +267,7 @@ def build_approval_readiness(
         # rejected 资产不抓取页面位置(仍出现在 readiness 记录中,呈现为不可批准)
         if asset.get("decision") not in ("review_required", "eligible"):
             continue
-        if _manifest_position(asset) is not None:
+        if _manifest_position(asset) is not None and not _needs_content_fetch(asset):
             continue
         src = asset.get("source_page_url")
         if src:
@@ -258,6 +284,12 @@ def build_approval_readiness(
             url = str(asset.get("resolved_original_url") or "")
             if url in section_map:
                 asset["_obs87_section"] = section_map[url]
+            # 档HF-3/OBS-245:同一次抓取内提取 img 的 alt/title(page_alt 级证据)。
+            if _needs_content_fetch(asset):
+                alt, title = extract_image_alt_title(html, url)
+                page_text = (alt or title or "").strip()
+                if page_text:
+                    asset["_obs87_page_alt"] = page_text
 
     records = []
     for asset in sorted(assets, key=lambda a: str(a.get("asset_id", ""))):
@@ -266,6 +298,25 @@ def build_approval_readiness(
         aid = asset["asset_id"]
         decision = asset.get("decision", "")
         content = assess_content(asset, claim_texts)
+        # 档HF-3/OBS-245:content_description 缺失且页面提取到非空 alt/title 时,
+        # 用 assess_content 的既有派生判定探针(alt_text 位,照旧防自证):
+        # 非派生 → 采纳为 page_alt 级证据(白名单来源,已含于
+        # ALLOWED_DESCRIPTION_SOURCES);派生/未提取 → 维持原状(fail-closed,
+        # 派生情形如实呈现 claim_derived)。
+        if not content["verified"] and asset.get("_obs87_page_alt"):
+            probed = assess_content(
+                dict(asset, alt_text=asset["_obs87_page_alt"], caption=None),
+                claim_texts)
+            if probed["kind"] == "claim_derived":
+                # 防自证:claim 派生文本不采纳,如实呈现。
+                content = probed
+            else:
+                # page_alt 非空保证有文本;assess_content 对「有文本无 desc」
+                # 返回 unverifiable,此处按 page_alt 白名单来源采纳为 verified。
+                content = {"kind": "verified",
+                           "description": asset["_obs87_page_alt"],
+                           "source": "page_alt",
+                           "verified": True}
         section = asset.get("_obs87_section")
         manifest_pos = _manifest_position(asset)
         if manifest_pos is not None:

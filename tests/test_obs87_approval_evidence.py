@@ -279,7 +279,9 @@ def test_wiring_visible_in_producers():
 
 def test_manifest_page_position_consumed_without_fetch(tmp_path):
     """OBS-86(档62)后,media-enrichment manifest 直接产出章节归属;
-    approval_readiness 必须直接消费,不再重抓页面(闸门语义不变)。"""
+    approval_readiness 必须直接消费,不再重抓页面。
+    档HF-3R/裁决(a):精确化——manifest 位置已知且内容描述完备时,readiness
+    不再重抓页面;位置缺失或内容缺失仍会抓取(HF-3)。"""
     rd = tmp_path / "run"
     d = rd / "media_enrichment" / "discover"
     d.mkdir(parents=True)
@@ -291,6 +293,11 @@ def test_manifest_page_position_consumed_without_fetch(tmp_path):
         "page_position": {"known": True,
                           "heading": "降价 80%！OpenAI 下调 GPT-5.6 Luna 模型费用",
                           "level": "h2"},
+        # 档HF-3R/裁决(a):内容完备资产(位置已知+内容描述齐),不再重抓页面。
+        # desc 取 claim 前缀派生文本:内容闸门(防自证)仍拦 → approvable 保持
+        # False(313 行旧断言不变),而「内容完备→不重抓」的不变量由 _boom 守护。
+        "content_description": "Codex 高阶玩法：让 Sol 在 `~/.codex/agents/` 下创建 `luna-worker.toml`",
+        "content_description_source": "generated",
     }
     manifest = {"schema_version": "1.0", "assets": [asset]}
     (d / "media_manifest.json").write_text(

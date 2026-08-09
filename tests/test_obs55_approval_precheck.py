@@ -2,7 +2,7 @@
 
 覆盖:
 1. 100x100(A-107 同款)与 1x1(A-108 同款)在预校验中被排除,不进 eligible
-2. 尺寸边界:639x359 排除 / 640x360 通过
+2. 尺寸边界:479x200 拦 / 480x200 过(档HF-3R2:门槛按用户裁决 480x200 重导;639x360 亦通过)
 3. 批准合同消费端:含不达标资产 -> FAIL_CLOSED
 4. 批准合同消费端:全部 eligible -> 通过
 5. 真实 RUN 数据回归:discover/media_manifest.json 中 A-107 被识别
@@ -45,20 +45,24 @@ def test_small_assets_excluded_not_eligible(tmp_path):
     assert "A-108" not in pre["eligible"]
     by_id = {a["asset_id"]: a for a in pre["excluded"]}
     assert by_id["A-107"]["width"] == 100 and by_id["A-107"]["height"] == 100
-    assert by_id["A-107"]["reason"] == "dimensions below minimum 640x360"
+    assert by_id["A-107"]["reason"] == "dimensions below minimum 480x200"
     assert "A-109" in pre["eligible"]
 
 
 def test_dimension_boundary(tmp_path):
+    """档HF-3R2:门槛按用户裁决(2026-08-09)改为 480x200——w<480 or h<200 才拦。
+    断言意图不变:低于门槛进 excluded 带 reason、达标进 eligible 清单。"""
     rd = _make_run(tmp_path, _manifest([
-        {"asset_id": "X-1", "width": 639, "height": 360},
-        {"asset_id": "X-2", "width": 640, "height": 360},
-        {"asset_id": "X-3", "width": 640, "height": 359},
+        {"asset_id": "X-1", "width": 479, "height": 200},
+        {"asset_id": "X-2", "width": 480, "height": 200},
+        {"asset_id": "X-3", "width": 480, "height": 199},
         {"asset_id": "X-4", "width": None, "height": None},
+        {"asset_id": "X-5", "width": 639, "height": 360},
     ]))
     pre = PR._approval_precheck(rd)
     assert "X-1" not in pre["eligible"] and "X-3" not in pre["eligible"]
     assert "X-2" in pre["eligible"]
+    assert "X-5" in pre["eligible"]
     # 尺寸未知:不排除(continue 阶段由 media 侧兜底),如实标注
     assert "X-4" in pre["eligible"]
 
