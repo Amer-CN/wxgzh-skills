@@ -13,6 +13,9 @@ handoff:
   p0_count: 0
   exit_status: ready_to_write
 
+  prose_craft_applied: false              # Batch 2 新增：本文是否经过 prose-craft 层（R1–R9 自检）
+  prose_craft_version: null               # Batch 2 新增：prose-craft.md 的版本号（如 "1.0"）
+
   unresolved_facts: []
   editor_anchors: []
   author_confirmations: []
@@ -54,6 +57,8 @@ v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved
 | schema_version | 交接契约版本，v2.0 |
 | semantic_map_path | 语义映射文件路径 |
 | formatter | formatter 交接子契约 |
+| prose_craft_applied | 本文是否经过 prose-craft 层（R1–R9 自检），true/false |
+| prose_craft_version | prose-craft.md 的版本号（如 "1.0"） |
 | formatter.target_skill | 目标排版 Skill（gzh-design） |
 | formatter.contract | 交接契约类型（semantic-component-handoff） |
 | formatter.contract_version | 契约版本（1.0） |

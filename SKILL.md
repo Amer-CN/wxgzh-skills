@@ -270,6 +270,16 @@ issues_and_uncertainties.md
 
 **素材摄入（v0.3.1 新增）：** 当用户输入大量素材时，加载 `references/material-ingestion.md`，建立 `material-ledger`，执行三层去重（URL → 事件 → 论点），计算三层覆盖率（source_coverage / event_coverage / claim_coverage）。素材量超过 100 条且未指定模式时，输出 `needs_mode_selection` 退出状态。
 
+**说话位置五问（Batch 2 新增）：** Phase 1 的内部检查（不对用户展示、不产生新文件），五问采用上游原文（KKKKhazix/human-writing v1.1.0，MIT），逐字：
+
+1. 谁在说这件事。他凭什么知道，又有哪些地方只是在推测。
+2. 什么事情让他现在想说。可以是一条新闻、一次经历、一个疑问或一件一直想不通的小事。
+3. 手里有哪些能托住文章的东西。优先找动作、数字、时间、地点、原话、失败、代价与后来结果。
+4. 他对哪一点有明确判断。这个判断依据什么，又到哪里为止。
+5. 读者知道上一段以后，最自然会追问什么。
+
+联动：第 3 问答不出来 → 进 Phase 1.5 素材充分性检查（既有门禁），不许用重复解释灌字数。
+
 **门禁：** 必须知道“写给谁、为什么写、希望读者改变什么”；必须确定 article_mode 和 length_mode。
 
 ### Phase 1.5：素材充分性检查

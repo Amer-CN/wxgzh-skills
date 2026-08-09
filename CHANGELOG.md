@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.3.3-rc1 — Batch 2：prose-craft 层 + 编辑审查扩项 + handoff 最小契约 (2026-08-10)
+
+### 新增
+
+- **references/prose-craft.md**：正向写法原则层（R1–R9，上限 12 条），告诉 Writer「怎么写才像具体的人在说话」；与 zh-human-writing 分工=正向写法/反向检测。谱系：KKKKhazix/human-writing v1.1.0（MIT）。
+- **说话位置五问**：内嵌 Phase 1（写作简报）内部检查（不对用户展示、不产生新文件）；第 3 问答不出来 → 进 Phase 1.5 素材充分性检查（既有门禁），不许用重复解释灌字数。五问采用上游原文（KKKKhazix/human-writing v1.1.0，MIT）。
+- **编辑审查扩项**：段落推进审查（P1 严重，四步）；翻案腔语义审查（P2，与 zh SC-007a/b 双层分工）；结尾专项（默认 P2）。
+- **handoff v2.0 追加两字段**：`prose_craft_applied`（bool）/ `prose_craft_version`（如 "1.0"）；语义=标记本文已按 R1–R9 自律，下游去 AI 味环节按「只标记、不改写」对待。
+
+### 修改
+
+- **conflict-resolution.md v0.4**：追加 15–18 四条（R6 vs 长度/重复校验器；R7 vs Burstiness；五问 vs Phase 1；翻案腔语义审查 vs zh SC-007a/b）。
+- 测试 +2（handoff prose_craft 两字段存在性/类型校验），235 passed。
+
 ## v0.3.2-rc1 — Material-Heavy Editorial Mode (2026-07-24)
 
 ### 新增

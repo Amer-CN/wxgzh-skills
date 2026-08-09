@@ -1921,6 +1921,27 @@ def test_h2_component_policy_list_reports_error(tmp_path):
         f"Expected component_policy list error, got: {errors}"
 
 
+class TestHandoffProseCraftFields:
+    """档72D-1/Batch 2:handoff v2.0 schema 新增 prose_craft 两字段的存在性与类型校验。"""
+
+    HANDOFF = ROOT / "references" / "handoff.md"
+
+    def test_prose_craft_fields_present_in_schema_yaml(self):
+        import re
+        text = self.HANDOFF.read_text(encoding="utf-8")
+        assert "prose_craft_applied:" in text
+        assert "prose_craft_version:" in text
+        # 类型语义:applied 是布尔示例,version 是字符串示例
+        assert re.search(r"prose_craft_applied:\s+(true|false)", text)
+        # version 可为 null(未产出)或带引号字符串示例
+        assert re.search(r"prose_craft_version:\s+(null|[\"']1\.0[\"'])", text)
+
+    def test_prose_craft_fields_listed_in_v2_field_table(self):
+        text = self.HANDOFF.read_text(encoding="utf-8")
+        assert "| prose_craft_applied |" in text
+        assert "| prose_craft_version |" in text
+
+
 def test_h2_component_policy_missing_field_reports_error(tmp_path):
     """component_policy missing one required field must report ERROR."""
     article = "Test content here."
