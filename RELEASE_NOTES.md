@@ -1,4 +1,14 @@
-# gzh-design v2026.08.02-hammer.8
+# gzh-design v2026.08.09-hammer.9
+
+## v2026.08.09-hammer.9(档HF-6)
+
+- OBS-249:封面 chrome 固定值——date 样品残留(2026.07)+ strike 硬编码占位
+  (「别急着划走」);谱系:增强层自生(render_article 与 hammer_* 组件层均为本 fork
+  增强,上游 isjiamu/gzh-design-skill 无文章渲染层,无上游修复可拉)。
+- 修复(用户裁决 B):render_article.py 封面全参数化——新增 --date/--strike/--brand/--tags
+  四个可选参数;date 未显式给出时自动取渲染时点当月(%Y.%m);不传参时除 date 外
+  与旧产出逐字一致。generate_hammer_upgrade_samples.py 的 hammer_cover 默认值不动,
+  parse_article/split_title/en_label_for 零改动(OBS-73 镜像守卫保持)。
 
 ## v2026.08.02-hammer.8(档71C-R)
 

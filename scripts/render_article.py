@@ -26,6 +26,7 @@ No network, no WeChat side effects — pure HTML generation.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import json
 import os
 import re
@@ -189,7 +190,10 @@ def parse_article(md: str) -> dict:
             intro_paras.append(fn_item)
     return {"title": title or "未命名", "intro": intro, "intro_paras": intro_paras,
             "chapters": chapters}
-def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, dict]:
+def render(theme_key: str, parsed: dict, body_images: list[dict],
+           date: str | None = None, strike: str = "别急着划走",
+           brand: str = "给自己造把锤子",
+           tags: tuple[str, ...] = ("深度", "观察")) -> tuple[str, dict]:
     title = parsed["title"]
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
     chapter_titles = [c["title"] for c in chapters]
@@ -204,8 +208,10 @@ def render(theme_key: str, parsed: dict, body_images: list[dict]) -> tuple[str, 
     l1, l2 = split_title(title)
     kicker = "深度观察 · " + en_label_for(chapter_titles[0] if chapter_titles else title, 1)
     subtitle = (parsed.get("intro") or "结构化拆解与要点梳理")[:48]
-    parts.append(H.hammer_cover(theme_key, kicker=kicker, strike="别急着划走",
-                                title_line1=l1, title_line2=l2, subtitle=subtitle))
+    cover_date = date or datetime.now().strftime("%Y.%m")
+    parts.append(H.hammer_cover(theme_key, kicker=kicker, strike=strike,
+                                title_line1=l1, title_line2=l2, subtitle=subtitle,
+                                date=cover_date, brand=brand, tags=tags))
     usage["cover_breaking"] += 1
 
     parts.append(H.hammer_toc(theme_key, chapter_titles))
@@ -277,6 +283,12 @@ def main(argv=None) -> int:
                     help="article_image_bindings.json (real WeChat-host image URLs)")
     ap.add_argument("--output-dir", required=True)
     ap.add_argument("--theme", default="smartisan")
+    ap.add_argument("--date", default=None,
+                    help="cover date (YYYY.MM); default = current render month")
+    ap.add_argument("--strike", default="别急着划走")
+    ap.add_argument("--brand", default="给自己造把锤子")
+    ap.add_argument("--tags", default="深度,观察",
+                    help="comma-separated cover tags")
     a = ap.parse_args(argv)
 
     theme_key = THEME_ALIAS.get(a.theme.strip().lower(), None)
@@ -297,7 +309,9 @@ def main(argv=None) -> int:
         except (ValueError, OSError):
             body_images = []
 
-    html, usage = render(theme_key, parsed, body_images)
+    tags = tuple(t.strip() for t in a.tags.split(",") if t.strip())
+    html, usage = render(theme_key, parsed, body_images,
+                         date=a.date, strike=a.strike, brand=a.brand, tags=tags)
 
     out = Path(a.output_dir)
     out.mkdir(parents=True, exist_ok=True)

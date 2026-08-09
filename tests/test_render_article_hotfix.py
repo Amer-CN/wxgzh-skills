@@ -140,6 +140,52 @@ class TestRenderArticle:
         assert rep["render_entry"] == "scripts/render_article.py"
 
 
+class TestHf6CoverParams:
+    """档HF-6:封面参数化——date 自动 + --strike/--brand/--tags 覆盖生效,
+    默认值不传时与旧产出逐字一致(date 除外)。"""
+
+    def _cli(self, td, extra=None):
+        (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")
+        bp = td / "article_image_bindings.json"
+        bp.write_text(json.dumps(BINDINGS), encoding="utf-8")
+        R = _load_render()
+        argv = ["--article", str(td / "final_article.md"),
+                "--bindings", str(bp), "--output-dir", str(td), "--theme", "smartisan"]
+        argv += (extra or [])
+        code = R.main(argv)
+        html = (td / "final.html").read_text(encoding="utf-8")
+        return code, html
+
+    def test_cover_date_auto_current_month(self, tmp_path):
+        import re
+        from datetime import datetime as dt
+        code, html = self._cli(tmp_path)
+        assert code == 0
+        m = re.search(r'<span leaf="">\d{4}\.\d{2}</span>', html)
+        assert m, "cover date must match YYYY.MM"
+        assert m.group(0) == f'<span leaf="">{dt.now():%Y.%m}</span>'
+
+    def test_cover_params_override(self, tmp_path):
+        code, html = self._cli(tmp_path, [
+            "--date", "2026.07", "--strike", "先别划走",
+            "--brand", "测试品牌", "--tags", "甲,乙"])
+        assert code == 0
+        assert "2026.07" in html
+        assert "先别划走" in html
+        assert "测试品牌" in html
+        assert '<span leaf="">甲</span>' in html
+        assert '<span leaf="">乙</span>' in html
+        assert "别急着划走" not in html
+
+    def test_cover_defaults_byte_identical_except_date(self):
+        from datetime import datetime as dt
+        R = _load_render()
+        parsed = R.parse_article(ARTICLE)
+        fixed, _ = R.render("hammer", parsed, [], date="2026.07")
+        auto, _ = R.render("hammer", parsed, [])
+        assert fixed.replace("2026.07", f"{dt.now():%Y.%m}", 1) == auto
+
+
 class TestCliCompat:
     def test_argparse_flags(self):
         src = (SKILL_ROOT / "scripts" / "render_article.py").read_text(encoding="utf-8")
