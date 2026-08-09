@@ -129,6 +129,9 @@
 | 237 | AO-007/AO-011 计数口径变更:逐次命中各产出一条 finding 改为每段一条(occurrence_count=段内命中次数,span_text=段内首命中处,其余 AO 规则不动);0C advisory 35→20(AO-007 22→7 条,其余 13 条不变,降幅 15;occurrence 和守恒 22) | 已修(72C-6 任务 3;PB-031~033,检测逻辑/severity/退出码零改动) | zh-human-writing scripts/pattern_audit.py;tests/run_tests.py | 72C-6 |
 | 238 | OBS-227 段落边界实证(72C-6 任务 2):样本 A 恢复《背影》原文 3 段后 SC-005 条数不变(4→4)且命中文本逐字相同,location 由「第1段第30句」如实化为「第2段第4句」——实证 split_sentences 完全不读段落边界(空结果=阳性证据),旧「跨段误连」推断不成立;OBS-227 本体保持未修(语义重写留 Batch 3) | 已实证(72C-6R 决定日志;不改代码) | zh-human-writing examples/samples/A-human | 72C-6R |
 | 239 | 词表定性为低产率保险:59 词四篇(A/B/C/0C)实测 56 词零命中,仅「还有一层」真阳 1、「链路」「闭环」存疑各 1;A(真人散文)特异性 100%(SC-009+SC-010 零命中);B(AI 稿)敏感性达标(SC-009+SC-010=1>0)但总体低产率;统计层新增 ST-003/ST-005 为 0C 首批统计命中 | 已登记(72C-5 词频表 + 72C-6R 四篇总表实证;校准决策归 Batch 1 之后) | audit/quality/obs-samples-frequency-72c5.md | 72C-6R |
+| 240 | PB-010 与 PB-014 同路径冗余:两者均 importlib 直载 pattern_audit 后读内存 STRONG_CONTEXTUAL_PATTERNS,与同一 EXPECTED_SC_THRESHOLDS 逐格比对,调用路径与断言同构(同一保险拉两次);非活性黑洞——模块加载真实消费 default.yaml,PB-013(--config CLI 活性)与 PB-009(默认阈值 CLI 分档)补足行为链路 | 已裁决未实施(Batch 3 测试整理时合并其一或改挂 CLI 行为断言) | zh-human-writing tests/run_tests.py | 72C-6F |
+| 241 | pattern_audit.py 统计层接线注释陈旧:仍写「恒 count=0 直至任务书 §4 指标注入」,九指标已注册,名实不符(R56) | 未修(注释级;随 Batch 2 首个 zh 改动档同批修,避免为注释单发 relock) | zh-human-writing scripts/pattern_audit.py | 72C-6F |
+| 242 | run_tests.py 两处注释算术小疵:PB-035 注释「5 连词→16.4‰」实为 8.2‰(5/610);PB-043 注释「5/606」实为 5/610;断言均不受影响 | 未修(注释级,随 241 同批) | zh-human-writing tests/run_tests.py | 72C-6F |
 
 ## 未修清单（独立分区）
 
@@ -158,6 +161,9 @@
 | 226 | 同步树快照潜伏陷阱(media 同步树连 pin 都无法解析) | 未修 | 不阻塞(当前配方单目标+远端见证+R109 先 push,陷阱未触发) |
 | 232 | profiles/*.md 三个文件无人读取,是死文件;声明的放宽/不检测语义无代码落点 | 未修(Batch 3:profile 语义落地后回写或废除) | 不阻塞(阈值真源已移至 config,profile 文档只是描述层) |
 | 227 | SC-005 量错了对象(句长≠句式,72C-2 改名「连续等长句」),双重计数/漂移误判并存 | 未修(严重性上调;语义重写留 Batch 3) | 不阻塞(0C 基线 SC-005 未命中;改名后名实对齐) |
+| 240 | PB-010/PB-014 同路径冗余(同一保险拉两次,非黑洞) | 已裁决未实施(Batch 3 测试整理合并) | 不阻塞(PB-013/PB-009 已补行为链路) |
+| 241 | pattern_audit 统计层接线注释陈旧(R56,九指标已注册) | 未修(随 Batch 2 首个 zh 改动档同批) | 不阻塞(注释级,不影响行为) |
+| 242 | run_tests 两处注释算术小疵(8.2‰/5-610,断言不受影响) | 未修(随 241 同批) | 不阻塞(注释级) |
 
 ## 本台账口径
 
@@ -192,6 +198,7 @@
 26. 72C-3:统一 audit 十字段(rule_id/group/severity/confidence/profile/action/location/span_text/reason/suggestion,任务书 §6;location 改中文「第N段第M句」);mask_non_prose 等长屏蔽五类非散文(任务书 §7,span_text 取原文);保护区命中 action=review_only;argparse 错误统一 exit 3(OBS-234);OBS-230 已修;OBS-211 猜想入档待 Batch 3。S114:0C 八项与 72C-2 逐字相同。
 27. 72C-4/72C-5:S116 释放记录——停机条件设计缺陷(比例阈值无样本量下限、且误用 advisory 级命中),审核方指令缺陷 #82;「链路」改判存疑,词表零改动。OBS-211 已坐实(路径清单哈希);OBS-236 顺序耦合规避步骤入档;三篇样本(A 真人散文/B AI 生成稿/C 技术教程)与 59 词词频表为下一档校准的唯一输入。
 28. 72C-6/72C-6R:统计检测层九项指标(任务书 §4 逐字,ST-001~009)阈值与词表全部在 config/default.yaml statistical 段(标注「待校准基线」,禁统一乘数 D2,H=屏蔽后总汉字数 D1);AO-007/011 每段聚合口径(occurrence_count);OBS-227 段落边界实证(238);词表低产率保险定性(239);指令缺陷 #85(引用任务书章节未随附原文,致三次同因阻塞)。统计层 severity=audit/action=review_only,不进 pass_fail 不影响退出码。
+29. 72C-6F:批次末一次性 GitHub 实读完成(核 10 commit numstat 全符、读 stat_audit/pattern_audit/default.yaml/run_tests 源码、PB-010/014 疑点坐实为冗余非黑洞、relock #20 三处同步验证、manifest 随清单 60→61 响应符合 OBS-211 口径);审核方沙箱独立复算 A/B/C 统计层,与仓内 audit-output.json 逐字一致(A=1:ST-005;B=3:ST-004/005/006;C=1:ST-005;A、B 的 ST-007 被段落门挡掉,C 无被挡);S118 判定未触发(1<3),方向正确。C 的 H/段落数按 masked 口径为 827/16(与审核方复算一致;72C-6R 汇报所用 raw 口径 895/23 已在本档修正)。
 
 ### ★授权变更登记(72A,不可省)
 
