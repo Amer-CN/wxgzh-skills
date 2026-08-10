@@ -50,6 +50,7 @@ Skill 不应永远强行产出文章。以下情况允许停止并输出退出�
 | `evidence_conflict` | 证据相互冲突 | 支持和反对证据无法调和，无法确定核心立场 |
 | `unsuitable_topic` | 选题没有信息增量 | HKR 三项均低于 3 分 |
 | `review_blocked` | 审稿发现不可修复的 P0 | 三轮修订后 P0 仍不为零 |
+| `scope_reduction` | 材料门未过且可收窄 | 材料门分档未满足且选题范围可收窄(降档 long→medium 等或收窄范围),收窄结果与理由记入 handoff.scope;能收窄则收窄并继续,不能收窄才以 `needs_research` 等既有状态退出 |
 
 ### 退出输出格式
 

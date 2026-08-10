@@ -1941,6 +1941,22 @@ class TestHandoffProseCraftFields:
         assert "| prose_craft_applied |" in text
         assert "| prose_craft_version |" in text
 
+    def test_v21_fields_present_and_typed(self):
+        import re
+        text = self.HANDOFF.read_text(encoding="utf-8")
+        for key in ("handoff_stage", "author_intent", "allow_rewrite_scope",
+                    "material_stats", "scope"):
+            assert f"{key}:" in text, key
+        # 类型语义:handoff_stage 字符串、allow_rewrite_scope 枚举 none/expression_only、
+        # material_stats 对象、formatter.cover 三字段 null 缺省
+        assert re.search(r"handoff_stage:\s*[\"']?[a-z_]+[\"']?", text)
+        assert re.search(r"allow_rewrite_scope:\s*[\"'](none|expression_only)[\"']", text)
+        assert re.search(r"material_stats:\s*\{\}", text)
+        assert "| formatter.cover |" in text
+        formatter_zone = text.split("formatter:")[1].split("next:")[0]
+        for key in ("kicker:", "strike:", "tags:"):
+            assert key in formatter_zone, key
+
 
 def test_h2_component_policy_missing_field_reports_error(tmp_path):
     """component_policy missing one required field must report ERROR."""

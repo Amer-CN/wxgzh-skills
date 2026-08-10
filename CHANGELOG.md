@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.3.4-rc1 — Batch 3：契约层（材料门分档 + scope_reduction + handoff v2.1 + dist lite）(2026-08-10)
+
+### 新增
+
+- **材料门分档**：`scripts/validate_material_gate.py` 按 article_mode 确定性判定（short 无下限 / medium ≥3 / long ≥5 / deep 每 core claim ≥2 且覆盖率 100% / digest 单一来源 ≤40% / synthesis 输入覆盖率 100%）；weekly_roundup 归 digest 档（72E-1 重建裁决）。Phase 7 校验链接入。
+- **scope_reduction 出口**：材料门未过且可收窄 → 降档或收窄选题范围，结果与理由记入 handoff.scope；失败退出表新增该行。
+- **handoff v2.1**：追加 handoff_stage / author_intent / allow_rewrite_scope（none|expression_only，默认 none）/ material_stats / scope 五字段 + formatter.cover（kicker/strike/tags）。
+- **dist/super-writer-lite.md**：≤2000 汉字人工蒸馏版（谱系沿用 KKKKhazix/human-writing lite 做法）。
+
+### 修改
+
+- prose-craft.md 末尾新增封面文案交接小节（kicker/strike/tags 写作引导）。
+- 测试 +2（handoff v2.1 字段、dist lite 汉字数），237 passed。
+
 ## v0.3.3-rc1 — Batch 2：prose-craft 层 + 编辑审查扩项 + handoff 最小契约 (2026-08-10)
 
 ### 新增

@@ -845,6 +845,21 @@ def test_h2_support_without_observed_at_rejected():
         assert "observed_at" in str(e)
 
 
+def test_dist_lite_exists_and_under_2000_hanzi():
+    """Batch 3:dist/super-writer-lite.md 存在且汉字数 <=2000(人工蒸馏版)。"
+
+    确定性计数口径(测试里写死):仅统计 CJK 统一表意文字 U+4E00–U+9FFF
+    (re.findall [\u4e00-\u9fff]),不含标点、拉丁字符与数字;计数 <=2000。
+    """
+    import re
+    p = ROOT / "dist" / "super-writer-lite.md"
+    assert p.is_file(), "dist/super-writer-lite.md must exist"
+    text = p.read_text(encoding="utf-8")
+    hanzi = len(re.findall(r"[\u4e00-\u9fff]", text))
+    assert hanzi <= 2000, f"dist lite 汉字数 {hanzi} > 2000"
+    assert hanzi > 500, f"dist lite 汉字数 {hanzi} 过少,疑似空文件"
+
+
 def test_h2_invalid_date_format_rejected():
     """H2: invalid observed_at date format must be rejected."""
     sys.path.insert(0, str(ROOT / 'scripts'))

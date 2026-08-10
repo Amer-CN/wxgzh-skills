@@ -31,6 +31,21 @@ material_readiness:
 | topic 不明确 | — | clarify_with_user |
 | 全部缺失 | — | clarify_with_user |
 
+### 材料门分档（Batch 3 新增）
+
+按 article_mode 分档评估（确定性校验脚本 `scripts/validate_material_gate.py`，字段取自 material-ledger.yaml 与 material-ingestion-report.json）：
+
+| article_mode | 分档要求 |
+|---|---|
+| short | 无下限 |
+| medium | 独立素材 ≥3 |
+| long | 独立素材 ≥5 |
+| deep | 每 core claim ≥2 件独立材料，且覆盖率 100% |
+| daily_digest / weekly_roundup（归 digest 档，72E-1 重建裁决） | 单一来源占比 ≤40% |
+| material_synthesis | 输入覆盖率 100% |
+
+分档未满足且可收窄（降档或收窄选题范围）→ `scope_reduction`，收窄结果与理由记入 handoff.scope；不能收窄才以既有失败退出状态退出。与 `needs_research` 等退出并列、不互斥。
+
 ### 降级策略
 
 当 WebSearch 不可用或外部证据不足时：

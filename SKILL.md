@@ -288,6 +288,8 @@ issues_and_uncertainties.md
 
 分维度评估已有素材（topic / audience / core_opinion / evidence / personal_experience / voice_context），输出 `material_readiness` 结果，决定 `allowed_output` 和 `required_actions`。这决定是否需要研究、是否可以进入找核、是否必须向用户提问、是否需要编辑锚点、是否只能输出大纲。
 
+**材料门分档（Batch 3 新增）：** 按 article_mode 分档评估素材量（short 无下限 / medium 独立素材 ≥3 / long ≥5 / deep 每 core claim ≥2 件独立材料且覆盖率 100% / digest 单一来源占比 ≤40% / synthesis 输入覆盖率 100%）；weekly_roundup 归 digest 档（72E-1 重建裁决，用户可否决）。交付链由 `scripts/validate_material_gate.py` 确定性校验。分档未满足且可收窄 → 走 `scope_reduction`（降档或收窄选题范围，结果与理由记入 handoff.scope）；不能收窄才以既有失败退出状态退出。
+
 **门禁：** 素材充分性检查完成且 `required_actions` 已执行或已设置编辑锚点。
 
 ### Phase 2：研究与证据地图
@@ -362,7 +364,7 @@ issues_and_uncertainties.md
 10. semantic-map.yaml（通过 validate_semantic_map.py 校验）
 11. editor-report.md（含 P0, P1, P2）
 
-Full 模式任一产物失败不得交付完成稿。先运行 `scripts/material_ingestion.py` 校验 ledger，再运行 `scripts/validate_article_length.py --full-mode`，最后运行 `scripts/validate_semantic_map.py`。详见 `references/length-policy.md`。
+Full 模式任一产物失败不得交付完成稿。校验链顺序：`scripts/material_ingestion.py`（校验 ledger）→ `scripts/validate_article_length.py --full-mode` → `scripts/validate_material_gate.py`（材料门分档，Batch 3 新增）→ `scripts/validate_semantic_map.py`。材料门未过且可收窄 → `scope_reduction`（降档或收窄范围，记入 handoff.scope）。详见 `references/length-policy.md`。
 
 ## 编辑学习流程
 
@@ -418,5 +420,6 @@ Skill 不应永远强行产出文章。当出现以下情况时，输出退出�
 | `evidence_conflict` | 证据相互冲突且无法解决 |
 | `unsuitable_topic` | 选题没有信息增量 |
 | `review_blocked` | 三轮修订后 P0 仍不为零 |
+| `scope_reduction` | 材料门分档未满足且可收窄(降档或收窄选题范围);能收窄则收窄并记录进 handoff.scope,不能收窄才退出 |
 
 详见 `references/workflow.md` 的“失败退出机制”段落。

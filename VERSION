@@ -1,5 +1,5 @@
-version: 0.3.3-rc1
-previous_version: 0.3.2-rc1
+version: 0.3.4-rc1
+previous_version: 0.3.3-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -7,11 +7,11 @@ smoke_test: passed
 formal_phase4: skipped_for_personal_use
 evaluation_method: continuous_dogfooding
 iteration_strategy: integrate_proven_editorial_flow
-test_count: 235
+test_count: 237
 writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-10
-hotfix_name: batch2
-release_notes: "v0.3.3-rc1: Batch 2 — prose-craft 正向写法层(R1–R9) + 编辑审查扩项(段落推进 P1/翻案腔语义 P2/结尾专项) + 说话位置五问(Phase 1 内嵌) + handoff prose_craft 两字段 + conflict-resolution v0.4;235 tests passed."
+hotfix_name: batch3
+release_notes: "v0.3.4-rc1: Batch 3 — 材料门分档 + scope_reduction + handoff v2.1(五字段+cover) + dist/super-writer-lite + validate_material_gate;237 tests passed."

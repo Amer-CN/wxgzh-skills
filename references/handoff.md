@@ -1,12 +1,12 @@
 # 下游交接契约
 
-## v2.0 Schema（v0.3 新增，向后兼容 v1.0）
+## v2.1 Schema（Batch 3 新增，向后兼容 v1.0/v2.0）
 
 写作 Skill 完成后输出：
 
 ```yaml
 handoff:
-  schema_version: "2.0"
+  schema_version: "2.1"
   article_path: article.md
   semantic_map_path: semantic-map.yaml    # v2.0 新增
   content_score: 0
@@ -15,6 +15,12 @@ handoff:
 
   prose_craft_applied: false              # Batch 2 新增：本文是否经过 prose-craft 层（R1–R9 自检）
   prose_craft_version: null               # Batch 2 新增：prose-craft.md 的版本号（如 "1.0"）
+
+  handoff_stage: super_writer             # Batch 3 新增：产出本 handoff 的阶段标识
+  author_intent: "写给谁/为什么写"       # Batch 3 新增：作者意图一句话（来自 Phase 1 简报）
+  allow_rewrite_scope: "none"            # Batch 3 新增：作者授予下游的改写范围，枚举 none/expression_only，默认 none
+  material_stats: {}                      # Batch 3 新增：材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕）
+  scope: ""                              # Batch 3 新增：文章范围声明；scope_reduction 发生时记录收窄结果与理由
 
   unresolved_facts: []
   editor_anchors: []
@@ -35,6 +41,10 @@ handoff:
       anchors_resolved: true
       payloads_complete: true
       unsupported_roles: []
+    cover:                                 # Batch 3 新增：封面文案（缺省则下游用渲染默认）
+      kicker: null                         # 文章类型标签（如 "深度观察"）
+      strike: null                         # 被本文推翻的旧认知疑问句
+      tags: null                           # 2 个内容标签（如 ["深度", "观察"]）
 
   next:
     - skill: humanizer
@@ -50,11 +60,11 @@ handoff:
 
 ### v1.0 向后兼容
 
-v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved_facts、editor_anchors、author_confirmations、preserve_exactly、next）全部保留。v2.0 新增字段：
+v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved_facts、editor_anchors、author_confirmations、preserve_exactly、next）全部保留。v2.0/v2.1 新增字段：
 
 | 新字段 | 含义 |
 |--------|------|
-| schema_version | 交接契约版本，v2.0 |
+| schema_version | 交接契约版本，v2.1 |
 | semantic_map_path | 语义映射文件路径 |
 | formatter | formatter 交接子契约 |
 | prose_craft_applied | 本文是否经过 prose-craft 层（R1–R9 自检），true/false |
@@ -65,6 +75,12 @@ v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved
 | formatter.preferred_theme | 首选主题（null=不指定） |
 | formatter.component_policy | 组件策略 |
 | formatter.validation | 校验状态 |
+| handoff_stage | 产出本 handoff 的阶段标识（交接来源可追溯） |
+| author_intent | 作者意图一句话（写给谁/为什么写，来自 Phase 1 简报） |
+| allow_rewrite_scope | 作者授予下游的改写范围，枚举 none/expression_only，默认 none |
+| material_stats | 材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕） |
+| scope | 文章范围声明；scope_reduction 发生时记录收窄结果与理由 |
+| formatter.cover | 封面文案对象 {kicker, strike, tags}；缺省则下游用渲染默认 |
 
 ---
 
