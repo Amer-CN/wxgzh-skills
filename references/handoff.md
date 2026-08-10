@@ -21,8 +21,10 @@ handoff:
   allow_rewrite_scope: "none"            # Batch 3 新增：作者授予下游的改写范围，枚举 none/expression_only，默认 none
   material_stats: {}                      # Batch 3 新增：材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕）
   scope: ""                              # Batch 3 新增：文章范围声明；scope_reduction 发生时记录收窄结果与理由
-  title_candidates: []                   # 档76A 新增：3–5 个候选标题（Phase 3 攻核后产出，供用户草稿箱挑选，不自动替换 H1）
+  title_candidates: []                   # 档76A 新增：3–5 个候选标题（Phase 3 攻核后产出，不同角度；Phase 6 选定后保留备查）
   hook_line: ""                          # 档76A 新增：一句钩子（本文最反直觉/最值钱的点）；formatter.cover.strike 未单独指定时默认取此值
+  selected_title: ""                    # 档76B 新增：Reviewer 按评分尺从 title_candidates 选定的最终 H1（article.md H1 与此一致）
+  title_selection_reason: ""            # 档76B 新增：选定理由一行（评分尺依据）
 
   unresolved_facts: []
   editor_anchors: []
@@ -86,6 +88,8 @@ v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved
 | formatter.cover | 封面文案对象 {kicker, strike, tags}；缺省则下游用渲染默认 |
 | title_candidates | 3–5 个候选标题（字符串数组，供用户草稿箱挑选，不自动替换 H1） |
 | hook_line | 一句钩子（本文最反直觉/最值钱的点）；formatter.cover.strike 未单独指定时默认取此值 |
+| selected_title | Reviewer 按评分尺从 title_candidates 选定的最终 H1（字符串；article.md H1 与此一致） |
+| title_selection_reason | 选定理由一行（字符串，评分尺依据） |
 
 ---
 

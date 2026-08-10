@@ -1,5 +1,5 @@
-version: 0.3.5-rc1
-previous_version: 0.3.4-rc1
+version: 0.3.6-rc1
+previous_version: 0.3.5-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -7,11 +7,11 @@ smoke_test: passed
 formal_phase4: skipped_for_personal_use
 evaluation_method: continuous_dogfooding
 iteration_strategy: integrate_proven_editorial_flow
-test_count: 241
+test_count: 242
 writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-10
-hotfix_name: 76a
-release_notes: "v0.3.5-rc1: 档76A — handoff.yaml 进 full-mode 必检(11->12,OBS-252) + 标题打磨(Phase 3 后 title_candidates/hook_line,handoff v2.2);241 tests passed."
+hotfix_name: 76b
+release_notes: "v0.3.6-rc1: 档76B — 标题选定闭环(Phase 6 Reviewer 评分尺选定 H1 + handoff selected_title/title_selection_reason);242 tests passed."

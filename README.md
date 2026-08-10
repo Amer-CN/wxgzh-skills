@@ -4,7 +4,7 @@
 
 明确不负责：去 AI 味、美化排版、配图和发布。最终稿通过 `handoff` 交给下游 Skill。
 
-> **v0.3.5-rc1** — `release_candidate` | 241 tests passed | MIT License
+> **v0.3.6-rc1** — `release_candidate` | 242 tests passed | MIT License
 
 ## 目录结构
 
@@ -51,7 +51,7 @@ super-writer/
 │   ├── check_manifest.py     #   文件完整性校验
 │   ├── package_zip.py        #   打包脚本
 │   └── gen_source_bundle.py  #   源码合并文档生成
-├── tests/                    # 测试套件（241 个）
+├── tests/                    # 测试套件（242 个）
 │   ├── test_structure.py
 │   ├── test_calibration.py
 │   ├── test_semantic_handoff.py
@@ -128,7 +128,7 @@ super-writer/
 
 **v0.3.0-rc1** — `ready_for_personal_use`
 
-- 241 个工程与行为测试：全部通过（含 50 项篇幅策略与素材路由测试）
+- 242 个工程与行为测试：全部通过（含 50 项篇幅策略与素材路由测试）
 - 4 场景冒烟测试：全部通过
 - 3 篇语义 fixture 集成验收通过（简单观点文 / 结构化教程 / 深度分析）
 - 正式 Phase 4 评测：跳过（个人使用）
@@ -149,7 +149,7 @@ cd ~/.claude/skills/super-writer
 python -m pytest tests/ -v
 ```
 
-应看到 `241 passed`。
+应看到 `242 passed`。
 
 ## 使用方法
 

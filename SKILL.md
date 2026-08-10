@@ -308,7 +308,7 @@ issues_and_uncertainties.md
 
 **门禁：** 核心只能得到“成立、变形、崩塌”三种结论。崩塌时回到研究或诚实告知，不进入大纲。
 
-**标题打磨（档76A 新增，攻核之后）：** 产出 3–5 个候选标题（`title_candidates`）与一句钩子（`hook_line`，一句话说清本文最反直觉/最值钱的点）。原则服从 R1–R9：标题要具体、有判断，禁标题党空壳；hook_line 与 formatter.cover.strike 同源（封面划线句默认取 hook_line）。候选标题供用户在草稿箱挑选，不自动替换文章 H1；H1 流程不变。产物写入 handoff.yaml（v2.2）。
+**标题打磨（档76A 新增，攻核之后）：** 产出 3–5 个候选标题（`title_candidates`）与一句钩子（`hook_line`，一句话说清本文最反直觉/最值钱的点），候选须覆盖不同角度。原则服从 R1–R9：标题要具体、有判断，禁标题党空壳；hook_line 与 formatter.cover.strike 同源（封面划线句默认取 hook_line）。产物写入 handoff.yaml（v2.2）。最终 H1 由 Phase 6「标题选定」从候选中选定（档76B）。
 
 ### Phase 4：结构设计
 
@@ -339,6 +339,8 @@ issues_and_uncertainties.md
 加载 `references/editorial-review.md` 和 `templates/editor-report.md`。
 
 切换 Reviewer 角色，不沿用 Writer 的自我辩护。按 P0-P3 分级并评分；写作 Skill 只修复 P0-P2，P3 表达层问题留给下游去 AI 味 Skill。
+
+**标题选定（档76B 新增，子步骤）：** 由 Reviewer 角色（非 Writer）按固定评分尺从 `title_candidates` 中选定一个作为最终 H1：具体（有数字/对象/动作）> 有判断（立场明确）> 贴核心张力 > 长度 ≤30 字 > 无标题党空壳；写一行选定理由（`title_selection_reason`）。article.md 的 H1 = 选定标题（封面拆行随 H1 自动生效）；`title_candidates` 保留备查。禁止 Reviewer 另造候选之外的新标题。
 
 **门禁：** 零 P0；P1 已解决或明确告知；内容分建议达到 82/100。
 

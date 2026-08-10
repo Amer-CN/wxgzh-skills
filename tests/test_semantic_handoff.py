@@ -1972,6 +1972,21 @@ class TestHandoffProseCraftFields:
         assert "strike" in text and "hook_line" in text
         assert "默认取 hook_line" in text or "取 hook_line" in text
 
+    def test_v22_selection_fields_present_and_typed(self):
+        import re
+        text = self.HANDOFF.read_text(encoding="utf-8")
+        assert "selected_title:" in text
+        assert "title_selection_reason:" in text
+        # 类型语义:两字段均为字符串示例
+        assert re.search(r"selected_title:\s*[\"']", text)
+        assert re.search(r"title_selection_reason:\s*[\"']", text)
+        # 字段表登记
+        assert "| selected_title |" in text
+        assert "| title_selection_reason |" in text
+        # 契约:selected_title 必须从 title_candidates 中选定,article H1 与之一致
+        assert "从 title_candidates" in text or "从 `title_candidates`" in text
+        assert "H1" in text
+
 
 def test_h2_component_policy_missing_field_reports_error(tmp_path):
     """component_policy missing one required field must report ERROR."""

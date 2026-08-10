@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.3.6-rc1 — 档76B：标题选定闭环 (2026-08-10)
+
+### 新增
+
+- **标题选定**：Phase 6 内容审稿新增子步骤，Reviewer 角色（非 Writer）按固定评分尺（具体 > 有判断 > 贴核心张力 > 长度 ≤30 字 > 无标题党空壳）从 title_candidates 选定最终 H1 并写一行理由；article.md H1 = 选定标题，封面拆行随 H1 自动生效；title_candidates 保留备查；禁止另造候选外新标题。
+- **handoff v2.2 追加两字段**：selected_title（字符串，= article H1）/ title_selection_reason（字符串，评分尺依据）。
+
+### 修改
+
+- Phase 3.5 标题打磨描述更新：候选覆盖不同角度，最终 H1 由 Phase 6 选定。
+- 测试 +1（selected_title/title_selection_reason 字段与契约），242 passed。
+
 ## v0.3.5-rc1 — 档76A：handoff 强制化 + 标题打磨 (2026-08-10)
 
 ### 新增
