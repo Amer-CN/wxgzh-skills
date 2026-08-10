@@ -100,10 +100,38 @@ def test_pipeline_builds_real_gzh_cli(tmp_path):
     sd = tmp_path / "gzh_design"; sd.mkdir()
     args = PR._entry_args(ctx, "gzh_design", sd, None, None)
     assert args[0] == "--article" and "--bindings" in args and "--output-dir" in args
-    assert args[-2] == "--theme" and args[-1] == "smartisan"
+    # 72E-1:handoff 无 cover 字段时行为与现状一致(--theme smartisan 收尾)
+    # cover 参数追加在 --theme smartisan 之后,末尾两参数是 kicker
+    assert "--theme" in args and args[args.index("--theme") + 1] == "smartisan"
+    assert "--kicker" not in args
     # gzh official validator takes a POSITIONAL html path (no --html flag)
     v = PR._validator_args("gzh_design", sd, None)
     assert len(v) == 1 and v[0].endswith("final.html")
+
+
+def test_pipeline_gzh_cover_handoff_wiring(tmp_path):
+    """72E-1/OBS-251:handoff formatter.cover 存在时,gzh 调用携带封面四参数;
+    --date 永远不传。"""
+    sw = tmp_path / "super_writer"; sw.mkdir()
+    (sw / "handoff.yaml").write_text("""handoff:
+  schema_version: "2.1"
+  formatter:
+    cover:
+      kicker: "实测观察"
+      strike: "写作只能靠天赋？"
+      tags: ["深度", "观察"]
+""", encoding="utf-8")
+    ctx = _Ctx(tmp_path, tmp_path)
+    sd = tmp_path / "gzh_design"; sd.mkdir()
+    args = PR._entry_args(ctx, "gzh_design", sd, None, None)
+    # cover 参数追加在 --theme smartisan 之后,末尾两参数是 kicker
+    assert "--theme" in args and args[args.index("--theme") + 1] == "smartisan"
+    assert "--kicker" in args and args[args.index("--kicker") + 1] == "实测观察"
+    assert "--strike" in args and args[args.index("--strike") + 1] == "写作只能靠天赋？"
+    # cover 定义 {kicker, strike, tags};brand 缺省不传,走渲染默认
+    assert "--brand" not in args
+    assert "--tags" in args and args[args.index("--tags") + 1] == "深度,观察"
+    assert "--date" not in args
 
 
 def test_shims_mirror_real_cli_flags():

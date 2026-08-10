@@ -787,10 +787,40 @@ def _entry_args(
             args.extend(["--discovery-manifest", str(discovery_manifest)])
         return args
     if stage == "gzh_design":
-        return ["--article", str(_frozen_article(ctx)),
+        args = ["--article", str(_frozen_article(ctx)),
                 "--bindings", str(rd / "media_enrichment" / "article_image_bindings.json"),
                 "--output-dir", str(sd), "--theme", "smartisan"]
+        # 72E-1/OBS-251:handoff formatter.cover 存在则传 --strike/--tags/--brand/--kicker;
+        # --date 永远不传(渲染自动当月);无 cover 字段时行为与现状逐字一致。
+        cover = _handoff_cover(ctx)
+        if cover:
+            for flag, key in (("--strike", "strike"), ("--tags", "tags"),
+                              ("--brand", "brand"), ("--kicker", "kicker")):
+                val = cover.get(key)
+                if val:
+                    if key == "tags" and isinstance(val, list):
+                        val = ",".join(str(t) for t in val)
+                    args += [flag, str(val)]
+        return args
     raise ValueError(stage)
+
+
+def _handoff_cover(ctx) -> dict | None:
+    """读 super_writer/handoff.yaml 的 handoff.formatter.cover(72E-1/OBS-251)。
+    文件缺失/解析失败/无 cover → None(行为与现状一致,绝不阻断)。"""
+    try:
+        p = Path(ctx.run_dir) / "super_writer" / "handoff.yaml"
+        if not p.is_file():
+            return None
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+        formatter = data.get("handoff", {}).get("formatter", {}) if isinstance(
+            data.get("handoff"), dict) else {}
+        cover = formatter.get("cover") if isinstance(formatter, dict) else None
+        return cover if isinstance(cover, dict) and cover else None
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
 
 
 def _validator_args(stage: str, sd: Path, req_path: Path | None) -> list:

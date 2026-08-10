@@ -21,6 +21,11 @@ def main(argv=None) -> int:
     ap.add_argument("--bindings", default=None)
     ap.add_argument("--output-dir", required=True)
     ap.add_argument("--theme", default="smartisan")
+    ap.add_argument("--strike", default="")
+    ap.add_argument("--brand", default="")
+    ap.add_argument("--tags", default="")
+    ap.add_argument("--kicker", default="")
+
     a = ap.parse_args(argv)
 
     md = Path(a.article).read_text(encoding="utf-8")
