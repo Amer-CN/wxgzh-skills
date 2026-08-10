@@ -190,6 +190,32 @@ class TestHf7Signature:
     """档HF-7:署名第二句恢复用户传统落款——渲染产物含新句、不含旧句,
     第一句与署名结构不动。"""
 
+
+class TestHf72eKicker:
+    """档72E-1/OBS-251:--kicker 显式覆盖生效;默认沿用既有「深度观察 · 标签」构造。"""
+
+    def test_kicker_override(self, tmp_path):
+        td = Path(tempfile.mkdtemp())
+        (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")
+        R = _load_render()
+        code = R.main(["--article", str(td / "final_article.md"),
+                      "--output-dir", str(td), "--theme", "smartisan",
+                      "--kicker", "实测观察"])
+        assert code == 0
+        html = (td / "final.html").read_text(encoding="utf-8")
+        assert '<span leaf="">实测观察</span>' in html
+        assert "深度观察 · " not in html
+
+    def test_kicker_default_construct(self, tmp_path):
+        td = Path(tempfile.mkdtemp())
+        (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")
+        R = _load_render()
+        code = R.main(["--article", str(td / "final_article.md"),
+                      "--output-dir", str(td), "--theme", "smartisan"])
+        assert code == 0
+        html = (td / "final.html").read_text(encoding="utf-8")
+        assert "深度观察 · " in html
+
     def test_render_contains_traditional_brand_2(self, tmp_path):
         td = Path(tempfile.mkdtemp())
         (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")

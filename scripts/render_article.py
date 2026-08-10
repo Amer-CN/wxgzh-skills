@@ -193,7 +193,8 @@ def parse_article(md: str) -> dict:
 def render(theme_key: str, parsed: dict, body_images: list[dict],
            date: str | None = None, strike: str = "别急着划走",
            brand: str = "给自己造把锤子",
-           tags: tuple[str, ...] = ("深度", "观察")) -> tuple[str, dict]:
+           tags: tuple[str, ...] = ("深度", "观察"),
+           kicker: str | None = None) -> tuple[str, dict]:
     title = parsed["title"]
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
     chapter_titles = [c["title"] for c in chapters]
@@ -206,7 +207,10 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
     parts: list[str] = []
 
     l1, l2 = split_title(title)
-    kicker = "深度观察 · " + en_label_for(chapter_titles[0] if chapter_titles else title, 1)
+    # 档HF-7/72E-1(OBS-251):--kicker 显式给出则用之;None 沿用既有构造。这里只赋值,
+    # hammer_cover 的 kicker 参数原样传入(见下方调用)。
+    if kicker is None:
+        kicker = "深度观察 · " + en_label_for(chapter_titles[0] if chapter_titles else title, 1)
     subtitle = (parsed.get("intro") or "结构化拆解与要点梳理")[:48]
     cover_date = date or datetime.now().strftime("%Y.%m")
     parts.append(H.hammer_cover(theme_key, kicker=kicker, strike=strike,
@@ -289,6 +293,8 @@ def main(argv=None) -> int:
     ap.add_argument("--brand", default="给自己造把锤子")
     ap.add_argument("--tags", default="深度,观察",
                     help="comma-separated cover tags")
+    ap.add_argument("--kicker", default=None,
+                    help="cover kicker(文章类型标签);默认沿用「深度观察 · 标签」构造")
     a = ap.parse_args(argv)
 
     theme_key = THEME_ALIAS.get(a.theme.strip().lower(), None)
@@ -311,7 +317,8 @@ def main(argv=None) -> int:
 
     tags = tuple(t.strip() for t in a.tags.split(",") if t.strip())
     html, usage = render(theme_key, parsed, body_images,
-                         date=a.date, strike=a.strike, brand=a.brand, tags=tags)
+                         date=a.date, strike=a.strike, brand=a.brand, tags=tags,
+                         kicker=a.kicker)
 
     out = Path(a.output_dir)
     out.mkdir(parents=True, exist_ok=True)

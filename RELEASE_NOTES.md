@@ -1,4 +1,10 @@
-# gzh-design v2026.08.10-hammer.10
+# gzh-design v2026.08.10-hammer.11
+
+## v2026.08.10-hammer.11(档72E-1)
+
+- OBS-251 封面文案路径:render_article.py 新增 --kicker 可选参数(默认 None → 沿用
+  既有「深度观察 · 标签」构造),与 HF-6 四参数同模式;handoff formatter.cover 的
+  kicker 经 pipeline 接线流入。测试 +2(覆盖生效/默认沿用)。
 
 ## v2026.08.10-hammer.10(档HF-7)
 
