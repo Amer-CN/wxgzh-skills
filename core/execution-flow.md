@@ -19,7 +19,7 @@
 
 ### 步骤 3：识别权限
 
-- 加载 profiles/{profile}.md
+- 加载 config/default.yaml 的 pattern_thresholds(profile 阈值真源;profiles/*.md 已删除,OBS-232)
 - 根据 source 确认 strategy（如用户未指定）
 - 根据 strategy 确认操作权限表
 

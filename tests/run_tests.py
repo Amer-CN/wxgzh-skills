@@ -474,7 +474,8 @@ def test_profile_thresholds():
 
 # 档72C-2:SC-005 阈值改为 3/3/3 后无法区分 profile,PB-011 改挂 SC-001
 # (essay 2 / technical 3 / social 2)。文本含恰好 2 处 SC-001「随着…的发展」,
-# 同一段落;两句长度 17/15,SC-005 连续计数最大 2<3 不会触发。
+# 同一段落;两句句式骨架相同但同构簇=2,SC-005 阈值 3 不触发(档72E-1/OBS-227
+# 语义重写后仍不触发:同构检测量句式非句长)。
 # 预期:essay 命中 1(cluster_threshold 2)、technical 0、social 命中 1。
 SC001_TEXT = ("随着人工智能的发展，行业开始变化。随着大模型的发展，成本下降。")
 

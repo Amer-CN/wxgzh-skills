@@ -85,7 +85,9 @@ HARD_RESIDUE_PATTERNS = [
     {
         'id': 'HR-001',
         'name': '模板占位符',
-        'patterns': [r'\{\{[^}]+\}\}', r'\[INSERT[^\]]*\]', r'\[待填\]'],
+        # 档72E-1:补 <...> 变体(72C-1 M-2a 遗留;mask_non_prose 已屏蔽 HTML 标签,
+        # 检测跑在屏蔽后文本上,不误伤真 HTML)。
+        'patterns': [r'\{\{[^}]+\}\}', r'\[INSERT[^\]]*\]', r'\[待填\]', r'<[^>\n]{1,40}>'],
         'language_origin': 'language_general',
     },
     {
@@ -306,11 +308,11 @@ STRONG_CONTEXTUAL_PATTERNS = [
     },
     {
         'id': 'SC-005',
-        'name': '连续等长句',  # 档72C-2/§2:名实对齐,见下方 OBS-227 注释
+        'name': '连续同构结构',  # 档72E-1/OBS-227:语义重写为句式同构(见专用块)
         'patterns': [],  # 需要特殊检测逻辑
-        # 档72C-2/OBS-227:本规则实测的是相邻句长差(<=5),不是句式同构。
-        # references/patterns/strong-contextual.md 声明的「相同句式」检测
-        # 尚未实现。语义重写留 Batch 3,本档只做名实对齐,不动算法。
+        # 档72E-1/OBS-227:检测同段落内句式骨架相同的句子聚集(功能词/标点
+        # 保留、内容占位 X、数字占位 N);分句不跨段落、取消只比紧邻前句、
+        # 每句只归属一个同构簇消除双重计数。详见专用块实现。
         'thresholds': {'essay': 3, 'technical': 3, 'social': 3},  # 档72C-2:文档三档均正常
         'language_origin': 'language_general',
     },
@@ -448,44 +450,68 @@ def detect_strong_contextual(masked, original, profile, protected):
                     reason=reason,
                     context_note=_CONTEXT_NOTE if pattern_def['id'] == 'SC-007a' else None))
 
-    # 检测连续等长句（SC-005,档72C-2 名实对齐:实测句长差,非句式同构）
-    # 档72B-2F/OBS-229:阈值与其余 SC 规则共用同一 thresholds 真源。
+    # 检测句式同构聚集（SC-005,档72E-1/OBS-227 语义重写:量对对象=句式骨架,
+    # 非句长;分句不跨段落;取消只比紧邻前句;每句只归属一个同构簇,消除双重计数。
+    # 骨架=功能词与标点原样保留、内容字符占位 X、数字占位 N;同骨架句=同构。
+    # 阈值与其余 SC 规则共用同一 thresholds 真源(档72B-2F/OBS-229)。
     sc005_def = _SC_BY_ID['SC-005']
     sc005_threshold = sc005_def['thresholds'][profile]
-    all_sents = []
-    for _para, pstart, pend in paragraphs:
-        for sent, sstart, send in _sent_spans(_para):
-            all_sents.append((sent, pstart + sstart, pstart + send))
-    consecutive_count = 1
-    prev_len = 0
-    for i, (sent, sstart, send) in enumerate(all_sents):
-        curr_len = len(sent)
-        if i > 0 and abs(curr_len - prev_len) <= 5 and curr_len > 10:
-            consecutive_count += 1
-            if consecutive_count >= sc005_threshold:
-                start_i = i - consecutive_count + 1
-                # 全局句号 → (段,句内号):按段落句数累计定位
-                acc = 0
-                para_of = 0
-                sent_of = 0
-                for p_idx, (_para, _ps, _pe) in enumerate(paragraphs):
-                    n = len(_sent_spans(_para))
-                    if start_i < acc + n:
-                        para_of, sent_of = p_idx, start_i - acc
+    _SC005_FUNC_WORDS = ("随着", "通过", "对于", "关于", "为了", "除了", "无论", "尽管",
+                        "虽然", "但是", "因为", "所以", "如果", "那么", "不仅", "而且",
+                        "并且", "然而", "于是", "因此", "其实", "不过", "当然", "后来",
+                        "当时", "然后", "没有", "不是", "而是", "就是", "还是", "还有",
+                        "以及", "或者", "只是", "可是")
+    _SC005_FUNC_CHARS = set("的了是在把被就也都还又但而和与或这那从向对为以按比")
+    for para_idx, (para, pstart, pend) in enumerate(paragraphs):
+        candidates = []
+        for sent, sstart, send in _sent_spans(para):
+            skel = []
+            i = 0
+            n = len(sent)
+            while i < n:
+                matched = False
+                for w in _SC005_FUNC_WORDS:
+                    if sent.startswith(w, i):
+                        skel.append(w)
+                        i += len(w)
+                        matched = True
                         break
-                    acc += n
-                span = (all_sents[start_i][1], all_sents[i][2])
-                reason = f"{sc005_def['name']}:连续{consecutive_count}句句长相近"
+                if matched:
+                    continue
+                ch = sent[i]
+                if ch in _SC005_FUNC_CHARS or ch in "，。！？；：、,.;:!?":
+                    skel.append(ch)
+                elif ch.isdigit():
+                    if not skel or skel[-1] != "N":
+                        skel.append("N")
+                else:
+                    if not skel or skel[-1] != "X":
+                        skel.append("X")
+                i += 1
+            skeleton = "".join(skel)
+            if skeleton.count("X") == len(skeleton) and "X" in skeleton:
+                continue  # 无功能词/标点的句子没有句式结构特征,不参与同构
+            candidates.append((sent, sstart, send, skeleton))
+        clusters = []
+        for sent, sstart, send, skel in candidates:
+            for cl in clusters:
+                if cl[0] == skel:
+                    cl[1].append((sent, sstart, send))
+                    break
+            else:
+                clusters.append((skel, [(sent, sstart, send)]))
+        for skel, members in clusters:
+            if len(members) >= sc005_threshold:
+                first, last = members[0], members[-1]
+                span = (pstart + first[1], pstart + last[2])
+                reason = f"{sc005_def['name']}:{len(members)}句句式同构聚集"
                 findings.append(_finding(
                     'strong_contextual', profile, sc005_def,
-                    f'第{para_of+1}段第{sent_of+1}句', span,
+                    f'第{para_idx+1}段第{first[1]+1}句', span,
                     original, protected,
-                    cluster_count=consecutive_count, cluster_threshold=sc005_threshold,
+                    cluster_count=len(members), cluster_threshold=sc005_threshold,
                     reason=reason,
-                    suggestion='复核是否真为同构句式;修辞排比应保留'))
-        else:
-            consecutive_count = 1
-        prev_len = curr_len
+                    suggestion='复核是否真为模板化句式;修辞排比应保留'))
 
     # 档72C-2/§5:SC-007b 升级机制——同一段落内 AO-001(不是…而是 / 并非…而是)
     # 命中 >= 2 时升级为 strong finding(confidence=low);单发只留 advisory。
@@ -558,7 +584,8 @@ ADVISORY_ONLY_PATTERNS = [
     {'id': 'AO-002', 'name': '先…再…', 'pattern': r'先.{0,20}再', 'language_origin': 'language_general'},
     {'id': 'AO-003', 'name': '从…到…', 'pattern': r'从.{0,20}到', 'language_origin': 'language_general'},
     {'id': 'AO-004', 'name': '破折号', 'pattern': r'——', 'language_origin': 'chinese_specific'},
-    {'id': 'AO-006', 'name': '反问', 'pattern': r'难道.{0,20}[吗呢？?]', 'language_origin': 'language_general'},
+    # 档72E-1:补「不是吗？」独立变体(72C-1 M-2a 遗留)。
+    {'id': 'AO-006', 'name': '反问', 'pattern': r'(?:难道.{0,20}[吗呢？?])|(?:不是吗？)', 'language_origin': 'language_general'},
     {'id': 'AO-007', 'name': '二人称', 'pattern': r'你', 'language_origin': 'language_general'},
     {'id': 'AO-011', 'name': '第一人称', 'pattern': r'[我]', 'language_origin': 'language_general'},
 ]

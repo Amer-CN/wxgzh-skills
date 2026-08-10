@@ -63,12 +63,7 @@ python scripts/change_report.py --original original.txt --edited edited.txt --le
 
 ## 文体 Profile
 
-| Profile | 调整系数 | 说明 |
-|---------|---------|------|
-| essay | ×1.0 | 散文/公众号 |
-| technical | ×1.5 | 技术文档（更宽松） |
-| social | ×2.0 | 社交媒体（最宽松） |
-| fiction | — | v1 不支持，拒绝处理 |
+profile 阈值真源在 `config/default.yaml` 的 pattern_thresholds（72C-2 起废除统一乘数；profiles/*.md 死文件已删除，OBS-232）。fiction 不被支持，拒绝处理。
 
 ## 运行测试
 
@@ -93,10 +88,6 @@ zh-human-writing/
 │   ├── fidelity.md             #   保真机制规格
 │   ├── workflow.md             #   工作流
 │   └── constraints.md          #   核心约束
-├── profiles/                   # 文体 profile
-│   ├── essay.md
-│   ├── technical.md
-│   └── social.md
 ├── references/                 # 参考文件
 │   ├── patterns/               #   模式包
 │   │   ├── hard-residue.md
