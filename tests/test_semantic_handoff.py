@@ -1957,6 +1957,21 @@ class TestHandoffProseCraftFields:
         for key in ("kicker:", "strike:", "tags:"):
             assert key in formatter_zone, key
 
+    def test_v22_title_fields_present_and_typed(self):
+        import re
+        text = self.HANDOFF.read_text(encoding="utf-8")
+        assert "title_candidates:" in text
+        assert "hook_line:" in text
+        # 类型语义:title_candidates 是列表、hook_line 是字符串
+        assert re.search(r"title_candidates:\s*\[\s*\]", text)
+        assert re.search(r"hook_line:\s*[\"']", text)
+        # 字段表登记
+        assert "| title_candidates |" in text
+        assert "| hook_line |" in text
+        # 联动默认:strike 未单独指定时默认取 hook_line
+        assert "strike" in text and "hook_line" in text
+        assert "默认取 hook_line" in text or "取 hook_line" in text
+
 
 def test_h2_component_policy_missing_field_reports_error(tmp_path):
     """component_policy missing one required field must report ERROR."""

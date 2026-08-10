@@ -308,6 +308,8 @@ issues_and_uncertainties.md
 
 **门禁：** 核心只能得到“成立、变形、崩塌”三种结论。崩塌时回到研究或诚实告知，不进入大纲。
 
+**标题打磨（档76A 新增，攻核之后）：** 产出 3–5 个候选标题（`title_candidates`）与一句钩子（`hook_line`，一句话说清本文最反直觉/最值钱的点）。原则服从 R1–R9：标题要具体、有判断，禁标题党空壳；hook_line 与 formatter.cover.strike 同源（封面划线句默认取 hook_line）。候选标题供用户在草稿箱挑选，不自动替换文章 H1；H1 流程不变。产物写入 handoff.yaml（v2.2）。
+
 ### Phase 4：结构设计
 
 加载 `references/structure-design.md` 和 `templates/outline.md`。同时加载 `references/semantic-components.md`（统一语义词表）和 `references/formatter-capability-map.md`（排版组件能力映射）。
@@ -350,7 +352,7 @@ issues_and_uncertainties.md
 
 **humanizer 后 anchor 失效处理：** 如果调用 humanizer 修改了正文，必须更新 semantic-map 中失效的 exact_text anchor。不得让 humanizer 修改正文后继续使用已失效的旧 anchor。
 
-**长度门禁（v0.3.1 新增）：** 交付前运行 `scripts/validate_article_length.py` 验证可见字符数、章节预算偏差和重复正文。`full` 模式还验证以下 11 个产物全部存在、非空且包含必填字段：
+**长度门禁（v0.3.1 新增）：** 交付前运行 `scripts/validate_article_length.py` 验证可见字符数、章节预算偏差和重复正文。`full` 模式还验证以下 12 个产物全部存在、非空且包含必填字段：
 
 1. generation-profile.yaml（含 mode, article_mode, target_visible_chars）
 2. writing-brief.md（含 article_mode, length_mode, target_visible_chars）
@@ -363,6 +365,7 @@ issues_and_uncertainties.md
 9. article.md（通过长度门禁）
 10. semantic-map.yaml（通过 validate_semantic_map.py 校验）
 11. editor-report.md（含 P0, P1, P2）
+12. handoff.yaml（档76A/OBS-252 必检：含 schema_version / prose_craft_applied / prose_craft_version / formatter.cover，缺任一即 FAIL；handoff 从「建议产出」升为「必检产出」）
 
 Full 模式任一产物失败不得交付完成稿。校验链顺序：`scripts/material_ingestion.py`（校验 ledger）→ `scripts/validate_article_length.py --full-mode` → `scripts/validate_material_gate.py`（材料门分档，Batch 3 新增）→ `scripts/validate_semantic_map.py`。材料门未过且可收窄 → `scope_reduction`（降档或收窄范围，记入 handoff.scope）。详见 `references/length-policy.md`。
 

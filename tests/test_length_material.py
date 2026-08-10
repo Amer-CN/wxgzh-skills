@@ -448,6 +448,9 @@ def test_h6_full_cli_with_semantic_map_passes(tmp_path):
         '交接保护项: preserve_exactly\n',
         encoding='utf-8')
 
+    # handoff.yaml (档76A/OBS-252:full-mode 必检)
+    hoff = _write_valid_handoff(tmp_path)
+
     p = subprocess.run(
         [sys.executable, str(ROOT / 'scripts' / 'validate_article_length.py'),
          '--article', str(article), '--article-mode', 'medium',
@@ -462,6 +465,7 @@ def test_h6_full_cli_with_semantic_map_passes(tmp_path):
          '--outline', str(ol),
          '--semantic-map', str(sm),
          '--editor-report', str(er),
+         '--handoff', str(hoff),
          '--json'],
         capture_output=True, text=True
     )
@@ -510,22 +514,70 @@ def test_h7_invalid_semantic_map_fails(tmp_path):
 
 
 # ════════════════════════════════════════════════════════════════
+# 档76A/OBS-252:handoff.yaml full-mode 必检(12 件)
+# ════════════════════════════════════════════════════════════════
+
+def _write_valid_handoff(tmp_path, name='handoff.yaml', drop=None):
+    """写一份合法 handoff;drop 指定要删除的字段(嵌套用 'formatter.cover' 路径)。"""
+    data = {'handoff': {
+        'schema_version': '2.2',
+        'prose_craft_applied': True,
+        'prose_craft_version': '1.0',
+        'formatter': {'cover': {'kicker': 'K', 'strike': 'S', 'tags': ['a', 'b']}},
+        'title_candidates': ['标题一', '标题二'], 'hook_line': '钩子',
+    }}
+    if drop == 'formatter.cover':
+        del data['handoff']['formatter']['cover']
+    elif drop:
+        del data['handoff'][drop]
+    fp = tmp_path / name
+    fp.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    return str(fp)
+
+
+def test_h76a_handoff_required_full_mode(tmp_path):
+    """缺 handoff 文件 → full-mode FAIL(档76A fail-closed)。"""
+    article = write_temp_article(make_chinese_text(3000), tmp_path)
+    paths = {'article': str(article)}  # 未提供 handoff 路径
+    errors, _ = check_full_mode_completeness(paths)
+    assert any('handoff.yaml' in e for e in errors), errors
+
+
+def test_h76a_handoff_missing_required_field_fails(tmp_path):
+    """handoff 缺 formatter.cover → full-mode FAIL(负向用例防假绿)。"""
+    h = _write_valid_handoff(tmp_path, drop='formatter.cover')
+    paths = {'handoff': h}
+    errors, _ = check_full_mode_completeness(paths)
+    assert any('handoff.formatter.cover' in e for e in errors), errors
+
+
+def test_h76a_handoff_valid_passes_field_check(tmp_path):
+    """合法 handoff → 字段检查通过(仅 handoff 路径下无 error)。"""
+    h = _write_valid_handoff(tmp_path)
+    paths = {'handoff': h}
+    errors, _ = check_full_mode_completeness(paths)
+    assert not any('handoff' in e for e in errors), errors
+
+
+# ════════════════════════════════════════════════════════════════
 # H8: Docs list 11 Full artifacts
 # ════════════════════════════════════════════════════════════════
 
-def test_h8_skill_md_lists_11_artifacts():
+def test_h8_skill_md_lists_12_artifacts():
     skill = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
     for artifact in ['generation-profile', 'writing-brief', 'material-readiness',
                      'material-ingestion-report', 'material-ledger', 'evidence-map',
-                     'core-card', 'outline', 'article', 'semantic-map', 'editor-report']:
+                     'core-card', 'outline', 'article', 'semantic-map', 'editor-report',
+                     'handoff']:
         assert artifact in skill, f"SKILL.md missing artifact '{artifact}'"
 
 
-def test_h8_length_policy_lists_11_artifacts():
+def test_h8_length_policy_lists_12_artifacts():
     lp = (ROOT / 'references' / 'length-policy.md').read_text(encoding='utf-8')
     for artifact in ['generation-profile', 'writing-brief', 'material-readiness',
                      'material-ingestion-report', 'material-ledger', 'evidence-map',
-                     'core-card', 'outline', 'article', 'semantic-map', 'editor-report']:
+                     'core-card', 'outline', 'article', 'semantic-map', 'editor-report',
+                     'handoff']:
         assert artifact in lp, f"length-policy.md missing artifact '{artifact}'"
 
 

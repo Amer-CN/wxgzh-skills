@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.3.5-rc1 — 档76A：handoff 强制化 + 标题打磨 (2026-08-10)
+
+### 新增
+
+- **handoff.yaml 进 full-mode 必检（11→12 件）**：validate_article_length.py `--full-mode` 新增 handoff 检查（存在性 + schema_version / prose_craft_applied / prose_craft_version / formatter.cover，嵌套路径校验，缺任一即 FAIL）；SKILL.md Phase 7 / length-policy.md / handoff.md 同步；pipeline 契约 02_super_writer.yaml outputs 与握手产物同步加 handoff.yaml。
+- **标题打磨**：Phase 3 攻核后产出 3–5 个候选标题与一句钩子（hook_line，最反直觉/最值钱的点）；原则服从 R1–R9，禁标题党空壳；候选标题供用户草稿箱挑选，不自动替换 H1。
+- **handoff v2.1→v2.2**：新增 title_candidates（字符串数组）与 hook_line（字符串）；formatter.cover.strike 未单独指定时默认取 hook_line。
+
+### 修改
+
+- 测试 +4（handoff 必检正向/缺文件 FAIL/缺字段 FAIL + v2.2 字段），241 passed。
+
 ## v0.3.4-rc1 — Batch 3：契约层（材料门分档 + scope_reduction + handoff v2.1 + dist lite）(2026-08-10)
 
 ### 新增

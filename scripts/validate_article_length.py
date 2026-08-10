@@ -531,6 +531,15 @@ FULL_MODE_REQUIRED_FIELDS = {
         'type': 'editor_report',
         'fields': ['P0', 'P1', 'P2'],
     },
+    # 档76A/OBS-252:handoff.yaml 从「建议产出」升为 full-mode 必检(12 件)。
+    # 必填字段:handoff.schema_version / prose_craft_applied / prose_craft_version /
+    # formatter.cover(嵌套路径,见 handoff 检查分支)。
+    'handoff': {
+        'filename': 'handoff.yaml',
+        'type': 'yaml_handoff',
+        'fields': ['schema_version', 'prose_craft_applied', 'prose_craft_version',
+                   'formatter.cover'],
+    },
 }
 
 
@@ -817,6 +826,29 @@ def check_full_mode_completeness(paths, runtime_policy=None):
                 else:
                     errors.append(f"ERROR: {filename} missing required section '{sec}'")
                 parse_ok = False
+
+        # ── handoff.yaml (档76A/OBS-252:full-mode 必检,嵌套字段) ──
+        elif ftype == 'yaml_handoff':
+            if yaml is None:
+                continue
+            try:
+                data = yaml.safe_load(content)
+                if not isinstance(data, dict) or not isinstance(data.get('handoff'), dict):
+                    errors.append(f"ERROR: {filename} top-level must be {{handoff: {{...}}}}")
+                    parse_ok = False
+                    continue
+                h = data['handoff']
+                # 嵌套路径检查:schema_version / prose_craft_applied / prose_craft_version 顶层,
+                # formatter.cover 嵌套(缺任一即 fail-closed)。
+                for field in ('schema_version', 'prose_craft_applied', 'prose_craft_version'):
+                    if h.get(field) in (None, ''):
+                        errors.append(f"ERROR: {filename} missing required field 'handoff.{field}'"); parse_ok = False
+                cover = (h.get('formatter') or {}).get('cover') if isinstance(h.get('formatter'), dict) else None
+                if not isinstance(cover, dict) or not cover:
+                    errors.append(f"ERROR: {filename} missing required field 'handoff.formatter.cover'"); parse_ok = False
+            except yaml.YAMLError as e:
+                errors.append(f"ERROR: {filename} has invalid YAML: {e}")
+                continue
 
         # ── outline.md (H6) ──
         elif ftype == 'outline':
@@ -1276,6 +1308,7 @@ def main():
     parser.add_argument('--material-report', default=None)
     parser.add_argument('--semantic-map', default=None, help='Path to semantic-map.yaml')
     parser.add_argument('--json', action='store_true', help='Output JSON only')
+    parser.add_argument('--handoff', default=None, help='Path to handoff.yaml (档76A full-mode 必检)')
     args = parser.parse_args()
 
     sections = None
@@ -1300,6 +1333,7 @@ def main():
             'article': args.article,
             'semantic_map': args.semantic_map,
             'editor_report': args.editor_report,
+            'handoff': args.handoff,
         }
 
     errors, warnings, info = validate_article_length(

@@ -128,7 +128,7 @@ target_visible_chars = 3,000，三节权重 40% / 35% / 25%：
 
 ## full 模式完整性门禁
 
-当 output_mode 为 `full` 时，以下 11 个产物必须全部存在、非空且包含必填字段，否则失败：
+当 output_mode 为 `full` 时，以下 12 个产物必须全部存在、非空且包含必填字段，否则失败：
 
 | # | 产物 | 必填字段 |
 |---|---|---|
@@ -143,10 +143,11 @@ target_visible_chars = 3,000，三节权重 40% / 35% / 25%：
 | 9 | article.md | 通过长度门禁 |
 | 10 | semantic-map.yaml | 通过 validate_semantic_map.py 校验 |
 | 11 | editor-report.md | P0, P1, P2 |
+| 12 | handoff.yaml | schema_version, prose_craft_applied, prose_craft_version, formatter.cover（档76A/OBS-252 必检） |
 
 执行顺序：
 1. `python scripts/material_ingestion.py --ledger material-ledger.yaml --output material-ingestion-report.json`
-2. `python scripts/validate_article_length.py --article article.md --full-mode --generation-profile ... --semantic-map ...`
+2. `python scripts/validate_article_length.py --article article.md --full-mode --generation-profile ... --semantic-map ... --handoff handoff.yaml`
 3. `python scripts/validate_semantic_map.py --article article.md --semantic-map semantic-map.yaml`
 
 缺任意一项或字段不完整 → ERROR: full 模式产物不完整

@@ -1,12 +1,12 @@
 # 下游交接契约
 
-## v2.1 Schema（Batch 3 新增，向后兼容 v1.0/v2.0）
+## v2.2 Schema（档76A 新增，向后兼容 v1.0/v2.0/v2.1）
 
 写作 Skill 完成后输出：
 
 ```yaml
 handoff:
-  schema_version: "2.1"
+  schema_version: "2.2"
   article_path: article.md
   semantic_map_path: semantic-map.yaml    # v2.0 新增
   content_score: 0
@@ -21,6 +21,8 @@ handoff:
   allow_rewrite_scope: "none"            # Batch 3 新增：作者授予下游的改写范围，枚举 none/expression_only，默认 none
   material_stats: {}                      # Batch 3 新增：材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕）
   scope: ""                              # Batch 3 新增：文章范围声明；scope_reduction 发生时记录收窄结果与理由
+  title_candidates: []                   # 档76A 新增：3–5 个候选标题（Phase 3 攻核后产出，供用户草稿箱挑选，不自动替换 H1）
+  hook_line: ""                          # 档76A 新增：一句钩子（本文最反直觉/最值钱的点）；formatter.cover.strike 未单独指定时默认取此值
 
   unresolved_facts: []
   editor_anchors: []
@@ -45,6 +47,7 @@ handoff:
       kicker: null                         # 文章类型标签（如 "深度观察"）
       strike: null                         # 被本文推翻的旧认知疑问句
       tags: null                           # 2 个内容标签（如 ["深度", "观察"]）
+                                           # 档76A 联动：strike 未单独指定时默认取 hook_line
 
   next:
     - skill: humanizer
@@ -81,6 +84,8 @@ v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved
 | material_stats | 材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕） |
 | scope | 文章范围声明；scope_reduction 发生时记录收窄结果与理由 |
 | formatter.cover | 封面文案对象 {kicker, strike, tags}；缺省则下游用渲染默认 |
+| title_candidates | 3–5 个候选标题（字符串数组，供用户草稿箱挑选，不自动替换 H1） |
+| hook_line | 一句钩子（本文最反直觉/最值钱的点）；formatter.cover.strike 未单独指定时默认取此值 |
 
 ---
 
