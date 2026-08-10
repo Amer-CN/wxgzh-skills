@@ -632,5 +632,23 @@
     "new_skill_version": "0.3.5-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/super-writer"
+  },
+  {
+    "entry_id": "relock-super-writer-20260810T154642Z-34d833cb",
+    "skill": "super-writer",
+    "reason": "76B: 标题选定闭环",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-10T15:46:42Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "f96589cd11305010ebda6afbaa4eec923be9221ae2ceacddf7dc416cfd2d4820",
+    "new_root_sha256": "84eab0525b8bbd4eff384c4663d00f4cc6a704b3b3cdb8a7e87c4c5e5b923b2a",
+    "old_full_commit_sha": "45b51ce7abed3e4c99d0b2e100ee9b1fd1d88598",
+    "new_full_commit_sha": "9ab1bcebc6107e5ca3452935675e9490864ef980",
+    "old_source_tree_sha": "b8a0308b1bb14d74ec0d5f808fb041a638bcf528",
+    "new_source_tree_sha": "d41b622d958645fc1dc48b8709480e9daf5d845d",
+    "old_skill_version": "0.3.5-rc1",
+    "new_skill_version": "0.3.6-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/super-writer"
   }
 ]
