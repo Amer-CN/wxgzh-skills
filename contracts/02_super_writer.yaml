@@ -19,6 +19,7 @@ outputs:
     - article.md
     - editor-report.md
     - full_mode_validator_report.json
+    - handoff.yaml             # 档76A/OBS-252:full-mode 必检产物(封面供料/契约留痕)
 gates:
   full_mode_validator_exit: 0
 forbidden: [fixed_medium_3000]

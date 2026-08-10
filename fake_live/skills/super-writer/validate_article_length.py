@@ -27,6 +27,7 @@ def main(argv=None) -> int:
     ap.add_argument("--material-ledger", default=None)
     ap.add_argument("--material-report", default=None)
     ap.add_argument("--semantic-map", default=None)
+    ap.add_argument("--handoff", default=None)  # 档76A:真实 CLI 新增 full-mode 必检参数
     ap.add_argument("--article-mode", default=None)
     ap.add_argument("--target-visible-chars", type=int, default=None)
     ap.add_argument("--acceptable-min", type=int, default=None)

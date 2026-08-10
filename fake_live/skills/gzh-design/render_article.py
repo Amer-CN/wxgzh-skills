@@ -113,6 +113,11 @@ def main(argv=None) -> int:
     ap.add_argument("--bindings", default=None)
     ap.add_argument("--output-dir", required=True)
     ap.add_argument("--theme", default="smartisan")
+    ap.add_argument("--date", default=None)   # 档HF-6/72E-1:与真实 CLI 对齐
+    ap.add_argument("--strike", default=None)
+    ap.add_argument("--brand", default=None)
+    ap.add_argument("--tags", default=None)
+    ap.add_argument("--kicker", default=None)
     a = ap.parse_args(argv)
     if a.theme.strip().lower() not in ("smartisan", "hammer"):
         print(f"ERROR: unsupported theme {a.theme}"); return 2

@@ -209,6 +209,7 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
             "--core-card", str(sd / "core-card.md"),
             "--semantic-map", str(sd / "semantic-map.yaml"),
             "--editor-report", str(sd / "editor-report.md"),
+            "--handoff", str(sd / "handoff.yaml"),  # 档76A/OBS-252:full-mode 必检
             "--article-mode", policy["article_mode"],
             "--target-visible-chars", str(policy["target_visible_chars"]),
             "--acceptable-min", str(policy["acceptable_min"]),

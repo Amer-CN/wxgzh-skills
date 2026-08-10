@@ -612,5 +612,25 @@
     "new_skill_version": "v2026.08.10-hammer.11",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/gzh-design-skill"
+  },
+  {
+    "entry_id": "relock-super-writer-20260810T101531Z-fb6c32d4",
+    "skill": "super-writer",
+    "reason": "76A: handoff 强制化 + 标题打磨",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-10T10:15:31Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "aeae9dbdc3cbe9909a49a7c4df758436643937e3dba1d4d18975003f4205c8aa",
+    "new_root_sha256": "f96589cd11305010ebda6afbaa4eec923be9221ae2ceacddf7dc416cfd2d4820",
+    "old_validator_sha256": "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92",
+    "new_validator_sha256": "4ad677aad6f66225aad83beb8fab5a24cac0f57c031767e787332695767c3218",
+    "old_full_commit_sha": "d395d703e7b774818a93f0076f3adec66cf09cda",
+    "new_full_commit_sha": "45b51ce7abed3e4c99d0b2e100ee9b1fd1d88598",
+    "old_source_tree_sha": "35b6e357acce5edd6f0dade0eccd3efe42f5667f",
+    "new_source_tree_sha": "b8a0308b1bb14d74ec0d5f808fb041a638bcf528",
+    "old_skill_version": "0.3.4-rc1",
+    "new_skill_version": "0.3.5-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/super-writer"
   }
 ]

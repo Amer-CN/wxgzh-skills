@@ -1,0 +1,36 @@
+handoff:
+  schema_version: '2.2'
+  article_path: article.md
+  semantic_map_path: semantic-map.yaml
+  content_score: 0
+  p0_count: 0
+  exit_status: ready_to_write
+  prose_craft_applied: true
+  prose_craft_version: '1.0'
+  handoff_stage: super_writer
+  author_intent: fake fixture
+  allow_rewrite_scope: none
+  material_stats: {}
+  scope: ''
+  title_candidates:
+  - fake title
+  hook_line: fake hook
+  unresolved_facts: []
+  editor_anchors: []
+  author_confirmations: []
+  preserve_exactly: []
+  formatter:
+    target_skill: gzh-design
+    contract: semantic-component-handoff
+    contract_version: '1.0'
+    preferred_theme: hammer
+    cover:
+      kicker: K
+      strike: S
+      tags:
+      - a
+      - b
+  next:
+  - skill: humanizer
+    trigger: P3
+    priority: recommended

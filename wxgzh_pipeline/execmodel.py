@@ -54,7 +54,7 @@ SUPER_WRITER_AGENT_OUTPUTS = [
     "material-ingestion-report.json", "material-ledger.yaml", "evidence-map.md",
     "canonical_claim_registry.json", "core-card.md", "outline.md",
     "semantic-map.yaml", "article.md", "editor-report.md",
-    "full_mode_validator_report.json",
+    "full_mode_validator_report.json", "handoff.yaml",  # 档76A/OBS-252:full-mode 必检产物
 ]
 
 AGENT_EXPECTED_OUTPUTS = {

@@ -21,7 +21,7 @@ from wxgzh_pipeline import producers as P
 from conftest import FAKE_FIXTURE, SKILL_ROOT
 
 LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
-    "f2f878b14a94692fd301db197a612923cf2d9b5a8d38825b4169fe372e3d9a92"
+    "4ad677aad6f66225aad83beb8fab5a24cac0f57c031767e787332695767c3218"  # 档76A:validate_article_length.py 加 --handoff 必检
 )
 
 
@@ -114,7 +114,7 @@ def test_super_writer_expected_outputs_are_complete_and_bound():
         "material-ingestion-report.json", "material-ledger.yaml", "evidence-map.md",
         "canonical_claim_registry.json", "core-card.md", "outline.md",
         "semantic-map.yaml", "article.md", "editor-report.md",
-        "full_mode_validator_report.json",
+        "full_mode_validator_report.json", "handoff.yaml",
     ]
 
 
@@ -133,7 +133,7 @@ def test_super_writer_validator_command_has_complete_full_mode_paths(tmp_path):
     for flag in ("--article", "--outline", "--full-mode", "--generation-profile",
                  "--brief", "--material-readiness", "--material-ledger",
                  "--material-report", "--evidence-map", "--core-card",
-                 "--semantic-map", "--editor-report", "--article-mode",
+                 "--semantic-map", "--editor-report", "--handoff", "--article-mode",
                  "--target-visible-chars", "--acceptable-min", "--acceptable-max", "--json"):
         assert flag in argv
     assert argv[argv.index("--article-mode") + 1] == "long"
