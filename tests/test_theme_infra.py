@@ -17,13 +17,13 @@ def _pass_html():
 
 
 def _theme(html, tmp_path, expected=6, exec_evidence=None, network_mode=None,
-           lock_entry=None):
+           lock_entry=None, image_shortfall=0):
     v = load_validator("validate_theme_identity")
     p = tmp_path / "final.html"
     p.write_text(html, encoding="utf-8")
     return v.validate(p, expected_chapters=expected, usage_out=tmp_path / "usage.json",
                       exec_evidence=exec_evidence, network_mode=network_mode,
-                      lock_entry=lock_entry)
+                      lock_entry=lock_entry, image_shortfall=image_shortfall)
 
 
 def test_theme_baseline_copied_html_without_execution_fails(tmp_path):
@@ -33,6 +33,24 @@ def test_theme_baseline_copied_html_without_execution_fails(tmp_path):
     assert code == 1 and rep["THEME_IDENTITY"] == "FAIL"
     assert rep["structure_ok"] is True
     assert "copied HTML" in rep.get("fail_reason", "")
+
+
+def test_theme_single_image_type_degrades_with_shortfall(tmp_path):
+    """76C:少图交付(image_shortfall>0)时,图片组件类型门槛 2→1 降级;
+    无短少时单图片类型仍判 structure_ok=False(默认行为不变)。"""
+    base = _pass_html()
+    # 去掉 image_2a_standard 指纹令牌,只保留 image_media_text_card 一类图片组件。
+    token = "box-shadow:0 4px 12px -2px rgba(0,0,0,0.08)"
+    assert token in base
+    one_type = base.replace(token, "")
+    sim = {"simulated": True, "official_gzh_call": False}
+    code0, rep0 = _theme(one_type, tmp_path, exec_evidence=sim, network_mode="fake_live",
+                         image_shortfall=0)
+    assert rep0["structure_ok"] is False and rep0["OFFICIAL_IMAGE_COMPONENT_TYPES"] == 1
+    code1, rep1 = _theme(one_type, tmp_path, exec_evidence=sim, network_mode="fake_live",
+                         image_shortfall=1)
+    assert rep1["structure_ok"] is True and rep1["IMAGE_TYPE_MIN"] == 1
+    assert rep1["image_shortfall"] == 1 and rep1["THEME_IDENTITY"] == "SIMULATED"
 
 
 def test_theme_simulated_executor_never_official(tmp_path):

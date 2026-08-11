@@ -214,19 +214,22 @@ def test_contract_code_dense_min_3_passes(tmp_path):
     assert report["checks"]["body_images_min"]["ok"] is True
 
 
-def test_contract_news_3_images_fails_min6(tmp_path):
-    """★反向验证:新闻综述 3 图在 contract 层仍按 6 判定 FAIL(门槛不降低)。"""
+def test_contract_news_3_images_degrades_with_shortfall(tmp_path):
+    """76C:新闻综述 3 图不足 6 不再 FAIL——降级留痕 image_shortfall(门槛保留为目标值)。"""
     rd, me = _contract_dir(tmp_path, ARTICLE_NEWS)
     ok, report = enforce_contract("media_enrichment", me, ctx=None, state=None)
-    assert ok is False
-    assert report["checks"]["body_images_min"]["ok"] is False
+    assert ok is True  # 76C 降级:不足不再阻断
+    assert report["checks"]["body_images_min"]["ok"] is True
+    assert report["checks"]["image_shortfall"]["ok"] is True
+    assert report["checks"]["image_shortfall"]["detail"] == "3"
 
 
-def test_contract_news_config2_still_requires_6(tmp_path):
-    """OBS-94 防降阈:新闻类即使 RUN 目录出现 config=2,contract 层仍要求 6。"""
+def test_contract_news_config2_still_targets_6_but_degrades(tmp_path):
+    """OBS-94 防降阈保留:新闻类即使 config=2,目标仍 6;76C 降级留痕不阻断。"""
     rd, me = _contract_dir(tmp_path, ARTICLE_NEWS)
     (me / "validation_config.json").write_text(
         json.dumps({"body_images_min": 2}), encoding="utf-8")
     ok, report = enforce_contract("media_enrichment", me, ctx=None, state=None)
-    assert ok is False
-    assert report["checks"]["body_images_min"]["ok"] is False
+    assert ok is True
+    assert report["checks"]["body_images_min"]["detail"].startswith("target=6")
+    assert report["checks"]["image_shortfall"]["ok"] is True

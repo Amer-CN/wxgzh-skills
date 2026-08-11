@@ -60,6 +60,27 @@ python -m wxgzh_pipeline.cli "续发"
 python -m wxgzh_pipeline.cli "续发：<RUN_ID>"
 # 进度
 python -m wxgzh_pipeline.cli "进度"
+
+## 供图注入（76C/OBS-255，媒体阶段正式人工通道）
+
+媒体 discover 阶段前，可把用户供图直链清单写入 `runs/<RUN>/media_enrichment/user_images.json`：
+
+```json
+[
+  {"url": "https://example.com/photo.png", "caption": "可选说明", "source_url": "可选来源链接"}
+]
+```
+
+- 该文件存在时,media discover 把其中图片纳入候选(`user_provided`);
+- **免版权审批**:用户供图责任自负,来源链接登记留痕(`content_description_source=user_provided`);
+- 仍走安全/尺寸(480×200)/质量/去重检查,不满足则 review_required 而非直接 eligible;
+- 与既有图片批准车道一致:命中黑名单域名或安全检查不过即拒。
+
+## 门禁降级（76C，用户裁决 2026-08-11）
+
+图片数量不再是发文限制条件:`body_images_min` 保留为「目标值」。源图 eligible 不足时走降级链:
+生图车道兜底(claims 绑定数字/事实生成图表,只可视化 claim 支撑数据,不编造数据图)→ 生图也兜不足 → 允许少图交付,
+在 receipt 与 final_delivery 标注 `image_shortfall=true` + 实际图数(留痕,不静默)。
 # 开发者：验收编排 Skill（release_audit；不生产文章、不上传、不建草稿）
 python -m wxgzh_pipeline.cli "验收编排Skill"
 

@@ -32,11 +32,15 @@ def test_explicit_min_two_passes_and_reports_source(tmp_path):
     assert report["body_images_min_source"] == "validation_config.json"
 
 
-def test_default_min_remains_six(tmp_path):
+def test_default_min_remains_six_but_shortfall_degrades(tmp_path):
+    """76C:body_images_min 保留目标值 6,但少图不再 FAIL——降级留痕。"""
     man, bnd = _files(tmp_path)
     code, report = validate_media_bindings.validate(man, bnd)
-    assert code == 1
+    assert code == 0  # 76C 降级:不足不再阻断
     assert report["min_required"] == 6
+    assert report["image_shortfall"] is True
+    assert report["image_shortfall_count"] == 4
+    assert "76C 降级" in report.get("note", "")
 
 @pytest.mark.parametrize("value", [0, -1])
 def test_min_less_than_one_rejected(tmp_path, value):

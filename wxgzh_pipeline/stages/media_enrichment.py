@@ -81,12 +81,13 @@ def content_validate(ctx, sd: Path, state):
             "evidence": list(tier.get("evidence") or []),
             "reason": "视觉内容达标(图片 + 代码块视觉单元),非图片数量豁免",
         }
+        # 76C:视觉内容门槛同降级——不足时留痕,不阻断(图片数量不再是
+        # 发文限制条件;用户裁决 2026-08-11)。
         if not report["VISUAL_TIER"]["visual_content_met"]:
-            code = 1
-            report["MEDIA_BINDINGS"] = "FAIL"
-            report["blocking_reason"] = (
-                f"visual units {visual_units} < {tier['visual_units_min']} "
-                "(code-dense article requires images + code blocks)")
+            report["image_shortfall"] = True
+            report["image_shortfall_count"] = max(0, tier["visual_units_min"] - visual_units)
+            report["note"] = (report.get("note") or "") + (
+                f" 视觉单元 {visual_units} < {tier['visual_units_min']}(code-dense),少图交付留痕(76C 降级)")
     else:
         report["VISUAL_TIER"] = {
             "code_blocks": tier["code_blocks"],
@@ -112,6 +113,14 @@ def post(ctx, sd, state, exit_code, report):
         state.side_effects.append({"stage": "media_enrichment",
                                    "uploaded_image_count": state.uploaded_image_count,
                                    "real_upload": ctx.network_mode == "live"})
+        # 76C:少图交付留痕(不静默)——image_shortfall 进 state/final_delivery
+        if report.get("image_shortfall"):
+            state.image_shortfall = int(report.get("image_shortfall_count", 0) or 0)
+            state.side_effects.append({"stage": "media_enrichment",
+                                       "image_shortfall": True,
+                                       "image_shortfall_count": state.image_shortfall,
+                                       "actual_images": report.get("body_image_count"),
+                                       "note": "生图兜底后仍不足,少图交付(76C 降级)"})
 
 
 def run_live(ctx, state):

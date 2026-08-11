@@ -708,7 +708,9 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
             raise MediaRequestError(f"claim {cid} references unknown material {mid} (FAIL_CLOSED)")
         claim = {"claim_id": cid, "claim_text": c.get("claim_text", ""),
                  "material_id": mid, "source_url": c.get("source_url", ""),
-                 "source_excerpt": c.get("source_excerpt", "")}
+                 # 76C:source_excerpt 为 None 时置空串(schema 要求 string;seedance
+                 # RUN 曾因 registry 某 claim 的 source_excerpt=None 被 media schema 拒绝)
+                 "source_excerpt": c.get("source_excerpt") or ""}
         for opt in ("numbers", "chart_group", "metric_name", "series_label"):
             if opt in c:
                 claim[opt] = c[opt]
@@ -749,6 +751,11 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
             # schemas/media_enrichment_request.schema.json 已声明合法键(默认 640/360)。
             "min_width": 480, "min_height": 200,
             "allow_unknown_license_for_publish": False,
+            # 76C/OBS-248:来源域名黑名单(首批 ithome.com / img.ithome.com,水印广告图,
+            # 用户两次手动删除;名单可配置,命中即拒)
+            "domain_blacklist": ["ithome.com", "img.ithome.com"],
+            # 76C/OBS-254:discover 扩池上限(全池潜力源补充抓取,防请求爆炸)
+            "pool_fetch_limit": int(ctx_env.get("WXGZH_MEDIA_POOL_FETCH_LIMIT", 30)),
         },
         "provenance": {"canonical_registry_sha256": sha256_file(reg_p),
                        "deduplicated_items_sha256": sha256_file(dedup_p),
@@ -756,6 +763,33 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
                        "verified_material_count": verified_material_count,
                        "copyright_approvals_bound": approvals["count"]},
     }
+
+    # 76C/OBS-254:discover 扩池——全池潜力源(deduplicated_items)经站内页通道
+    # (links.aihot 直出 HTML)补充抓取;仅 discover 阶段携带。
+    if phase == "discover":
+        try:
+            dedup_data = json.loads(dedup_p.read_text(encoding="utf-8"))
+        except ValueError:
+            dedup_data = {}
+        pool_items = dedup_data.get("items") if isinstance(dedup_data, dict) else dedup_data
+        if not isinstance(pool_items, list):
+            pool_items = []
+        req["pool_items"] = [{
+            "id": it.get("id", ""), "title": it.get("title") or it.get("originalTitle", ""),
+            "summary": it.get("summary", ""), "links": it.get("links", {}),
+            "source_url": (it.get("links") or {}).get("original", ""),
+            "aihot_permalink": (it.get("links") or {}).get("aihot", ""),
+        } for it in pool_items if isinstance(it, dict) and it.get("id")]
+        # 76C/OBS-255:用户供图注入——runs/<RUN>/media_enrichment/user_images.json
+        # (直链清单,user_provided 免版权审批,用户供图责任自负,登记来源链接)
+        user_images_p = rd / "media_enrichment" / "user_images.json"
+        if user_images_p.is_file():
+            try:
+                user_images = json.loads(user_images_p.read_text(encoding="utf-8"))
+            except ValueError:
+                user_images = None
+            if isinstance(user_images, list):
+                req["user_images"] = user_images
     req_path = sd / (
         "media_discovery_request.json" if phase == "discover"
         else "media_continuation_request.json"
@@ -986,7 +1020,9 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 entry,
                 _entry_args(ctx, "media_enrichment", sd, state, request_path,
                             media_phase="discover"),
-                timeout=300, env=_media_subprocess_env(ctx),
+                # 76C/OBS-254:discover 扩池后抓取预算=素材页 + pool_fetch_limit(默认 30)
+                # 站内页,单页 15s 上限;300s 旧预算不足,按最坏预算放大至 900s。
+                timeout=900, env=_media_subprocess_env(ctx),
             )
             events_path = discover_dir / "upload_events.json"
             zero_upload = False

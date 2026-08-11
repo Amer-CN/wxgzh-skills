@@ -132,17 +132,20 @@ def test_11_article_freeze_invalidates_downstream(orch):
     assert code_ok == 0 and code_bad == 1 and rep["final_article_unchanged"] is False
 
 
-# ---- 12. fewer than 6 images blocks upload ----
+# ---- 12. fewer than 6 images degrades with shortfall (76C) ----
 def test_12_min_images_blocks(tmp_path):
     v = load_validator("validate_media_bindings")
     man = {"assets": [{"asset_id": f"A-{i}", "decision": "eligible", "sha256": str(i),
-                       "upload": {"status": "success", "remote_url": "http://mmbiz.qpic.cn/x"}} for i in range(5)]}
+                       "upload": {"status": "success", "remote_url": "https://mmbiz.qpic.cn/x"}} for i in range(5)]}
     bnd = {"body_images": [{"asset_id": f"A-{i}", "sha256": str(i),
-                            "wechat_remote_url": "http://mmbiz.qpic.cn/x"} for i in range(5)]}
+                            "wechat_remote_url": "https://mmbiz.qpic.cn/x"} for i in range(5)]}
     mp, bp = tmp_path / "m.json", tmp_path / "b.json"
     mp.write_text(json.dumps(man), encoding="utf-8"); bp.write_text(json.dumps(bnd), encoding="utf-8")
     code, rep = v.validate(mp, bp)
-    assert code == 1 and rep["min_met"] is False and "blocking_reason" in rep
+    # 76C: 图片数量不再是发文限制条件,不足时降级留痕,不再阻断。
+    assert code == 0 and rep["min_met"] is False
+    assert rep["image_shortfall"] is True and rep["image_shortfall_count"] == 1
+    assert "blocking_reason" not in rep
 
 
 # ---- 13. non-eligible (e.g. social share card) image cannot be bound ----

@@ -187,7 +187,14 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
                 config = json.loads(validation_config.read_text(encoding="utf-8"))
                 config_value = config.get("body_images_min")
             cmin = effective_body_images_min(tier, config_value)
-            chk("body_images_min", len(body) >= cmin, f"{len(body)} < {cmin}")
+            # 76C(用户裁决 2026-08-11):图片数量不再是发文限制条件。
+            # body_images_min 保留为目标值,不足时降级留痕(image_shortfall),不进 problems。
+            shortfall = max(0, cmin - len(body))
+            checks["body_images_min"] = {"ok": True,
+                "detail": f"target={cmin} actual={len(body)}" + (f" shortfall={shortfall}(76C 降级)" if shortfall else "")}
+            if shortfall:
+                checks["image_shortfall"] = {"ok": True, "detail": f"{shortfall}",
+                    "actual": len(body), "target": cmin}
             per = c.get("per_bound_image", {})
             host = per.get("remote_url_host", "mmbiz.qpic.cn")
             from urllib.parse import urlparse as _uparse

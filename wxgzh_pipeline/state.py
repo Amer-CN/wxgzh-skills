@@ -65,6 +65,7 @@ class PipelineState:
     output_hashes: dict = field(default_factory=dict)
     side_effects: list = field(default_factory=list)
     uploaded_image_count: int = 0
+    image_shortfall: int = 0  # 76C:少图交付留痕(目标值-实际图数;0=无短少)
     draft_created: bool = False
     formally_published: bool = False  # hard-fixed False; no code path sets True
     started_at: str = field(default_factory=_now)

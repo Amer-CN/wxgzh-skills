@@ -44,6 +44,7 @@ def build_delivery(run_dir: Path) -> dict:
         "run_id": st.run_id, "topic": st.topic, "profile": st.profile,
         "stages": stages, "stage_timing": timing,
         "uploaded_image_count": st.uploaded_image_count,
+        "image_shortfall": st.image_shortfall,
         "draft_created": st.draft_created,
         "formally_published": False,
         "final_article_sha256": st.final_article_sha256,

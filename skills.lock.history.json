@@ -650,5 +650,25 @@
     "new_skill_version": "0.3.6-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/super-writer"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260811T124034Z-031b94c4",
+    "skill": "media-enrichment",
+    "reason": "76C: discover 扩池+域名黑名单+用户供图注入(OBS-254/255/248, dev11)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-11T12:40:34Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "11c5a1585e47ff134df9445dbb44a9818df6da0ad666d755d139b2b5b3c9ea08",
+    "new_root_sha256": "3c61107416354b59fad837a8eb5b86136631f96bf6acae295178a069887cd907",
+    "old_entrypoint_sha256": "4a7d5de5b0cd6e3b776429be7ffd54062a8e33edf7034c549f0492b8c74348c0",
+    "new_entrypoint_sha256": "5513d63a9e5e5ac5e905baa3e92b83a963ab0ed6cfc384f14599f9725baad9f8",
+    "old_full_commit_sha": "b3a70e7591d7cf241505ba33237b49dfe9366873",
+    "new_full_commit_sha": "c6d67e462ad5e062ff0e70fa3a86190893fdec8b",
+    "old_source_tree_sha": "46c81a29c5725011a7fb0369ba2abd015ade859c",
+    "new_source_tree_sha": "93a46e2966a74f494011a97aa0678736957e2dd3",
+    "old_skill_version": "0.1.0-dev10",
+    "new_skill_version": "0.1.0-dev11",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]

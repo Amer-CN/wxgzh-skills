@@ -59,11 +59,16 @@ def validate(media_manifest: str | Path, bindings: str | Path,
         "target_not_met_is_warning": True, "problems": problems,
         "all_bindings_consistent": not problems,
     }
-    ok = (count >= body_images_min) and (count <= 8) and not problems
+    # 76C(用户裁决 2026-08-11):图片数量不再是发文限制条件。
+    # body_images_min 保留为「目标值」,不足时降级——生图兜底 + 少图交付,
+    # 留痕 image_shortfall(不静默)。count > 8 上限与 bindings 一致性仍 FAIL。
+    shortfall = max(0, body_images_min - count)
+    report["image_shortfall"] = shortfall > 0
+    report["image_shortfall_count"] = shortfall
+    ok = (count <= 8) and not problems
     report["MEDIA_BINDINGS"] = "PASS" if ok else "FAIL"
-    if count < body_images_min:
-        report["blocking_reason"] = (
-            f"fewer than {body_images_min} bound images — MUST NOT upload")
+    if shortfall > 0:
+        report["note"] = (f"body_images_min {body_images_min} 为目标值,实际 {count},少图交付留痕(76C 降级)→ 允许少图交付")
     return (0 if ok else 1), report
 
 
