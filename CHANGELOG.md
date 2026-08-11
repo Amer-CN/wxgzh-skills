@@ -2,6 +2,23 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev11 (2026-08-11)
+
+- OBS-254(档76C):discover 扩池——抓取范围从「已选素材」扩到「全池潜力源」,
+  deduplicated_items 全池评估图源潜力补充抓取;每条素材除 source_url 外加抓
+  links.aihot 站内页(直出 HTML 可绕 X 动态渲染);来源扩池的图仍按 OBS-86
+  cross-section 语义做 claim 相关性绑定,只放行与文章相关者。pool_fetch_limit
+  默认 30,pool_image_count 独立计数。
+- OBS-248(档76C):来源域名黑名单——新增 config.domain_blacklist(可配置),
+  首批 ithome.com / img.ithome.com(水印广告图);命中即拒,URL 尾段匹配。
+- OBS-255(档76C):用户供图注入——runs/<RUN>/media_enrichment/user_images.json
+  存在则纳入候选(user_provided 资产,copyright_status=user_granted 免版权
+  审批,asset_origin=user_provided,登记来源链接);continue 阶段 user_granted_ids
+  免守卫 + 免 source_url 比对。
+- 76C 门禁降级链(用户裁决 2026-08-11,口径 43):图片数量不再是发文限制条件——
+  body_images_min 保留为目标值,不足时降级(生图兜底 + 少图交付留痕),不再阻断。
+
+
 - OBS-247(档HF-4):meta 提取通道去冤——og:image/twitter:image 通道不再因通道
   本身被一票否决(x.com 等 SPA 源正文图只能经 meta 标签提取);仅 URL 命中动态
   伪卡片端点(/opengraph-image-xxxx 等)时拒绝。meta 通道资产 page_position

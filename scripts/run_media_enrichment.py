@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+from urllib.parse import urlsplit
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -184,6 +186,12 @@ def main():
                     and (materials_by_id.get(frozen["material_id"], {})
                          .get("copyright_review", {}).get("status") == "known_allowed")
                 }
+                # 76C/OBS-255:user_provided 资产免版权审批(用户供图责任自负,
+                # user_images.json 即批准依据),计入 upload_candidate_ids。
+                user_granted_ids = {
+                    asset_id for asset_id, frozen in frozen_records.items()
+                    if frozen.get("asset_origin") == "user_provided"
+                }
                 # 档HF-4/OBS-246:守卫语义修正——不再用「候选数 > 显式
                 # single_asset 批准数」计数比较(纯 material 车道被误杀,HF-2
                 # lane1/lane2 实证);改为:每个上传候选(冻结清单中 decision 可
@@ -196,14 +204,16 @@ def main():
                 }
                 unbacked = sorted(
                     aid for aid in frozen_candidates
-                    if aid not in asset_approvals and aid not in material_approved_ids)
+                    if aid not in asset_approvals and aid not in material_approved_ids
+                    and aid not in user_granted_ids)
                 if unbacked:
                     builder.errors.append(
                         "upload candidates without approval basis (FAIL_CLOSED): "
                         + ", ".join(unbacked))
                     upload_candidate_ids = set()
                 else:
-                    upload_candidate_ids = set(asset_approvals) | material_approved_ids
+                    upload_candidate_ids = (set(asset_approvals) | material_approved_ids
+                                           | user_granted_ids)
 
                 for asset_id in sorted(upload_candidate_ids):
                     approval = asset_approvals.get(asset_id)
@@ -225,12 +235,14 @@ def main():
                                 + ", ".join(sorted(mismatches)))
                             continue
 
-                    material = materials_by_id.get(frozen["material_id"])
-                    if (material is None
-                            or material.get("source_url") != frozen["source_page_url"]):
-                        builder.errors.append(
-                            f"approval_identity_mismatch: {asset_id} material/source changed")
-                        continue
+                    # 76C/OBS-255:user_provided 资产无对应 material(来源登记即依据),跳过检查
+                    if frozen.get("asset_origin") != "user_provided":
+                        material = materials_by_id.get(frozen["material_id"])
+                        if (material is None
+                                or material.get("source_url") != frozen["source_page_url"]):
+                            builder.errors.append(
+                                f"approval_identity_mismatch: {asset_id} material/source changed")
+                            continue
 
                     local_value = discovered.get("local_path")
                     if not local_value:
@@ -296,6 +308,70 @@ def main():
     max_total_images = config.get("max_total_images", 12)
     total_assets_added = 0
     asset_counter = 0
+
+    # 76C/OBS-255:用户供图注入——user_images.json 直链清单(user_provided,
+    # 免版权审批,用户供图责任自负,登记来源链接)。仅 discover 纳入候选。
+    for ui in (request.get("user_images") or []):
+        if total_assets_added >= max_total_images:
+            break
+        url = (ui.get("url") or "").strip()
+        if not url:
+            continue
+        asset_counter += 1
+        asset_id = f"A-{asset_counter:03d}"
+        _host = (urlsplit(url).hostname or "").lower()
+        _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
+        sec = is_safe_url(url, require_dns=(network_mode == "live"))
+        if not sec.safe or any(_host == d or _host.endswith("." + d) for d in _bl):
+            builder.add_asset(AssetRecord(
+                asset_id=asset_id, asset_origin="user_provided", material_ids=[], claim_ids=[],
+                source_page_url=ui.get("source_url") or "", discovered_url=url, resolved_original_url=url,
+                extraction_method="user_provided", decode_method="none",
+                decision="rejected", reasons=[f"user image rejected: {'URL security' if not sec.safe else 'domain blacklisted: ' + _host} (76C)"],
+                quality_status="fail", relevance_status="irrelevant",))
+            continue
+        dl = download_image(url, output_dir / "images",
+                              max_bytes=config.get("max_download_bytes", 15728640),
+                              mode=network_mode, fixture_dir=fixture_images_dir)
+        if not dl.success:
+            builder.add_asset(AssetRecord(
+                asset_id=asset_id, asset_origin="user_provided", material_ids=[], claim_ids=[],
+                source_page_url=ui.get("source_url") or "", discovered_url=url, resolved_original_url=url,
+                extraction_method="user_provided", decode_method="none",
+                decision="rejected", reasons=[f"download failed: {dl.error}"],
+                quality_status="fail", relevance_status="irrelevant",))
+            continue
+        inspection = inspect_image(dl.local_path, max_pixels=config.get("max_pixels", 40_000_000))
+        identity_sha256 = stable_asset_identity("user-provided", ui.get("source_url") or "", url, inspection.sha256)
+        dim_ok = (inspection.is_valid and inspection.width >= config.get("min_width", 480)
+                  and inspection.height >= config.get("min_height", 200))
+        decision = "eligible" if dim_ok else "review_required"
+        caption = ui.get("caption") or ""
+        asset = AssetRecord(
+            asset_id=asset_id, asset_origin="user_provided", material_ids=[], claim_ids=[],
+            source_page_url=ui.get("source_url") or "", discovered_url=url, resolved_original_url=url,
+            extraction_method="user_provided", decode_method="none", local_path=dl.local_path,
+            sha256=inspection.sha256, perceptual_hash=inspection.perceptual_hash,
+            mime_type=inspection.mime_type, width=inspection.width, height=inspection.height,
+            file_size=inspection.file_size, quality_status="pass" if inspection.is_valid else "fail",
+            relevance_status="relevant" if decision == "eligible" else "uncertain",
+            copyright_status="user_granted", copyright_risk="low", decision=decision,
+            reasons=["user provided image — 免版权审批,用户供图责任自负 (76C/OBS-255)"],
+            caption=caption, alt_text=caption,
+            content_description=caption or "用户供图", content_description_source="user_provided",
+            page_region="user_provided", page_position={"known": False, "heading": None, "level": None},
+            asset_identity_sha256=identity_sha256,
+            upload={"mode": upload_mode, "status": "not_uploaded", "remote_url": None, "response_sha256": None},
+        )
+        pending_uploads.append((asset, dl.local_path, inspection, "user_provided"))
+        discovery_records.append({
+            "asset_id": asset_id, "asset_origin": "user_provided",
+            "material_id": "user-provided", "source_page_url": ui.get("source_url") or "", "resolved_original_url": url,
+            "asset_sha256": inspection.sha256, "asset_identity_sha256": identity_sha256,
+        })
+        builder.add_asset(asset)
+        total_assets_added += 1
+        print(f"  User image {asset_id}: {url} — {decision}")
 
     for mat in ([] if args.phase == "continue" else materials):
         material_id = mat["material_id"]
@@ -417,6 +493,23 @@ def main():
                     builder.add_asset(asset)
                     continue
 
+            # 76C/OBS-248:来源域名黑名单(可配置,首批 ithome.com / img.ithome.com)
+            # ——水印广告图,用户两次手动删除的域名,意图明确;命中即拒。
+            _host = (urlsplit(resolved_url).hostname or "").lower()
+            _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
+            if any(_host == d or _host.endswith("." + d) for d in _bl):
+                asset = AssetRecord(
+                    asset_id=asset_id, asset_origin="source",
+                    material_ids=[material_id], claim_ids=mat.get("selected_claim_ids", []),
+                    aihot_permalink=permalink, source_page_url=page_url,
+                    discovered_url=candidate.url, resolved_original_url=resolved_url,
+                    extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                    decision="rejected", reasons=[f"domain blacklisted: {_host} (76C/OBS-248)"],
+                    quality_status="fail", relevance_status="irrelevant",
+                )
+                builder.add_asset(asset)
+                continue
+
             images_dir = output_dir / "images"
             download_result = download_image(resolved_url, images_dir,
                                               max_bytes=config.get("max_download_bytes", 15728640),
@@ -520,6 +613,124 @@ def main():
             builder.add_asset(asset)
             total_assets_added += 1
             material_image_count += 1
+
+    # 76C/OBS-254:discover 扩池——全池潜力源(pool_items,来自 aihot
+    # deduplicated_items)补充抓取;每条素材除 source_url 外,优先抓 links.aihot
+    # 站内页(渲染好的直出 HTML,可绕开 X 等平台动态渲染)。来源扩池的图仍按
+    # 既有 OBS-86 规则做 claim 相关性绑定,只放行与文章相关者。
+    pool_items = request.get("pool_items") or []
+    pool_fetch_limit = int(config.get("pool_fetch_limit", 30))
+    pool_fetched = 0
+    pool_selected_ids = {m.get("material_id") for m in materials}
+    all_claim_texts = [c.get("claim_text", "") for c in claims]
+    _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
+    pool_image_count = 0
+    for item in pool_items:
+        if total_assets_added >= max_total_images or pool_fetched >= pool_fetch_limit:
+            break
+        iid = item.get("id", "")
+        if not iid or iid in pool_selected_ids:
+            continue
+        permalink = item.get("aihot_permalink", "")
+        source_url = item.get("source_url", "")
+        links = item.get("links") or {}
+        # 图源潜力:summary/links 含图片 URL 或站内页(优先);有图片线索则最多
+        # 抓两页(站内页 + 原页),否则只抓站内页。
+        img_hint = bool(re.search(r"https?://[^\s\"']+\.(?:png|jpe?g|gif|webp)",
+                               (item.get("summary") or "") + json.dumps(links, ensure_ascii=False), re.I))
+        page_candidates = []
+        if links.get("aihot"):
+            page_candidates.append(("aihot_permalink", links["aihot"]))
+        if source_url and source_url != permalink and img_hint:
+            page_candidates.append(("source_url", source_url))
+        for kind, page_url in page_candidates:
+            if total_assets_added >= max_total_images or pool_fetched >= pool_fetch_limit:
+                break
+            fr = fetch_page(page_url, mode=network_mode, fixture_dir=fixture_dir)
+            pool_fetched += 1
+            if not fr.success:
+                continue
+            extraction = extract_images(fr.content, page_url=page_url)
+            print(f"  Pool {iid} via {kind}: {len(extraction.candidates)} candidates")
+            for candidate in extraction.candidates:
+                if total_assets_added >= max_total_images:
+                    break
+                if pool_image_count >= max_images_per_material:
+                    break
+                asset_counter += 1
+                asset_id = f"A-{asset_counter:03d}"
+                decode_result = decode_proxy_url(candidate.url)
+                resolved_url = decode_result.decoded_url
+                sec = is_safe_url(resolved_url, require_dns=(network_mode == "live"))
+                _host = (urlsplit(resolved_url).hostname or "").lower()
+                if not sec.safe or any(_host == d or _host.endswith("." + d) for d in _bl):
+                    builder.add_asset(AssetRecord(
+                        asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                        aihot_permalink=permalink, source_page_url=page_url,
+                        discovered_url=candidate.url, resolved_original_url=resolved_url,
+                        extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                        decision="rejected", reasons=[f"pool image rejected: {'URL security' if not sec.safe else 'domain blacklisted: ' + _host} (76C)"],
+                        quality_status="fail", relevance_status="irrelevant",))
+                    continue
+                # OBS-86 语义不变:多章节页做 claim 相关性绑定,只放行与文章相关者
+                if (candidate.section_level in ("h2", "h3")
+                        and candidate.section_heading and all_claim_texts):
+                    if not section_matches_claims(candidate.section_heading, all_claim_texts):
+                        builder.add_asset(AssetRecord(
+                            asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                            aihot_permalink=permalink, source_page_url=page_url,
+                            discovered_url=candidate.url, resolved_original_url=resolved_url,
+                            extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                            decision="rejected", reasons=[f"pool cross-section image (section: {candidate.section_heading[:60]}) does not match any selected claim (OBS-86)"],
+                            quality_status="fail", relevance_status="irrelevant",
+                            page_region=candidate.page_region, page_position={"known": True, "heading": candidate.section_heading, "level": candidate.section_level},))
+                        continue
+                images_dir = output_dir / "images"
+                dl = download_image(resolved_url, images_dir, max_bytes=config.get("max_download_bytes", 15728640),
+                                    mode=network_mode, fixture_dir=fixture_images_dir)
+                if not dl.success:
+                    builder.add_asset(AssetRecord(
+                        asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                        aihot_permalink=permalink, source_page_url=page_url,
+                        discovered_url=candidate.url, resolved_original_url=resolved_url,
+                        extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                        decision="rejected", reasons=[f"download failed: {dl.error}"],
+                        quality_status="fail", relevance_status="irrelevant",))
+                    continue
+                inspection = inspect_image(dl.local_path, max_pixels=config.get("max_pixels", 40_000_000))
+                identity_sha256 = stable_asset_identity(iid, page_url, resolved_url, inspection.sha256)
+                classification = classify_image(
+                    url=resolved_url, inspection=inspection,
+                    min_width=config.get("min_width", 480), min_height=config.get("min_height", 200),
+                    context=candidate.context, copyright_status="unknown",
+                    extraction_method=candidate.extraction_method,)
+                asset = AssetRecord(
+                    asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                    aihot_permalink=permalink, source_page_url=page_url,
+                    discovered_url=candidate.url, resolved_original_url=resolved_url,
+                    extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
+                    local_path=dl.local_path, sha256=inspection.sha256,
+                    perceptual_hash=inspection.perceptual_hash, mime_type=inspection.mime_type,
+                    width=inspection.width, height=inspection.height, file_size=inspection.file_size,
+                    quality_status="pass" if inspection.is_valid else "fail",
+                    relevance_status="relevant" if classification.decision == "eligible" else "uncertain",
+                    copyright_status="unknown", copyright_risk="medium", decision=classification.decision,
+                    reasons=classification.rejection_reasons or classification.relevance_reasons,
+                    asset_identity_sha256=identity_sha256,
+                    content_description=candidate.context or "", content_description_source="page_alt",
+                    page_region=candidate.page_region, page_position={"known": False, "heading": None, "level": None},
+                    upload={"mode": upload_mode, "status": "not_uploaded", "remote_url": None, "response_sha256": None},
+                )
+                pending_uploads.append((asset, dl.local_path, inspection, candidate.extraction_method))
+                discovery_records.append({
+                    "asset_id": asset_id, "asset_origin": "source", "material_id": iid,
+                    "source_page_url": page_url, "resolved_original_url": resolved_url,
+                    "asset_sha256": inspection.sha256, "asset_identity_sha256": identity_sha256,
+                })
+                builder.add_asset(asset)
+                total_assets_added += 1
+                pool_image_count += 1
+                print(f"  Pool {asset_id}: {resolved_url} — {classification.decision}")
 
     # OBS-71(档63):生成图表纳入批准链——决策 review_required、版权 unknown、
     # 计入数量上限、内容描述来自图表 spec(数据来源,非 claim 派生填充),

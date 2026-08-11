@@ -3,7 +3,14 @@
   "title": "Media Enrichment Request",
   "description": "Input contract for the media-enrichment Skill",
   "type": "object",
-  "required": ["schema_version", "run_id", "article", "materials", "claims", "config"],
+  "required": [
+    "schema_version",
+    "run_id",
+    "article",
+    "materials",
+    "claims",
+    "config"
+  ],
   "properties": {
     "schema_version": {
       "type": "string",
@@ -15,7 +22,10 @@
     },
     "article": {
       "type": "object",
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
         "path": {
           "type": "string",
@@ -32,7 +42,13 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["material_id", "aihot_permalink", "source_url", "title", "selected_claim_ids"],
+        "required": [
+          "material_id",
+          "aihot_permalink",
+          "source_url",
+          "title",
+          "selected_claim_ids"
+        ],
         "properties": {
           "material_id": {
             "type": "string",
@@ -60,16 +76,29 @@
             "properties": {
               "status": {
                 "type": "string",
-                "enum": ["unknown", "restricted", "known_allowed"]
+                "enum": [
+                  "unknown",
+                  "restricted",
+                  "known_allowed"
+                ]
               },
               "reviewed_by": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "reviewed_at": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "evidence": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           }
@@ -82,24 +111,68 @@
       "items": {
         "type": "object",
         "required": [
-          "asset_id", "material_id", "source_page_url", "resolved_original_url",
-          "asset_sha256", "asset_identity_sha256", "discovery_manifest_sha256",
-          "approval_id", "approved_scope", "approved_by", "approved_at",
+          "asset_id",
+          "material_id",
+          "source_page_url",
+          "resolved_original_url",
+          "asset_sha256",
+          "asset_identity_sha256",
+          "discovery_manifest_sha256",
+          "approval_id",
+          "approved_scope",
+          "approved_by",
+          "approved_at",
           "approval_evidence_sha256"
         ],
         "properties": {
-          "asset_id": {"type": "string", "minLength": 1},
-          "material_id": {"type": "string", "minLength": 1},
-          "source_page_url": {"type": "string", "format": "uri"},
-          "resolved_original_url": {"type": "string", "format": "uri"},
-          "asset_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
-          "asset_identity_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
-          "discovery_manifest_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
-          "approval_id": {"type": "string", "minLength": 1},
-          "approved_scope": {"type": "string", "const": "single_asset"},
-          "approved_by": {"type": "string", "minLength": 1},
-          "approved_at": {"type": "string", "minLength": 1},
-          "approval_evidence_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+          "asset_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "material_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_page_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "resolved_original_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "asset_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "asset_identity_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "discovery_manifest_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "approval_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approved_scope": {
+            "type": "string",
+            "const": "single_asset"
+          },
+          "approved_by": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approved_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approval_evidence_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          }
         }
       }
     },
@@ -107,7 +180,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["claim_id", "claim_text", "material_id", "source_url", "source_excerpt"],
+        "required": [
+          "claim_id",
+          "claim_text",
+          "material_id",
+          "source_url",
+          "source_excerpt"
+        ],
         "properties": {
           "claim_id": {
             "type": "string",
@@ -131,13 +210,21 @@
             "type": "array",
             "items": {
               "oneOf": [
-                {"type": "string"},
+                {
+                  "type": "string"
+                },
                 {
                   "type": "object",
-                  "required": ["value"],
+                  "required": [
+                    "value"
+                  ],
                   "properties": {
-                    "value": {"type": "number"},
-                    "unit": {"type": "string"}
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string"
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -169,15 +256,26 @@
     },
     "config": {
       "type": "object",
-      "required": ["network_mode", "upload_mode"],
+      "required": [
+        "network_mode",
+        "upload_mode"
+      ],
       "properties": {
         "network_mode": {
           "type": "string",
-          "enum": ["live", "offline_fixture"]
+          "enum": [
+            "live",
+            "offline_fixture"
+          ]
         },
         "upload_mode": {
           "type": "string",
-          "enum": ["dry_run", "wechat_image_host", "stable_storage", "wechat_audit"]
+          "enum": [
+            "dry_run",
+            "wechat_image_host",
+            "stable_storage",
+            "wechat_audit"
+          ]
         },
         "max_images_per_material": {
           "type": "integer",
@@ -212,8 +310,75 @@
         "allow_unknown_license_for_publish": {
           "type": "boolean",
           "default": false
+        },
+        "domain_blacklist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "76C/OBS-248: 来源域名黑名单(命中即拒);首批 ithome.com / img.ithome.com"
         }
       }
+    },
+    "pool_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "source_url",
+          "aihot_permalink"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "aihot_permalink": {
+            "type": "string",
+            "format": "uri"
+          },
+          "links": {
+            "type": "object"
+          }
+        }
+      },
+      "description": "76C/OBS-254: 全池潜力源(aihot deduplicated_items),discover 扩池扫描用;可选"
+    },
+    "user_images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "description": "76C/OBS-255: 用户供图直链清单(user_provided,免版权审批,责任自负);可选"
     }
   }
 }
