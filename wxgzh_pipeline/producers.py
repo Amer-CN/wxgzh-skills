@@ -887,8 +887,9 @@ def _entry_args(
             args.extend(["--discovery-manifest", str(discovery_manifest)])
         return args
     if stage == "gzh_design":
+        bindings_path = _captioned_bindings_path(ctx)
         args = ["--article", str(_frozen_article(ctx)),
-                "--bindings", str(rd / "media_enrichment" / "article_image_bindings.json"),
+                "--bindings", str(bindings_path),
                 "--output-dir", str(sd), "--theme", "smartisan"]
         # 72E-1/OBS-251:handoff formatter.cover 存在则传 --strike/--tags/--brand/--kicker;
         # --date 永远不传(渲染自动当月);无 cover 字段时行为与现状逐字一致。
@@ -912,6 +913,84 @@ def _entry_args(
                 args += ["--subtitle", hook]
         return args
     raise ValueError(stage)
+
+
+
+
+_OFFICIAL_HINTS = ("official", "官方", "announcement", "公告", "发布",
+                   "github.com/minimax", "minimax.io", "releases")
+
+
+def _caption_type(asset: dict, title: str) -> str:
+    """76I/OBS-269:图注来源类型——官方资料图 / 社区演示 / 视频封面 / 本文数据图表。"""
+    if asset.get("asset_origin") == "generated":
+        return "本文数据图表"
+    if asset.get("video_poster"):
+        return "视频封面"
+    low = f"{title} {asset.get('source_page_url') or ''}".lower()
+    if any(h in low for h in _OFFICIAL_HINTS):
+        return "官方资料图"
+    return "社区演示"
+
+
+def _readable_desc(desc: str) -> str:
+    """76I/OBS-269:content_description 可读性判定——<img 开头的裸 HTML 判不可读。"""
+    d = (desc or "").strip()
+    if not d or d.startswith("<img"):
+        return ""
+    return d
+
+
+def _captioned_bindings_path(ctx) -> Path:
+    """76I/OBS-269:图注合成——为 gzh 渲染生成 captioned bindings 副本
+    (媒体冻结 bindings 不动,media receipt 不受影响);图注=来源类型+素材标题
+    [+可读摘要],≤40 字,任何情况不含 HTML 片段。"""
+    rd = Path(ctx.run_dir)
+    src_bnd = rd / "media_enrichment" / "article_image_bindings.json"
+    if not src_bnd.is_file():
+        return src_bnd
+    try:
+        bnd = json.loads(src_bnd.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return src_bnd
+    titles = {}
+    reg_p = rd / "super_writer" / "canonical_claim_registry.json"
+    if reg_p.is_file():
+        try:
+            reg = json.loads(reg_p.read_text(encoding="utf-8"))
+            for m in reg.get("materials") or []:
+                if m.get("material_id"):
+                    titles[str(m["material_id"])] = str(m.get("title") or "")
+        except (OSError, ValueError):
+            pass
+    man_p = rd / "media_enrichment" / "media_manifest.json"
+    man = {}
+    if man_p.is_file():
+        try:
+            man = json.loads(man_p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            man = {}
+    by_id = {a.get("asset_id"): a for a in man.get("assets", [])}
+    out_dir = rd / "gzh_design" / "inputs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = dict(bnd)
+    for b in out.get("body_images", []):
+        aid = b.get("asset_id")
+        a = by_id.get(aid) or {}
+        mids = b.get("material_ids") or a.get("material_ids") or []
+        title = next((titles.get(str(m)) for m in mids if titles.get(str(m))), "") or ""
+        ctype = _caption_type(a, title)
+        desc = _readable_desc(a.get("content_description") or "")
+        if desc:
+            title_part = title[:14] if title else "素材"
+            caption = f"{ctype}·{title_part}:{desc[:20]}"
+        else:
+            caption = f"{ctype}·{title[:24]}" if title else ctype
+        b["caption"] = caption[:40]
+        b["alt_text"] = b.get("alt_text") or caption[:40]
+    p = out_dir / "article_image_bindings.captioned.json"
+    p.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    return p
 
 
 def _handoff_cover(ctx) -> dict | None:

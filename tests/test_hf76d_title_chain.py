@@ -140,3 +140,68 @@ def test_aihot_instructions_contain_oow_fetch_procedure():
     assert "selected/snapshot" in src
     assert "hot-topics" in src and "stories" in src
     assert "supplemental" in src and "items_file_injection" in src
+
+
+def test_captioned_bindings_generation(tmp_path):
+    """76I/OBS-269:图注合成——来源类型+素材标题(+可读摘要),≤40 字,无 HTML。"""
+    rd = tmp_path
+    (rd / "media_enrichment").mkdir(parents=True)
+    (rd / "gzh_design").mkdir()
+    man = {"assets": [
+        {"asset_id": "A-1", "asset_origin": "source", "material_ids": ["M-01"],
+         "content_description": '<img alt="" class="w-full" src="x">',
+         "video_poster": False, "source_page_url": "https://x.com/official"},
+        {"asset_id": "A-2", "asset_origin": "generated", "material_ids": ["M-02"],
+         "content_description": "可读摘要内容", "video_poster": False},
+        {"asset_id": "A-3", "asset_origin": "source", "material_ids": ["M-03"],
+         "content_description": "", "video_poster": True},
+    ]}
+    (rd / "media_enrichment" / "media_manifest.json").write_text(
+        json.dumps(man, ensure_ascii=False), encoding="utf-8")
+    bnd = {"schema_version": "1.0", "body_images": [
+        {"asset_id": "A-1", "material_ids": ["M-01"]},
+        {"asset_id": "A-2", "material_ids": ["M-02"]},
+        {"asset_id": "A-3", "material_ids": ["M-03"]},
+    ]}
+    (rd / "media_enrichment" / "article_image_bindings.json").write_text(
+        json.dumps(bnd, ensure_ascii=False), encoding="utf-8")
+    (rd / "super_writer").mkdir()
+    reg = {"materials": [
+        {"material_id": "M-01", "title": "MiniMax 官方发布 H3"},
+        {"material_id": "M-02", "title": "H3 数据对比"},
+        {"material_id": "M-03", "title": "H3 演示视频"},
+    ]}
+    (rd / "super_writer" / "canonical_claim_registry.json").write_text(
+        json.dumps(reg, ensure_ascii=False), encoding="utf-8")
+    ctx = _Ctx(rd)
+    p = PR._captioned_bindings_path(ctx)
+    assert p.name == "article_image_bindings.captioned.json"
+    out = json.loads(p.read_text(encoding="utf-8"))
+    caps = {b["asset_id"]: b["caption"] for b in out["body_images"]}
+    # A-1:裸描述不可读 → 官方资料图+标题(不追加摘要)
+    assert caps["A-1"].startswith("官方资料图") and "MiniMax 官方发布 H3" in caps["A-1"]
+    assert "<img" not in caps["A-1"] and "<" not in caps["A-1"]
+    # A-2:数据图表 + 可读摘要
+    assert caps["A-2"].startswith("本文数据图表") and "可读摘要" in caps["A-2"]
+    # A-3:视频封面
+    assert caps["A-3"].startswith("视频封面") and "演示视频" in caps["A-3"]
+    for c in caps.values():
+        assert len(c) <= 40, c
+
+
+def test_gzh_args_use_captioned_bindings(tmp_path):
+    """76I/OBS-269:gzh 调用 --bindings 指向 captioned 副本。"""
+    rd = tmp_path
+    (rd / "media_enrichment").mkdir(parents=True)
+    (rd / "gzh_design").mkdir()
+    (rd / "media_enrichment" / "article_image_bindings.json").write_text(
+        json.dumps({"body_images": []}), encoding="utf-8")
+    (rd / "media_enrichment" / "media_manifest.json").write_text(
+        json.dumps({"assets": []}), encoding="utf-8")
+    (rd / "super_writer").mkdir()
+    (rd / "super_writer" / "canonical_claim_registry.json").write_text(
+        json.dumps({"materials": []}), encoding="utf-8")
+    ctx = _Ctx(rd)
+    sd = rd / "gzh_design"
+    args = PR._entry_args(ctx, "gzh_design", sd, None, None)
+    assert "captioned.json" in args[args.index("--bindings") + 1]
