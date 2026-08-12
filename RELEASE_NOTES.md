@@ -1,4 +1,12 @@
-# gzh-design v2026.08.12-hammer.12
+# gzh-design v2026.08.13-hammer.13
+
+## v2026.08.13-hammer.13(档76J)
+
+- OBS-271 表格/列表支持:render_article.py 解析标准 Markdown 表格(首行 header +
+  分隔行跳过)与 `- `/`* `/`1. ` 列表块;渲染走既有 hammer 组件样式——表格
+  = theme-hammer.md 11f,无序列表 = 11a pill-list,有序列表 = 11g
+  ordered-list;单元格/列表项文本以固定 p 样式承载(语法门锚可测,pipeline
+  component_anchors.json 同步注册)。测试 +6(解析/渲染/语法门 probe 同语义)。
 
 ## v2026.08.12-hammer.12(档76D)
 

@@ -756,6 +756,75 @@ def hammer_para(theme_key, text):
             f'{s(text)}</p></section>')
 
 
+def hammer_table(theme_key, header, rows):
+    """76J/OBS-271:Markdown 表格 -> 官方 11f 表格样式(references/theme-hammer.md 11f)。
+
+    结构与 theme-hammer.md 11f 逐字一致:外层 section overflow-x:auto;table
+    width:100%;border-collapse:collapse;font-size:13px;th 背景 primary 白字;td
+    border-bottom border_gray + 偶数行 bg_extreme_light 斑马。单元格文本用
+    <p style="margin:0;font-size:13px;line-height:1.6;color:{...}"> 承载(微信
+    支持 td>p,视觉与 11f 的 span 直挂一致;该 p 样式即语法门锚可测样式,由
+    component_anchors.json 注册)。"""
+    t = PALETTES[theme_key]
+    p = t["primary"]
+    bg = t["border_gray"]
+    bc = t["body_color"]
+    zebra_bg = t["bg_extreme_light"]
+    cells = []
+    if header:
+        cells.append('    <tr>' + ''.join(
+            f'<th style="background:{p};color:#fff;font-weight:700;padding:8px 12px;'
+            f'text-align:left;"><p style="margin:0;font-size:13px;line-height:1.6;'
+            f'color:#fff;"><span leaf="">{s(c)}</span></p></th>' for c in header)
+            + '</tr>')
+    for i, row in enumerate(rows):
+        zebra = f"background:{zebra_bg};" if i % 2 == 0 else ""
+        cells.append('    <tr>' + ''.join(
+            f'<td style="padding:8px 12px;border-bottom:1px solid {bg};'
+            f'color:{bc};{zebra}">'
+            f'<p style="margin:0;font-size:13px;line-height:1.6;'
+            f'color:{bc};">'
+            f'<span leaf="">{s(c)}</span></p></td>' for c in row)
+            + '</tr>')
+    thead_html = "\n".join(cells[:1]) if header else ""
+    tbody_html = "\n".join(cells[1:])
+    return (f'<section style="margin-bottom:24px;overflow-x:auto;">'
+            f'<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+            f'<thead>{thead_html}</thead>'
+            f'<tbody>{tbody_html}</tbody></table></section>')
+
+
+def hammer_list(theme_key, items, ordered=False):
+    """76J/OBS-271:Markdown 列表 -> 官方主题样式——无序 = 11a pill-list 基本版,
+    有序 = 11g ordered-list(references/theme-hammer.md 11a/11g)。
+
+    无序项 p 在 11a 的 margin:0 0 6px 基础上补 font-size/line-height/color(视觉
+    由 pill span 自身样式决定,补位仅为语法门锚可测样式);有序项 p 与 11g 逐字
+    一致(唯一差异=颜色走主题 token)。"""
+    t = PALETTES[theme_key]; p = t["primary"]
+    parts = []
+    if ordered:
+        for i, item in enumerate(items, 1):
+            parts.append(
+                f'<section style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">'
+                f'<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;'
+                f'height:22px;background:{p};color:#fff;font-size:11px;font-weight:700;'
+                f'border-radius:50%;flex-shrink:0;margin-top:2px;"><span leaf="">{i}</span></span>'
+                f'<p style="font-size:14px;color:{t["body_color"]};margin:0;line-height:1.9;flex:1;">'
+                f'<span leaf="">{s(item)}</span></p></section>')
+    else:
+        for item in items:
+            parts.append(
+                f'<section style="margin-bottom:14px;">'
+                f'<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:{t["body_color"]};">'
+                f'<span style="display:inline-block;font-size:13px;font-weight:700;color:{p};'
+                f'background:{t["rgba_primary_008"]};padding:3px 10px;border-radius:999px;">'
+                f'<span style="display:inline-block;width:6px;height:6px;background:{p};border-radius:50%;'
+                f'margin-right:5px;vertical-align:middle;"><span leaf=""><br></span></span>'
+                f'<span leaf="">{s(item)}</span></span></p></section>')
+    return "\n".join(parts)
+
+
 def hammer_code_block(language: str, text: str) -> str:
     """1a 深色代码块(common-components.md)——所有主题共用,不做主题变色。
 

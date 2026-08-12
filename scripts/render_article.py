@@ -104,6 +104,50 @@ def parse_article(md: str) -> dict:
     component_name = ""
     component_head = ""
     scattered_fns: list[str] = []  # 1g(OBS-128):正文散落 [^N]: 定义行
+    # 76J/OBS-271:表格/列表块缓冲 —— 连续行聚成块,遇空白/非块行落盘。
+    table_buf: list[list[str]] = []
+    list_buf: list[str] = []
+    list_ordered = False
+    _TABLE_ROW_RE = re.compile(r"^\|")
+    _UL_RE = re.compile(r"^[-*]\s+")
+    _OL_RE = re.compile(r"^\d+\.\s+")
+
+    def _flush_table():
+        """表格块 -> {kind: table};首行作 header,全破折号行(分隔行)跳过。"""
+        nonlocal table_buf
+        if not table_buf:
+            return
+        header = [c.strip() for c in table_buf[0].strip("|").split("|")]
+        body = []
+        for raw in table_buf[1:]:
+            cells = [c.strip() for c in raw.strip("|").split("|")]
+            if all(re.fullmatch(r":?-{2,}:?", c or "-") for c in cells):
+                continue  # 分隔行
+            body.append(cells)
+        item = {"kind": "table", "header": header, "rows": body}
+        if cur is None:
+            intro_paras.append(item)
+        else:
+            cur["paras"].append(item)
+        table_buf = []
+
+    def _flush_list():
+        """列表块 -> {kind: list};ordered 由首行判定,项去控制符。"""
+        nonlocal list_buf, list_ordered
+        if not list_buf:
+            return
+        items = []
+        for raw in list_buf:
+            m = _OL_RE.match(raw) if list_ordered else _UL_RE.match(raw)
+            items.append(raw[m.end():].strip() if m else raw.strip())
+        item = {"kind": "list", "items": items, "ordered": list_ordered}
+        if cur is None:
+            intro_paras.append(item)
+        else:
+            cur["paras"].append(item)
+        list_buf = []
+        list_ordered = False
+
     for ln in lines:
         st = ln.strip()
         if in_component:
@@ -155,6 +199,19 @@ def parse_article(md: str) -> dict:
             continue
         if st.startswith("#"):
             continue
+        # 76J/OBS-271:表格/列表行收集(标题/正文处理之前;代码块与组件块已在上面分流)
+        if _TABLE_ROW_RE.match(st):
+            _flush_list()
+            table_buf.append(st)
+            continue
+        if _UL_RE.match(st) or _OL_RE.match(st):
+            _flush_table()
+            if not list_buf:
+                list_ordered = bool(_OL_RE.match(st))
+            list_buf.append(st)
+            continue
+        _flush_table()
+        _flush_list()
         if not st:
             continue
         # 1g(OBS-128):散落 [^N]: 定义行 → 收集,不当作正文段落渲染。
@@ -169,6 +226,8 @@ def parse_article(md: str) -> dict:
             intro_paras.append({"kind": "para", "text": st})
             continue
         cur["paras"].append({"kind": "para", "text": st})
+    _flush_table()
+    _flush_list()
     if in_code:  # unclosed fence: keep collected lines as a code item (lenient)
         if cur is None:
             intro_paras.append({"kind": "code", "text": "\n".join(code_buf)})
@@ -227,7 +286,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
     # Order: cover -> intro paras -> chapter 1 title -> chapter body.
     for item in parsed.get("intro_paras") or []:
         parts.append(_render_item(theme_key, item, usage))
-        if isinstance(item, dict) and item.get("kind") in ("code", "component"):
+        if isinstance(item, dict) and item.get("kind") in ("code", "component", "table", "list"):
             continue
         usage["paragraph"] += 1
 
@@ -241,7 +300,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
         usage["chapter_title"] += 1
         for item in ch["paras"]:
             parts.append(_render_item(theme_key, item, usage))
-            if isinstance(item, dict) and item.get("kind") in ("code", "component"):
+            if isinstance(item, dict) and item.get("kind") in ("code", "component", "table", "list"):
                 continue
             usage["paragraph"] += 1
         for _ in range(per_chapter[i - 1]):
@@ -382,6 +441,14 @@ def _render_item(theme_key: str, item, usage: dict) -> str:
     if kind == "code":
         usage["code_block"] += 1
         return _hammer_code_block(theme_key, item["text"], item.get("language", ""))
+    if kind == "table":
+        usage["table"] = usage.get("table", 0) + 1
+        return H.hammer_table(theme_key, item.get("header") or [],
+                              item.get("rows") or [])
+    if kind == "list":
+        usage["list"] = usage.get("list", 0) + 1
+        return H.hammer_list(theme_key, item.get("items") or [],
+                             item.get("ordered", False))
     if kind == "component":
         name = item.get("name", "")
         builder = _COMPONENT_BUILDERS.get(name)
