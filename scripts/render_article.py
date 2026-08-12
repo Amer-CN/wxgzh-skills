@@ -194,8 +194,9 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
            date: str | None = None, strike: str = "别急着划走",
            brand: str = "给自己造把锤子",
            tags: tuple[str, ...] = ("深度", "观察"),
-           kicker: str | None = None) -> tuple[str, dict]:
-    title = parsed["title"]
+           kicker: str | None = None, title: str | None = None,
+           subtitle: str | None = None) -> tuple[str, dict]:  # 76D/OBS-257:封面标题/副标题参数化
+    title = title or parsed["title"]
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
     chapter_titles = [c["title"] for c in chapters]
     usage = {"cover_breaking": 0, "toc_scroll": 0, "chapter_title": 0,
@@ -211,7 +212,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
     # hammer_cover 的 kicker 参数原样传入(见下方调用)。
     if kicker is None:
         kicker = "深度观察 · " + en_label_for(chapter_titles[0] if chapter_titles else title, 1)
-    subtitle = (parsed.get("intro") or "结构化拆解与要点梳理")[:48]
+    # 76D/OBS-257:显式 --subtitle 优先;否则文章导语(intro);再否则默认文案。
+    subtitle = (subtitle or parsed.get("intro") or "结构化拆解与要点梳理")[:48]
     cover_date = date or datetime.now().strftime("%Y.%m")
     parts.append(H.hammer_cover(theme_key, kicker=kicker, strike=strike,
                                 title_line1=l1, title_line2=l2, subtitle=subtitle,
@@ -295,6 +297,10 @@ def main(argv=None) -> int:
                     help="comma-separated cover tags")
     ap.add_argument("--kicker", default=None,
                     help="cover kicker(文章类型标签);默认沿用「深度观察 · 标签」构造")
+    ap.add_argument("--title", default=None,
+                    help="cover title(76D/OBS-257);默认取文章 H1(parse_article)")
+    ap.add_argument("--subtitle", default=None,
+                    help="cover subtitle(76D/OBS-257);默认取文章导语(intro)")
     a = ap.parse_args(argv)
 
     theme_key = THEME_ALIAS.get(a.theme.strip().lower(), None)
@@ -318,7 +324,7 @@ def main(argv=None) -> int:
     tags = tuple(t.strip() for t in a.tags.split(",") if t.strip())
     html, usage = render(theme_key, parsed, body_images,
                          date=a.date, strike=a.strike, brand=a.brand, tags=tags,
-                         kicker=a.kicker)
+                         kicker=a.kicker, title=a.title, subtitle=a.subtitle)
 
     out = Path(a.output_dir)
     out.mkdir(parents=True, exist_ok=True)

@@ -234,3 +234,41 @@ class TestCliCompat:
         src = (SKILL_ROOT / "scripts" / "render_article.py").read_text(encoding="utf-8")
         for flag in ('"--article"', '"--bindings"', '"--output-dir"', '"--theme"'):
             assert flag in src, f"render_article.py must accept {flag}"
+
+
+class TestHf76dCoverTitle:
+    """档76D/OBS-257:--title/--subtitle 显式覆盖生效;不传时沿用解析/H1/导语默认。"""
+
+    def _render(self, argv):
+        td = Path(tempfile.mkdtemp())
+        (td / "final_article.md").write_text(ARTICLE, encoding="utf-8")
+        R = _load_render()
+        code = R.main(["--article", str(td / "final_article.md"),
+                       "--output-dir", str(td), "--theme", "smartisan", *argv])
+        assert code == 0
+        return (td / "final.html").read_text(encoding="utf-8")
+
+    def test_title_override(self):
+        html = self._render(["--title", "定制封面标题"])
+        assert "定制封面标题" in html
+        assert "把旧显卡折腾成本地 AI 画图机" not in html
+
+    def test_title_default_from_h1(self):
+        html = self._render([])
+        # 封面标题经 split_title 拆行渲染(H1 不在正文渲染),断言拆行片段
+        assert '把旧显卡折腾成本地' in html and 'AI 画图机' in html
+
+    def test_subtitle_override(self):
+        html = self._render(["--subtitle", "定制副标题文案"])
+        assert "定制副标题文案" in html
+
+    def test_subtitle_default_from_intro(self):
+        html = self._render([])
+        assert "一块两三百块的旧 A 卡" in html
+
+
+class TestCliCompatHf76d:
+    def test_new_flags_accepted(self):
+        src = (SKILL_ROOT / "scripts" / "render_article.py").read_text(encoding="utf-8")
+        for flag in ('"--title"', '"--subtitle"'):
+            assert flag in src, f"render_article.py must accept {flag}"

@@ -1,4 +1,11 @@
-# gzh-design v2026.08.10-hammer.11
+# gzh-design v2026.08.12-hammer.12
+
+## v2026.08.12-hammer.12(档76D)
+
+- OBS-257 封面标题链路:render_article.py 新增 --title/--subtitle 可选参数
+  (默认 None → 沿用既有解析:H1 / 导语 intro),与 HF-6/72E-1 参数化同模式;
+  pipeline 侧 handoff.selected_title(缺省回落 title_candidates[0])流入 --title,
+  文章导语缺失时 hook_line 流入 --subtitle。测试 +5(覆盖生效/默认沿用/CLI 参数)。
 
 ## v2026.08.10-hammer.11(档72E-1)
 
