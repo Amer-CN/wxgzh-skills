@@ -121,6 +121,7 @@ def classify_image(
     context: str = "",
     copyright_status: str = "unknown",
     extraction_method: str = "",
+    internal_page: bool = False,
 ) -> ClassificationResult:
     """Classify an image using deterministic rules.
 
@@ -153,7 +154,10 @@ def classify_image(
     # 档HF-4/OBS-247:meta 通道图仅当 URL 本身命中动态伪卡片端点时才拒绝
     # (AI HOT /opengraph-image-xxxx 类);正常 URL 的 meta 通道图不再因通道
     # 被拒,进入后续安全/尺寸/质量/去重关卡(review_required)。
-    if method in SOCIAL_PREVIEW_EXTRACTION_METHODS and is_social_preview_url(url):
+    # 76G-R/OBS-263:站内页(aihot.virxact.com 直出 HTML)内容已经过筛选,
+    # 其 og:image 是内容图/视频封面而非分享卡,不按 social preview 拒。
+    if (method in SOCIAL_PREVIEW_EXTRACTION_METHODS
+            and is_social_preview_url(url) and not internal_page):
         result.category = "social_share_card"
         result.decision = "rejected"
         result.rejection_reasons.append(
@@ -319,7 +323,9 @@ def classify_image(
         result.confidence = max(result.confidence, 0.6)
 
     # Photo with unknown source context
-    if result.category == "" and copyright_status == "unknown":
+    # 76G-R/OBS-263:站内页图与素材同源即相关——不再因「source context unclear」
+    # 加拦;copyright unknown 的 review_required 语义保持。
+    if result.category == "" and copyright_status == "unknown" and not internal_page:
         result.category = "photo"
         review_reasons.append("appears to be a photograph but source context unclear")
         result.confidence = max(result.confidence, 0.5)

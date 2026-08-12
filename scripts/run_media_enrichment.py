@@ -630,13 +630,20 @@ def main():
                 min_width=config.get("min_width", 640), min_height=config.get("min_height", 360),
                 context=candidate.context, copyright_status=effective_copyright,
                 extraction_method=candidate.extraction_method,
+                # 76G-R/OBS-263:站内页图与素材同源即相关(站内内容已筛选)
+                internal_page=(page_kind == "aihot_internal"),
             )
 
             content_desc, content_desc_source = _source_content_description(candidate)
             # 档HF-4/OBS-247:meta 通道图原始 HTML 无 DOM 位置——推文页=内容单元
             # 本身,页级主图位置即页面(page-meta 语义,审核方裁定);取不到页面
             # title 则 known=false。
-            if candidate.extraction_method in ("og:image", "twitter:image"):
+            # 76G-R/OBS-262:站内页图源证据形态——站内页(aihot_internal)为单篇
+            # 内容单元,页内 img 无章节上下文时位置即页面(page-meta,与 og:image
+            # 的审核方裁定同源);三项证据=站内页 URL + 页内位置 + img-proxy 原始
+            # URL 追溯(readiness 认可,不再因位置未知拦站内页图)。
+            if (candidate.extraction_method in ("og:image", "twitter:image")
+                    or page_kind == "aihot_internal"):
                 if extraction.page_title:
                     page_pos = {"known": True, "heading": extraction.page_title,
                                 "level": "page-meta"}
@@ -766,6 +773,7 @@ def main():
                     url=resolved_url, inspection=inspection,
                     min_width=config.get("min_width", 480), min_height=config.get("min_height", 200),
                     context=candidate.context, copyright_status="unknown",
+                    internal_page=(kind == "aihot_permalink"),
                     extraction_method=candidate.extraction_method,)
                 asset = AssetRecord(
                     asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
@@ -969,6 +977,8 @@ def main():
                     min_height=config.get("min_height", 360),
                     context="", copyright_status="known_allowed",
                     extraction_method=extraction_method,
+                    internal_page=((asset.source_page_url or "").startswith(
+                        "https://aihot.virxact.com/")),
                 )
                 asset.decision = classification.decision
                 asset.relevance_status = (

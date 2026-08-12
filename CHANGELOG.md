@@ -2,6 +2,22 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev15 (2026-08-12)
+
+- OBS-262(76G-R):站内页图源证据形态——站内页(aihot_internal)为单篇内容单元,
+  页内 img 无章节上下文时位置即页面(page-meta,与 og:image 审核方裁定同源);
+  三项证据=站内页 URL + 页内位置 + img-proxy 原始 URL 追溯,readiness 认可,
+  不再因「位置未知/描述为空」拦站内页图。
+- OBS-263(76G-R):站内页图相关性——站内页内容已筛选,图与素材同源即相关:
+  分类器 internal_page 参数(站内页图不再加「source context unclear」review
+  reason;站内页 og:image 是内容图/视频封面,不按 social share card 拒);
+  素材/pool/continue 重分类三处调用接线;cross-section 站内页变体无需改
+  (站内页单篇 h1 形态无跨节歧义,既有 h1 例外覆盖)。
+- 测试 +2(test_hf76g_video_poster:站内页 img page-meta 位置/og:image 不被
+  social card 拒;四测试页案例回归语义:h84rqz A-013 类 img.src 站内页图由
+  position unknown + unclear 双拦 → 现 page-meta + 无 unclear,可批候选)。
+- 版本 0.1.0-dev15。
+
 ## 0.1.0-dev14 (2026-08-12)
 
 - OBS-266(76G 增补):视频封面采集通道——视频型素材页(og:video / twitter:player /

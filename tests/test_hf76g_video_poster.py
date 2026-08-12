@@ -127,3 +127,65 @@ def test_video_poster_enters_candidates(tmp_path):
     assert all(a["decision"] in ("eligible", "review_required", "rejected") for a in vp)
     # 视频本体不下载:资产 URL 均为图片(非 .mp4)
     assert all(not (a.get("resolved_original_url") or "").endswith(".mp4") for a in vp)
+
+
+def test_internal_page_img_gets_page_meta_position(tmp_path):
+    """76G-R/OBS-262:站内页 img.src 无章节上下文时位置=page-meta(三项证据齐)。"""
+    fixture_html = _mk_fixture(tmp_path / "fixture2")
+    # 站内页单篇形态:img 无 h2/h3 上下文(x-tweet-media-img 类)
+    (fixture_html / "ipage.html").write_text(
+        "<!doctype html><html><head><title>站内视频页 · AIHOT</title></head>"
+        "<body><article><h1>站内视频页</h1>"
+        '<img class="x-tweet-media-img" src="https://aihot.example/api/img-proxy?u=https%3A%2F%2Fimg.example-source.test%2Fvp.png">'
+        "</article></body></html>", encoding="utf-8")
+    req = _mk_request(tmp_path)
+    reqd = json.loads(req.read_text(encoding="utf-8"))
+    reqd["materials"][0]["aihot_internal_url"] = "https://aihot.example/items/ipage"
+    reqd["materials"][0]["source_url"] = "https://x.example/ipage-src"
+    reqd["claims"][0]["source_url"] = "https://x.example/ipage-src"
+    req.write_text(json.dumps(reqd, ensure_ascii=False, indent=2), encoding="utf-8")
+    out = tmp_path / "out-discover2"
+    cmd = [sys.executable, "-X", "utf8", str(RUNNER),
+           "--request", str(req), "--output-dir", str(out),
+           "--fixture-dir", str(fixture_html), "--phase", "discover"]
+    proc = subprocess.run(cmd, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", timeout=180)
+    assert proc.returncode == 0, proc.stdout[-1200:]
+    man = json.loads((out / "media_manifest.json").read_text(encoding="utf-8"))
+    assets = [a for a in man["assets"] if a["source_page_url"] == "https://aihot.example/items/ipage"]
+    assert assets, "站内页图应进候选"
+    a = assets[0]
+    assert a["page_position"]["known"] is True, a["page_position"]
+    assert a["page_position"]["level"] == "page-meta"
+    assert a["page_position"]["heading"] == "站内视频页 · AIHOT"
+    # 三项证据:站内页 URL + page-meta 位置 + 原始 URL 追溯
+    assert a["resolved_original_url"].endswith("/vp.png")
+
+
+def test_internal_page_og_image_not_social_card(tmp_path):
+    """76G-R/OBS-263:站内页 og:image 是内容图/视频封面,不按 social share card 拒。"""
+    fixture_html = _mk_fixture(tmp_path / "fixture3")
+    (fixture_html / "opage.html").write_text(
+        "<!doctype html><html><head><title>OpenGraph 站内页 · AIHOT</title>"
+        '<meta property="og:image" content="https://img.example-source.test/vp.png">'
+        "</head><body><article><h1>OpenGraph 站内页</h1>"
+        "<p>正文</p></article></body></html>", encoding="utf-8")
+    req = _mk_request(tmp_path)
+    reqd = json.loads(req.read_text(encoding="utf-8"))
+    reqd["materials"][0]["aihot_internal_url"] = "https://aihot.example/items/opage"
+    reqd["materials"][0]["source_url"] = "https://x.example/opage-src"
+    reqd["claims"][0]["source_url"] = "https://x.example/opage-src"
+    req.write_text(json.dumps(reqd, ensure_ascii=False, indent=2), encoding="utf-8")
+    out = tmp_path / "out-discover3"
+    cmd = [sys.executable, "-X", "utf8", str(RUNNER),
+           "--request", str(req), "--output-dir", str(out),
+           "--fixture-dir", str(fixture_html), "--phase", "discover"]
+    proc = subprocess.run(cmd, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", timeout=180)
+    assert proc.returncode == 0, proc.stdout[-1200:]
+    man = json.loads((out / "media_manifest.json").read_text(encoding="utf-8"))
+    og = [a for a in man["assets"] if a["extraction_method"] == "og:image"
+          and a["source_page_url"] == "https://aihot.example/items/opage"]
+    assert og, "站内页 og:image 应进候选(不被 social card 拒)"
+    assert all("social share card" not in (r or "") for a in og for r in a.get("reasons") or [])
+    assert all(a["decision"] in ("eligible", "review_required") for a in og)
