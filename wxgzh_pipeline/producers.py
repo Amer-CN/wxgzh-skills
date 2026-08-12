@@ -42,7 +42,7 @@ AGENT_INSTRUCTIONS = {
                      "product, then run the locked official validate_article_length.py with "
                      "--full-mode --json and save its exact JSON stdout as "
                      "full_mode_validator_report.json before ACK. "
-                     "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。"),
+                     "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。76G-R/OBS-265(行为层,通用规则):a) 产 handoff.yaml 时如实填写 prose_craft_applied / prose_craft_version——实际执行了 R1–R9 自检才许填 prose_craft_applied=true,未执行必须填 false,禁止默认 true 或留空误导下游;b) Phase 6 内容审稿的标题选定子步骤为必做——必须从 title_candidates 中按 评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定最终标题,handoff 的 selected_title 与 title_selection_reason 必填且不得为空,article.md 的 H1 必须与 selected_title 一致。"),
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). "
                      "fidelity_report.json 自报 length_retention 必须为 balanced"
                      "(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。",
@@ -223,7 +223,8 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
             ("super-writer", "scripts/validate_article_length.py", length_args),
             ("super-writer", "scripts/validate_semantic_map.py",
              ["--article", str(sd / "article.md"),
-              "--semantic-map", str(sd / "semantic-map.yaml")]),
+              "--semantic-map", str(sd / "semantic-map.yaml"),
+               "--evidence-map", str(sd / "evidence-map.md")]),
         ]
     if stage == "zh_human_writing":
         orig = rd / "super_writer" / "article.md"
@@ -321,7 +322,8 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                   "--output", str(sd / "material_ingestion_verification.json")]),
                 ("super-writer", "scripts/validate_semantic_map.py",
                  ["--article", str(sd / "article.md"),
-                  "--semantic-map", str(sd / "semantic-map.yaml")]),
+                  "--semantic-map", str(sd / "semantic-map.yaml"),
+               "--evidence-map", str(sd / "evidence-map.md")]),
             ]
         officials.append({"path": None, "sha256": None, "command": [], "exit_code": 2,
                           "stdout_sha256": hashlib.sha256(b"").hexdigest(),
@@ -1493,8 +1495,36 @@ def _select_live_cover(ctx):
             raise MediaRequestError(
                 f"cover: {asset_id} approval sha diverges from frozen manifest")
         local = _find_frozen_file(asset_id, rec["asset_sha256"])
-        return local, asset_id
+        # 76G-R/76D 配套:封面本地文件若是 WebP 转 JPEG(微信 40113 unsupported
+        # file type 实证;上传路径已转码,封面选择路径同样处理)
+        return _webp_cover_to_jpeg(local, rd), asset_id
     raise MediaRequestError("cover: no usable approved cover asset")
+
+
+def _webp_cover_to_jpeg(local: Path, run_dir: Path) -> Path:
+    """封面 WebP → JPEG(alpha 白底合成,与 media uploader 同法);非 WebP 原样。"""
+    try:
+        head = local.read_bytes()[:12]
+    except OSError:
+        return local
+    if len(head) < 12 or head[:4] != b"RIFF" or head[8:12] != b"WEBP":
+        return local
+    try:
+        from PIL import Image
+        im = Image.open(local)
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            bg = Image.new("RGB", im.size, (255, 255, 255))
+            bg.paste(im, mask=im.split()[-1])
+            im = bg
+        else:
+            im = im.convert("RGB")
+        out = Path(run_dir) / "wechat_draft" / (local.stem + ".cover.jpg")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        im.save(out, "JPEG", quality=90)
+        return out
+    except Exception:
+        return local  # 转码失败回落原路径(由发布端如实报错)
 
 
 def _wechat(ctx, stage, sd, expected, state):

@@ -784,5 +784,43 @@
     "new_source_tree_sha": "4d1ec0694f397061fe3ed4c8f01e60cd4aa74746",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/media-enrichment"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260812T105237Z-567956fd",
+    "skill": "media-enrichment",
+    "reason": "76G-R: 站内页图源证据形态+相关性放宽(OBS-262/263, dev15)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-12T10:52:37Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "cb7b8fdeae13d804897631316618867a30a38fc80deb9f49eb31a71cbb0a085a",
+    "new_root_sha256": "fb3b69745e26eab82bde5470246101dcf0b49bd2bb6c8aac65b2abd6f1159713",
+    "old_entrypoint_sha256": "d42ee97412ab81e3db928ab2b92f85bb088a2739c7e6ce66abae7edd638b5789",
+    "new_entrypoint_sha256": "fd15a81f6c5ec660c2a2edc263bc366d621287abfa09885107c4b70f75d4b610",
+    "old_full_commit_sha": "91000a0fc1b635c10dfc383f25b83977f1652dc9",
+    "new_full_commit_sha": "30f263bd19e84f28ca0087bf4ceedfd692bd810b",
+    "old_source_tree_sha": "4d1ec0694f397061fe3ed4c8f01e60cd4aa74746",
+    "new_source_tree_sha": "728d05bd57c8bcce20794329c71c8a3a60c0b6ce",
+    "old_skill_version": "0.1.0-dev13",
+    "new_skill_version": "0.1.0-dev15",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260812T111759Z-4fad07e5",
+    "skill": "media-enrichment",
+    "reason": "76G-R: 绑定 max_total 截断配套",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-12T11:17:59Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "fb3b69745e26eab82bde5470246101dcf0b49bd2bb6c8aac65b2abd6f1159713",
+    "new_root_sha256": "f0e72216883974e726700d04fea0211fe9cdac1d689f5c698923a233d11f2529",
+    "old_entrypoint_sha256": "fd15a81f6c5ec660c2a2edc263bc366d621287abfa09885107c4b70f75d4b610",
+    "new_entrypoint_sha256": "7dac85c0d39f581ac90574dcb324b7f31818c043bbfee0f8b8ca7ca0f9aabbd5",
+    "old_full_commit_sha": "30f263bd19e84f28ca0087bf4ceedfd692bd810b",
+    "new_full_commit_sha": "bf47c467884d823ed3c76bcff431a60223fdbc76",
+    "old_source_tree_sha": "728d05bd57c8bcce20794329c71c8a3a60c0b6ce",
+    "new_source_tree_sha": "fdb4eeadb006e54ef5082b93ac2878bb5929d173",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]

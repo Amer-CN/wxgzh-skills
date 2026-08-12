@@ -106,3 +106,28 @@ def test_wechat_title_falls_back_to_topic(tmp_path):
     ctx = _Ctx(rd)
     title = PR._wechat_title(ctx, st)
     assert title == "主题"
+
+
+def test_super_writer_instructions_guide_behavior():
+    """76G-R/OBS-265:super_writer 握手指令必须含两条行为层引导——
+    ① prose_craft_applied 如实填写(执行 R1–R9 才许 true);② Phase 6 标题选定必做
+    (selected_title/title_selection_reason 必填)。"""
+    src = (SKILL_ROOT / "wxgzh_pipeline" / "producers.py").read_text(encoding="utf-8")
+    assert "prose_craft_applied" in src and "R1–R9" in src
+    assert "执行了 R1–R9 自检才许填" in src
+    assert "Phase 6" in src and "标题选定" in src
+    assert "selected_title 与 title_selection_reason 必填" in src
+
+
+def test_webp_cover_transcoded_to_jpeg(tmp_path):
+    """76G-R:封面本地 WebP 转 JPEG(微信 40113 实证);非 WebP 原样。"""
+    from PIL import Image
+    webp = tmp_path / "cover.webp"
+    Image.new("RGB", (800, 450), (200, 90, 30)).save(webp, "WEBP")
+    out = PR._webp_cover_to_jpeg(webp, tmp_path)
+    assert out != webp and out.suffix == ".jpg"
+    with Image.open(out) as im:
+        assert im.format == "JPEG"
+    png = tmp_path / "cover.png"
+    Image.new("RGB", (800, 450), (30, 90, 200)).save(png, "PNG")
+    assert PR._webp_cover_to_jpeg(png, tmp_path) == png
