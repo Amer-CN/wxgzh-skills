@@ -822,5 +822,23 @@
     "new_source_tree_sha": "fdb4eeadb006e54ef5082b93ac2878bb5929d173",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/media-enrichment"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260812T131230Z-f8d53654",
+    "skill": "media-enrichment",
+    "reason": "76H: materials provenance supplemental 注册(OBS-268, dev16)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-12T13:12:30Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "f0e72216883974e726700d04fea0211fe9cdac1d689f5c698923a233d11f2529",
+    "new_root_sha256": "d037ea5ba50aa1a79a80982fcd11211bb7f136b14c3f03940e71c8597984062a",
+    "old_full_commit_sha": "bf47c467884d823ed3c76bcff431a60223fdbc76",
+    "new_full_commit_sha": "0329505366881df16081ae5aeae0afb24cf8f1d0",
+    "old_source_tree_sha": "fdb4eeadb006e54ef5082b93ac2878bb5929d173",
+    "new_source_tree_sha": "6c80b04c9dad82c98b7b16b275e71f0a65d4b3fd",
+    "old_skill_version": "0.1.0-dev15",
+    "new_skill_version": "0.1.0-dev16",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/media-enrichment"
   }
 ]

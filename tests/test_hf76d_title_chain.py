@@ -131,3 +131,12 @@ def test_webp_cover_transcoded_to_jpeg(tmp_path):
     png = tmp_path / "cover.png"
     Image.new("RGB", (800, 450), (30, 90, 200)).save(png, "PNG")
     assert PR._webp_cover_to_jpeg(png, tmp_path) == png
+
+
+def test_aihot_instructions_contain_oow_fetch_procedure():
+    """76H/OBS-267:aihot 握手指令必须含超窗取料顺序(日报/快照/事件回溯/官方源/手动注入)。"""
+    src = (SKILL_ROOT / "wxgzh_pipeline" / "producers.py").read_text(encoding="utf-8")
+    assert "/api/v1/dailies/" in src
+    assert "selected/snapshot" in src
+    assert "hot-topics" in src and "stories" in src
+    assert "supplemental" in src and "items_file_injection" in src

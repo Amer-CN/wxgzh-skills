@@ -101,3 +101,19 @@ python scripts/build_portable_bundle.py
 - 只创建草稿；无正式发布/群发/定时发布/删除草稿能力。
 - 离线 Fixture 测试不产生任何真实微信副作用。
 - 证据包与便携安装包不含 .env / AppID / AppSecret / access_token / 草稿 ID / 本机绝对路径。
+
+
+## 超窗取料（76H/OBS-267，发文 SOP）
+
+选题关键素材可能超出 AI HOT v1 7 天窗口、或用户显式写历史/回顾类选题时，
+aihot 阶段按下列顺序取料（写入手握手指令，agent 执行）：
+
+1. 已知关键日期 → `/api/v1/dailies/{date}` 取当日日报（归档正式端点）。
+2. 精选池快照检索：`selected/snapshot`（fields=minimal，翻完分页后本地按关键词
+   过滤，遵守 ETag/流量纪律；仅超窗选题使用，日常发文不走快照）。
+3. 热点事件回溯：`hot-topics` → `/api/v1/stories/{publicId}` 时间线（逆序报道
+   可回溯超 7 天）。
+4. 官方源直采：官方博客/公告页/releases 等一手来源——走补充来源注册
+   （registry/ledger `provenance: supplemental`，携带 source_url + 抓取证据 +
+   登记理由，不再被 dedup 对齐挤出）。
+5. 仍缺 → 明示用户手动注入（`items_file_injection` 既有通道），不得静默降级。

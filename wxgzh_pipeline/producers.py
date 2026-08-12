@@ -37,7 +37,7 @@ from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
                                 enforce_approval_readiness)
 
 AGENT_INSTRUCTIONS = {
-    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article.",
+    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。",
     "super_writer": ("Run Super Writer Material-Heavy Full Mode. Generate every requested "
                      "product, then run the locked official validate_article_length.py with "
                      "--full-mode --json and save its exact JSON stdout as "
@@ -667,6 +667,21 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
         if not mid or not src:
             raise MediaRequestError(f"registry material missing id/source_url: {m}")
         mat_ids.add(mid)
+        # 76H/OBS-268:supplemental(权威补充来源)正式注册——官方博客/公告页/
+        # releases 等一手来源不在 aihot dedup 池属预期,携带自身 source_url +
+        # 抓取证据 + 登记理由,不再被 dedup 对齐规则挤出或 FAIL_CLOSED。
+        if m.get("provenance") == "supplemental":
+            materials.append({
+                "material_id": mid,
+                "aihot_permalink": m.get("aihot_permalink") or src,
+                "aihot_internal_url": "",
+                "source_url": src, "title": m.get("title", ""),
+                "selected_claim_ids": list(m.get("selected_claim_ids", [])),
+                "provenance": "supplemental",
+                "copyright_review": {"status": "unknown"},
+            })
+            verified_material_count += 1
+            continue
         # ── P0#3 STRICT dedup mapping (hotfix4): the canonical material must map
         #    by its FORMAL upstream/dedup ID ONLY. A URL can NEVER be used to find
         #    a substitute item for a wrong/missing ID (no by_url fallback). ──
@@ -712,6 +727,21 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
     # 严格映射,缺失即 FAIL_CLOSED(与 registry 同强度)。
     for lmid, le in sorted(_ledger_used_materials(rd).items()):
         if lmid in mat_ids:
+            continue
+        # 76H/OBS-268:supplemental 条目(携带 source_url + 登记理由)不要求
+        # dedup 池映射——权威补充来源正式注册位。
+        if le.get("provenance") == "supplemental":
+            mat_ids.add(lmid)
+            verified_material_count += 1
+            materials.append({
+                "material_id": lmid,
+                "aihot_permalink": le["aihot_permalink"],
+                "aihot_internal_url": "",
+                "source_url": le["source_url"], "title": le["title"],
+                "selected_claim_ids": [],
+                "provenance": "supplemental",
+                "copyright_review": {"status": "unknown"},
+            })
             continue
         di = dedup["by_url"].get(le["source_url"])
         if di is None:
@@ -969,6 +999,7 @@ def _ledger_used_materials(rd: Path) -> dict:
                     "title": m.get("title", ""),
                     "source_url": m["source_url"],
                     "aihot_permalink": m.get("aihot_permalink") or m["source_url"],
+                    "provenance": m.get("provenance"),
                 }
         return out
     except (OSError, ValueError, yaml.YAMLError):
