@@ -1,5 +1,20 @@
 # Release notes
 
+## v0.1.3
+
+76D(档76D):
+
+- OBS-253 修复:词表新增 forbidden_term 类目(FT-001,首批 Agent/智能体助手)——命中疑似
+  专名(大写开头英文词、引号/「」内文本、产品名连写)时降级为 advisory(报告留痕、
+  不强制改写、不判 fail);普通命中保持 strong(与 SC-009 同级,不进 pass_fail)。
+  实证:Luma Agents 三轮连中 + 流水线 ×2 被强制改写为 Luma。
+- pattern_audit.py:FORBIDDEN_TERM_PATTERNS 独立挂载 + _is_proper_noun_span 专名判定 +
+  detect_forbidden_term;FT-001 普通命中归 strong 高置信桶(输出分组兼容)。
+- run_tests.py:run_script 子进程统一 PYTHONUTF8=1 + UTF-8 解码(Windows 管道 GBK 互踩);
+  新增 PB-048(产品名命中降级 advisory)/PB-049(普通命中保持 strong);PB-026 临时词表
+  补 forbidden_term 键(R111:schema 类目集合固定,旧最小词表不再合法,属本档预期红态)。
+- 测试基数 80 → 82。
+
 ## v0.1.2
 
 Batch 3 (档72E-1):

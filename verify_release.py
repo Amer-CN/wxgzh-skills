@@ -3,7 +3,7 @@
 verify_release.py — zh-human-writing canonical release verification.
 
 Checks:
-1. VERSION file exists and contains exactly "0.1.2"
+1. VERSION file exists and contains exactly "0.1.3"
 2. SHA256SUMS exists
 3. Every file in SHA256SUMS exists
 4. Every file SHA256 matches
@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-VERSION_EXPECTED = "0.1.2"
+VERSION_EXPECTED = "0.1.3"
 
 EXCLUDED_PATTERNS = [
     "SHA256SUMS",
@@ -134,6 +134,8 @@ def run_tests(errors):
             [sys.executable, "-X", "utf8", str(test_runner)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=60,
             cwd=str(SCRIPT_DIR),
             env={**os.environ, "PYTHONIOENCODING": "utf-8"},
@@ -147,8 +149,8 @@ def run_tests(errors):
                         errors.append(f"  {line.strip()}")
         else:
             # Verify 80/80
-            if "80" not in result.stdout:
-                errors.append("Test suite passed but expected 80 tests")
+            if "82" not in result.stdout:
+                errors.append("Test suite passed but expected 82 tests")
     except subprocess.TimeoutExpired:
         errors.append("Test suite timed out")
     except Exception as e:
@@ -344,7 +346,7 @@ def main():
         for e in test_fails:
             print(f"  FAIL: {e}")
     else:
-        print("  OK: 80/80 tests passed")
+        print("  OK: 82/82 tests passed")
 
     print("\n" + "=" * 60)
     if errors:

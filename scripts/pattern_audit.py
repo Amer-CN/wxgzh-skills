@@ -277,6 +277,10 @@ def detect_hard_residue(masked, original, profile, protected):
 # strong-contextual 检测
 # ============================================================
 
+# 76D/OBS-253:禁用词(词表 forbidden_term 注入;命中疑似专名时降级 advisory)。
+FORBIDDEN_TERM_PATTERNS: list[dict] = []
+
+
 STRONG_CONTEXTUAL_PATTERNS = [
     {
         'id': 'SC-001',
@@ -606,6 +610,8 @@ _LEXICON_RULES = {
     'SC-010': {'name': '模型路标', 'key': 'model_signposts', 'group': 'strong'},  # 6 词
     'AO-013': {'name': '语境黑话', 'key': 'contextual_jargon', 'group': 'advisory'},  # 14 词
     'AO-014': {'name': '抒情词', 'key': 'lyrical', 'group': 'advisory'},  # 12 词
+    # 76D/OBS-253:禁用词——疑似专名命中降级 advisory,普通命中保持 strong。
+    'FT-001': {'name': '禁用词', 'key': 'forbidden_term', 'group': 'forbidden'},
 }
 
 # 「还有一层」按前缀模式(任务书 §3.5 注):后接实际内容才命中,单独成句不命中。
@@ -660,6 +666,11 @@ def _apply_lexicon(data):
             STRONG_CONTEXTUAL_PATTERNS[:] = [
                 r for r in STRONG_CONTEXTUAL_PATTERNS if r['id'] != rid]
             STRONG_CONTEXTUAL_PATTERNS.append(entry)
+        elif meta['group'] == 'forbidden':
+            # 76D/OBS-253:禁用词独立挂载(不走聚集阈值;命中后按专名语境降级)。
+            FORBIDDEN_TERM_PATTERNS[:] = [
+                r for r in FORBIDDEN_TERM_PATTERNS if r['id'] != rid]
+            FORBIDDEN_TERM_PATTERNS.append(entry)
         else:
             ADVISORY_ONLY_PATTERNS[:] = [
                 r for r in ADVISORY_ONLY_PATTERNS if r['id'] != rid]
@@ -678,7 +689,7 @@ _apply_pattern_thresholds(load_config())
 # 档72C-4/§3-2:strong 输出的高/低置信分组(按规则归属,非按 confidence 字段值;
 # SC-007a 的 confidence 字段为 medium 但按指令归入 high 桶)。
 _SC_HIGH_IDS = {'SC-001', 'SC-002', 'SC-003', 'SC-004', 'SC-005', 'SC-006',
-                'SC-007a', 'SC-009', 'SC-010'}
+                'SC-007a', 'SC-009', 'SC-010', 'FT-001'}  # 76D/OBS-253:禁用词普通命中=strong 高置信桶
 _SC_LOW_IDS = {'SC-007b', 'SC-011'}
 
 
@@ -743,6 +754,70 @@ def detect_advisory_only(masked, original, profile, protected):
 # 主函数
 # ============================================================
 
+
+def _is_proper_noun_span(original: str, start: int, end: int) -> bool:
+    """76D/OBS-253:疑似专名语境判定(命中 span 相对原文)。
+
+    - 命中词以拉丁大写字母开头(如 "Agent");
+    - 命中 span 位于「」/双引号/单引号内;
+    - 命中 span 前/后紧邻拉丁字母或连字符(产品名连写,如 "Luma-Agents").
+    任一成立 → True。
+    """
+    word = original[start:end]
+    if word and word[0].isascii() and word[0].isupper():
+        return True
+    before = original[max(0, start - 24):start]
+    after = original[end:end + 24]
+    if ('「' in before and '」' in after) or ('"' in before and '"' in after) \
+            or ("'" in before and "'" in after):
+        return True
+    if start > 0 and (original[start - 1].isascii() and original[start - 1].isalpha()
+                      or original[start - 1] in '-_'):
+        return True
+    if end < len(original) and (original[end].isascii() and original[end].isalpha()
+                                or original[end] in '-_'):
+        return True
+    return False
+
+
+def detect_forbidden_term(masked, original, profile, protected):
+    """76D/OBS-253:禁用词检测——单次命中即报;疑似专名降级 advisory,
+    普通命中保持 strong(与 SC-009 同级,不进 pass_fail)。"""
+    findings = []
+    for pattern_def in FORBIDDEN_TERM_PATTERNS:
+        for pat in pattern_def['patterns']:
+            for m in re.finditer(pat, masked):
+                start, end = m.span()
+                para_idx, sent_idx = _locate_span(masked, start)
+                location = f'第{para_idx+1}段第{sent_idx+1}句' if para_idx >= 0 else f'第{start+1}字符起'
+                if _is_proper_noun_span(original, start, end):
+                    findings.append(_finding(
+                        'advisory_only', profile, pattern_def,
+                        location, (start, end), original, protected,
+                        confidence='medium',
+                        reason=(
+                            f"{pattern_def['name']}:疑似专名语境(大写开头/"
+                            "引号内/产品名连写),降级为建议,不强制改写"),
+                        suggestion='仅提示;产品名等专名不得改写'))
+                else:
+                    findings.append(_finding(
+                        'strong_contextual', profile, pattern_def,
+                        location, (start, end), original, protected,
+                        reason=f"{pattern_def['name']}:普通语境命中,保持禁用语义"))
+    return findings
+
+
+def _locate_span(masked: str, pos: int) -> tuple[int, int]:
+    """返回 masked 中 pos 所属的(段下标, 句下标);找不到 → (-1, -1)。"""
+    for para_idx, (para, pstart, pend) in enumerate(_para_spans(masked)):
+        if pstart <= pos < pend or (pend == len(masked) and pos == pend):
+            for sent_idx, (_, sstart, send) in enumerate(_sent_spans(para)):
+                if sstart <= pos - pstart < send:
+                    return para_idx, sent_idx
+            return para_idx, 0
+    return -1, -1
+
+
 def main():
     parser = _P(
         description='zh-human-writing v1 模式审计脚本',
@@ -792,6 +867,10 @@ def main():
     if args.check_level == 'full':
         sc_findings = detect_strong_contextual(masked, text, args.profile, protected)
         ao_findings = detect_advisory_only(masked, text, args.profile, protected)
+        # 76D/OBS-253:禁用词检测——疑似专名命中降级 advisory,普通命中进 strong。
+        ft_findings = detect_forbidden_term(masked, text, args.profile, protected)
+        sc_findings.extend(f for f in ft_findings if f['group'] == 'strong_contextual')
+        ao_findings.extend(f for f in ft_findings if f['group'] == 'advisory_only')
 
     # 档72C-6/任务4:统计检测层(full 与 hard_residue_only 均计算——统计层
     # 只读不判:命中只进 statistical 段,不参与 pass_fail/退出码;--config 覆盖时走同一 fail-closed 加载)。

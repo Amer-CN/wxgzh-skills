@@ -36,6 +36,15 @@ absolute_jargon:
   - 认知增量
   - 迭代闭环
 
+# §3.6 禁用词(76D/OBS-253 新增,2 词) → FT-001(strong;命中疑似专名时降级 advisory)
+# 背景:Luma Agents 三轮连中 + 流水线 ×2——"Agent" 被当作禁用词强制改写,违反
+# 「不得改产品名」铁律。机制:forbidden_term 命中疑似专名(大写开头英文词、
+# 引号/「」内文本、产品名语境)时降级为 advisory(报告留痕,不强制改写、不判
+# fail);普通命中语义不变(strong)。
+forbidden_term:
+  - Agent
+  - 智能体助手
+
 # §3.3 语境黑话(14 词) → AO-013(advisory,永不升 strong)
 contextual_jargon:
   - 沉淀

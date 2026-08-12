@@ -44,6 +44,8 @@ EXPECTED_SC_THRESHOLDS = {
 }
 
 PYTHON = sys.executable
+# 76D:子进程统一 UTF-8 输出/解码(Windows 管道默认 GBK 会互相踩编码)。
+_RUN_SCRIPT_ENV = dict(os.environ, PYTHONUTF8="1")
 
 
 class TestResult:
@@ -69,7 +71,8 @@ def write_temp(text):
 def run_script(script, args):
     """运行脚本，返回 (returncode, stdout, stderr)。"""
     cmd = [PYTHON, script] + args
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", env=_RUN_SCRIPT_ENV, timeout=30)
     return result.returncode, result.stdout, result.stderr
 
 
@@ -839,6 +842,8 @@ lyrical:
   - 微光
 model_signposts:
   - 更微妙的是
+forbidden_term:
+  - 智能体助手
 """)
     rc, out, err = run_script(PATTERN_AUDIT, ['--lexicon', lex_path, '--text', text_p, '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
     ok = default_hits > 0 and rc == 0
@@ -1136,6 +1141,29 @@ def test_stat_neutral():
     return results
 
 
+
+def test_forbidden_term_proper_noun():
+    """76D/OBS-253:forbidden_term 疑似专名命中降级 advisory,普通命中保持 strong。"""
+    results = []
+    # 产品名语境:Luma Agents 中的 Agent(大写开头)→ FT-001 advisory
+    text1 = "Luma Agents 上线了 H3。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text1), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data1 = json.loads(out)
+    ft1 = [f for f in data1['advisory_only']['items'] if f.get('rule_id') == 'FT-001']
+    ok1 = len(ft1) == 1 and ft1[0]['severity'] == 'advisory' and '疑似专名' in ft1[0]['reason']
+    results.append(TestResult('PB-048', 'ft001-proper-noun-advisory', ok1,
+                              f'advisory={len(ft1)}'))
+    # 普通语境:智能体助手 → FT-001 strong(高置信桶,语义不变)
+    text2 = "这款智能体助手很好用。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text2), '--profile', 'essay', '--check-level', 'full', '--output', 'json'])
+    data2 = json.loads(out)
+    sc2 = data2['strong_contextual']
+    ft2 = [f for f in sc2.get('high_confidence', []) if f.get('rule_id') == 'FT-001']
+    ok2 = len(ft2) == 1 and ft2[0]['severity'] == 'strong'
+    results.append(TestResult('PB-049', 'ft001-plain-strong', ok2,
+                              f'strong={len(ft2)}'))
+    return results
+
 def main():
     verbose = '--verbose' in sys.argv
 
@@ -1173,6 +1201,10 @@ def main():
     all_results.extend(test_stat_social_disabled())
     all_results.extend(test_stat_neutral())
     all_results.extend(test_long_form())
+
+
+
+    all_results.extend(test_forbidden_term_proper_noun())
     all_results.extend(test_unsupported_fiction())
 
     passed = sum(1 for r in all_results if r.passed)
