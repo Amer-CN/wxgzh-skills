@@ -118,6 +118,8 @@ def main(argv=None) -> int:
     ap.add_argument("--brand", default=None)
     ap.add_argument("--tags", default=None)
     ap.add_argument("--kicker", default=None)
+    ap.add_argument("--title", default=None)   # 档76D/OBS-257:与真实 CLI 对齐
+    ap.add_argument("--subtitle", default=None)
     a = ap.parse_args(argv)
     if a.theme.strip().lower() not in ("smartisan", "hammer"):
         print(f"ERROR: unsupported theme {a.theme}"); return 2
@@ -125,6 +127,8 @@ def main(argv=None) -> int:
     md = Path(a.article).read_text(encoding="utf-8")
     title = next((ln[2:].strip() for ln in md.splitlines()
                   if ln.startswith("# ") and not ln.startswith("## ")), "未命名")
+    if a.title:
+        title = a.title
     titles = chapters_of(md) or [title]
     intro_paras = []
     title_seen = False

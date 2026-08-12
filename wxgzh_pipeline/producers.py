@@ -836,6 +836,15 @@ def _entry_args(
                     if key == "tags" and isinstance(val, list):
                         val = ",".join(str(t) for t in val)
                     args += [flag, str(val)]
+        # 76D/OBS-257:封面标题 = handoff.selected_title(缺省回落 title_candidates[0]);
+        # 副标题默认 = 文章导语(渲染器 intro),仅当终稿无导语且 hook_line 存在时兜底传入。
+        cover_title = _handoff_title(ctx)
+        if cover_title:
+            args += ["--title", cover_title]
+        if not _article_has_intro(ctx):
+            hook = _handoff_hook(ctx)
+            if hook:
+                args += ["--subtitle", hook]
         return args
     raise ValueError(stage)
 
@@ -854,6 +863,65 @@ def _handoff_cover(ctx) -> dict | None:
             data.get("handoff"), dict) else {}
         cover = formatter.get("cover") if isinstance(formatter, dict) else None
         return cover if isinstance(cover, dict) and cover else None
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
+
+
+def _handoff_title(ctx) -> str | None:
+    """读 handoff.selected_title;缺省回落 title_candidates[0](76D/OBS-257/258)。
+    文件缺失/解析失败/两者皆无 → None(回落既有逻辑,绝不阻断)。"""
+    try:
+        p = Path(ctx.run_dir) / "super_writer" / "handoff.yaml"
+        if not p.is_file():
+            return None
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("handoff"), dict):
+            return None
+        h = data["handoff"]
+        sel = h.get("selected_title")
+        if isinstance(sel, str) and sel.strip():
+            return sel.strip()
+        cands = h.get("title_candidates")
+        if isinstance(cands, list) and cands and isinstance(cands[0], str) and cands[0].strip():
+            return cands[0].strip()
+        return None
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
+
+
+def _article_has_intro(ctx) -> bool:
+    """终稿第一个 "## " 之前是否存在非空正文行(导语);缺失时封面副标题用 hook_line 兜底。
+    文件缺失/解析失败 → True(不触发兜底,行为与现状一致)。"""
+    try:
+        md = _frozen_article(ctx).read_text(encoding="utf-8")
+        for ln in md.replace("\r\n", "\n").split("\n"):
+            st = ln.strip()
+            if st.startswith("## "):
+                break
+            if st and not st.startswith("#"):
+                return True
+        return False
+    except (OSError, ValueError):
+        return True
+
+
+
+
+def _wechat_title(ctx, state) -> str:
+    """76D/OBS-258:草稿标题 = handoff.selected_title → title_candidates[0] → topic。"""
+    return _handoff_title(ctx) or (state.topic or "wxgzh article")
+
+def _handoff_hook(ctx) -> str | None:
+    """读 handoff.hook_line(封面副标题兜底,76D/OBS-257);缺失 → None。"""
+    try:
+        p = Path(ctx.run_dir) / "super_writer" / "handoff.yaml"
+        if not p.is_file():
+            return None
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("handoff"), dict):
+            return None
+        hook = data["handoff"].get("hook_line")
+        return hook.strip() if isinstance(hook, str) and hook.strip() else None
     except (OSError, ValueError, yaml.YAMLError):
         return None
 
@@ -1376,6 +1444,10 @@ def _wechat(ctx, stage, sd, expected, state):
     entry, _ = EM.resolve_entry(stage, ctx.network_mode, ctx.skills_home)
     html = Path(ctx.run_dir) / "gzh_design" / "final.html"
     args = ["--html", str(html), "--title", (state.topic or "wxgzh article")[:60],
+            "--audit-dir", str(sd)]
+    # 76D/OBS-258:草稿标题优先取 handoff.selected_title(缺省回落 title_candidates[0]);
+    # 都没有再回落既有 topic 逻辑。标题 60 字符上限沿用。
+    args = ["--html", str(html), "--title", _wechat_title(ctx, state)[:60],
             "--audit-dir", str(sd)]
     if ctx.network_mode == "live":
         try:

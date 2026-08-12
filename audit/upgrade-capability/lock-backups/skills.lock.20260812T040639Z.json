@@ -75,14 +75,14 @@
       "skill_name": "gzh-design",
       "repository_url": "https://github.com/Amer-CN/gzh-design-skill",
       "branch": "fix/obs73-codeblock-docs",
-      "full_commit_sha": "3e1fb63caec014d427c8aa42151ac71a5758f746",
-      "source_tree_sha": "ce6691fb6e12d13e632b8ecb29d12a3d2081a7b7",
-      "skill_version": "v2026.08.12-hammer.12",
-      "skill_root_sha256": "af0d2b86ea909910df3f1c4a7ef2cc70551fc848f05e740395d41665836dbe22",
+      "full_commit_sha": "c1268c725654486b25da68666830caa4631efead",
+      "source_tree_sha": "8906d182180bc8f852f46f59abef70df80c8909b",
+      "skill_version": "v2026.08.10-hammer.11",
+      "skill_root_sha256": "1ec0c00e8bdc7285a712df085456853b748950e216a43db638e28890d7e2fc52",
       "runtime_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
       "runtime_file_count": 76,
       "entrypoint": "scripts/render_article.py",
-      "entrypoint_sha256": "3ab22a66440998bf975b58017382590aeec52e7eb0e8efb531db63cbfe962445",
+      "entrypoint_sha256": "42fbb1c97f55cb2f14d68ed900c29a0c3bd425c55f05bdb4933f7ab103febb9f",
       "validator": "scripts/validate_gzh_html.py",
       "validator_sha256": "b3d74347777890c145d99a152cd95e4c23c795937f54b19915baebaa46a1aefa",
       "required_files": [
@@ -93,7 +93,7 @@
         "scripts/generate_advanced_html.py"
       ],
       "render_entry": "scripts/render_article.py",
-      "render_entry_sha256": "3ab22a66440998bf975b58017382590aeec52e7eb0e8efb531db63cbfe962445",
+      "render_entry_sha256": "42fbb1c97f55cb2f14d68ed900c29a0c3bd425c55f05bdb4933f7ab103febb9f",
       "component_source": "scripts/generate_hammer_upgrade_samples.py",
       "component_source_sha256": "c888fc314ef6e889652936386fc3d3f6cbab9fa43b37dceb643bf1183c5f79f5"
     },

@@ -4,6 +4,7 @@ upload success + mmbiz + sha==manifest, >=6 images. Serial upload, no bypass.
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 from . import subskill_validator_sha, load_validator
 
@@ -121,6 +122,17 @@ def post(ctx, sd, state, exit_code, report):
                                        "image_shortfall_count": state.image_shortfall,
                                        "actual_images": report.get("body_image_count"),
                                        "note": "生图兜底后仍不足,少图交付(76C 降级)"})
+        # 76D/OBS-259:WebP→JPEG 转码记录进 side_effects(manifest.transcodes 留痕)。
+        try:
+            man_p = Path(sd) / "media_manifest.json"
+            if man_p.is_file():
+                man = json.loads(man_p.read_text(encoding="utf-8"))
+                tcs = man.get("transcodes") or []
+                if tcs:
+                    state.side_effects.append({"stage": "media_enrichment",
+                                               "webp_transcodes": list(tcs)})
+        except (OSError, ValueError):
+            pass
 
 
 def run_live(ctx, state):
