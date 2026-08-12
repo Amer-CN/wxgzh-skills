@@ -1099,7 +1099,9 @@ def main():
     # and validate_media_manifest.py --bindings checks it per asset.
     from media_enrichment.article_bindings import write_bindings
     bindings_path = output_dir / "article_image_bindings.json"
-    write_bindings(manifest, bindings_path)
+    # 76G-R:绑定按 max_total_images 截断最终入文图数(76C 语义)
+    write_bindings(manifest, bindings_path,
+                   max_images=config.get("max_total_images"))
 
     # dev2-hotfix2: persist the serial upload event log for downstream audit
     events_path = output_dir / "upload_events.json"

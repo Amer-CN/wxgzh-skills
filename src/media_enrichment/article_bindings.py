@@ -43,11 +43,13 @@ def _is_wechat_url(url: str | None) -> bool:
     return p.scheme == "https" and p.hostname in WECHAT_IMAGE_HOSTS
 
 
-def build_bindings(manifest: dict[str, Any]) -> dict[str, Any]:
+def build_bindings(manifest: dict[str, Any], max_images: int | None = None) -> dict[str, Any]:
     """Project a media_manifest dict into an article_image_bindings dict.
 
     Only eligible + successfully-uploaded body images with a WeChat-host
     remote_url are bound. Deterministic ordering (by asset_id).
+    76G-R:max_images(==max_total_images)约束最终入文图数——上传可能多于上限,
+    绑定截断到上限(76C 语义)。
     """
     body_images: list[dict[str, Any]] = []
     for asset in sorted(manifest.get("assets", []), key=lambda a: a.get("asset_id", "")):
@@ -78,6 +80,11 @@ def build_bindings(manifest: dict[str, Any]) -> dict[str, Any]:
             },
         })
 
+    # 76G-R:max_images 截断最终入文图数(76C 语义:max_total_images 只约束
+    # 最终入文;上传可能多于上限,绑定截断到上限)
+    if max_images is not None and max_images > 0:
+        body_images = body_images[:max_images]
+
     return {
         "schema_version": "1.0",
         "skill_version": SKILL_VERSION,
@@ -90,8 +97,9 @@ def build_bindings(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def write_bindings(manifest: dict[str, Any], output_path: str | Path) -> str:
-    bindings = build_bindings(manifest)
+def write_bindings(manifest: dict[str, Any], output_path: str | Path,
+                    max_images: int | None = None) -> str:
+    bindings = build_bindings(manifest, max_images=max_images)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

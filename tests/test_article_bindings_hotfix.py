@@ -138,3 +138,22 @@ class TestCliCompat:
         src = (SKILL_ROOT / "scripts" / "validate_media_manifest.py").read_text(encoding="utf-8")
         for flag in ('"--manifest"', '"--request"', '"--bindings"'):
             assert flag in src, f"validate_media_manifest.py must accept {flag}"
+
+
+
+def test_build_bindings_max_images_truncates():
+    """76G-R:max_total_images 约束最终入文图数——上传 10 张,绑定截断到 8。"""
+    assets = [_asset(f"A-{i:03d}") for i in range(10)]
+    man = _manifest(assets)
+    bnd = build_bindings(man, max_images=8)
+    assert bnd["body_image_count"] == 8
+    assert [b["asset_id"] for b in bnd["body_images"]] == [f"A-{i:03d}" for i in range(8)]
+    # 不传 max_images 行为不变(全绑)
+    assert build_bindings(man)["body_image_count"] == 10
+
+
+def test_build_bindings_max_images_ignored_when_none():
+    """76G-R:max_images 缺省/None → 全绑(行为与现状一致)。"""
+    assets = [_asset(f"A-{i:03d}") for i in range(3)]
+    man = _manifest(assets)
+    assert build_bindings(man)["body_image_count"] == 3
