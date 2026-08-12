@@ -32,15 +32,17 @@ from pathlib import Path
 # OBS-145(档71C-R2):QUARANTINED 语义由「哨兵未进 final.html」收紧为「not render_ok」;
 # 新增 ANCHOR_GAP = render_ok 且 not anchor_ok(渲染器吐字但 pipeline 锚缺口)。
 # 实测导出快照(档71C-R3 实测):锚闭环(OBS-154)后 _COMPONENT_PARA_RES 从
-# component_anchors.json 全量导出(条数以 component_anchors.json 现算为准,当前 17),9 类全部 render_ok+struct_ok+
-# anchor_ok -> QUARANTINED/MULTILINE/ANCHOR_GAP 全空,APPROVED = 9 类全部。
+# component_anchors.json 全量导出(条数以 component_anchors.json 现算为准,76J 起含
+# table/list 锚),11 类全部 render_ok+struct_ok+
+# anchor_ok -> QUARANTINED/MULTILINE/ANCHOR_GAP 全空,APPROVED = 11 类全部。
 # 测试以 R19 断言 == 现场导出,防快照过期。
 QUARANTINED_COMPONENTS = frozenset()
 MULTILINE_UNSUPPORTED_COMPONENTS = frozenset()
 ANCHOR_GAP_COMPONENTS = frozenset()
 APPROVED_CARRIER_COMPONENTS = frozenset({"alert", "code-compare", "dialogue",
                                          "footnotes", "gallery", "long-image",
-                                         "media-text", "quote", "resources"})
+                                         "media-text", "quote", "resources",
+                                         "table", "list"})
 
 # ── 4a(OBS-155):三张哨兵表从 component_slots.SLOTS 机械生成 ──
 # 哨兵名 = S_<COMP>_<SLOT>;同一 (组件,槽) 多模式时追加模式后缀(type=note -> _NOTE,
@@ -132,6 +134,17 @@ SLOT_SAMPLES: dict[str, list[dict]] = {
     ],
     "dialogue": [
         {"mode": "默认", "block": ':::dialogue title="S_DIALOGUE_TITLE"\n@user name="S_DIALOGUE_NAME_1": S_DIALOGUE_MSG_1 问题一\n@assistant name="S_DIALOGUE_NAME_2": S_DIALOGUE_MSG_2 回答二\n@user name="S_DIALOGUE_NAME_3": S_DIALOGUE_MSG_3 问题三\n:::\n'},
+    ],
+    # 76J/OBS-271:标准 Markdown 表格/列表样本(探针渲染;哨兵在单元格/列表项 p 内)
+    "table": [
+        # 单哨兵分样本:struct_ok 的相邻哨兵载体判据是 ::: 组件语义,表格单元格
+        # 是独立 th/td 容器(非换行塌陷);拆样本后每样本单哨兵 -> 无多行证据 -> True。
+        {"mode": "表头", "block": '| S_TABLE_HEADER | 列2 |\n| --- | --- |\n'},
+        {"mode": "表体", "block": '| 列1 | 列2 |\n| --- | --- |\n| S_TABLE_BODY | 值 |\n'},
+    ],
+    "list": [
+        {"mode": "无序", "block": '- S_LIST_ITEM_UL\n- 第二项\n'},
+        {"mode": "有序", "block": '1. S_LIST_ITEM_OL\n2. 第二项\n'},
     ],
 }
 

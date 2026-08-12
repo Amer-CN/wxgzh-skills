@@ -8,6 +8,14 @@ inputs:
 outputs:
   required: [raw_items.json, deduplicated_items.json, fetch_log.json]
   hashed: true
+  # 76J/OBS-273:deduplicated_items.json 字段模板(agent 照此写,字段名/类型绝版返工:
+  # aihot_permalink 类字段名税)。每条 item 的期望键:
+  #   id(str, 必填, AIHOT item id) / title(str, 必填)
+  #   source_url(str, 必填, links.original 或 links.aihot 回落)
+  #   links(dict, 可选, {aihot, original}) / content(str, 可选, summary)
+  #   published_at(str, 可选, ISO8601) / category(str, 可选) / score(int, 可选)
+  #   selected(bool, 可选) / aihot_permalink(str, 可选, 站内页链接)
+  #   provenance(str, 可选, normal|supplemental——官方一手来源补充注册)
 gates:
   - deduplicated_count >= 1
 forbidden: [write_article, final_image_inventory]

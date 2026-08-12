@@ -37,7 +37,7 @@ from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
                                 enforce_approval_readiness)
 
 AGENT_INSTRUCTIONS = {
-    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。",
+    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。76J/OBS-273(dedup 模板):deduplicated_items.json 严格按 contracts/01_aihot.yaml 的字段模板书写(id/title/source_url 必填,links/content/published_at/category/score/selected/aihot_permalink/provenance 可选),不得自造字段名或改动既有键(aihot_permalink 类字段名税绝版)。",
     "super_writer": ("Run Super Writer Material-Heavy Full Mode. Generate every requested "
                      "product, then run the locked official validate_article_length.py with "
                      "--full-mode --json and save its exact JSON stdout as "
@@ -45,7 +45,11 @@ AGENT_INSTRUCTIONS = {
                      "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。76G-R/OBS-265(行为层,通用规则):a) 产 handoff.yaml 时如实填写 prose_craft_applied / prose_craft_version——实际执行了 R1–R9 自检才许填 prose_craft_applied=true,未执行必须填 false,禁止默认 true 或留空误导下游;b) Phase 6 内容审稿的标题选定子步骤为必做——必须从 title_candidates 中按 评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定最终标题,handoff 的 selected_title 与 title_selection_reason 必填且不得为空,article.md 的 H1 必须与 selected_title 一致。"),
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). "
                      "fidelity_report.json 自报 length_retention 必须为 balanced"
-                     "(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。",
+                     "(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。"
+                     "76J/OBS-272(专名明规,通用规则):产品名/专名中的词永不改写——如 "
+                     "Luma Agents、ComfyUI、MiniMax H3 等,任何语言/词形(Agent、agent、Agents)都不得"
+                     "因「疑似 AI 味」被改写或删除;检测报告中的 FT-001 advisory 命中无需处理、不影响"
+                     "交付(76D 专名豁免语义);改写产品名即违反「不得改产品名」铁律。",
 }
 
 
@@ -933,6 +937,24 @@ def _caption_type(asset: dict, title: str) -> str:
     return "社区演示"
 
 
+def _clean_caption_title(t: str) -> str:
+    """76I 遗留打磨(记入 OBS-269):图注标题清理——剥离站点前缀(「GitHub - 」等)、
+    「 | 」「 - 」后缀段与多余冒号。"""
+    s = (t or "").strip()
+    # 76J/OBS-269 打磨:前缀剥离仅限 ASCII 站点名(GitHub - 等),避免把
+    # 「MiniMax H3 - 官方博客」这类真实标题当站点前缀吃掉(后缀段由下方 - 规则剥)。
+    m = re.match(r"^[A-Za-z0-9.]{1,24} - ", s)
+    if m:
+        s = s[m.end():]
+    for sep in (" | ", " - "):
+        idx = s.find(sep)
+        if idx > 0:
+            s = s[:idx]
+    s = re.sub(r"[：:]{2,}", lambda m: m.group(0)[0], s)  # 多余冒号合并为第一个冒号的宽度
+    s = re.sub(r"^[:：]\s*", "", s)
+    return s.strip()
+
+
 def _readable_desc(desc: str) -> str:
     """76I/OBS-269:content_description 可读性判定——<img 开头的裸 HTML 判不可读。"""
     d = (desc or "").strip()
@@ -981,11 +1003,12 @@ def _captioned_bindings_path(ctx) -> Path:
         title = next((titles.get(str(m)) for m in mids if titles.get(str(m))), "") or ""
         ctype = _caption_type(a, title)
         desc = _readable_desc(a.get("content_description") or "")
+        title_clean = _clean_caption_title(title)
         if desc:
-            title_part = title[:14] if title else "素材"
+            title_part = title_clean[:14] if title_clean else "素材"
             caption = f"{ctype}·{title_part}:{desc[:20]}"
         else:
-            caption = f"{ctype}·{title[:24]}" if title else ctype
+            caption = f"{ctype}·{title_clean[:24]}" if title_clean else ctype
         b["caption"] = caption[:40]
         b["alt_text"] = b.get("alt_text") or caption[:40]
     p = out_dir / "article_image_bindings.captioned.json"

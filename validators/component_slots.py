@@ -96,6 +96,17 @@ SLOTS: tuple[ComponentSlots, ...] = (
         Slot("msg", "块体 @user/@assistant 行（N 项）", "references/advanced/dialogue.md L9-12", True, "默认", multi=True),
         Slot("name", "块体行内 name= 属性", "references/advanced/dialogue.md L20-21", False, "默认", multi=True),
     )),
+    # 76J/OBS-271:标准 Markdown 表格/列表 —— 语法门 probe 判据驱动,非 ::: 组件;
+    # 来源=SKILL.md L98-99(表格/列表映射)+ references/theme-hammer.md 11a/11f/11g
+    # (本文件此前为 references/advanced/*.md 纯数据投影,本条目为文档化扩展)。
+    ComponentSlots("table", (
+        Slot("header", "表头单元格", "SKILL.md L99 / references/theme-hammer.md 11f", True, "默认"),
+        Slot("body", "数据单元格", "SKILL.md L99 / references/theme-hammer.md 11f", True, "默认"),
+    )),
+    ComponentSlots("list", (
+        Slot("item_ul", "无序列表项(- / *) ", "SKILL.md L98 / references/theme-hammer.md 11a", True, "默认"),
+        Slot("item_ol", "有序列表项(1. )", "SKILL.md L98 / references/theme-hammer.md 11g", True, "默认"),
+    )),
 )
 
 BY_COMPONENT: dict[str, ComponentSlots] = {c.component: c for c in SLOTS}

@@ -39,7 +39,7 @@ def test_obs151_fake_empty_quarantined_nonempty(tmp_path):
     measured = vcv.component_structure_check(FAKE_EMPTY, tmp_path / "e")
     lists = vcv.export_lists_from_measurement(measured)
     assert lists["quarantined"], "fake_empty 下 quarantined 应为非空"
-    assert len(lists["quarantined"]) == 9, sorted(lists["quarantined"])
+    assert len(lists["quarantined"]) == 11, sorted(lists["quarantined"])
 
 
 def test_obs151_multiline_gate_fires_with_injected_list(monkeypatch):
@@ -67,7 +67,7 @@ def test_obs151_quarantine_gate_fires_with_injected_list(monkeypatch):
 
 
 def test_obs151_real_renderer_lists(tmp_path):
-    """真渲染器四名单实测(防回归;OBS-154 锚闭环后:QUAR/MULTI/GAP 全空,APPROVED 9 类)。"""
+    """真渲染器四名单实测(防回归;OBS-154 锚闭环后:QUAR/MULTI/GAP 全空,APPROVED 11 类,76J 起含 table/list)。"""
     from tests.test_obs119_visibility import _resolved_renderer
     renderer, log = _resolved_renderer()
     if renderer is None:
@@ -77,7 +77,7 @@ def test_obs151_real_renderer_lists(tmp_path):
     assert lists["quarantined"] == frozenset(), sorted(lists["quarantined"])
     assert lists["multiline"] == frozenset(), sorted(lists["multiline"])
     assert lists["anchor_gap"] == frozenset(), sorted(lists["anchor_gap"])
-    assert len(lists["approved"]) == 9, sorted(lists["approved"])
+    assert len(lists["approved"]) == 11, sorted(lists["approved"])
 
 
 # ── 4b(OBS-155):三表并集与 SLOTS 一一对应 ───────────────────

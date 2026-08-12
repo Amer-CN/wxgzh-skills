@@ -80,7 +80,10 @@ def _installed_builders_keys(renderer: Path) -> set[str]:
             for tgt in node.targets:
                 if isinstance(tgt, ast.Name) and tgt.id == "_COMPONENT_BUILDERS":
                     if isinstance(node.value, ast.Dict):
-                        return {ast.literal_eval(k) for k in node.value.keys}
+                        keys = {ast.literal_eval(k) for k in node.value.keys}
+                        # 76J/OBS-271:table/list 非 ::: 组件,由 _render_item 的 kind
+                        # 分发渲染(hammer_table/hammer_list),与 _COMPONENT_BUILDERS 并列。
+                        return keys | {"table", "list"}
     return set()
 
 

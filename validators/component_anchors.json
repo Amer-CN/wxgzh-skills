@@ -1,6 +1,6 @@
 {
-  "renderer_sha256": "3ab22a66440998bf975b58017382590aeec52e7eb0e8efb531db63cbfe962445",
-  "generated_at_utc": "2026-08-12T04:07:32+00:00",
+  "renderer_sha256": "5414ed083b10cb078c9eae42c1735028ce14ccb35497fd56d09c615af34aa350",
+  "generated_at_utc": "2026-08-12T20:27:05+00:00",
   "anchors": [
     {
       "sentinel": "S_ALERT_BODY_CAUTION",
@@ -185,6 +185,20 @@
       "style": "margin:0 0 14px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
     },
     {
+      "sentinel": "S_LIST_ITEM_OL",
+      "component": "list",
+      "slot": "item_ol",
+      "mode": "默认",
+      "style": "font-size:14px;color:#555555;margin:0;line-height:1.9;flex:1;"
+    },
+    {
+      "sentinel": "S_LIST_ITEM_UL",
+      "component": "list",
+      "slot": "item_ul",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:13px;line-height:1.6;color:#555555;"
+    },
+    {
       "sentinel": "S_LONG_IMAGE_CAPTION",
       "component": "long-image",
       "slot": "caption",
@@ -288,6 +302,20 @@
       "slot": "url",
       "mode": "默认",
       "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_TABLE_BODY",
+      "component": "table",
+      "slot": "body",
+      "mode": "默认",
+      "style": "margin:0;font-size:13px;line-height:1.6;color:#555555;"
+    },
+    {
+      "sentinel": "S_TABLE_HEADER",
+      "component": "table",
+      "slot": "header",
+      "mode": "默认",
+      "style": "margin:0;font-size:13px;line-height:1.6;color:#fff;"
     }
   ]
 }
