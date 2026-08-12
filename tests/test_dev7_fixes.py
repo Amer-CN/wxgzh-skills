@@ -71,14 +71,21 @@ class TestNoRepostScan:
 
 
 class TestRunnerRouting:
-    def test_runner_prefers_source_url(self):
+    def test_runner_prefers_aihot_internal_then_source_url(self):
+        """76E/OBS-260:抓图优先级=AI HOT 站内页(aihot_internal_url)优先 →
+        原始来源页(source_url)兜底 + no-repost 扫描保留;permalink 仅追溯兜底。"""
         runner = (SKILL_ROOT / "scripts" / "run_media_enrichment.py").read_text(
             encoding="utf-8")
+        # ① 站内页优先
+        assert "fetch_page(internal_url, mode=network_mode" in runner
+        assert '"aihot_internal"' in runner
+        # ② 原始来源页兜底 + no-repost 扫描(变量名为 fr_src)
         assert "fetch_page(source_url, mode=network_mode" in runner
         assert "falling back to" in runner
-        # no-repost scan wired to the source page branch
-        assert "scan_no_repost(fetch_result.content)" in runner
+        assert "scan_no_repost(fr_src.content)" in runner
         assert 'mat_copyright_status = "restricted"' in runner
+        # ③ permalink 追溯兜底
+        assert "fetch_page(permalink, mode=network_mode" in runner
         # source_page_url records the actually fetched page
         assert "source_page_url=page_url" in runner
         assert "source_page_url=permalink" not in runner

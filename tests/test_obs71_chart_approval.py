@@ -179,11 +179,15 @@ def test_replay_continue_with_approval_uploads_only_approved(tmp_path):
         assert by_id[other["asset_id"]]["upload"]["status"] == "not_uploaded", other["asset_id"]
 
 
-def test_max_total_images_caps_charts(tmp_path):
-    req, man = _discover(tmp_path, max_total=1)
+def test_max_total_images_does_not_cap_discovery_charts(tmp_path):
+    """76E/OBS-260:max_total_images 只约束最终入文图数,不再截断 discovery——
+    图表由 claims 决定(本夹具 6 组数据 → 6 张图表),不再出现 chart skipped。"""
+    req_path, man = _discover(tmp_path, max_total=1)
     charts = [a for a in man["assets"] if a["asset_origin"] == "generated"]
-    assert len(charts) <= 1
+    assert len(charts) == 6
     joined = " | ".join(man.get("warnings", []))
-    assert "max_total_images" in joined and "chart skipped" in joined
-    # 源资产 + 图表合计不得超过上限(事件 RUN 页面无图,总资产=图表数)
-    assert len(man["assets"]) <= 1
+    assert "max_total_images" not in joined and "chart skipped" not in joined
+    # discovery 阶段独立预算存在(media 侧默认 max(24, 3×max_total),请求可不传)
+    reqd = json.loads(req_path.read_text(encoding="utf-8"))
+    budget = reqd["config"].get("discovery_budget") or 24
+    assert budget >= 6

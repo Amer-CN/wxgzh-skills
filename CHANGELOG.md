@@ -2,6 +2,21 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev13 (2026-08-12)
+
+- OBS-260(档76E):discovery 预算与最终入文数分离——max_total_images 只约束最终
+  上传图数,discovery 用独立预算 discovery_budget(默认 max(24, 3×max_total),
+  可配置),rejected/头像/重复图不再消耗中止条件;「skipping M-10」类截断场景
+  回归修复(3 素材页 max_total=2 全抓)。
+- OBS-260(档76E):图源优先级(用户确认业务规则)——AI HOT 站内页
+  (materials[].aihot_internal_url,links.aihot 直出 HTML)优先;站内页无候选 →
+  原始来源页兜底;原始页无论主用页为何都做 no-repost 扫描(命中→素材 restricted);
+  页面抓到但无候选属正常(走图表/降级车道,不报 error)。
+- OBS-260(档76E):img-proxy 下载 429 限流退避重试(429 实证,最多 3 次,1s/2s/4s)。
+- 测试 +5(test_hf76e_source:预算回归/站内页优先/原始页兜底/no-repost 保留/
+  429 重试);test_dev7_fixes 抓取优先级断言按新语义更新;test_obs71 图表上限
+  断言改为「max_total 不截断 discovery 图表」(76E 语义)。
+
 ## 0.1.0-dev12 (2026-08-12)
 
 - OBS-259(档76D):WebP→JPEG 自动转码——上传前检测 WebP magic(RIFF....WEBP),

@@ -90,9 +90,25 @@ def download_image(
     temp_path = output_dir / f".download_tmp_{os.getpid()}_{int(time.time())}"
 
     try:
-        sha_hex, total_size, content_type, redirect_chain = safe_download_with_redirects(
-            url, temp_path, max_bytes=max_bytes, timeout=timeout,
-        )
+        # 76E/OBS-260:AI HOT img-proxy 限流退避重试(429 实证)——最多 3 次,
+        # 退避 1s/2s/4s;仅对限流(429)重试,其余错误照常上抛。
+        sha_hex = total_size = content_type = None
+        redirect_chain = []
+        last_err: Exception | None = None
+        for attempt in range(3):
+            try:
+                sha_hex, total_size, content_type, redirect_chain = safe_download_with_redirects(
+                    url, temp_path, max_bytes=max_bytes, timeout=timeout,
+                )
+                last_err = None
+                break
+            except RuntimeError as exc:
+                if "HTTP 429" not in str(exc) or attempt >= 2:
+                    raise
+                last_err = exc
+                time.sleep(1 << attempt)  # 1s, 2s, 4s
+        if last_err is not None:
+            raise last_err
 
         final_path = output_dir / sha_hex
         actual_mime = detect_mime(temp_path)

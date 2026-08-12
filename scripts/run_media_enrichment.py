@@ -307,13 +307,18 @@ def main():
 
     max_images_per_material = config.get("max_images_per_material", 3)
     max_total_images = config.get("max_total_images", 12)
+    # 76E/OBS-260:discovery 预算与最终入文数分离——max_total_images 只约束
+    # 最终进入文章的上传图数;discovery 用独立预算(默认 max(24, 3×max_total)),
+    # rejected/头像/重复图不再消耗中止条件,不得再出现「因预算截断跳过后续
+    # 素材页」的行为。
+    discovery_budget = int(config.get("discovery_budget") or max(24, max_total_images * 3))
     total_assets_added = 0
     asset_counter = 0
 
     # 76C/OBS-255:用户供图注入——user_images.json 直链清单(user_provided,
     # 免版权审批,用户供图责任自负,登记来源链接)。仅 discover 纳入候选。
     for ui in (request.get("user_images") or []):
-        if total_assets_added >= max_total_images:
+        if total_assets_added >= discovery_budget:
             break
         url = (ui.get("url") or "").strip()
         if not url:
@@ -385,50 +390,98 @@ def main():
 
         print(f"\n[media-enrichment] Processing material {material_id}: {permalink}")
 
-        if total_assets_added >= max_total_images:
-            builder.warnings.append(f"max_total_images ({max_total_images}) reached — skipping {material_id}")
-            print(f"  SKIP: max_total_images reached")
+        if total_assets_added >= discovery_budget:
+            builder.warnings.append(f"discovery_budget ({discovery_budget}) reached — skipping {material_id}")
+            print(f"  SKIP: discovery_budget reached")
             continue
 
         builder.pages_requested += 1
-        # dev7: prefer the ORIGINAL source page (materials[].source_url).
-        # aihot_permalink stays for traceability and is only a fallback
-        # when the original page cannot be fetched.
+        # 76E/OBS-260(用户确认业务规则):AI HOT 站内页优先——站内内容已经过
+        # 筛选、无广告图;站内页无候选图 → 原始来源页兜底;原始页「禁止转载/
+        # 禁止使用」扫描与来源追溯继续保留。
+        internal_url = (mat.get("aihot_internal_url") or "").strip()
         page_url = ""
         fetch_result = None
-        if source_url and source_url != permalink:
-            fetch_result = fetch_page(source_url, mode=network_mode, fixture_dir=fixture_dir)
-            if fetch_result.success:
-                page_url = source_url
-            else:
+        extraction = None
+        page_kind = ""
+        no_repost_hits: list[str] = []
+        fallback_page = ""  # 页面抓取成功但无候选时保留(无图属正常,走图表/降级车道)
+        fallback_fetch = None
+        fallback_extraction = None
+        fetched: set[str] = set()
+        # ① AI HOT 站内页优先(76C pool 通道同源;links.aihot 直出 HTML)
+        if internal_url and internal_url != source_url:
+            fr_in = fetch_page(internal_url, mode=network_mode, fixture_dir=fixture_dir)
+            fetched.add(internal_url)
+            if fr_in.success:
+                ex_in = extract_images(fr_in.content, page_url=internal_url)
+                if ex_in.candidates:
+                    page_url, fetch_result, extraction, page_kind = (
+                        internal_url, fr_in, ex_in, "aihot_internal")
+                else:
+                    fallback_page = internal_url
+                    fallback_fetch = fr_in
+                    fallback_extraction = ex_in
+                    builder.warnings.append(
+                        f"{material_id}: aihot internal page has no image candidates "
+                        "— falling back to source page")
+        # ② 原始来源页:无论主用页为何都抓取做 no-repost 扫描(规则保留);
+        #    站内页无候选时同时作为候选兜底。source_url==permalink 只抓一次。
+        if source_url and source_url not in fetched:
+            fr_src = fetch_page(source_url, mode=network_mode, fixture_dir=fixture_dir)
+            fetched.add(source_url)
+            if fr_src.success:
+                no_repost_hits = scan_no_repost(fr_src.content)
+                if not page_url:
+                    ex_src = extract_images(fr_src.content, page_url=source_url)
+                    if ex_src.candidates:
+                        page_url, fetch_result, extraction, page_kind = (
+                            source_url, fr_src, ex_src, "source_url")
+                    else:
+                        fallback_page = fallback_page or source_url
+                        fallback_fetch = fallback_fetch or fr_src
+                        fallback_extraction = fallback_extraction or ex_src
+            elif not page_url:
                 builder.warnings.append(
                     f"{material_id}: source_url fetch failed — falling back to "
-                    f"aihot_permalink ({str(fetch_result.error)[:120]})")
-        if not page_url:
-            fetch_result = fetch_page(permalink, mode=network_mode, fixture_dir=fixture_dir)
-            if fetch_result.success:
-                page_url = permalink
+                    f"aihot_permalink ({str(fr_src.error)[:120]})")
+        # ③ aihot_permalink 兜底(追溯链)
+        if not page_url and permalink and permalink not in fetched:
+            fr_p = fetch_page(permalink, mode=network_mode, fixture_dir=fixture_dir)
+            fetched.add(permalink)
+            if fr_p.success:
+                ex_p = extract_images(fr_p.content, page_url=permalink)
+                if ex_p.candidates:
+                    page_url, fetch_result, extraction, page_kind = (
+                        permalink, fr_p, ex_p, "aihot_permalink")
+                else:
+                    fallback_page = fallback_page or permalink
+                    fallback_fetch = fallback_fetch or fr_p
+                    fallback_extraction = fallback_extraction or ex_p
+
+        if not page_url and fallback_page:
+            page_url = fallback_page
+            fetch_result = fallback_fetch
+            extraction = fallback_extraction
+            page_kind = "fallback_no_candidates"
+            print(f"  Fetched via {page_kind}: page has no image candidates")
 
         if not page_url:
-            builder.errors.append(f"Failed to fetch page for {material_id}: {fetch_result.error}")
-            print(f"  FETCH FAILED: {fetch_result.error}")
+            err = (fetch_result.error if fetch_result and not fetch_result.success
+                   else "all page fetches failed")
+            builder.errors.append(f"Failed to fetch page for {material_id}: {err}")
+            print(f"  FETCH FAILED: {err}")
             continue
 
         builder.pages_fetched += 1
-        page_kind = "source_url" if page_url == source_url and source_url != permalink else "aihot_permalink"
         print(f"  Fetched via {page_kind}: {fetch_result.status_code}")
 
-        # dev7: explicit no-repost scan targets the ORIGINAL source page.
-        # If found there, all images from this material become restricted.
-        if page_kind == "source_url":
-            no_repost_hits = scan_no_repost(fetch_result.content)
-            if no_repost_hits:
-                mat_copyright_status = "restricted"
-                builder.warnings.append(
-                    f"{material_id}: explicit no-repost statement on source page "
-                    f"({'/'.join(no_repost_hits)}) — images restricted")
-
-        extraction = extract_images(fetch_result.content, page_url=page_url)
+        # 原始页 no-repost 命中 → 素材全部候选 restricted(含站内页来源图)
+        if no_repost_hits:
+            mat_copyright_status = "restricted"
+            builder.warnings.append(
+                f"{material_id}: explicit no-repost statement on source page "
+                f"({'/'.join(no_repost_hits)}) — images restricted")
         # OBS-86(档62):正文边界判定后处理——素材 claim 文本(章节对齐用)
         # 与排除统计。peripheral 图已在提取阶段被排除(下载前,零请求)。
         material_claim_texts = [
@@ -443,8 +496,8 @@ def main():
         print(f"  Candidates: {len(extraction.candidates)}")
 
         for candidate in extraction.candidates:
-            if total_assets_added >= max_total_images:
-                builder.warnings.append(f"max_total_images ({max_total_images}) reached — stopping discovery")
+            if total_assets_added >= discovery_budget:
+                builder.warnings.append(f"discovery_budget ({discovery_budget}) reached — stopping discovery")
                 break
             if material_image_count >= max_images_per_material:
                 builder.warnings.append(f"max_images_per_material ({max_images_per_material}) reached for {material_id}")
@@ -627,7 +680,7 @@ def main():
     _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
     pool_image_count = 0
     for item in pool_items:
-        if total_assets_added >= max_total_images or pool_fetched >= pool_fetch_limit:
+        if total_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
             break
         iid = item.get("id", "")
         if not iid or iid in pool_selected_ids:
@@ -645,7 +698,7 @@ def main():
         if source_url and source_url != permalink and img_hint:
             page_candidates.append(("source_url", source_url))
         for kind, page_url in page_candidates:
-            if total_assets_added >= max_total_images or pool_fetched >= pool_fetch_limit:
+            if total_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
                 break
             fr = fetch_page(page_url, mode=network_mode, fixture_dir=fixture_dir)
             pool_fetched += 1
@@ -654,7 +707,7 @@ def main():
             extraction = extract_images(fr.content, page_url=page_url)
             print(f"  Pool {iid} via {kind}: {len(extraction.candidates)} candidates")
             for candidate in extraction.candidates:
-                if total_assets_added >= max_total_images:
+                if total_assets_added >= discovery_budget:
                     break
                 if pool_image_count >= max_images_per_material:
                     break
@@ -748,9 +801,9 @@ def main():
                 builder.warnings.append(w)
                 print(f"  WARN: {w}")
             for i, spec in enumerate(plan.specs):
-                if total_assets_added >= max_total_images:
+                if total_assets_added >= discovery_budget:
                     builder.warnings.append(
-                        f"max_total_images ({max_total_images}) reached — chart skipped (OBS-71)")
+                        f"discovery_budget ({discovery_budget}) reached — chart skipped (OBS-71)")
                     break
                 chart_path = output_dir / "charts" / f"chart-{i+1:03d}.png"
                 chart_result = generate_chart(spec, chart_path)
