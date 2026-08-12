@@ -233,6 +233,7 @@
 44. 76D(补丁批,用户批准 2026-08-11,RELOCK_ALLOWED 临时 0→1 范围=档 76D 全部任务;任务 1 根因落在 gzh-design 仓,GZH_DESIGN_WRITE_ALLOWED 同期临时 1(仅限该根因修复),验收后两键一并归 0):①封面标题链路(OBS-257)——根因=终稿缺 H1(xvlvb4 实证,首行即 ##,parse_article 返回「未命名」)+ 渲染器无标题参数 + pipeline 未喂 handoff;修复=gzh render_article.py --title/--subtitle(默认 None 走现状,H1/intro 解析)+ pipeline 按 selected_title→title_candidates[0] 传 --title、无导语且 hook_line 存在时传 --subtitle;render_entry 变→component_anchors.json 随档重新生成(仅 renderer_sha256/generated_at 两行变,anchors 41 行零差异,HF-6R 过程规则);验收=xvlvb4 重渲染封面「MiniMax H3 / 开源视频模型的一周，比榜单更值得看」、副标题=hook_line 兜底(该终稿无导语段)。②草稿标题(OBS-258)——_wechat_title = selected_title→title_candidates[0]→topic,测试 6 条。③WebP 转码(OBS-259)——上传前 magic 检测→Pillow 转 JPEG(alpha 白底),manifest.transcodes 留痕+pipeline side_effects,转码失败 fail-closed(微信 40005 实证)。④词表专名豁免(OBS-253 已修移出分区)——forbidden_term 新类目 FT-001(Agent/智能体助手),疑似专名(大写开头/引号「」内/产品名连写)降级 advisory(留痕不强制改写不判 fail),普通命中 strong 不变;PB-048/049;PB-026 旧最小词表补键(R111 类目集合固定,本档预期红态);run_tests/verify_release 子进程编码统一 PYTHONUTF8=1+UTF-8 解码(Windows 管道 GBK 互踩)。升版:gzh v2026.08.12-hammer.12(3e1fb63)/media 0.1.0-dev12(016972a)/zh 0.1.3(06902c4);relock #33(zh,entrypoint/validator/58 不变)/#34(media,validator/59 不变,entrypoint 变=run_media_enrichment 已改)/#35(gzh,render_entry 变,validator/component_source/76 不变);R93 双侧;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH;pipeline pytest 475/473/0/0/1/1(+6=test_hf76d_title_chain);media 310 passed/6 skipped(+4);zh 82/82(+2,verify_release 82/82 PASS)。程序校验:唯一编号 141(119–259 连续,含 76C-F 注册的 OBS-256)、R59 分区 22=22 差集空——与任务书预期一致。执行端注记:gzh 仓 fresh clone .temp/hf76d-gzh-src;fake_live gzh shim 同步 --title/--subtitle(76D 红态,test_hotfix1 gzh/wechat/tamper 全绿)。
 
 
+　　【76D-F 补记】档 76D 验收 PASS(审核方 2026-08-12 远端点验四仓 numstat 逐字一致:gzh 3e1fb63 / media 016972a / zh 06902c4 / pipeline 247e268;zh 词表专名降级语义经 diff 级实读在案)。RELOCK_ALLOWED 与 GZH_DESIGN_WRITE_ALLOWED 归位 1→0(见授权登记节)。
 ### ★授权变更登记(72A,不可省)
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
@@ -247,9 +248,12 @@
 > `RELOCK_ALLOWED` 于档 76C 四次临时由 0 改为 1(批准人=用户,范围=档 76C 媒体批:门禁降级链/discover 扩池/域名黑名单/供图注入),恢复条件=本档验收通过后立即改回 0。**归位(档76C-F,审核方 2026-08-11 验收通过):由 1 改回 0**。
 > RELOCK_ALLOWED 于档 76D 五次临时由 0 改为 1(批准人=用户,范围=档 76D 全部任务),恢复条件=本档验收通过后立即改回 0。
 > GZH_DESIGN_WRITE_ALLOWED 于档 76D 同期临时由 0 改为 1(批准人=用户,范围=档 76D 任务 1 的 gzh-design 根因修复),恢复条件=本档验收通过后立即改回 0。**归位:两键均待审核方验收宣告后执行**。
+> **归位(档76D-F,审核方 2026-08-12 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
 1. CI 自有记录以来(≥100 次运行,最早 2026-08-06T07:01Z)零 success,长期红。
 2. 根因四类并存:类 A 硬编码开发机路径(12 项)、类 B CI 未安装被锁子技能、类 C bs4 依赖缺失(8 项)、类 D 陈旧 LOCKED_HEADS 与 OBS-69 内嵌基线(4 项)。
 3. CI 绿不构成验收依据,CI 红也不构成停机依据;一切验收以本机 junit 为准。解除条件:四类全部清零且 CI 出现第一次 success 之后,本条作废。
+
+
