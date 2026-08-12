@@ -558,8 +558,11 @@ def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
         iid = str(iid) if iid is not None else None
         url = _material_source_url(it)
         permalink = it.get("aihot_permalink") or it.get("permalink") or url
+        links = it.get("links") if isinstance(it.get("links"), dict) else {}
         norm = {"id": iid, "source_url": url, "aihot_permalink": permalink,
-                "title": it.get("title", "")}
+                "title": it.get("title", ""),
+                # 76E/OBS-260:AI HOT 站内页(links.aihot)直出 HTML,抓图优先来源
+                "aihot_internal_url": links.get("aihot") or ""}
         if iid is not None:
             if iid in by_id:
                 raise MediaRequestError(
@@ -695,11 +698,37 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
         materials.append({
             "material_id": mid,
             "aihot_permalink": permalink,
+            # 76E/OBS-260:站内页优先抓取(links.aihot;缺失时 media 回落原始页)
+            "aihot_internal_url": di.get("aihot_internal_url") or "",
             "source_url": src, "title": m.get("title", ""),
             "selected_claim_ids": list(m.get("selected_claim_ids", [])),
             "dedup_id": di["id"],
             "copyright_review": cr,
         })
+    # 76E/OBS-261:媒体请求范围 = registry(claim 绑定) ∪ material-ledger used。
+    # used 但未绑定 claim 的素材(M-25 案例)必须进入抓取范围;dedup 按 source_url
+    # 严格映射,缺失即 FAIL_CLOSED(与 registry 同强度)。
+    for lmid, le in sorted(_ledger_used_materials(rd).items()):
+        if lmid in mat_ids:
+            continue
+        di = dedup["by_url"].get(le["source_url"])
+        if di is None:
+            raise MediaRequestError(
+                f"material {lmid}: ledger used source_url not found in dedup "
+                "(FAIL_CLOSED)")
+        _check_material_url_consistency(lmid, di["source_url"], le["source_url"])
+        mat_ids.add(lmid)
+        verified_material_count += 1
+        materials.append({
+            "material_id": lmid,
+            "aihot_permalink": le["aihot_permalink"],
+            "aihot_internal_url": di.get("aihot_internal_url") or "",
+            "source_url": le["source_url"], "title": le["title"],
+            "selected_claim_ids": [],
+            "dedup_id": di["id"],
+            "copyright_review": {"status": "unknown"},
+        })
+
     for c in reg_claims:
         cid, mid = c.get("claim_id"), c.get("material_id")
         if not cid or not mid:
@@ -756,6 +785,10 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
             "domain_blacklist": ["ithome.com", "img.ithome.com"],
             # 76C/OBS-254:discover 扩池上限(全池潜力源补充抓取,防请求爆炸)
             "pool_fetch_limit": int(ctx_env.get("WXGZH_MEDIA_POOL_FETCH_LIMIT", 30)),
+            # 76E/OBS-260:discovery 独立预算(与 max_total_images 分离;0/缺省由
+            # media 侧默认 max(24, 3×max_total))
+            **({"discovery_budget": int(ctx_env["WXGZH_MEDIA_DISCOVERY_BUDGET"])}
+               if ctx_env.get("WXGZH_MEDIA_DISCOVERY_BUDGET") else {}),
         },
         "provenance": {"canonical_registry_sha256": sha256_file(reg_p),
                        "deduplicated_items_sha256": sha256_file(dedup_p),
@@ -906,6 +939,38 @@ def _article_has_intro(ctx) -> bool:
 
 
 
+
+
+
+def _ledger_used_materials(rd: Path) -> dict:
+    """76E/OBS-261:读 material-ledger.yaml 的 status:used 素材(id → 条目)。
+    缺失/解析失败 → {};仅返回 used 且含 id/source_url 的条目(绝不阻断)。"""
+    try:
+        p = rd / "super_writer" / "material-ledger.yaml"
+        if not p.is_file():
+            return {}
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+        ml = data.get("material_ledger")
+        if not isinstance(ml, dict):
+            return {}
+        out = {}
+        for m in ml.get("materials") or []:
+            if not isinstance(m, dict):
+                continue
+            if m.get("status") != "used":
+                continue
+            mid = m.get("id") or m.get("material_id")
+            if mid and m.get("source_url"):
+                out[str(mid)] = {
+                    "title": m.get("title", ""),
+                    "source_url": m["source_url"],
+                    "aihot_permalink": m.get("aihot_permalink") or m["source_url"],
+                }
+        return out
+    except (OSError, ValueError, yaml.YAMLError):
+        return {}
 
 def _wechat_title(ctx, state) -> str:
     """76D/OBS-258:草稿标题 = handoff.selected_title → title_candidates[0] → topic。"""
