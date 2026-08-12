@@ -2,6 +2,12 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev16 (2026-08-12)
+
+- OBS-268(76H):materials 输入契约新增可选 provenance 枚举(normal/supplemental)
+  ——supplemental=权威补充来源(官方博客/公告/releases,携带 source_url+抓取证据+
+  登记理由),不要求 aihot dedup 池映射;媒体侧抓取按既有 source_url 兜底通道处理。
+
 ## 0.1.0-dev15 (2026-08-12)
 
 - OBS-262(76G-R):站内页图源证据形态——站内页(aihot_internal)为单篇内容单元,

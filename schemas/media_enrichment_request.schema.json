@@ -106,6 +106,14 @@
       "type": "string",
       "format": "uri",
       "description": "76E/OBS-260:AI HOT 站内页(links.aihot)直出 HTML,抓图优先来源"
+     },
+     "provenance": {
+      "type": "string",
+      "enum": [
+       "normal",
+       "supplemental"
+      ],
+      "description": "76H/OBS-268:normal=aihot dedup 池来源(默认);supplemental=权威补充来源(官方博客/公告/releases,携带 source_url+抓取证据+登记理由,不要求 dedup 映射)"
      }
     }
    }
