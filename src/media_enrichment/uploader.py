@@ -26,6 +26,18 @@ SENSITIVE_PATTERNS = [
     "access_key", "secret_key", "bearer", "authorization",
 ]
 
+# 76E/OBS-260:字符串值扫描用赋值形态正则(76E 实测:content_description 中
+# AI 术语「token」被裸词命中误报 SECRET_DETECTED)。键名扫描仍用上面的裸词。
+_VALUE_SECRET_RES = (
+    re.compile(r"access[_-]?token\s*[=:]\s*\S+"),
+    re.compile(r"api[_-]?key\s*[=:]\s*\S+"),
+    re.compile(r"secret[_-]?key\s*[=:]\s*\S+"),
+    re.compile(r"bearer\s+\S+"),
+    re.compile(r"password\s*[=:]\s*\S+"),
+    re.compile(r"cookie\s*[=:]\s*\S+"),
+    re.compile(r"token\s*[=:]\s*\S+"),
+)
+
 SAFE_FIELD_NAMES = {
     "secrets_detected", "secret_scan_passed", "no_secrets_found",
 }
@@ -177,7 +189,7 @@ def scan_for_secrets(data: Any) -> list[str]:
     elif isinstance(data, str):
         lower = data.lower()
         for pattern in SENSITIVE_PATTERNS:
-            if pattern in lower:
+            if pattern in lower and any(rx.search(lower) for rx in _VALUE_SECRET_RES):
                 findings.append(f"potential secret in value: ...{pattern}...")
     return findings
 
