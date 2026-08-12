@@ -189,3 +189,44 @@ def test_internal_page_og_image_not_social_card(tmp_path):
     assert og, "站内页 og:image 应进候选(不被 social card 拒)"
     assert all("social share card" not in (r or "") for a in og for r in a.get("reasons") or [])
     assert all(a["decision"] in ("eligible", "review_required") for a in og)
+
+
+def test_content_description_upgrade_priority():
+    """76I/OBS-269:描述抽取优先级 alt/title → context_text(父元素可读文本) →
+    page_context(非裸片段) → 素材标题兜底;裸 <img 片段判不可读。"""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "rm", str(RUNNER))
+    rm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rm)
+    from media_enrichment.image_extractor import ImageCandidate
+    # 裸 <img context + context_text 可读 → 用 context_text
+    c1 = ImageCandidate(url="x", extraction_method="img.src",
+                        context='<img alt="" class="w-full" src="x">', context_text="MiniMax H3 发布官方公告")
+    d1, s1 = rm._source_content_description(c1, material_title="M 标题")
+    assert d1 == "MiniMax H3 发布官方公告" and s1 == "page_context"
+    # alt 优先
+    c2 = ImageCandidate(url="x", extraction_method="img.src", alt="模型截图",
+                        context="<img alt='模型截图'>", context_text="父文本")
+    d2, _ = rm._source_content_description(c2)
+    assert d2 == "模型截图"
+    # 全空 → 素材标题兜底
+    c3 = ImageCandidate(url="x", extraction_method="img.src",
+                        context='<img alt="" class="w-full" src="x">')
+    d3, _ = rm._source_content_description(c3, material_title="M 标题")
+    assert d3 == "M 标题"
+    # 可读 context(非 <img 开头)保留
+    c4 = ImageCandidate(url="x", extraction_method="og:image", context="GitHub - MiniMax-AI/MiniMax-H3")
+    d4, s4 = rm._source_content_description(c4)
+    assert d4 == "GitHub - MiniMax-AI/MiniMax-H3" and s4 == "page_context"
+
+
+def test_extractor_context_text_from_parent():
+    """76I/OBS-269:extractor 从父元素提取可读文本(context_text)。"""
+    from media_enrichment.image_extractor import extract_images
+    html = ('<html><body><figure><img src="https://img.example/a.png" alt="">'
+            '<figcaption>MiniMax H3 官方演示图</figcaption></figure></body></html>')
+    ex = extract_images(html, page_url="https://aihot.example/items/v")
+    cand = [c for c in ex.candidates if c.extraction_method == "img.src"]
+    assert cand and cand[0].context_text
+    assert "MiniMax H3 官方演示图" in cand[0].context_text or "MiniMax H3" in cand[0].context_text

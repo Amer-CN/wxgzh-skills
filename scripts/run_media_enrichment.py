@@ -44,17 +44,24 @@ from media_enrichment.asset_approval import (
 )
 
 
-def _source_content_description(candidate):
-    """档HF-4/OBS-245:源图内容描述直写——img alt/title(page_alt) >
-    提取上下文(page_context,含 meta 通道的 og:title/og:description)。
-    严禁用文章 claim 文本填充(OBS-87 的墙,下游 claim 派生判定照旧)。
-    都取不到 → (None, None),readiness 判 empty 属诚实结果。"""
+def _source_content_description(candidate, material_title: str | None = None):
+    """档HF-4/OBS-245 + 76I/OBS-269:源图内容描述——img alt/title(page_alt) >
+    父元素/兄弟节点可读文本(context_text,剥离 HTML) > 既有 page_context
+    (meta 通道 og:title/og:description) > 素材标题兜底。
+
+    以「<img」开头的裸 HTML 片段一律判不可读(直接丢弃),触发下一级回填。
+    严禁用文章 claim 文本填充(OBS-87 的墙,下游 claim 派生判定照旧)。"""
     text = (candidate.alt or candidate.title or "").strip()
     if text:
         return text, "page_alt"
+    ctx_text = (candidate.context_text or "").strip()
+    if ctx_text:
+        return ctx_text, "page_context"
     ctx = (candidate.context or "").strip()
-    if ctx:
+    if ctx and not ctx.startswith("<img"):
         return ctx, "page_context"
+    if material_title and material_title.strip():
+        return material_title.strip(), "page_context"
     return None, None
 
 
@@ -634,7 +641,8 @@ def main():
                 internal_page=(page_kind == "aihot_internal"),
             )
 
-            content_desc, content_desc_source = _source_content_description(candidate)
+            content_desc, content_desc_source = _source_content_description(
+                candidate, material_title=mat.get("title"))
             # 档HF-4/OBS-247:meta 通道图原始 HTML 无 DOM 位置——推文页=内容单元
             # 本身,页级主图位置即页面(page-meta 语义,审核方裁定);取不到页面
             # title 则 known=false。

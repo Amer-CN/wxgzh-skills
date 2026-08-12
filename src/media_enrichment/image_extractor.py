@@ -48,6 +48,9 @@ class ImageCandidate:
     # 76G 增补/OBS-266:视频封面标记(og:image+og:video / <video poster> /
     # twitter:player:image / 站内页 img-proxy thumb);视频本体不下载不上传。
     video_poster: bool = False
+    # 76I/OBS-269:父元素/兄弟节点可读文本(剥离 HTML 标签)——img alt 为空时
+    # 的图注素材来源;裸 <img 片段判不可读,以本字段回填。
+    context_text: str = ""
 
 
 @dataclass
@@ -237,6 +240,19 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
                 alt=img.get("alt", ""),
                 context=str(img)[:200],
             )
+            # 76I/OBS-269:父元素可读文本(图注素材);剥离标签后取最近非空文本。
+            _ctx_parent = img.parent
+            _ctx_txt = ""
+            for _ in range(3):
+                if _ctx_parent is None:
+                    break
+                _t = (_ctx_parent.get_text(" ", strip=True) or "").strip()
+                if _t:
+                    _ctx_txt = _t
+                    break
+                _ctx_parent = _ctx_parent.parent
+            if _ctx_txt:
+                candidate.context_text = _ctx_txt[:200]
             # Check for width/height attributes
             if img.get("width"):
                 try:

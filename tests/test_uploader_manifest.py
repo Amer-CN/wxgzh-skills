@@ -210,7 +210,7 @@ class TestVersionConsistency:
             all_versions.add(m.group(0))
 
         assert len(all_versions) == 1, f"inconsistent versions: {all_versions}"
-        assert "0.1.0-dev16" in all_versions, f"expected 0.1.0-dev16, got {all_versions}"
+        assert "0.1.0-dev17" in all_versions, f"expected 0.1.0-dev17, got {all_versions}"
 
     def test_deterministic_ordering(self):
         b1 = ManifestBuilder(run_id="t", request_sha256="a"*64, article_sha256="b"*64, claims_total=1, materials_total=1)

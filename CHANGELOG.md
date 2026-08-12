@@ -2,6 +2,13 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev17 (2026-08-12)
+
+- OBS-269(76I):content_description 提质——抽取优先级 img alt/title → 父元素/
+  兄弟节点可读文本(context_text,剥离 HTML 标签) → page_context(非裸片段) →
+  素材标题兜底;以「<img」开头的裸 HTML 片段一律判不可读并触发回填(nryi0a
+  实证:8 张绑定图 6 张裸片段)。测试 +2。
+
 ## 0.1.0-dev16 (2026-08-12)
 
 - OBS-268(76H):materials 输入契约新增可选 provenance 枚举(normal/supplemental)
