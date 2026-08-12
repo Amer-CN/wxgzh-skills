@@ -181,7 +181,7 @@ class TestVersionConsistency:
     Gates: RUNTIME_VERSION_RESIDUE_DEV3=0, BUILD_VERSION_RESIDUE_DEV4=0,
     CURRENT_EVIDENCE_VERSION_RESIDUE_DEV4=0, OUTPUT_ZIP_NAME_MATCH=true."""
 
-    CURRENT = "0.1.0-dev11"
+    CURRENT = "0.1.0-dev12"
     # concatenated so this test file never contains the residue literals itself
     DEV3 = "0.1.0-dev" + "3"
     DEV4 = "0.1.0-dev" + "4"
@@ -228,7 +228,7 @@ class TestVersionConsistency:
         assert seen_any, "no version strings found at all — check scope"
         assert offenders == {}, f"non-dev7-hotfix1 version residue: {offenders}"
 
-        # OUTPUT_ZIP_NAME_MATCH=true (media-enrichment-v0.1.0-dev11.zip)
+        # OUTPUT_ZIP_NAME_MATCH=true (media-enrichment-v0.1.0-dev12.zip)
         build_text = (SKILL_ROOT / "scripts" / "build_zip.py").read_text(encoding="utf-8")
         assert f'BUILD_VERSION = "{self.CURRENT}"' in build_text
         assert "media-enrichment-v{BUILD_VERSION}.zip" in build_text, \

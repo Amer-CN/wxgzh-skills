@@ -64,6 +64,44 @@ def normalize_wechat_url(url: str | None) -> str | None:
     return url
 
 
+def transcode_webp_to_jpeg(local_path: str) -> tuple[str, dict | None, str | None]:
+    """76D/OBS-259:上传前 WebP→JPEG 自动转码(微信 40005 实证:WebP 上传被拒)。
+
+    检测 WebP magic(RIFF....WEBP);Pillow 打开,带 alpha 时合成白底,存同目录 .jpg。
+    返回 (上传路径, 转码记录, 错误):
+      - 非 WebP → (原路径, None, None),行为与现状一致;
+      - 转码成功 → (新 .jpg 路径, {from_format,to_format,original_bytes,converted_bytes}, None);
+      - 是 WebP 但转码失败 → (原路径, None, 错误串)——调用方应 fail-closed(不上传)。
+    """
+    p = Path(local_path)
+    try:
+        head = p.read_bytes()[:12]
+    except OSError as exc:
+        return local_path, None, None
+    if len(head) < 12 or head[:4] != b"RIFF" or head[8:12] != b"WEBP":
+        return local_path, None, None
+    try:
+        from PIL import Image
+        im = Image.open(local_path)
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            bg = Image.new("RGB", im.size, (255, 255, 255))
+            bg.paste(im, mask=im.split()[-1])
+            im = bg
+        else:
+            im = im.convert("RGB")
+        out = p.with_suffix(".jpg")
+        im.save(out, "JPEG", quality=90)
+        record = {
+            "from_format": "webp", "to_format": "jpeg",
+            "original_bytes": p.stat().st_size,
+            "converted_bytes": out.stat().st_size,
+        }
+        return str(out), record, None
+    except Exception as exc:  # Pillow 缺失/损坏文件等
+        return local_path, None, f"webp transcode failed for {local_path}: {exc}"
+
+
 def timed_upload(uploader, events: list, local_path: str, asset_id: str,
                  copyright_status: str) -> "UploadResult":
     """Run one upload SERIALLY and append a verifiable event record (start/end

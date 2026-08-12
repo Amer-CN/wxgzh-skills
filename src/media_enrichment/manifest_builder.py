@@ -138,6 +138,8 @@ class ManifestBuilder:
     pages_fetched: int = 0
     candidates_discovered: int = 0
     downloads_succeeded: int = 0
+    # 76D/OBS-259:WebP→JPEG 转码记录(上传前;空列表=无转码)
+    transcodes: list[dict] = field(default_factory=list)
 
     def add_asset(self, asset: AssetRecord) -> None:
         """Add an asset record."""
@@ -199,6 +201,7 @@ class ManifestBuilder:
             "assets": [a.to_dict() for a in sorted_assets],
             "errors": sorted(self.errors),
             "warnings": sorted(self.warnings),
+            "transcodes": sorted(self.transcodes, key=lambda t: str(t.get("asset_id", ""))),
             "gate": {
                 "input_contract_pass": not has_errors,
                 "provenance_complete": provenance_complete,

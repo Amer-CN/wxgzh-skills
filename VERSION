@@ -1,6 +1,6 @@
-version: 0.1.0-dev11
-previous_version: 0.1.0-dev10
+version: 0.1.0-dev12
+previous_version: 0.1.0-dev11
 status: development
 engineering_tests: passed
 smoke_test: passed
-release_date: 2026-08-11
+release_date: 2026-08-12

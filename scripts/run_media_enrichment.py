@@ -30,6 +30,7 @@ from media_enrichment.image_deduplicator import deduplicate_asset, DedupState
 from media_enrichment.image_classifier import classify_image
 from media_enrichment.chart_generator import build_chart_specs, generate_chart
 from media_enrichment.uploader import (
+    transcode_webp_to_jpeg,
     create_uploader, normalize_wechat_url, scan_for_secrets, timed_upload,
 )
 from media_enrichment.placement_planner import find_anchors
@@ -947,8 +948,20 @@ def main():
                         "source_event": "existing_success_event",
                     })
                 else:
+                    # 76D/OBS-259:上传前 WebP→JPEG 自动转码(微信 40005 实证);
+                    # 转码成功用新路径上传并留痕,转码失败 fail-closed(不上传)。
+                    upload_path, tinfo, terr = transcode_webp_to_jpeg(local_path)
+                    if terr:
+                        builder.errors.append(
+                            f"upload blocked for {asset.asset_id}: {terr}")
+                        asset.upload = {"mode": upload_mode, "status": "failed",
+                                        "remote_url": None, "response_sha256": None}
+                        continue
+                    if tinfo is not None:
+                        tinfo = dict(tinfo, asset_id=asset.asset_id)
+                        builder.transcodes.append(tinfo)
                     upload_result = timed_upload(
-                        uploader, upload_events, local_path, asset.asset_id,
+                        uploader, upload_events, upload_path, asset.asset_id,
                         copyright_status=asset.copyright_status,
                     )
                     asset.upload = {

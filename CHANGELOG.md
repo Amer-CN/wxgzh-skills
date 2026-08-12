@@ -2,6 +2,15 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev12 (2026-08-12)
+
+- OBS-259(档76D):WebP→JPEG 自动转码——上传前检测 WebP magic(RIFF....WEBP),
+  Pillow 打开(带 alpha 合成白底)转 JPEG 同目录 .jpg;转码成功用新路径上传并把
+  {asset_id, from_format, to_format, original_bytes, converted_bytes} 记入
+  manifest.transcodes(空列表=无转码);转码失败 fail-closed 不上传(微信 40005
+  实证:WebP 直传被拒)。pipeline media post 将 transcodes 读入 side_effects 留痕。
+  测试 +4(test_hf76d_webp:转码/非 WebP 不动/损坏 fail-closed/manifest 字段)。
+
 ## 0.1.0-dev11 (2026-08-11)
 
 - OBS-254(档76C):discover 扩池——抓取范围从「已选素材」扩到「全池潜力源」,
