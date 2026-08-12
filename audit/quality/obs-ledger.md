@@ -237,6 +237,7 @@
 
 　　【76D-F 补记】档 76D 验收 PASS(审核方 2026-08-12 远端点验四仓 numstat 逐字一致:gzh 3e1fb63 / media 016972a / zh 06902c4 / pipeline 247e268;zh 词表专名降级语义经 diff 级实读在案)。RELOCK_ALLOWED 与 GZH_DESIGN_WRITE_ALLOWED 归位 1→0(见授权登记节)。
 45. 76E(媒体源修复,用户批准 2026-08-12,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;依据 media-source-bug-handoff-20260812.md 用户实证+执行端取证):①discovery 预算分离(OBS-260)——max_total_images 只约束最终入文图数,discovery 独立预算 discovery_budget(默认 max(24,3×max_total)),且预算只统计非 rejected 资产(rejected/头像/重复不消耗中止条件);「skipping M-10」场景回归修复。②请求范围修正(OBS-261)——materials = canonical_claim_registry ∪ material-ledger status:used(M-25 案例),used 素材按 source_url 经 dedup 严格映射。③图源优先级(用户确认业务规则)——AI HOT 站内页(links.aihot/aihot_internal_url,img-proxy)优先(站内内容已筛选无广告图),站内页无候选→原始来源页兜底,原始页无论主用页为何都做 no-repost 扫描(命中→素材 restricted),仍无→生图车道(76C)→少图/无图留痕交付(76C);img-proxy 下载 429 限流退避重试(429 实证,3 次 1s/2s/4s);「禁止转载/禁止使用」扫描与来源追溯保留。执行端注记:①scan_for_secrets 值扫描裸词「token」误报 SECRET_DETECTED(76E 验收实测,content_description 含 AI 术语 token 致 exit 1)——改赋值形态正则(access_token=/token= 等),真密钥仍命中;②media 验收暴露的三处修正均以 commit+relock 追加(0710f30→e4f138a(accepted 计数)→91000a0(secret 误报),relock #36/#37/#38,版本保持 dev13 内修正);③fake_live fixture dedup 与 ledger used 对齐(原 fixture 数据缺陷:ledger 26 条真实 URL 而 dedup 仅 2 条 example)。验收(实证,新 RUN 副本 20260812T141000-76e-accept-xvlvb4 复用 xvlvb4 冻结 aihot/super_writer/zh,只重跑 media,OBS-256 教训前置):discover 25/25 素材页全抓(pages_requested=pages_fetched=25),errors 空,无 max_total_images/discovery_budget skipping warning;M-10→A-103 review_required(站内页 cmsmt46gf0g3rrohfu2wtal7d)、M-25→A-334 review_required(站内页 cmsf5dmmt1gqwro2eizlmyc9a)进候选,22 review_required 候选(原仅 2 图);停止在 AWAITING_MEDIA_ASSET_APPROVAL(批准/上传链路 76C 已验,避免重复真实副作用)。pipeline pytest 478/476/0/0/1/1(+3 test_hf76e_request,469+9);media 315 passed/6 skipped(+5 test_hf76e_source,既有 2 条断言按新语义更新)。
+　　【76E-F 补记】档 76E 验收 PASS(审核方 2026-08-12 远端点验三路逐字一致:media 91000a0;pipeline 推送区间含 feat commit bedaf178(producers +66 请求范围并集接线、test_hf76e_request 新增 102 行)与 docs commit 7a78c44;验收实证 25/25 页全抓、零截断 warning、M-10/M-25 案例图经站内页进候选)。RELOCK_ALLOWED 归位 1→0(见授权登记节)。
 ### ★授权变更登记(72A,不可省)
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
@@ -253,6 +254,7 @@
 > GZH_DESIGN_WRITE_ALLOWED 于档 76D 同期临时由 0 改为 1(批准人=用户,范围=档 76D 任务 1 的 gzh-design 根因修复),恢复条件=本档验收通过后立即改回 0。**归位:两键均待审核方验收宣告后执行**。
 > **归位(档76D-F,审核方 2026-08-12 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > `RELOCK_ALLOWED` 于档 76E 六次临时由 0 改为 1(批准人=用户,范围=档 76E 媒体源修复),恢复条件=本档验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76E-F,审核方 2026-08-12 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
