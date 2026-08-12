@@ -94,8 +94,9 @@ events:
 
 ```yaml
 claims:
-  - id: cl-001
-    statement: "多阶段构建可以显著减小镜像体积"
+  - claim_id: cl-001             # 76G-R/OBS-264:字段名与 canonical_claim_registry 对齐(原 id/statement 已废弃)
+    claim_text: "多阶段构建可以显著减小镜像体积"
+    source_excerpt: "多阶段构建可以显著减小镜像体积"   # 必填:素材中支撑该 claim 的逐字摘录(缺省会在媒体阶段 FAIL_CLOSED,三次生产返工实证)
     supporting_events: [evt-001, evt-003]
     conflicting_events: []
     coverage: covered            # covered / partial / missing

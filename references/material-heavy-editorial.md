@@ -79,7 +79,7 @@ Material-Heavy Editorial Mode 是 Super Writer v0.3.2 新增的输入模式，�
 | material_id | 支撑该 claim 的素材 ID |
 | event_id | 所属事件 ID |
 | source_url | 原始来源 URL |
-| source_excerpt | 素材中支撑该 claim 的逐字摘录 |
+| source_excerpt | **必填**——素材中支撑该 claim 的逐字摘录(缺省/None 会在媒体请求构造时 FAIL_CLOSED,76A/76C/76E 三次生产返工实证) |
 | numbers | 数字、单位、主体、时间（如有） |
 | support_strength | strong / moderate / weak |
 | qualifiers | 必须保留的限定表述 |

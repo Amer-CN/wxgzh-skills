@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.3.7-rc1
+
+76G-R(档76G-R):
+
+- OBS-264(文档对齐):material-ingestion.md 的 claims 示例字段名由 id/statement
+  改为 claim_id/claim_text,新增 source_excerpt 必填标注(缺省/None 会在媒体请求
+  构造时 FAIL_CLOSED——76A/76C/76E 三次生产返工实证);material-heavy-editorial.md
+  Phase 2 claim 表 source_excerpt 标必填。
+
 ## v0.3.6-rc1 — 档76B：标题选定闭环 (2026-08-10)
 
 ### 新增
