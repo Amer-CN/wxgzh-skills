@@ -246,8 +246,14 @@ def main():
                     # 76C/OBS-255:user_provided 资产无对应 material(来源登记即依据),跳过检查
                     if frozen.get("asset_origin") != "user_provided":
                         material = materials_by_id.get(frozen["material_id"])
-                        if (material is None
-                                or material.get("source_url") != frozen["source_page_url"]):
+                        # 76J/OBS-270:绑定一致性认可站内页通道——source_page_url 与
+                        # material 的 aihot_internal_url(站内页)相等即一致,与
+                        # links.original(source_url)同等合法;无站内页字段的素材行为不变。
+                        source_ok = (material is not None
+                                     and (material.get("source_url") == frozen["source_page_url"]
+                                          or (material.get("aihot_internal_url") or "")
+                                          == frozen["source_page_url"]))
+                        if not source_ok:
                             builder.errors.append(
                                 f"approval_identity_mismatch: {asset_id} material/source changed")
                             continue

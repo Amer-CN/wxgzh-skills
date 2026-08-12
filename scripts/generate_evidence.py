@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all evidence files for media-enrichment v0.1.0-dev17.
+"""Generate all evidence files for media-enrichment v0.1.0-dev18.
 
 Uses pytest --json-report for structured test results.
 All test_summary fields come from structured reports — no hardcoding.
@@ -22,8 +22,7 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 EVIDENCE_DIR = SKILL_ROOT / "evidence"
 EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
-VERSION = "0.1.0-dev17"
-
+VERSION = "0.1.0-dev18"
 
 def compute_file_sha256(path: Path) -> str:
     h = hashlib.sha256()

@@ -2,6 +2,14 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev18 (2026-08-13)
+
+- OBS-270(76J):站内页绑定一致性——continue 重分类的 source 一致性检查认可
+  aihot_internal_url(站内页)与 source_page_url 相等,与 links.original
+  (source_url)同等合法;无站内页字段的素材行为不变(xboc9w 形态回归:
+  站内页图不再因 URL 不一致被挡在绑定层外,eligible 显著 >4 生产实证)。
+  测试 +2。
+
 ## 0.1.0-dev17 (2026-08-12)
 
 - OBS-269(76I):content_description 提质——抽取优先级 img alt/title → 父元素/
@@ -319,3 +327,9 @@
 - **Validator**：validate_media_manifest.py（全部 P0 检查、退出码 0=PASS/非0=FAIL）。
 - **测试**：单元测试（31+ 用例）、离线集成测试、固定 HTML/Image fixtures。
 - **真实网页验证**：AI HOT permalink 抓取测试（3+ 页面、HTML 快照保存）。
+
+
+
+
+
+
