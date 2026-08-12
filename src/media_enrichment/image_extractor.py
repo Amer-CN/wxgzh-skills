@@ -45,6 +45,9 @@ class ImageCandidate:
     page_region: str = "unknown"
     section_heading: str = ""
     section_level: str = ""
+    # 76G 增补/OBS-266:视频封面标记(og:image+og:video / <video poster> /
+    # twitter:player:image / 站内页 img-proxy thumb);视频本体不下载不上传。
+    video_poster: bool = False
 
 
 @dataclass
@@ -305,6 +308,36 @@ def extract_images(html: str, page_url: str = "") -> ExtractionResult:
                 extraction_method="og:image",
                 context=meta_context or str(meta)[:200],
             ))
+
+    # 5b. 76G 增补/OBS-266:视频封面通道——页面为视频型(og:video / twitter:player /
+    # <video>)时抽取封面:<video poster>、twitter:player:image、og:image(视频页),
+    # 以及站内页 img-proxy thumb(img[src] 已提取,此处统一补 video_poster 标记)。
+    is_video_page = bool(soup.find("video")) or bool(
+        _meta_content(soup, "og:video") or _meta_content(soup, "og:video:url")
+        or _meta_content(soup, "twitter:player") or _meta_content(soup, "twitter:player:stream"))
+    has_og_video = bool(_meta_content(soup, "og:video") or _meta_content(soup, "og:video:url"))
+    if is_video_page:
+        for vtag in soup.find_all("video"):
+            poster = (vtag.get("poster") or "").strip()
+            if poster:
+                resolved = urljoin(page_url, poster) if page_url else poster
+                result.candidates.append(ImageCandidate(
+                    url=resolved, extraction_method="video_poster",
+                    video_poster=True, context="<video poster>",
+                    page_region="body"))
+        for meta in soup.find_all("meta", attrs={"name": "twitter:player:image"}):
+            content = meta.get("content", "").strip()
+            if content:
+                resolved = urljoin(page_url, content) if page_url else content
+                result.candidates.append(ImageCandidate(
+                    url=resolved, extraction_method="twitter:player:image",
+                    video_poster=True, context=str(meta)[:200]))
+        # og:image 在视频页 = 视频封面;img-proxy thumb 同为封面形态
+        for cand in result.candidates:
+            if cand.extraction_method == "og:image" and has_og_video:
+                cand.video_poster = True
+            if ("img-proxy" in cand.url or "thumb" in cand.url.lower()):
+                cand.video_poster = True
 
     # 5. meta[name="twitter:image"]
     for meta in soup.find_all("meta", attrs={"name": "twitter:image"}):

@@ -73,6 +73,8 @@ class AssetRecord:
     # 图表 spec/数据来源,绝不使用 claim 派生文本填充。
     content_description: str | None = None
     content_description_source: str | None = None
+    # 76G 增补/OBS-266:视频封面资产标记(视频本体不下载不上传,封面按图片规则走)
+    video_poster: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -118,6 +120,7 @@ class AssetRecord:
             "page_position": self.page_position,
             "content_description": self.content_description,
             "content_description_source": self.content_description_source,
+            "video_poster": self.video_poster,
         }
 
 

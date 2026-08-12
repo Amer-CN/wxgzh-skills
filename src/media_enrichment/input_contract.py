@@ -16,7 +16,7 @@ from typing import Any
 
 import jsonschema
 
-SKILL_VERSION = "0.1.0-dev13"
+SKILL_VERSION = "0.1.0-dev14"
 
 
 @dataclass

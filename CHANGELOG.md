@@ -2,6 +2,17 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev14 (2026-08-12)
+
+- OBS-266(76G 增补):视频封面采集通道——视频型素材页(og:video / twitter:player /
+  <video>)抽取封面为图片候选:<video poster>、twitter:player:image、og:image(视频页)、
+  img-proxy thumb 链接全部纳入;资产标 video_poster=true,证据链走站内页形态
+  (位置/描述/原始 URL 追溯同 76E);合规语义不变(no-repost 扫描照旧,封面按图片规则);
+  视频本体不下载不上传(视频车道后置)。测试 +5(test_hf76g_video_poster:poster 抽取/
+  twitter:player:image/img-proxy thumb 标记/非视频页不标/端到端进候选)。
+  验收(源码树直跑 xvlvb4 副本冻结请求):6 个 video_poster 资产全部 review_required,
+  来自 6 个真实视频素材页。
+
 ## 0.1.0-dev13 (2026-08-12)
 
 - OBS-260(档76E):discovery 预算与最终入文数分离——max_total_images 只约束最终

@@ -664,6 +664,8 @@ def main():
                 decision=classification.decision,
                 reasons=classification.rejection_reasons or classification.relevance_reasons,
                 page_region=candidate.page_region,
+                # 76G 增补/OBS-266:视频封面资产标记(证据链走站内页形态,视频本体不下载)
+                video_poster=candidate.video_poster,
                 page_position=page_pos,
                 content_description=content_desc,
                 content_description_source=content_desc_source,
@@ -779,6 +781,7 @@ def main():
                     reasons=classification.rejection_reasons or classification.relevance_reasons,
                     asset_identity_sha256=identity_sha256,
                     content_description=candidate.context or "", content_description_source="page_alt",
+                    video_poster=candidate.video_poster,
                     page_region=candidate.page_region, page_position={"known": False, "heading": None, "level": None},
                     upload={"mode": upload_mode, "status": "not_uploaded", "remote_url": None, "response_sha256": None},
                 )
