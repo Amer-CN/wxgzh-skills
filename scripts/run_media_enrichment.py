@@ -313,12 +313,15 @@ def main():
     # 素材页」的行为。
     discovery_budget = int(config.get("discovery_budget") or max(24, max_total_images * 3))
     total_assets_added = 0
+    # 76E/OBS-260:预算只统计非 rejected 资产(eligible/review_required)——rejected/
+    # 头像/重复图不消耗中止条件,不得因预算截断跳过后续素材页。
+    accepted_assets_added = 0
     asset_counter = 0
 
     # 76C/OBS-255:用户供图注入——user_images.json 直链清单(user_provided,
     # 免版权审批,用户供图责任自负,登记来源链接)。仅 discover 纳入候选。
     for ui in (request.get("user_images") or []):
-        if total_assets_added >= discovery_budget:
+        if accepted_assets_added >= discovery_budget:
             break
         url = (ui.get("url") or "").strip()
         if not url:
@@ -377,6 +380,8 @@ def main():
         })
         builder.add_asset(asset)
         total_assets_added += 1
+        if asset.decision != "rejected":
+            accepted_assets_added += 1
         print(f"  User image {asset_id}: {url} — {decision}")
 
     for mat in ([] if args.phase == "continue" else materials):
@@ -390,7 +395,7 @@ def main():
 
         print(f"\n[media-enrichment] Processing material {material_id}: {permalink}")
 
-        if total_assets_added >= discovery_budget:
+        if accepted_assets_added >= discovery_budget:
             builder.warnings.append(f"discovery_budget ({discovery_budget}) reached — skipping {material_id}")
             print(f"  SKIP: discovery_budget reached")
             continue
@@ -496,7 +501,7 @@ def main():
         print(f"  Candidates: {len(extraction.candidates)}")
 
         for candidate in extraction.candidates:
-            if total_assets_added >= discovery_budget:
+            if accepted_assets_added >= discovery_budget:
                 builder.warnings.append(f"discovery_budget ({discovery_budget}) reached — stopping discovery")
                 break
             if material_image_count >= max_images_per_material:
@@ -666,6 +671,8 @@ def main():
             pending_uploads.append((asset, download_result.local_path, inspection, candidate.extraction_method))
             builder.add_asset(asset)
             total_assets_added += 1
+            if asset.decision != "rejected":
+                accepted_assets_added += 1
             material_image_count += 1
 
     # 76C/OBS-254:discover 扩池——全池潜力源(pool_items,来自 aihot
@@ -680,7 +687,7 @@ def main():
     _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
     pool_image_count = 0
     for item in pool_items:
-        if total_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
+        if accepted_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
             break
         iid = item.get("id", "")
         if not iid or iid in pool_selected_ids:
@@ -698,7 +705,7 @@ def main():
         if source_url and source_url != permalink and img_hint:
             page_candidates.append(("source_url", source_url))
         for kind, page_url in page_candidates:
-            if total_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
+            if accepted_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
                 break
             fr = fetch_page(page_url, mode=network_mode, fixture_dir=fixture_dir)
             pool_fetched += 1
@@ -707,7 +714,7 @@ def main():
             extraction = extract_images(fr.content, page_url=page_url)
             print(f"  Pool {iid} via {kind}: {len(extraction.candidates)} candidates")
             for candidate in extraction.candidates:
-                if total_assets_added >= discovery_budget:
+                if accepted_assets_added >= discovery_budget:
                     break
                 if pool_image_count >= max_images_per_material:
                     break
@@ -783,6 +790,8 @@ def main():
                 })
                 builder.add_asset(asset)
                 total_assets_added += 1
+                if asset.decision != "rejected":
+                    accepted_assets_added += 1
                 pool_image_count += 1
                 print(f"  Pool {asset_id}: {resolved_url} — {classification.decision}")
 
@@ -792,7 +801,7 @@ def main():
     # 图表必须有显式 single_asset 批准才会上传。禁止任何 known_allowed 硬编码。
     def _generate_charts() -> None:
         """discover 阶段生成图表(决策 review_required,需显式批准)。"""
-        nonlocal asset_counter, total_assets_added
+        nonlocal asset_counter, total_assets_added, accepted_assets_added
         print(f"\n[media-enrichment] Generating charts (discover only)...")
         claims_with_numbers = [c for c in claims if c.get("numbers")]
         if claims_with_numbers:
@@ -801,7 +810,7 @@ def main():
                 builder.warnings.append(w)
                 print(f"  WARN: {w}")
             for i, spec in enumerate(plan.specs):
-                if total_assets_added >= discovery_budget:
+                if accepted_assets_added >= discovery_budget:
                     builder.warnings.append(
                         f"discovery_budget ({discovery_budget}) reached — chart skipped (OBS-71)")
                     break
@@ -855,6 +864,8 @@ def main():
                     })
                     builder.add_asset(asset)
                     total_assets_added += 1
+                    if asset.decision != "rejected":
+                        accepted_assets_added += 1
                     print(f"  Chart {i+1}: {chart_path} ({spec.chart_type}) — review_required")
                 else:
                     builder.warnings.append(f"Chart generation failed: {chart_result.error}")
