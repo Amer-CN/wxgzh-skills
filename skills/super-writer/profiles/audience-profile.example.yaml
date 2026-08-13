@@ -1,0 +1,11 @@
+version: 1
+primary_reader:
+  description: ""
+  prior_knowledge: ""
+  current_problem: ""
+  desired_change: ""
+exclusions: []
+reading_context:
+  platform: "公众号"
+  attention_level: ""
+  expected_depth: ""

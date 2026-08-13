@@ -1,0 +1,12 @@
+[
+  {
+    "article_id": "blind-001",
+    "human_verdict": "publish",
+    "score": 88,
+    "strengths": ["观点独特", "论证简洁有力"],
+    "p0": [],
+    "p1": ["可以补充更多案例"],
+    "p2": [],
+    "reasoning_summary": "短小精悍，观点有力。"
+  }
+]

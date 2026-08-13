@@ -1,0 +1,17 @@
+version: 0.3.8-rc1
+previous_version: 0.3.7-rc1
+baseline_commit: 9d2e77f
+status: release_candidate
+engineering_tests: passed
+smoke_test: passed
+formal_phase4: skipped_for_personal_use
+evaluation_method: continuous_dogfooding
+iteration_strategy: integrate_proven_editorial_flow
+test_count: 250
+writing_core_freeze_date: 2026-07-14
+release_date: 2026-08-10
+handoff_contract_version: v2.0
+semantic_roles_count: 41
+hotfix_date: 2026-08-13
+hotfix_name: 76f
+release_notes: "v0.3.8-rc1: 档76F — 产物单文件预校验(validate_single_product) + 大纲预算自动对齐(align_outline_budget);250 tests passed."

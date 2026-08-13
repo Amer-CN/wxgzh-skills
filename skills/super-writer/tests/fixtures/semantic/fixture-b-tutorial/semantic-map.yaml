@@ -1,0 +1,325 @@
+schema_version: "1.0"
+
+article:
+  id: "fixture-b-tutorial"
+  title: "Docker 多阶段构建实战指南"
+  summary: "从 1.2GB 到 180MB，多阶段构建如何让镜像瘦身 85%。"
+  article_type: "教程"
+  core_statement: "多阶段构建可以让镜像瘦身 85%"
+  target_platform:
+    - wechat
+  preferred_theme: null
+
+blocks:
+  - block_id: "cover-001"
+    heading_path: []
+    role: "article_cover"
+    source_anchor:
+      start_text: "# Docker 多阶段构建实战指南"
+      end_text: "从 1.2GB 到 180MB，多阶段构建如何让镜像瘦身 85%。"
+    payload:
+      title: "Docker 多阶段构建实战指南"
+      summary_or_intro: "从 1.2GB 到 180MB，多阶段构建如何让镜像瘦身 85%。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - cover-breaking
+    fallback:
+      - paragraph
+    required: true
+
+  - block_id: "section-001"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 为什么要用多阶段构建"
+    payload:
+      heading_text: "为什么要用多阶段构建"
+      section_index: 1
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "para-001"
+    heading_path:
+      - "为什么要用多阶段构建"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "传统的单阶段构建会把构建工具和运行依赖都打进最终镜像。结果就是镜像又大又慢。"
+    payload:
+      text: "传统的单阶段构建会把构建工具和运行依赖都打进最终镜像。结果就是镜像又大又慢。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "section-002"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 部署流程"
+    payload:
+      heading_text: "部署流程"
+      section_index: 2
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "steps-001"
+    heading_path:
+      - "部署流程"
+    role: "step_sequence"
+    source_anchor:
+      start_text: "1. 拉取基础镜像"
+      end_text: "4. 验证健康检查"
+    payload:
+      title: "部署流程"
+      steps:
+        - "拉取基础镜像"
+        - "编写 Dockerfile 分离构建阶段和运行阶段"
+        - "构建最终镜像"
+        - "验证健康检查"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - steps
+    fallback:
+      - ordered_list
+    required: false
+
+  - block_id: "section-003"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 风险提示"
+    payload:
+      heading_text: "风险提示"
+      section_index: 3
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "warn-001"
+    heading_path:
+      - "风险提示"
+    role: "warning"
+    source_anchor:
+      exact_text: "此版本在测试环境模拟中存在已知的连接池泄漏问题（测试虚构数据），生产环境请确认已打补丁。"
+    payload:
+      text: "此版本在测试环境模拟中存在已知的连接池泄漏问题（测试虚构数据），生产环境请确认已打补丁。"
+      title: "风险提示"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - alert
+      - alert-box
+    fallback:
+      - quote
+      - paragraph
+    required: false
+
+  - block_id: "section-004"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 安装命令"
+    payload:
+      heading_text: "安装命令"
+      section_index: 4
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "cmd-001"
+    heading_path:
+      - "安装命令"
+    role: "command"
+    source_anchor:
+      exact_text: "npx skills add gzh-design"
+    payload:
+      code_text: "npx skills add gzh-design"
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - code-block
+    fallback:
+      - code
+    required: false
+
+  - block_id: "section-005"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 发布前检查"
+    payload:
+      heading_text: "发布前检查"
+      section_index: 5
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "chk-001"
+    heading_path:
+      - "发布前检查"
+    role: "checklist"
+    source_anchor:
+      start_text: "- [x] 完成单元测试"
+      end_text: "- [ ] 准备回滚预案"
+    payload:
+      title: "发布前检查"
+      items:
+        - text: "完成单元测试"
+          checked: true
+        - text: "完成灰度验证"
+          checked: true
+        - text: "准备回滚预案"
+          checked: false
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - checklist
+    fallback:
+      - ordered_list
+    required: false
+
+  - block_id: "section-006"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 常见问题"
+    payload:
+      heading_text: "常见问题"
+      section_index: 6
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "faq-001"
+    heading_path:
+      - "常见问题"
+    role: "faq"
+    source_anchor:
+      start_text: "问：多阶段构建会拖慢 CI 吗？"
+      end_text: "不适合极简脚本项目；当运行依赖明显少于构建依赖时更有价值。"
+    payload:
+      title: "常见问题"
+      items:
+        - question: "多阶段构建会拖慢 CI 吗？"
+          answer: "构建阶段可能略长，但最终镜像更小，拉取与部署通常更快。"
+        - question: "是否适合所有项目？"
+          answer: "不适合极简脚本项目；当运行依赖明显少于构建依赖时更有价值。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - faq
+    fallback:
+      - subtitle
+      - paragraph
+    required: false
+
+  - block_id: "section-007"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 参考资料"
+    payload:
+      heading_text: "参考资料"
+      section_index: 7
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "res-001"
+    heading_path:
+      - "参考资料"
+    role: "resource_list"
+    source_anchor:
+      start_text: "Docker 官方构建指南：https://docs.docker.com/build/"
+      end_text: "多阶段构建最佳实践：https://docs.docker.com/develop/develop-images/multistage-build/"
+    payload:
+      title: "参考资料"
+      links:
+        - name: "Docker 官方构建指南"
+          url: "https://docs.docker.com/build/"
+        - name: "多阶段构建最佳实践"
+          url: "https://docs.docker.com/develop/develop-images/multistage-build/"
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - resources
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "para-end-001"
+    heading_path:
+      - "参考资料"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "好了，今天就先聊到这儿。"
+    payload:
+      text: "好了，今天就先聊到这儿。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "signature-001"
+    heading_path: []
+    role: "article_signature"
+    source_anchor: {}
+    payload: {}
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - footer-signature-brand
+    fallback: []
+    required: false
+
+constraints:
+  preserve_facts: ["1.2GB 到 180MB"]
+  preserve_stance: []
+  preserve_quotes: []
+  unresolved_facts: []
+  editor_anchors: []
+  forbidden_transformations: []
+
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

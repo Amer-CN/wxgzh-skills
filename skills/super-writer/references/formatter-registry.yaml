@@ -1,0 +1,220 @@
+# Formatter Registry Snapshot
+# Super Writer v0.3.1-rc1
+#
+# This file is a cryptographic snapshot of gzh-design's component contract.
+# The validator uses it to detect when gzh-design's components change.
+# When gzh-design updates, regenerate this file using:
+#   python scripts/validate_semantic_map.py --regenerate-registry --formatter-root <path>
+#
+# Source: f:\AIXM\wxgzh\gzh-design-skill
+
+registry_version: '1.0'
+gzh_design_version: latest
+snapshot_date: '2026-07-19'
+source_files:
+- path: SKILL.md
+  sha256: 0f3cc1e7d456a9441e248293dc0c9ef68df8c7aea5215483a4e0afcdc3ca51c9
+- path: references/theme-index.md
+  sha256: f3bd17932a3ae8f2a2d6b8d044c6ca6c5d3095edb0f248ca73be30135a39b1e4
+- path: references/common-components.md
+  sha256: 42f54efdcb0c27368c095e3e90606af91ff86bb3ea7280f77e46ac814abdd2da
+- path: references/advanced-components.md
+  sha256: 45f65db35423760397f655724e23a1facbae80e7202a9bb6eef1b6d58217b271
+- path: references/theme-hammer.md
+  sha256: 9ed110811a03180c06eed757751236f5aaa9fb7391210bbe68a4408c08668e89
+- path: references/advanced/alerts.md
+  sha256: 298635a565c3dc139f1ac8d9d9b8f5c01ba8cac8afe5f80a1a506df21550d354
+- path: references/advanced/annotated-image.md
+  sha256: 56fc7022701df2ff94a92877eddf4c3df11701445787eb447623d28a1d3a222f
+- path: references/advanced/case.md
+  sha256: e70142de8ed8e8d1354207478e77c60cf24f4efd491be65505fbaa5e3bfaee9b
+- path: references/advanced/checklist.md
+  sha256: e724b55df888d74095b2e721ca2b0df35cc51f9168df339993b9824d1da46910
+- path: references/advanced/code-compare.md
+  sha256: 91e1b45d92c617ca19f5bd82e44f1a73ee5637cf2871621eaff9dce08a9eba52
+- path: references/advanced/compare.md
+  sha256: bcb61481176ad8c1ea9477e754cff83e2d77f3bc117ce509fba32ff18d722727
+- path: references/advanced/cta.md
+  sha256: 5e93fe5bb96cc0e3691265c3c2c4a1979aa6d9aeb77afb8d8a21dbdfa158eb9d
+- path: references/advanced/decision.md
+  sha256: 77636bb20353cd7bdb556abb2a9990d75e941317a9cb93b049723b44eb454c6b
+- path: references/advanced/dialogue.md
+  sha256: 0b01705662a9d50f8267deebaf6331ee6d04c9176890a5e6d0ee62f2e7f81f14
+- path: references/advanced/facts.md
+  sha256: 54647038d426be178e8a4543cae4c7d56d8b7921a3345a7682bd3ae13ee4d81b
+- path: references/advanced/faq.md
+  sha256: 612f7b45921737ac01e755ec5ccae7ecf2e4de4068657b9f36db91c9cd3c4a45
+- path: references/advanced/footnotes.md
+  sha256: 721cd82123a691a85cf6f4d6df9bc63f5771dbe881918d4ef6798a41faef8df1
+- path: references/advanced/links-resources.md
+  sha256: 64aa4e3d0133c30138130fbecc39b19a2ac36d3e31a60244be3023f0775fd284
+- path: references/advanced/media.md
+  sha256: 41a701b604d02acc3194f660ca0f0b8c67451167e1d68cd04fad967290035f32
+- path: references/advanced/quotes.md
+  sha256: 35e6382bfeacacc78f18fef27e604374ef4bf16f98d6c33a3dd6ae09323648d6
+- path: references/advanced/steps.md
+  sha256: 1f337c17cdb18c2b6e5d9a634cb5b11cb027bfe7088250bb572ea6cdd511e330
+- path: references/advanced/theme-adapters.md
+  sha256: a287bc2c22fcf8831cace5b853c7ff784b5a34cbaea1bf44bacd8a24615e8ddb
+- path: references/advanced/timeline.md
+  sha256: 9a4152ea18c0a32eefc8b29cb12d6022db3d0755c10d26c6bd166055268221f2
+core_components:
+- global-container
+- cover-breaking
+- toc-scroll
+- chapter-title
+- paragraph
+- inline-styles
+- label-heading
+- code-block
+- quote-oneliner
+- alert-box
+- table-list-flow
+- image-video
+- footer-signature-brand
+advanced_components:
+- alert
+- quote
+- code-compare
+- media-text
+- gallery
+- long-image
+- resources
+- footnotes
+- dialogue
+- facts
+- decision
+- steps
+- compare
+- annotated-image
+- faq
+- timeline
+- checklist
+- case
+- cta
+all_components:
+- global-container
+- cover-breaking
+- toc-scroll
+- chapter-title
+- paragraph
+- inline-styles
+- label-heading
+- code-block
+- quote-oneliner
+- alert-box
+- table-list-flow
+- image-video
+- footer-signature-brand
+- alert
+- quote
+- code-compare
+- media-text
+- gallery
+- long-image
+- resources
+- footnotes
+- dialogue
+- facts
+- decision
+- steps
+- compare
+- annotated-image
+- faq
+- timeline
+- checklist
+- case
+- cta
+role_component_matrix:
+  article_cover:
+  - cover-breaking
+  article_toc:
+  - toc-scroll
+  article_intro:
+  - cover-breaking
+  - paragraph
+  article_section:
+  - chapter-title
+  article_conclusion:
+  - chapter-title
+  article_cta:
+  - cta
+  article_signature:
+  - footer-signature-brand
+  paragraph:
+  - paragraph
+  key_statement:
+  - quote
+  - quote-oneliner
+  secondary_emphasis:
+  - inline-styles
+  subtitle:
+  - label-heading
+  quote:
+  - quote
+  - quote-oneliner
+  fact:
+  - facts
+  statistic:
+  - facts
+  example:
+  - paragraph
+  - label-heading
+  case:
+  - case
+  step_sequence:
+  - steps
+  ordered_list:
+  - table-list-flow
+  pill_list:
+  - table-list-flow
+  - label-heading
+  process_flow:
+  - table-list-flow
+  - steps
+  comparison:
+  - compare
+  - table-list-flow
+  decision:
+  - decision
+  timeline:
+  - timeline
+  checklist:
+  - checklist
+  faq:
+  - faq
+  dialogue:
+  - dialogue
+  warning:
+  - alert
+  - alert-box
+  tip:
+  - alert
+  - alert-box
+  information:
+  - alert
+  - alert-box
+  code:
+  - code-block
+  command:
+  - code-block
+  prompt:
+  - code-block
+  code_comparison:
+  - code-compare
+  resource_list:
+  - resources
+  footnote:
+  - footnotes
+  media_text:
+  - media-text
+  image:
+  - image-video
+  image_annotation:
+  - annotated-image
+  gallery:
+  - gallery
+  long_image:
+  - long-image
+  video:
+  - image-video

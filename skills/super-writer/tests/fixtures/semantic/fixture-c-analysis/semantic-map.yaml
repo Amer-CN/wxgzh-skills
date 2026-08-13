@@ -1,0 +1,313 @@
+schema_version: "1.0"
+
+article:
+  id: "fixture-c-analysis"
+  title: "2026 年容器编排工具深度对比"
+  summary: "Kubernetes、Nomad 和 Docker Swarm，谁更适合你的团队？"
+  article_type: "深度分析"
+  core_statement: "容器编排工具的选择取决于团队规模和运维能力"
+  target_platform:
+    - wechat
+  preferred_theme: hammer
+
+blocks:
+  - block_id: "cover-001"
+    heading_path: []
+    role: "article_cover"
+    source_anchor:
+      start_text: "# 2026 年容器编排工具深度对比"
+      end_text: "Kubernetes、Nomad 和 Docker Swarm，谁更适合你的团队？"
+    payload:
+      title: "2026 年容器编排工具深度对比"
+      summary_or_intro: "Kubernetes、Nomad 和 Docker Swarm，谁更适合你的团队？"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - cover-breaking
+    fallback:
+      - paragraph
+    required: true
+
+  - block_id: "section-001"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 核心数据"
+    payload:
+      heading_text: "核心数据"
+      section_index: 1
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "fact-001"
+    heading_path:
+      - "核心数据"
+    role: "fact"
+    source_anchor:
+      exact_text: "月活用户：120 万。同比增长：42%。数据来源：2026 Q2 财报。"
+    payload:
+      title: "核心数据"
+      items:
+        - key: "月活用户"
+          value: "120 万"
+        - key: "同比增长"
+          value: "42%"
+        - key: "数据来源"
+          value: "2026 Q2 财报"
+    evidence_ids:
+      - "ev-001"
+    preserve_exactly: true
+    formatter_candidates:
+      - facts
+    fallback:
+      - ordered_list
+    required: false
+
+  - block_id: "section-002"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 方案对比"
+    payload:
+      heading_text: "方案对比"
+      section_index: 2
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "cmp-001"
+    heading_path:
+      - "方案对比"
+    role: "comparison"
+    source_anchor:
+      start_text: "对象 A：Kubernetes，对象 B：Nomad。"
+      end_text: "Kubernetes 资源占用大，Nomad 轻量。"
+    payload:
+      subject_a: "Kubernetes"
+      subject_b: "Nomad"
+      dimensions:
+        - "学习曲线"
+        - "生态成熟度"
+        - "资源占用"
+      rows:
+        - dimension: "学习曲线"
+          value_a: "陡峭"
+          value_b: "平缓"
+        - dimension: "生态成熟度"
+          value_a: "极高"
+          value_b: "适中"
+        - dimension: "资源占用"
+          value_a: "大"
+          value_b: "轻量"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - compare
+      - table-list-flow
+    fallback:
+      - paragraph
+      - ordered_list
+    required: false
+
+  - block_id: "section-003"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 技术选型"
+    payload:
+      heading_text: "技术选型"
+      section_index: 3
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "dec-001"
+    heading_path:
+      - "技术选型"
+    role: "decision"
+    source_anchor:
+      start_text: "推荐方案：Nomad。"
+      end_text: "备选方案 Docker Swarm 适合小团队。"
+    payload:
+      title: "技术选型"
+      recommended: "Nomad"
+      options:
+        - name: "Kubernetes"
+          description: "适合大型团队"
+        - name: "Nomad"
+          description: "推荐方案"
+        - name: "Docker Swarm"
+          description: "适合小团队"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - decision
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "section-004"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 项目演进"
+    payload:
+      heading_text: "项目演进"
+      section_index: 4
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "tl-001"
+    heading_path:
+      - "项目演进"
+    role: "timeline"
+    source_anchor:
+      start_text: "2026-01 完成原型验证。"
+      end_text: "2026-06 正式上线。"
+    payload:
+      title: "项目演进"
+      events:
+        - time: "2026-01"
+          description: "完成原型验证"
+        - time: "2026-03"
+          description: "启动灰度测试"
+        - time: "2026-06"
+          description: "正式上线"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - timeline
+    fallback:
+      - ordered_list
+    required: false
+
+  - block_id: "section-005"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 案例复盘"
+    payload:
+      heading_text: "案例复盘"
+      section_index: 5
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "case-001"
+    heading_path:
+      - "案例复盘"
+    role: "case"
+    source_anchor:
+      start_text: "背景：一个 Node.js 服务的生产镜像初始体积为 1.2GB。"
+      end_text: "镜像降至 180MB，部署时间缩短约 60%。"
+    payload:
+      title: "镜像瘦身实践"
+      context: "一个 Node.js 服务的生产镜像初始体积为 1.2GB。"
+      challenge: "部署慢，安全扫描耗时长。"
+      action: "改用多阶段构建，并移除开发依赖。"
+      result: "镜像降至 180MB，部署时间缩短约 60%。"
+    evidence_ids:
+      - "ev-002"
+    preserve_exactly: false
+    formatter_candidates:
+      - case
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "section-006"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 脚注"
+    payload:
+      heading_text: "脚注"
+      section_index: 6
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "fn-001"
+    heading_path: []
+    role: "footnote"
+    source_anchor:
+      exact_text: "[^1]: 数据来源：example/benchmark v3.14.2 release notes"
+    payload:
+      notes:
+        - id: "1"
+          content: "数据来源：example/benchmark v3.14.2 release notes"
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - footnotes
+    fallback: []
+    required: false
+
+  - block_id: "para-end-001"
+    heading_path:
+      - "脚注"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "好了，今天就先聊到这儿。"
+    payload:
+      text: "好了，今天就先聊到这儿。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "signature-001"
+    heading_path: []
+    role: "article_signature"
+    source_anchor: {}
+    payload: {}
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - footer-signature-brand
+    fallback: []
+    required: false
+
+constraints:
+  preserve_facts: ["120 万", "42%", "180MB", "60%", "1.2GB"]
+  preserve_stance: ["容器编排工具的选择取决于团队规模和运维能力"]
+  preserve_quotes: []
+  unresolved_facts: []
+  editor_anchors: []
+  forbidden_transformations: []
+
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

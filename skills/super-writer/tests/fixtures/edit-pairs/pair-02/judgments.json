@@ -1,0 +1,24 @@
+[
+  {
+    "change_index": 0,
+    "relation": "conflict",
+    "key": "reduce_questions",
+    "instruction": "在此文中用户主动增加了反问句作为结构引导",
+    "scope": "global",
+    "evidence": "用户将单个反问句扩展为三个连续反问句作为'三个问题'的结构引导",
+    "confidence": 1,
+    "observed_at": "2026-07-14",
+    "source_id": "pair-002"
+  },
+  {
+    "change_index": 1,
+    "relation": "new",
+    "key": "actionable_endpoint",
+    "instruction": "给出可操作的下一步动作",
+    "scope": "global",
+    "evidence": "用户增加了'拿出纸笔写下来'的可操作建议",
+    "confidence": 1,
+    "observed_at": "2026-07-14",
+    "source_id": "pair-002"
+  }
+]

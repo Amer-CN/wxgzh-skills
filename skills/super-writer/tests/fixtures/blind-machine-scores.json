@@ -1,0 +1,19 @@
+[
+  {
+    "article_id": "blind-001",
+    "overall_score": 85,
+    "dimensions": {
+      "core_strength": 14,
+      "uniqueness": 13,
+      "argument_evidence": 12,
+      "structure": 13,
+      "specificity": 7,
+      "reader_value": 9,
+      "author_judgment": 9,
+      "voice_consistency": 5,
+      "completeness": 3
+    },
+    "reviewer_version": "0.2.0",
+    "run_config": {"model": "test", "temperature": 0}
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "total_materials": 0,
+  "total_events": 0,
+  "total_claims": 0,
+  "source_coverage": 0.0,
+  "event_coverage": 0.0,
+  "claim_coverage": 0.0,
+  "duplicates_removed": 0,
+  "conflicts_detected": 0,
+  "excluded_materials": [],
+  "uncovered_events": [],
+  "uncovered_claims": [],
+  "conflicts": []
+}

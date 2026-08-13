@@ -1,0 +1,35 @@
+[
+  {
+    "change_index": 0,
+    "relation": "new",
+    "key": "reduce_questions",
+    "instruction": "减少连续反问句开头，直接进入正题",
+    "scope": "global",
+    "evidence": "用户删除了开头的三个连续反问句，直接从事实进入",
+    "confidence": 1,
+    "observed_at": "2026-07-14",
+    "source_id": "pair-001"
+  },
+  {
+    "change_index": 1,
+    "relation": "one_off",
+    "key": "",
+    "instruction": "添加具体案例（远程办公文章总结）",
+    "scope": "global",
+    "evidence": "用户补充了一个具体案例来说明'内容太泛'",
+    "confidence": 1,
+    "observed_at": "2026-07-14",
+    "source_id": "pair-001"
+  },
+  {
+    "change_index": 2,
+    "relation": "new",
+    "key": "concrete_before_abstract",
+    "instruction": "先写具体做法，再写抽象总结",
+    "scope": "global",
+    "evidence": "用户在结尾补充了具体策略改变，而不是只说抽象结论",
+    "confidence": 1,
+    "observed_at": "2026-07-14",
+    "source_id": "pair-001"
+  }
+]

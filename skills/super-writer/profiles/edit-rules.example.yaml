@@ -1,0 +1,17 @@
+version: 2
+rules: []
+# rule example:
+# - id: ER001
+#   key: reduce_questions          # 复用 key，同种偏好累加
+#   instruction: "减少反问句和连续提问"
+#   scope: global                  # global | article_type_specific
+#   confidence: 3                  # 0-5，双向调整
+#   support_count: 3              # 被新样本支持的次数
+#   conflict_count: 0             # 被新样本冲突的次数
+#   status: active                 # active | revoked | stale
+#   sources: ["draft-001", "draft-007", "draft-012"]
+#   exceptions: []
+#   last_supported_at: "2025-07-01"
+#   last_conflicted_at: ""
+#   confirmed: true
+#   confirmed_at: "2025-06-15"

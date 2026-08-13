@@ -1,0 +1,53 @@
+[
+  {
+    "article_id": "sample-001",
+    "overall_score": 80,
+    "dimensions": {
+      "core_strength": 12,
+      "uniqueness": 13,
+      "argument_evidence": 11,
+      "structure": 13,
+      "specificity": 8,
+      "reader_value": 9,
+      "author_judgment": 8,
+      "voice_consistency": 4,
+      "completeness": 2
+    },
+    "reviewer_version": "0.2.0",
+    "run_config": {"model": "test", "temperature": 0}
+  },
+  {
+    "article_id": "sample-002",
+    "overall_score": 83,
+    "dimensions": {
+      "core_strength": 13,
+      "uniqueness": 14,
+      "argument_evidence": 12,
+      "structure": 14,
+      "specificity": 8,
+      "reader_value": 9,
+      "author_judgment": 8,
+      "voice_consistency": 3,
+      "completeness": 2
+    },
+    "reviewer_version": "0.2.0",
+    "run_config": {"model": "test", "temperature": 0}
+  },
+  {
+    "article_id": "sample-003",
+    "overall_score": 70,
+    "dimensions": {
+      "core_strength": 11,
+      "uniqueness": 11,
+      "argument_evidence": 10,
+      "structure": 11,
+      "specificity": 7,
+      "reader_value": 8,
+      "author_judgment": 7,
+      "voice_consistency": 3,
+      "completeness": 2
+    },
+    "reviewer_version": "0.2.0",
+    "run_config": {"model": "test", "temperature": 0}
+  }
+]

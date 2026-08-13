@@ -1,0 +1,184 @@
+schema_version: "1.0"
+
+article:
+  id: "fixture-a-simple"
+  title: "写作的核心不是工具，而是判断"
+  summary: "把真实材料和作者判断组织成一篇值得读的长文，比掌握任何写作技巧都重要。"
+  article_type: "观点文"
+  core_statement: "写作的核心不是工具，而是判断"
+  target_platform:
+    - wechat
+  preferred_theme: null
+
+blocks:
+  - block_id: "cover-001"
+    heading_path: []
+    role: "article_cover"
+    source_anchor:
+      start_text: "# 写作的核心不是工具，而是判断"
+      end_text: "把真实材料和作者判断组织成一篇值得读的长文，比掌握任何写作技巧都重要。"
+    payload:
+      title: "写作的核心不是工具，而是判断"
+      summary_or_intro: "把真实材料和作者判断组织成一篇值得读的长文，比掌握任何写作技巧都重要。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - cover-breaking
+    fallback:
+      - paragraph
+    required: true
+
+  - block_id: "section-001"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 引言"
+    payload:
+      heading_text: "引言"
+      section_index: 1
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "key-001"
+    heading_path:
+      - "引言"
+    role: "key_statement"
+    source_anchor:
+      exact_text: "真正的问题往往是：没有值得说的东西。"
+    payload:
+      text: "真正的问题往往是：没有值得说的东西。"
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - quote
+      - quote-oneliner
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "key-002"
+    heading_path:
+      - "引言"
+    role: "key_statement"
+    source_anchor:
+      exact_text: "工具只是放大器。如果输入是空洞的，输出只会是更大的空洞。"
+    payload:
+      text: "工具只是放大器。如果输入是空洞的，输出只会是更大的空洞。"
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - quote
+      - quote-oneliner
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "section-002"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 正文"
+    payload:
+      heading_text: "正文"
+      section_index: 2
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "para-001"
+    heading_path:
+      - "正文"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "写作的核心在于三个判断：什么是事实、什么是观点、什么是推测。混这三者，文章就不可信。"
+    payload:
+      text: "写作的核心在于三个判断：什么是事实、什么是观点、什么是推测。混这三者，文章就不可信。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "para-002"
+    heading_path:
+      - "正文"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "每篇文章只能承担一个核心任务。如果你说不清这一节在做什么，它就不应该存在。"
+    payload:
+      text: "每篇文章只能承担一个核心任务。如果你说不清这一节在做什么，它就不应该存在。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "section-003"
+    heading_path: []
+    role: "article_section"
+    source_anchor:
+      exact_text: "## 结语"
+    payload:
+      heading_text: "结语"
+      section_index: 3
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - chapter-title
+    fallback:
+      - paragraph
+    required: false
+
+  - block_id: "para-003"
+    heading_path:
+      - "结语"
+    role: "paragraph"
+    source_anchor:
+      exact_text: "好了，今天就先聊到这儿。"
+    payload:
+      text: "好了，今天就先聊到这儿。"
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - paragraph
+    fallback: []
+    required: false
+
+  - block_id: "signature-001"
+    heading_path: []
+    role: "article_signature"
+    source_anchor: {}
+    payload: {}
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - footer-signature-brand
+    fallback: []
+    required: false
+
+constraints:
+  preserve_facts: []
+  preserve_stance: ["写作的核心不是工具，而是判断"]
+  preserve_quotes: ["工具只是放大器。如果输入是空洞的，输出只会是更大的空洞。"]
+  unresolved_facts: []
+  editor_anchors: []
+  forbidden_transformations: []
+
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

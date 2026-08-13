@@ -1,0 +1,106 @@
+version: 2
+name: personal
+source_count: 0
+last_updated: ""
+
+# ── 核心 8 维（默认加载） ──
+
+dimensions:
+  - dimension: sentence_rhythm
+    value: "待从本人范文提取"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: paragraph_structure
+    value: "待从本人范文提取"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: claim_strength
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: uncertainty_style
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: evidence_order
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: reader_relationship
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: transition_style
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: never_do
+    value: []
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+# ── 可选 4 维（按需加载） ──
+
+optional_dimensions:
+  - dimension: analogy_preference
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: humor_style
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: opening_closing
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""
+
+  - dimension: punctuation_format
+    value: "待确认"
+    confidence: 0.0
+    source_count: 0
+    sources: []
+    scope: global
+    last_confirmed: ""

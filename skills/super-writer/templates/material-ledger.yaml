@@ -1,0 +1,35 @@
+# Material Ledger Template
+#
+# 素材台账：记录每条摄入素材的状态和路由结果。
+# 详见 references/material-ingestion.md
+
+material_ledger:
+  total_count: 0
+  materials:
+    # - id: mat-001
+    #   source_type: url          # url / pdf / note / interview / text
+    #   source_url: "https://..."
+    #   title: "素材标题或摘要"
+    #   raw_text: "原始内容片段"
+    #   ingested_at: "2026-07-20"
+    #   event_id: evt-001
+    #   claim_ids: [cl-001]
+    #   status: used               # used / deduplicated / conflicting / excluded
+    #   excluded_reason: null       # excluded 时填写排除原因
+    #   duplicate_of: null         # deduplicated 时填写指向的 canonical material ID
+    #   duplicate_reason: null     # deduplicated 时填写: url_hash / content_hash
+  
+  events:
+    # - id: evt-001
+    #   title: "事件简述"
+    #   materials: [mat-001, mat-005]
+    #   sources_count: 2
+    #   has_conflict: false
+    #   claims: [cl-001]
+  
+  claims:
+    # - id: cl-001
+    #   statement: "论点描述"
+    #   supporting_events: [evt-001]
+    #   conflicting_events: []
+    #   coverage: covered          # covered / partial / missing

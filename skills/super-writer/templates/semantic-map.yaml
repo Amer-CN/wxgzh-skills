@@ -1,0 +1,420 @@
+# Semantic Map Template
+# Super Writer v0.3.0-rc1
+# 本文件声明文章中每个语义块的 role、payload、source_anchor、formatter_candidates 和 fallback。
+# article.md 保持干净可读；语义信息放到本文件。
+# 使用 scripts/validate_semantic_map.py 校验。
+
+schema_version: "1.0"
+
+article:
+  id: ""
+  title: ""
+  summary: ""
+  article_type: ""          # 如：观点文/教程/深度分析/案例复盘/访谈...
+  core_statement: ""
+  target_platform:
+    - wechat
+  preferred_theme: null     # null=不指定主题；用户指定时填主题英文标识如 hammer
+
+blocks:
+  # ── 文章级块 ──
+  - block_id: "cover-001"
+    heading_path: []
+    role: "article_cover"
+    source_anchor:
+      exact_text: ""        # 必须能在 article.md 中定位
+    payload:
+      title: ""
+      summary_or_intro: ""
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - cover-breaking
+    fallback:
+      - paragraph
+    required: true
+
+  - block_id: "toc-001"
+    heading_path: []
+    role: "article_toc"
+    source_anchor:
+      exact_text: ""
+    payload:
+      toc_items: []         # ≤3 项
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - toc-scroll
+    fallback: []
+    required: false
+
+  # ── 正文级块：key_statement 示例 ──
+  - block_id: "intro-001"
+    heading_path: []
+    role: "key_statement"
+    source_anchor:
+      exact_text: ""        # 必须能在 article.md 中逐字定位
+    payload:
+      text: ""
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - quote
+      - quote-oneliner
+    fallback:
+      - paragraph
+    required: true
+
+  # ── 正文级块：comparison 示例 ──
+  - block_id: "section-02-compare-001"
+    heading_path:
+      - "第二节标题"
+    role: "comparison"
+    source_anchor:
+      exact_text: ""
+    payload:
+      subject_a: ""
+      subject_b: ""
+      dimensions: []        # 对比维度列表
+      rows: []              # 每行含 dimension + value_a + value_b
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - compare
+      - table-list-flow
+    fallback:
+      - paragraphs
+      - ordered_list
+    required: false
+
+  # ── 正文级块：step_sequence 示例 ──
+  - block_id: "section-03-steps-001"
+    heading_path:
+      - "第三节标题"
+    role: "step_sequence"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      steps: []             # 有序步骤列表
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - steps
+    fallback:
+      - ordered_list
+    required: false
+
+  # ── 正文级块：timeline 示例 ──
+  - block_id: "section-04-timeline-001"
+    heading_path:
+      - "第四节标题"
+    role: "timeline"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      events: []            # 每项含 time + description
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - timeline
+    fallback:
+      - ordered_list
+    required: false
+
+  # ── 正文级块：faq 示例 ──
+  - block_id: "section-05-faq-001"
+    heading_path:
+      - "第五节标题"
+    role: "faq"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      items: []             # 每项含 question + answer
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - faq
+    fallback:
+      - subtitle
+      - paragraph
+    required: false
+
+  # ── 正文级块：decision 示例 ──
+  - block_id: "section-06-decision-001"
+    heading_path:
+      - "第六节标题"
+    role: "decision"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      recommended: ""
+      options: []           # 每项含 name + description
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - decision
+    fallback:
+      - paragraphs
+    required: false
+
+  # ── 正文级块：fact 示例 ──
+  - block_id: "section-07-facts-001"
+    heading_path:
+      - "第七节标题"
+    role: "fact"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      items: []             # 每项含 key + value
+    evidence_ids: []        # evidence_required: true 时必须有
+    preserve_exactly: true
+    formatter_candidates:
+      - facts
+    fallback:
+      - ordered_list
+    required: false
+
+  # ── 正文级块：quote 示例 ──
+  - block_id: "section-08-quote-001"
+    heading_path:
+      - "第八节标题"
+    role: "quote"
+    source_anchor:
+      exact_text: ""
+    payload:
+      text: ""
+      source: ""
+      quote_type: "sourced"   # normal/highlight/sourced
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - quote
+      - quote-oneliner
+    fallback:
+      - paragraph
+    required: false
+
+  # ── 正文级块：checklist 示例 ──
+  - block_id: "section-09-checklist-001"
+    heading_path:
+      - "第九节标题"
+    role: "checklist"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      items: []             # 每项含 text + checked
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - checklist
+    fallback:
+      - ordered_list
+    required: false
+
+  # ── 正文级块：case 示例 ──
+  - block_id: "section-10-case-001"
+    heading_path:
+      - "第十节标题"
+    role: "case"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      context: ""
+      challenge: ""
+      action: ""
+      result: ""
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - case
+    fallback:
+      - paragraphs
+    required: false
+
+  # ── 正文级块：dialogue 示例 ──
+  - block_id: "section-11-dialogue-001"
+    heading_path:
+      - "第十一节标题"
+    role: "dialogue"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      messages: []          # 每项含 role + content
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - dialogue
+    fallback:
+      - quote
+      - paragraph
+    required: false
+
+  # ── 正文级块：code_comparison 示例 ──
+  - block_id: "section-12-codecmp-001"
+    heading_path:
+      - "第十二节标题"
+    role: "code_comparison"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      before_code: ""
+      after_code: ""
+      before_lang: ""
+      after_lang: ""
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - code-compare
+    fallback:
+      - code-block
+    required: false
+
+  # ── 正文级块：resource_list 示例 ──
+  - block_id: "section-13-resources-001"
+    heading_path:
+      - "第十三节标题"
+    role: "resource_list"
+    source_anchor:
+      exact_text: ""
+    payload:
+      title: ""
+      links: []             # 每项含 name + url（≥2 项）
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - resources
+    fallback:
+      - paragraph
+    required: false
+
+  # ── 正文级块：footnote 示例 ──
+  - block_id: "section-14-footnote-001"
+    heading_path: []
+    role: "footnote"
+    source_anchor:
+      exact_text: ""
+    payload:
+      notes: []             # 每项含 id + content
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - footnotes
+    fallback: []
+    required: false
+
+  # ── 正文级块：warning 示例 ──
+  - block_id: "section-15-warning-001"
+    heading_path:
+      - "第十五节标题"
+    role: "warning"
+    source_anchor:
+      exact_text: ""
+    payload:
+      text: ""
+      title: ""
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - alert
+      - alert-box
+    fallback:
+      - quote
+      - paragraph
+    required: false
+
+  # ── 正文级块：media_text 示例 ──
+  - block_id: "section-16-media-001"
+    heading_path:
+      - "第十六节标题"
+    role: "media_text"
+    source_anchor:
+      exact_text: ""
+    payload:
+      image_url: ""
+      explanation_text: ""
+      image_caption: ""
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - media-text
+    fallback:
+      - image-video
+      - paragraph
+    required: false
+
+  # ── 正文级块：image_annotation 示例 ──
+  - block_id: "section-17-annot-001"
+    heading_path:
+      - "第十七节标题"
+    role: "image_annotation"
+    source_anchor:
+      exact_text: ""
+    payload:
+      image_url: ""
+      caption: ""
+      notes: []             # 每项含 number + description
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - annotated-image
+    fallback:
+      - image-video
+      - ordered_list
+    required: false
+
+  # ── 正文级块：article_cta 示例 ──
+  - block_id: "cta-001"
+    heading_path: []
+    role: "article_cta"
+    source_anchor:
+      exact_text: ""
+    payload:
+      text: ""
+      url: ""               # 必须 HTTPS
+      action: ""
+    evidence_ids: []
+    preserve_exactly: true
+    formatter_candidates:
+      - cta
+    fallback:
+      - footer-signature-brand
+    required: false
+
+  # ── 正文级块：article_signature 示例 ──
+  - block_id: "signature-001"
+    heading_path: []
+    role: "article_signature"
+    source_anchor:
+      exact_text: ""
+    payload: {}
+    evidence_ids: []
+    preserve_exactly: false
+    formatter_candidates:
+      - footer-signature-brand
+    fallback: []
+    required: false
+
+constraints:
+  preserve_facts: []        # 必须逐字保留的事实
+  preserve_stance: []       # 必须保留的立场
+  preserve_quotes: []       # 必须保留的引用
+  unresolved_facts: []      # 未决事实
+  editor_anchors: []        # 编辑锚点
+  forbidden_transformations: []  # 禁止的转换
+
+component_policy:
+  force_all_components: false           # 必须为 false
+  formatter_has_final_choice: true      # formatter 拥有最终组件选择权
+  allow_fallback: true                  # 允许降级
+  max_primary_advanced_components: 6    # 主要高级组件上限
+  prohibit_content_invention: true      # 禁止编造内容
+  prohibit_duplicate_full_content: true # 禁止重复完整内容
