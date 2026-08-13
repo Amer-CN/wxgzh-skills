@@ -181,7 +181,8 @@ class Orchestrator:
             stop_after: str | None = None) -> dict:
         ok, dreport = self.doctor()
         if not ok:
-            return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport}
+            return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport,
+                        "run_wall_seconds": self._wall_seconds(st)}
         disc = dreport["skills"]
         run_dir = P.new_run_dir(self.project_root, topic)
         st = PipelineState(run_id=run_dir.name, topic=topic, profile=profile)
@@ -235,6 +236,18 @@ class Orchestrator:
             out["invalidated_from"] = broken
         return out
 
+    @staticmethod
+    def _wall_seconds(st) -> float:
+        """76F/OBS-274:run 墙钟 = now - pipeline_state.started_at(跨 CLI 调用)。"""
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+        try:
+            return round((_dt.now(_tz.utc) - _dt.strptime(
+                st.started_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc)
+            ).total_seconds(), 3)
+        except Exception:
+            return 0.0
+
     def _drive(self, run_dir, st, disc, create_wechat_draft, resumed=False,
               stop_after: str | None = None) -> dict:
         ctx = self._context(run_dir, disc, create_wechat_draft)
@@ -246,7 +259,7 @@ class Orchestrator:
             if stage != expected:
                 st.mark_failed(stage); save_state(run_dir, st)
                 return {"status": "FAIL_CLOSED", "reason": f"stage order violation: {stage} != {expected}",
-                        "run_dir": str(run_dir)}
+                        "run_dir": str(run_dir), "run_wall_seconds": self._wall_seconds(st)}
             # WeChat draft gate (P0#3): all prior 5 receipts must pass FULL
             # verify_receipt (hash recomputation), not just structural validity.
             if stage == "wechat_draft":
@@ -260,7 +273,7 @@ class Orchestrator:
                     st.mark_failed(stage); save_state(run_dir, st)
                     return {"status": "FAIL_CLOSED",
                             "reason": f"draft blocked; tampered/invalid prior receipts={bad} create={create_wechat_draft}",
-                            "run_dir": str(run_dir)}
+                            "run_dir": str(run_dir), "run_wall_seconds": self._wall_seconds(st)}
             st.current_stage = stage
             save_state(run_dir, st)
             try:
@@ -275,6 +288,7 @@ class Orchestrator:
                     "discovery_manifest": awaiting.discovery_manifest,
                     "approval_file": awaiting.approval_file,
                     "gzh_design_executed": (Path(run_dir) / "gzh_design" / "stage_receipt.json").exists(),
+                    "run_wall_seconds": self._wall_seconds(st),
                     "wechat_draft_executed": (Path(run_dir) / "wechat_draft" / "stage_receipt.json").exists(),
                     "note": "approve assets from the frozen discovery manifest, then 续发",
                 }
@@ -283,6 +297,7 @@ class Orchestrator:
                 save_state(run_dir, st)
                 return {"status": "AWAITING_AGENT", "run_id": st.run_id, "stage": stage,
                         "handshake_request": str(Path(run_dir) / stage / "agent_handshake_request.json"),
+                        "run_wall_seconds": self._wall_seconds(st),
                         "note": "agent: produce expected outputs + write agent_handshake.json, then 续发"}
             except (StageError, NotImplementedError) as e:
                 st.mark_failed(stage); save_state(run_dir, st)
@@ -296,12 +311,14 @@ class Orchestrator:
                 return {"status": "STOPPED_AFTER", "run_id": st.run_id,
                         "stage": stage, "stop_after": stop_after,
                         "completed_stages": list(st.completed_stages),
-                        "note": "受控停止,不执行后续阶段(不发布、不调微信)"}
+                        "note": "受控停止,不执行后续阶段(不发布、不调微信)",
+                        "run_wall_seconds": self._wall_seconds(st)}
         write_delivery(run_dir)
         return {"status": "COMPLETE", "run_id": st.run_id, "topic": st.topic,
                 "completed_stages": st.completed_stages, "draft_created": st.draft_created,
                 "formally_published": False, "resumed": resumed,
-                "uploaded_image_count": st.uploaded_image_count, "run_dir": str(run_dir)}
+                "uploaded_image_count": st.uploaded_image_count, "run_dir": str(run_dir),
+                "run_wall_seconds": self._wall_seconds(st)}
 
     # ---------- progress ----------
     def progress(self, run_id: str | None = None) -> dict:
@@ -315,6 +332,7 @@ class Orchestrator:
                 "current_stage": st.current_stage, "completed_stages": st.completed_stages,
                 "failed_stage": st.failed_stage, "uploaded_image_count": st.uploaded_image_count,
                 "draft_created": st.draft_created, "formally_published": False,
+                "run_wall_seconds": self._wall_seconds(st),
                 "stage_timing": timing}
 
     # ---------- release audit ----------

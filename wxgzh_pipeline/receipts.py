@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .state import atomic_write_json, sha256_file
+from .state import atomic_write_json, read_json, sha256_file
 
 REQUIRED_FIELDS = [
     "stage", "skill_name", "skill_dir", "skill_version", "skill_root_sha256",
@@ -52,7 +52,7 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
                   started_at, ended_at, side_effects=None,
                   entrypoint_path=None, entrypoint_sha256=None,
                   official_validator=None, official_validators=None,
-                  network_mode=None, stage=None) -> dict:
+                  network_mode=None, stage=None, wall_seconds=None) -> dict:
     inp = [str(p) for p in input_files]
     out = [str(p) for p in output_files]
     try:
@@ -75,6 +75,8 @@ def build_receipt(*, skill_name, skill_dir, skill_version, skill_root_sha256,
         "network_mode": network_mode,
         "started_at": started_at, "ended_at": ended_at,
         "elapsed_seconds": round(elapsed, 3),
+        "validation_seconds": round(elapsed, 3),
+        "wall_seconds": round(wall_seconds, 3) if wall_seconds is not None else None,
         "side_effects": side_effects or [],
     }
 
@@ -132,7 +134,7 @@ def load_receipt(run_dir: Path, stage: str) -> dict | None:
     p = receipt_path(run_dir, stage)
     if not p.is_file():
         return None
-    return json.loads(p.read_text(encoding="utf-8"))
+    return read_json(p)
 
 
 def receipt_valid(run_dir: Path, stage: str) -> bool:
@@ -160,7 +162,7 @@ def _find_upgrade_chain(skill_name: str, receipt_root: str,
     Returns the ordered records (oldest -> newest) or None."""
     ledger = history_path if history_path is not None else _history_path()
     try:
-        data = json.loads(ledger.read_text(encoding="utf-8"))
+        data = read_json(ledger)
     except (OSError, ValueError):
         return None
     if not isinstance(data, list) or not data:

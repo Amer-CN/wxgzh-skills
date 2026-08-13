@@ -139,6 +139,15 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
     sd = ctx.stage_dir(stage)
     started = now()
 
+    # 76F/OBS-274:阶段墙钟跨调用持久化 —— AWAITING_AGENT / 批准等待后 resume
+    # 重跑本阶段时沿用首次起始时间,receipt.wall_seconds 才含握手/返工等待。
+    wall_mark = sd / ".wall_started_at"
+    if wall_mark.is_file():
+        wall_started = wall_mark.read_text(encoding="utf-8").strip() or started
+    else:
+        wall_started = started
+        wall_mark.write_text(started, encoding="utf-8", newline="\n")
+
     # 1. stage_request.json (schema-validated)
     request = {
         "run_id": state.run_id, "stage": stage, "skill_name": skill,
@@ -275,7 +284,14 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
             if p.is_file():
                 input_files.append(p)
     disc = ctx.discovery.get(skill, {})
+    try:
+        from datetime import datetime as _dt
+        wall_seconds = (_dt.strptime(now(), "%Y-%m-%dT%H:%M:%SZ")
+                        - _dt.strptime(wall_started, "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
+    except Exception:
+        wall_seconds = 0.0
     receipt = build_receipt(
+
         stage=stage, skill_name=skill,
         skill_dir=disc.get("skill_dir", str(Path(ctx.skills_home) / skill)),
         skill_version=disc.get("current_version") or disc.get("locked_version"),
@@ -287,6 +303,7 @@ def execute_stage(ctx: StageContext, module, state) -> dict:
         side_effects=declared_side_effects,
         entrypoint_path=meta.get("entrypoint_path"), entrypoint_sha256=meta.get("entrypoint_sha256"),
         official_validator=ov, official_validators=ovs, network_mode=ctx.network_mode,
+        wall_seconds=wall_seconds,
     )
     write_receipt(ctx.run_dir, stage, receipt)
 

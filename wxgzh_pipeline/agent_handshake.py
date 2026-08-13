@@ -20,7 +20,7 @@ import json
 import shutil
 from pathlib import Path
 
-from .state import atomic_write_json, sha256_file
+from .state import atomic_write_json, read_json, sha256_file
 
 REQUEST_FILE = "agent_handshake_request.json"
 ACK_FILE = "agent_handshake.json"
@@ -51,7 +51,10 @@ def write_request(sd: Path, stage: str, skill: str, instructions: str,
                   upstream_hashes=None, stage_request_sha256=None,
                   skill_identity=None, contract_sha256=None) -> dict:
     sd = Path(sd)
+    # 76F/OBS-276:request_id 稳定 —— 同一 run 同一阶段同一意图 = 同一 id。
+    # request 重写(同 stage 同意图)不得换 id;ACK 绑定 request_id,verify 校验一致。
     req = {"run_id": run_id, "stage": stage, "skill": skill, "kind": "agent_handshake",
+           "request_id": f"{run_id or 'anon'}:{stage}",
            "instructions": instructions, "expected_outputs": list(expected_outputs),
            "inputs": inputs, "upstream_hashes": upstream_hashes or {},
            "stage_request_sha256": stage_request_sha256,
@@ -77,7 +80,7 @@ def _token_from_disk(sd: Path, stage: str, expected_outputs) -> tuple[str | None
     reqp = sd / REQUEST_FILE
     if not reqp.is_file():
         return None, {}
-    req = json.loads(reqp.read_text(encoding="utf-8"))
+    req = read_json(reqp)
     produced = {o: sha256_file(sd / o) for o in expected_outputs if (sd / o).is_file()}
     t = token(run_id=req.get("run_id"), stage=stage,
               request_sha256=sha256_file(reqp),
@@ -103,6 +106,7 @@ def write_ack(sd: Path, stage: str, expected_outputs, agent_id: str = "agent") -
         raise FileNotFoundError(f"missing expected outputs: {missing}")
     produced = {o: sha256_file(sd / o) for o in expected_outputs}
     ack = {"run_id": req.get("run_id"), "stage": stage, "agent_id": agent_id,
+           "request_id": req.get("request_id"),
            "produced_files": sorted(produced), "produced_hashes": produced,
            "handshake_token": t}
     atomic_write_json(sd / ACK_FILE, ack)
@@ -116,7 +120,7 @@ def write_ack_from_request(sd: Path, agent_id: str = "agent") -> dict:
     if not reqp.is_file():
         raise FileNotFoundError(f"request file not found: {reqp}")
     try:
-        req = json.loads(reqp.read_text(encoding="utf-8"))
+        req = read_json(reqp)
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid request JSON: {exc}") from exc
     stage = req.get("stage")
@@ -136,7 +140,7 @@ def verify_ack(sd: Path, stage: str, expected_outputs,
     ackp = sd / ACK_FILE
     if not ackp.is_file():
         return False, {"HANDSHAKE": "AWAITING_AGENT", "reason": f"{ACK_FILE} not present yet"}
-    ack = json.loads(ackp.read_text(encoding="utf-8"))
+    ack = read_json(ackp)
     missing = [o for o in expected_outputs if not (sd / o).is_file()]
     recomputed, req = _token_from_disk(sd, stage, expected_outputs)
     token_ok = recomputed is not None and ack.get("handshake_token") == recomputed
@@ -151,9 +155,18 @@ def verify_ack(sd: Path, stage: str, expected_outputs,
             if cur != want:
                 upstream_drift.append(rel)
 
+    request_id_ok = ack.get("request_id") == req.get("request_id")
+    if not request_id_ok:
+        # 76F/OBS-276:ACK 绑定旧 request —— 以最新 request 为准重新 ACK(恢复 SOP)。
+        return False, {"HANDSHAKE": "FAIL", "missing_outputs": missing,
+                       "token_ok": token_ok, "upstream_drift": upstream_drift,
+                       "request_id_ok": False,
+                       "reason": "ACK request_id != current request; re-ACK against the latest request",
+                       "agent_id": ack.get("agent_id"), "recomputed_token": recomputed}
     ok = (not missing) and token_ok and ack.get("stage") == stage and not upstream_drift
     return ok, {"HANDSHAKE": "PASS" if ok else "FAIL", "missing_outputs": missing,
                 "token_ok": token_ok, "upstream_drift": upstream_drift,
+                "request_id_ok": True,
                 "agent_id": ack.get("agent_id"), "recomputed_token": recomputed}
 
 

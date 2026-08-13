@@ -31,25 +31,25 @@ import yaml
 from . import execmodel as EM
 from . import agent_handshake as AH
 from . import secrets as SEC
-from .state import sha256_file
+from .state import read_json, sha256_file
 from .subprocess_runner import run_script
 from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
                                 enforce_approval_readiness)
 
 AGENT_INSTRUCTIONS = {
-    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。76J/OBS-273(dedup 模板):deduplicated_items.json 严格按 contracts/01_aihot.yaml 的字段模板书写(id/title/source_url 必填,links/content/published_at/category/score/selected/aihot_permalink/provenance 可选),不得自造字段名或改动既有键(aihot_permalink 类字段名税绝版)。",
+    "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。76J/OBS-273(dedup 模板):deduplicated_items.json 严格按 contracts/01_aihot.yaml 的字段模板书写(id/title/source_url 必填,links/content/published_at/category/score/selected/aihot_permalink/provenance 可选),不得自造字段名或改动既有键(aihot_permalink 类字段名税绝版)。76F/OBS-276(恢复SOP,通用规则):若卡在 ACK/request 循环——以当前最新 agent_handshake_request.json 为准重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁止删除文件重来;路径一律 POSIX 正斜杠,禁止把 Windows 反斜杠路径传给 rm 类命令。76F/OBS-279(编码,通用规则):写 JSON 一律 utf-8 无 BOM;读到带 BOM 的文件属正常,读侧容忍,不要重写上游产物。",
     "super_writer": ("Run Super Writer Material-Heavy Full Mode. Generate every requested "
                      "product, then run the locked official validate_article_length.py with "
                      "--full-mode --json and save its exact JSON stdout as "
                      "full_mode_validator_report.json before ACK. "
-                     "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。76G-R/OBS-265(行为层,通用规则):a) 产 handoff.yaml 时如实填写 prose_craft_applied / prose_craft_version——实际执行了 R1–R9 自检才许填 prose_craft_applied=true,未执行必须填 false,禁止默认 true 或留空误导下游;b) Phase 6 内容审稿的标题选定子步骤为必做——必须从 title_candidates 中按 评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定最终标题,handoff 的 selected_title 与 title_selection_reason 必填且不得为空,article.md 的 H1 必须与 selected_title 一致。"),
+                     "注入路径强制(OBS-88/档66,通用规则,不含单篇素材字面量):1) 含数字对比的事实必须登记为结构化 numbers(unit/value)+ chart_group + metric_name + series_label,中文数字转阿拉伯;2) 命令/脚本片段/终端输出以 fenced code block 原文呈现,不得转写为散文(并列短句清单除外,见 3));3) 注入素材中同一批并列短句清单,按语义分组拆进多个 :::alert 块,每组一块;块内每条独占一行、逐字不得改写;同一批文案全文只出现一次,不得再以 fenced code block 重复;alert type 按语义选择,阻断类与提醒类必须用不同 type;title 由写作侧按该组语义自拟;4) 每组数字对比在其首次出现的章节完整展开;同一组数字不得在多个章节重复对比表述;导语不出现任何数字对比。76G-R/OBS-265(行为层,通用规则):a) 产 handoff.yaml 时如实填写 prose_craft_applied / prose_craft_version——实际执行了 R1–R9 自检才许填 prose_craft_applied=true,未执行必须填 false,禁止默认 true 或留空误导下游;b) Phase 6 内容审稿的标题选定子步骤为必做——必须从 title_candidates 中按 评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定最终标题,handoff 的 selected_title 与 title_selection_reason 必填且不得为空,article.md 的 H1 必须与 selected_title 一致。76F/OBS-276(恢复SOP,通用规则):若卡在 ACK/request 循环——以当前最新 agent_handshake_request.json 为准重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁止删除文件重来;路径一律 POSIX 正斜杠,禁止把 Windows 反斜杠路径传给 rm 类命令。76F/OBS-279(编码,通用规则):写 JSON 一律 utf-8 无 BOM;读到带 BOM 的文件属正常,读侧容忍,不要重写上游产物。76F/OBS-278(产物自检,super-writer 阶段):outline 写完后先跑 super-writer 仓 scripts/align_outline_budget.py --outline <outline.md> --target-visible-chars <目标字数> 做 ±5% 自动对齐(只调预算数值字段,保护域/数字/产品名不动);每个关键产物(outline/core-card/semantic-map/handoff/registry)写完后先跑 scripts/validate_single_product.py --product <名> --file <路径> 自检,失败按输出补字段,再交 ACK。"),
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). "
                      "fidelity_report.json 自报 length_retention 必须为 balanced"
                      "(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。"
                      "76J/OBS-272(专名明规,通用规则):产品名/专名中的词永不改写——如 "
                      "Luma Agents、ComfyUI、MiniMax H3 等,任何语言/词形(Agent、agent、Agents)都不得"
                      "因「疑似 AI 味」被改写或删除;检测报告中的 FT-001 advisory 命中无需处理、不影响"
-                     "交付(76D 专名豁免语义);改写产品名即违反「不得改产品名」铁律。",
+                     "交付(76D 专名豁免语义);改写产品名即违反「不得改产品名」铁律。76F/OBS-276(恢复SOP,通用规则):若卡在 ACK/request 循环——以当前最新 agent_handshake_request.json 为准重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁止删除文件重来;路径一律 POSIX 正斜杠,禁止把 Windows 反斜杠路径传给 rm 类命令。76F/OBS-279(编码,通用规则):写 JSON 一律 utf-8 无 BOM;读到带 BOM 的文件属正常,读侧容忍,不要重写上游产物。",
 }
 
 
@@ -265,7 +265,7 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
         existing = None
         if fetch_log_p.is_file():
             try:
-                existing = json.loads(fetch_log_p.read_text(encoding="utf-8"))
+                existing = read_json(fetch_log_p)
             except ValueError:
                 existing = None
         if existing and existing.get("mode") == INJECTION_MODE:
@@ -393,7 +393,7 @@ def _approval_precheck(rd: Path) -> dict:
     eligible, excluded = [], []
     if manifest_path.is_file():
         try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest = read_json(manifest_path)
         except ValueError as exc:
             raise MediaRequestError(
                 f"approval precheck FAIL_CLOSED: invalid discover media_manifest: {exc}") from exc
@@ -466,7 +466,7 @@ def _load_copyright_approvals(rd: Path) -> dict:
     if not p.is_file():
         return out
     try:
-        data = json.loads(p.read_text(encoding="utf-8"))
+        data = read_json(p)
     except ValueError:
         return out
     for rec in data.get("approvals", []):
@@ -550,7 +550,7 @@ def _load_dedup_index(rd: Path) -> tuple[Path, dict]:
     if not p.is_file():
         raise MediaRequestError("aihot/deduplicated_items.json missing (FAIL_CLOSED)")
     try:
-        data = json.loads(p.read_text(encoding="utf-8"))
+        data = read_json(p)
     except ValueError as e:
         raise MediaRequestError(f"deduplicated_items malformed: {e}")
     items = data.get("items") if isinstance(data, dict) else data
@@ -646,7 +646,7 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
     if not reg_p.is_file():
         raise MediaRequestError("canonical_claim_registry.json missing (FAIL_CLOSED)")
     try:
-        reg = json.loads(reg_p.read_text(encoding="utf-8"))
+        reg = read_json(reg_p)
     except ValueError as e:
         raise MediaRequestError(f"canonical registry malformed: {e}")
     reg_claims = reg.get("claims") or reg.get("canonical_claims") or []
@@ -837,7 +837,7 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
     # (links.aihot 直出 HTML)补充抓取;仅 discover 阶段携带。
     if phase == "discover":
         try:
-            dedup_data = json.loads(dedup_p.read_text(encoding="utf-8"))
+            dedup_data = read_json(dedup_p)
         except ValueError:
             dedup_data = {}
         pool_items = dedup_data.get("items") if isinstance(dedup_data, dict) else dedup_data
@@ -854,7 +854,7 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
         user_images_p = rd / "media_enrichment" / "user_images.json"
         if user_images_p.is_file():
             try:
-                user_images = json.loads(user_images_p.read_text(encoding="utf-8"))
+                user_images = read_json(user_images_p)
             except ValueError:
                 user_images = None
             if isinstance(user_images, list):
@@ -972,14 +972,14 @@ def _captioned_bindings_path(ctx) -> Path:
     if not src_bnd.is_file():
         return src_bnd
     try:
-        bnd = json.loads(src_bnd.read_text(encoding="utf-8"))
+        bnd = read_json(src_bnd)
     except (OSError, ValueError):
         return src_bnd
     titles = {}
     reg_p = rd / "super_writer" / "canonical_claim_registry.json"
     if reg_p.is_file():
         try:
-            reg = json.loads(reg_p.read_text(encoding="utf-8"))
+            reg = read_json(reg_p)
             for m in reg.get("materials") or []:
                 if m.get("material_id"):
                     titles[str(m["material_id"])] = str(m.get("title") or "")
@@ -989,7 +989,7 @@ def _captioned_bindings_path(ctx) -> Path:
     man = {}
     if man_p.is_file():
         try:
-            man = json.loads(man_p.read_text(encoding="utf-8"))
+            man = read_json(man_p)
         except (OSError, ValueError):
             man = {}
     by_id = {a.get("asset_id"): a for a in man.get("assets", [])}
@@ -1223,7 +1223,7 @@ def _discover_degraded_recoverable(discover_dir):
     """
     manifest_path = discover_dir / "media_manifest.json"
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = read_json(manifest_path)
     except (OSError, ValueError):
         return None
     if not isinstance(manifest, dict):
@@ -1275,7 +1275,7 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
             old_reg_sha = None
             if req_p.is_file():
                 try:
-                    old_reg_sha = json.loads(req_p.read_text(encoding="utf-8"))                         .get("provenance", {}).get("canonical_registry_sha256")
+                    old_reg_sha = read_json(req_p)                         .get("provenance", {}).get("canonical_registry_sha256")
                 except (OSError, ValueError, AttributeError):
                     old_reg_sha = None
             cur_reg_sha = sha256_file(Path(ctx.run_dir) / "super_writer"
@@ -1289,8 +1289,10 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 _entry_args(ctx, "media_enrichment", sd, state, request_path,
                             media_phase="discover"),
                 # 76C/OBS-254:discover 扩池后抓取预算=素材页 + pool_fetch_limit(默认 30)
-                # 站内页,单页 15s 上限;300s 旧预算不足,按最坏预算放大至 900s。
-                timeout=900, env=_media_subprocess_env(ctx),
+                # 站内页,单页 15s 上限;300s 旧预算不足曾放大至 900s。
+                # 76F/OBS-275:抓取并行(media worker=4)+ x.com 原文页短超时(5s)跳过,
+                # 最坏预算重估 ≈ materials×(15×2)/4 + pool×15/4 + 余量 → 600s。
+                timeout=600, env=_media_subprocess_env(ctx),
             )
             events_path = discover_dir / "upload_events.json"
             zero_upload = False
@@ -1367,10 +1369,10 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                 # OBS-198:raise 不带 FAIL_CLOSED 前缀(外层 except 已拼 f"FAIL_CLOSED: {exc}")。
                 raise MediaRequestError(WECHAT_API_BLOCKED_MSG % raw)
 
-        discovery = json.loads(frozen.read_text(encoding="utf-8"))
+        discovery = read_json(frozen)
         if discovery.get("discovery_manifest_sha256") != _canonical_discovery_sha(discovery):
             raise MediaRequestError("frozen discovery manifest sha256 invalid")
-        approval_data = json.loads(approval_file.read_text(encoding="utf-8"))
+        approval_data = read_json(approval_file)
         stable = [a for a in approval_data.get("approvals", [])
                   if a.get("approved_scope") == "single_asset"]
         # OBS-82(档55):消费批准合同前,预校验兜底——批准了不达标资产必须 FAIL_CLOSED
@@ -1378,7 +1380,7 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         if not precheck_path.is_file():
             raise MediaRequestError(
                 "approval precheck FAIL_CLOSED: approval_precheck.json missing")
-        precheck = json.loads(precheck_path.read_text(encoding="utf-8"))
+        precheck = read_json(precheck_path)
         precheck["checked_approvals"] = stable
         _enforce_approval_precheck(Path(ctx.run_dir), precheck)
         # OBS-87(档61):批准信息链闸门——旧合同自动失效;内容不明/rejected 不得消费
@@ -1387,7 +1389,7 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
         if not readiness_path.is_file():
             raise MediaRequestError(
                 "approval readiness FAIL_CLOSED: approval_readiness.json missing")
-        readiness = json.loads(readiness_path.read_text(encoding="utf-8"))
+        readiness = read_json(readiness_path)
         enforce_approval_readiness(readiness_path, readiness, stable)
         frozen_by_id = {a["asset_id"]: a for a in discovery.get("assets", [])}
         for approval in stable:
@@ -1491,13 +1493,13 @@ def _select_live_cover(ctx):
     if not frozen.is_file():
         raise MediaRequestError(
             "cover: frozen asset_discovery_manifest.json missing")
-    manifest = json.loads(frozen.read_text(encoding="utf-8"))
+    manifest = read_json(frozen)
     by_id = {a["asset_id"]: a for a in manifest.get("assets", [])}
     events_path = media_root / "continue" / "upload_events.json"
     if not events_path.is_file():
         raise MediaRequestError(
             "cover: continue/upload_events.json missing")
-    events = json.loads(events_path.read_text(encoding="utf-8"))
+    events = read_json(events_path)
     success_ids = []
     for ev in events.get("events", []):
         aid = ev.get("asset_id") if isinstance(ev, dict) else None
@@ -1510,7 +1512,7 @@ def _select_live_cover(ctx):
     if not bindings_path.is_file():
         raise MediaRequestError(
             "cover: article_image_bindings.json missing")
-    bindings = json.loads(bindings_path.read_text(encoding="utf-8"))
+    bindings = read_json(bindings_path)
     candidates = []
     for img in bindings.get("body_images", []):
         aid = img.get("asset_id") if isinstance(img, dict) else None
@@ -1527,7 +1529,7 @@ def _select_live_cover(ctx):
     full_by_id: dict = {}
     if full_manifest_path.is_file():
         try:
-            full = json.loads(full_manifest_path.read_text(encoding="utf-8"))
+            full = read_json(full_manifest_path)
             full_by_id = {a.get("asset_id"): a
                           for a in full.get("assets", []) if isinstance(a, dict)}
         except (OSError, ValueError):

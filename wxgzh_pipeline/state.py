@@ -28,6 +28,17 @@ def sha256_file(p: Path) -> str:
     return h.hexdigest()
 
 
+def read_json(path):
+    """76F/OBS-279:读 JSON 容忍 BOM —— agent 侧工具若以 utf-8-sig 写文件,
+    首字节 BOM 会让 json.loads(utf-8 文本) 直接失败;先按字节读并剥离 BOM。
+    写 JSON 一律走 atomic_write_json(encoding="utf-8",无 BOM)。"""
+    p = Path(path)
+    raw = p.read_bytes()
+    if raw.startswith(b"\xef\xbb\xbf"):
+        raw = raw[3:]
+    return json.loads(raw.decode("utf-8"))
+
+
 def atomic_write_json(path: Path, obj) -> None:
     """Write JSON atomically: temp file in same dir -> fsync -> os.replace."""
     path = Path(path)
