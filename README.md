@@ -1,15 +1,16 @@
-​
+<p align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=0:B3593B,100:7A2E1D&height=170&section=header&text=gzh-forge&fontSize=64&fontColor=ffffff&animation=fadeIn" width="100%"></p>
+
 <div align="center">
 
-# 🧰 wxgzh-skills
-
 #### 一句话发公众号：从选题到草稿箱的全自动 AI 流水线
+
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1200&color=B3593B&center=true&vCenter=true&width=620&lines=%E4%B8%80%E5%8F%A5%E8%AF%9D%E9%80%89%E9%A2%98%EF%BC%8C%E8%BF%9B%E8%8D%89%E7%A8%BF%E7%AE%B1;%E7%B4%A0%E6%9D%90%C2%B7%E5%86%99%E4%BD%9C%C2%B7%E5%8E%BBAI%E5%91%B3%C2%B7%E9%85%8D%E5%9B%BE%C2%B7%E6%8E%92%E7%89%88%C2%B7%E4%BA%A4%E4%BB%98;%E6%AF%8F%E4%B8%80%E6%AD%A5%E9%83%BD%E7%95%99%E8%AF%81%E6%8D%AE)](https://git.io/typing-svg)
 
 [![Skills](https://img.shields.io/badge/Skills-5-10B981?style=for-the-badge)](#-五个-skill)
 [![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-8B5CF6?style=for-the-badge)](https://agentskills.io)
 [![Pipeline](https://img.shields.io/badge/Pipeline-六阶段-3B82F6?style=for-the-badge)](#-它怎么工作)
 
-<img src="docs/assets/cover.png" alt="wxgzh-skills 封面" width="100%">
+<img src="docs/assets/cover.png" alt="gzh-forge 封面" width="100%">
 
 </div>
 
@@ -31,13 +32,25 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 每一步都有 receipt 回执；任何一关证据不足，宁可停机报告也不硬闯。
 **它只进草稿箱——发布、群发、定时永远是你手动。**
 
+## 👀 效果预览
+
+以下三篇均为流水线真实产出（锤子主题，430px 移动端整页截图）：
+
+<table>
+<tr>
+<td align="center"><img src="docs/assets/preview-grok46.jpg" width="260"><br><sub><b>Grok 4.6</b><br>8 图 + 图注 + 表格</sub></td>
+<td align="center"><img src="docs/assets/preview-deepseek.jpg" width="260"><br><sub><b>DeepSeek V4 Pro</b><br>8 图 + 图注</sub></td>
+<td align="center"><img src="docs/assets/preview-minimax-h3.jpg" width="260"><br><sub><b>MiniMax H3</b><br>封面 + 目录 + 图注</sub></td>
+</tr>
+</table>
+
 ## 📦 安装
 
 **只装一个 skill**（比如只要写作）：在 Claude Code / Codex 等支持
 Agent Skills 的工具里直接说：
 
 ​
-帮我安装这个 skill：[https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer](https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer)
+帮我安装这个 skill：[https://github.com/Amer-CN/gzh-forge/tree/main/skills/super-writer](https://github.com/Amer-CN/gzh-forge/tree/main/skills/super-writer)
 
 把结尾的 `super-writer` 换成你要的那个即可——每个子目录都是完整独立的
 skill（SKILL.md / 脚本 / 文档 / 许可齐全）。super-writer、
@@ -47,7 +60,7 @@ zh-human-writing、gzh-design 三个零依赖、单装即用；media-enrichment
 **装整个流水线**（一句话发文）：
 
 ​
-git clone [https://github.com/Amer-CN/wxgzh-skills.git](https://github.com/Amer-CN/wxgzh-skills.git)
+git clone [https://github.com/Amer-CN/gzh-forge.git](https://github.com/Amer-CN/gzh-forge.git)
 
 然后按 `skills/wxgzh-pipeline` 的 README 安装——编排器的 doctor 会用
 `skills.lock.json` 强制校验其余四个依赖 skill 必须齐、版本与哈希必须对，
@@ -187,4 +200,3 @@ receipt 双时制入账（校验秒数 + 真实墙钟分开记）、锁链治理
 各子 skill 许可见各自目录 · Made by [@Amer-CN](https://github.com/Amer-CN)
 
 </div>
-​
