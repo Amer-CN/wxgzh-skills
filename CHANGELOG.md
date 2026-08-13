@@ -1,6 +1,23 @@
 # CHANGELOG
 
+## v0.3.8-rc1 (2026-08-13) — 档76F：产物预校验 + 大纲预算自动对齐
+
+### 新增
+
+- **validate_single_product.py**（OBS-277）：关键产物单文件预校验——outline（缺节/缺
+  预算字段/总计划与目标偏差 >5% 即报，提示先跑对齐）、core-card（Core Statement /
+  Reader Change / Core Tension / Value Carrier 四字段）、semantic-map（YAML 顶层
+  schema_version/article/blocks + article.title 非空）、handoff（76A 必填四字段 +
+  76A/76B 标题四字段类型）、registry（数组 + material_id/claim_id/claim_text/
+  source_excerpt 必填）；输出 JSON + exit 0/1，语义与 validate_article_length 同源，
+  不放宽任何质量门禁。
+- **align_outline_budget.py**（OBS-278）：大纲预算自动对齐——按目标字数 ±5% 按
+  planned 比例缩放各节 planned/min/max，只动预算数值行；weight_percent /
+  evidence_ids / event_ids / unique_information_goal / 配置节不动（保护域）。
+
 ## v0.3.7-rc1
+
+76G-R(档76G-R):
 
 76G-R(档76G-R):
 
