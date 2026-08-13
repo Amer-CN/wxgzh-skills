@@ -278,6 +278,7 @@
 　　【76L-F 补记】档 76L 验收 PASS(审核方 2026-08-13 远端点验两 commit 逐字一致:feat e263c21(publish 凭证门 +48 / 反顶包明规 / 红旗 SOP)与 docs d91ce99(relock #52 产物 + 台账);验收实证:无凭证直调 publish 被拒(exit 2)、冻结 RUN 凭证正向过校验、dry-run 零真实副作用)。
 53. 76N(合集仓改名 gzh-forge + README v3 全美化,用户裁决 2026-08-13,RELOCK_ALLOWED 临时 0→1 范围本档(仅用于锁文件 repository_url 字段随改名修正),恢复条件=验收通过后立即改回 0;其余键不动,渲染器零触碰,GZH_DESIGN_WRITE_ALLOWED 维持 0):①改名——gh repo rename gzh-forge 成功,origin 自动更新为 Amer-CN/gzh-forge.git,新旧 URL ls-remote main 同 sha 57f223a6(旧名跳转保外链不死);本地工作树目录名不变。②锁 URL 修正——skills.lock.json 四处 repository_url(wxgzh-skills→gzh-forge;aihot external 条目无此字段,实测 4 处非任务书所述 5 处),relock dry-run ×4(super-writer/zh-human-writing/media-enrichment/gzh-design)全「无变化 OK」零哈希漂移;R93 同 commit 同步 observability.py REPO_LOCK_SHA256(4d21421f→a109c0fb)与 installed 侧锁文件,doctor PASS/OBS_69 MATCH/OBS_68 MATCH(712/712 0 diff)双侧。③预览图压缩副本——三张 preview-*.jpg(Pillow quality=82,430px 宽不变,grok46 949,949B/deepseek 801,661B/minimax-h3 861,912B),只提交 jpg,png 母版留本地。④README v3——动态横幅(capsule-render)+打字机标语(typing-svg)+封面+效果预览区(三图 table)+安装链接改 gzh-forge+gzh-design 来源与致谢节(isjiamu 增强,AGPL 署名)。程序校验:唯一编号 165(119–283 连续,本档无新增 OBS,以 76L-F 后实测基线为准——任务书「163(119–281)」系 76K 旧值,按 #98 规则以同配置实测为准)、R59 22=22 差集空(无新 OBS,非缺陷修复)。
 　　【76N-F 补记】档 76N 验收 PASS(审核方 2026-08-13 远端点验:gzh-forge main=4f933f3 在册、旧名 wxgzh-skills 经跳转解析到同一 commit、三张预览图远端 200 在册;relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH)。RELOCK_ALLOWED 归位 1→0(见授权登记节)。指令缺陷 #99 登记:档 76N 任务书程序校验预期误写 76K 旧值「163(119–281)」,当时实测已为 165(119–283)——审核方缺陷,#98 同类复发(规则已在执行端正确生效:以同配置实测基数为准)。程序校验不变:唯一编号 165(119–283 连续)/ R59 22=22 差集空。
+54. 76P(仓名改回 wxgzh-skills + README v4 小白先行,用户裁决 2026-08-13,RELOCK_ALLOWED 临时 0→1 范围本档(仅锁文件 repository_url 随改名回改),恢复条件=验收通过后立即改回 0;其余键不动):①改名回滚——gh repo rename wxgzh-skills -y 成功,origin 自动更新为 Amer-CN/wxgzh-skills.git;锁文件四处 repository_url(gzh-forge→wxgzh-skills,aihot external 无此字段),relock dry-run ×4 全「无变化」零哈希漂移;R93 同 commit 同步 observability.py REPO_LOCK_SHA256(a109c0fb→4d21421f,与 76N 改名前逐字节一致=纯字段往返零漂移旁证)与 installed 侧锁文件,doctor PASS/OBS_69 MATCH/OBS_68 MATCH(712/712 0 diff)双侧。②README v4 小白先行——全文替换:横幅 text=wxgzh-skills、新增「小白三分钟上手」节(零编程入门:第一步装/第二步用,单 skill 零配置可用,全家桶需公众号凭证)、安装节并入小白节(原 📦 安装节删除)、封面图保持「它怎么工作」节内(alt 去 gzh-forge 前缀)、gzh-design 渲染器/推送脚本名反斜杠转义(render\_article.py/publish\_wechat\_draft.py)。程序校验:唯一编号 165(119–283 连续,本档无新增 OBS)、R59 22=22 差集空。
 ### ★授权变更登记(72A,不可省)
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
@@ -312,6 +313,7 @@
 > **归位(档76L-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > `RELOCK_ALLOWED` 于档 76N 十四次临时由 0 改为 1(批准人=用户,范围=档 76N 合集仓改名 gzh-forge+README v3,仅用于锁文件 repository_url 字段随改名修正),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76N-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
+> `RELOCK_ALLOWED` 于档 76P 十五次临时由 0 改为 1(批准人=用户,范围=档 76P 仓名改回 wxgzh-skills+README v4,仅用于锁文件 repository_url 随改名回改),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
