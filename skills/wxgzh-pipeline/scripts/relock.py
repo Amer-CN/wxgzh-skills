@@ -333,8 +333,8 @@ def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
             fetch = _git_run(["-C", str(td), "fetch", "--depth", "1", "origin", source_commit])
             if fetch.returncode != 0:
                 return _fail("(b)", f"远端无法取回该 commit 的树: {fetch.stderr.strip()[:200]}")
-            rev = _git_run(["-C", str(td), "rev-parse",
-                           "FETCH_HEAD:'{sub_path}" if sub_path else "FETCH_HEAD^{tree}"])  # 76K:子目录树
+            rev_expr = f"FETCH_HEAD:{sub_path}" if sub_path else "FETCH_HEAD^{tree}"
+            rev = _git_run(["-C", str(td), "rev-parse", rev_expr])  # 76K:子目录树
             if rev.returncode != 0:
                 return _fail("(b)", f"无法解析远端树 sha: {rev.stderr.strip()[:200]}")
             remote_tree = rev.stdout.strip()

@@ -1678,7 +1678,9 @@ def _wechat(ctx, stage, sd, expected, state):
     # 76D/OBS-258:草稿标题优先取 handoff.selected_title(缺省回落 title_candidates[0]);
     # 都没有再回落既有 topic 逻辑。标题 60 字符上限沿用。
     args = ["--html", str(html), "--title", _wechat_title(ctx, state)[:60],
-            "--audit-dir", str(sd)]
+            "--audit-dir", str(sd),
+            # 76L/OBS-282:交付凭证门——publish 脚本必须绑定本 RUN 的 gzh receipt
+            "--evidence", str(Path(ctx.run_dir) / "gzh_design" / "stage_receipt.json")]
     if ctx.network_mode == "live":
         try:
             cover, cover_asset_id = _select_live_cover(ctx)

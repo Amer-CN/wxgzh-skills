@@ -946,5 +946,23 @@
     "new_skill_version": "0.3.8-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/super-writer"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260813T074724Z-4ed75667",
+    "skill": "gzh-design",
+    "reason": "76L gzh-design 交付凭证门 #52",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-13T07:47:24Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "650cce849f18eb68a9207b63d70c974d9a6bfd4f31f59d80df2af6630e0c885e",
+    "new_root_sha256": "f0941b081e448b95a773fbb53dd0d6222772c92f447f3bef4a8c572451131145",
+    "old_full_commit_sha": "87abc89831ab75b5f361de32c3b0c253f34155d8",
+    "new_full_commit_sha": "e263c21bb6089f57fdb3e96819a2e9e09dfb088e",
+    "old_source_tree_sha": "72134ec7d13ab947640b04dda7be64e243b5d564",
+    "new_source_tree_sha": "ed1058a84ee9e76d555e16f7e4bdbeb0cb4e86fa",
+    "old_skill_version": "v2026.08.13-hammer.13",
+    "new_skill_version": "v2026.08.13-hammer.14",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
