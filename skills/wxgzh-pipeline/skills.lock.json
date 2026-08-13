@@ -4,7 +4,7 @@
   "skills": {
     "super-writer": {
       "skill_name": "super-writer",
-      "repository_url": "https://github.com/Amer-CN/super-writer",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "chore/wxgzh-pipeline-dev2-integration",
       "full_commit_sha": "0fc5f89d2bc54d113815ccce95d07f17fd6ce94d",
       "source_tree_sha": "738ebc37cc31553338e2a70ce19a74996b062049",
@@ -22,11 +22,12 @@
         "scripts/validate_semantic_map.py"
       ],
       "render_entry_sha256": null,
-      "component_source_sha256": null
+      "component_source_sha256": null,
+      "path": "skills/super-writer"
     },
     "zh-human-writing": {
       "skill_name": "zh-human-writing",
-      "repository_url": "https://github.com/Amer-CN/zh-human-writing",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "chore/wxgzh-pipeline-dev2-integration",
       "full_commit_sha": "06902c49a61063c42e98ededb705f73051d3e1fa",
       "source_tree_sha": "4e81c88d3791407f7be6753c1b913ceb2b0dddb1",
@@ -46,11 +47,12 @@
         "scripts/pattern_audit.py"
       ],
       "render_entry_sha256": null,
-      "component_source_sha256": null
+      "component_source_sha256": null,
+      "path": "skills/zh-human-writing"
     },
     "media-enrichment": {
       "skill_name": "media-enrichment",
-      "repository_url": "https://github.com/Amer-CN/media-enrichment",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "restore/local-patches-obs42-53",
       "full_commit_sha": "8a90b9b9796319a7f74555f731f8adda116e93fb",
       "source_tree_sha": "4c109a3968c9955cfdbaad9706b7401d45df701e",
@@ -69,11 +71,12 @@
         "src/media_enrichment/article_bindings.py"
       ],
       "render_entry_sha256": null,
-      "component_source_sha256": null
+      "component_source_sha256": null,
+      "path": "skills/media-enrichment"
     },
     "gzh-design": {
       "skill_name": "gzh-design",
-      "repository_url": "https://github.com/Amer-CN/gzh-design-skill",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "fix/obs73-codeblock-docs",
       "full_commit_sha": "f64fb34ec82b66cb4b47e393a9b2d28e432f71ee",
       "source_tree_sha": "72134ec7d13ab947640b04dda7be64e243b5d564",
@@ -95,7 +98,8 @@
       "render_entry": "scripts/render_article.py",
       "render_entry_sha256": "5414ed083b10cb078c9eae42c1735028ce14ccb35497fd56d09c615af34aa350",
       "component_source": "scripts/generate_hammer_upgrade_samples.py",
-      "component_source_sha256": "7a2538a8765fd8000d9c0959bd0cfab25da9ec44da2f917780a28b328a84c757"
+      "component_source_sha256": "7a2538a8765fd8000d9c0959bd0cfab25da9ec44da2f917780a28b328a84c757",
+      "path": "skills/gzh-design"
     },
     "aihot": {
       "skill_name": "aihot",

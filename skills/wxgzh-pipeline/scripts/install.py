@@ -164,10 +164,27 @@ def _bundle_source_proof(bundle: Path, skill_name: str, src: Path) -> dict:
 def _resolve_source_proof(
     bundle: Path | None, skill_name: str, src: Path, locked: dict,
 ) -> tuple[str, str, str]:
+    git_root = Path(src)
     if (Path(src) / ".git").exists():
-        actual = _git(src, "rev-parse", "HEAD")
-        tree = _git(src, "rev-parse", "HEAD^{tree}")
-        remote = _norm_repo_url(_git(src, "config", "--get", "remote.origin.url"))
+        git_root = Path(src)
+    else:
+        # 76K/合集仓:src 是合集仓内的子目录(skills/<name>),向上找 .git 根;
+        # 树 sha = 根仓库对子目录的树(git rev-parse HEAD:<path>),commit 取根 HEAD。
+        cur = Path(src).resolve()
+        while not (cur / ".git").exists():
+            if cur.parent == cur:
+                break
+            cur = cur.parent
+        if (cur / ".git").exists():
+            git_root = cur
+    if git_root != Path(src) or (Path(src) / ".git").exists():
+        actual = _git(git_root, "rev-parse", "HEAD")
+        sub = ""
+        if git_root != Path(src).resolve():
+            sub = str(Path(src).resolve().relative_to(git_root)).replace("\\", "/")
+        tree = (_git(git_root, "rev-parse", f"HEAD:{sub}") if sub
+                else _git(git_root, "rev-parse", "HEAD^{tree}"))
+        remote = _norm_repo_url(_git(git_root, "config", "--get", "remote.origin.url"))
         if not remote:
             raise InstallReceiptError(
                 f"{skill_name}: git remote.origin.url missing — FAIL_CLOSED")
@@ -200,7 +217,16 @@ def _resolve_sources(
         for name in sorted(expected_skills):
             meta = lock_skills[name]
             repo_name = (_norm_repo_url(meta.get("repository_url")) or "").rsplit("/", 1)[-1]
-            candidates = [Path(skills_src) / name, Path(skills_src) / repo_name]
+            # 76K/合集仓:lock entry 的 path(如 skills/super-writer)优先;
+            # 兼容旧 skills_src/name 与 skills_src/repo_name 布局。
+            candidates = [
+                Path(skills_src) / meta["path"] if meta.get("path") else None,
+                Path(skills_src) / name,
+                Path(skills_src) / repo_name,
+                (Path(skills_src) / repo_name / meta["path"])
+                if meta.get("path") else None,
+            ]
+            candidates = [c for c in candidates if c is not None]
             source = next((path for path in candidates if path.is_dir()), None)
             if source is None:
                 raise InstallReceiptError(f"{name}: source not found under {skills_src}")

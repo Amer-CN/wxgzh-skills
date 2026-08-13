@@ -268,7 +268,8 @@ def _git_run(args, timeout=180):
 
 
 def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
-                          expected_tree_sha: str | None = None) -> tuple[bool, str, dict]:
+                          expected_tree_sha: str | None = None,
+                          path: str | None = None) -> tuple[bool, str, dict]:
     """OBS-74 remote-witness constraint (档44 Part 2 — the core safety design).
 
     来由 (OBS-74): 四轮本地热修(obs42/43、obs44-46、obs47、obs53)曾长期只存在
@@ -288,6 +289,16 @@ def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
         return (False,
                 f"远端见证 {check} 未通过: {detail}。升级前请先将改动 push 到远端。",
                 {})
+
+    # 76K/合集仓:lock entry 带 path(如 skills/super-writer)时,见证对象是
+    # 合集仓内该子目录的树(远端 rev-parse <commit>:<path>),本地工作树 =
+    # source_tree/path;无 path 时行为与旧版逐字一致。
+    work_tree = Path(source_tree)
+    sub_path = path.strip("/") if path else ""
+    if sub_path:
+        work_tree = work_tree / sub_path
+        if not work_tree.is_dir():
+            return _fail("(b)", f"本地 --source-tree 缺少子目录: {sub_path}")
 
     # (a) remote existence — full ref listing (ls-remote treats a bare sha as a
     # ref-name pattern and returns nothing; the commit must be reachable from a
@@ -322,14 +333,15 @@ def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
             fetch = _git_run(["-C", str(td), "fetch", "--depth", "1", "origin", source_commit])
             if fetch.returncode != 0:
                 return _fail("(b)", f"远端无法取回该 commit 的树: {fetch.stderr.strip()[:200]}")
-            rev = _git_run(["-C", str(td), "rev-parse", "FETCH_HEAD^{tree}"])  # temp repo itself
+            rev = _git_run(["-C", str(td), "rev-parse",
+                           "FETCH_HEAD:'{sub_path}" if sub_path else "FETCH_HEAD^{tree}"])  # 76K:子目录树
             if rev.returncode != 0:
                 return _fail("(b)", f"无法解析远端树 sha: {rev.stderr.strip()[:200]}")
             remote_tree = rev.stdout.strip()
             # mirror the source repo's line-ending rules (if any) so CRLF/LF
             # normalization matches the ORIGINAL commit (OBS-74 witness must
             # compare like-for-like, not raw-platform bytes)
-            src_attrs = Path(source_tree) / ".gitattributes"
+            src_attrs = Path(source_tree) / ".gitattributes" if not sub_path else work_tree / ".gitattributes"
             if src_attrs.is_file():
                 shutil.copyfile(src_attrs, td / ".gitattributes")
             # Local tree = remote file set, content-compared via git tree sha.
@@ -344,19 +356,19 @@ def verify_remote_witness(repo_url: str, source_commit: str, source_tree: Path,
                 return _fail("(b)", "无法列出远端树文件")
             remote_set = {s for s in remote_files.stdout.split("\0") if s}
             add = _git_run(["--git-dir", str(td / ".git"),
-                            "--work-tree", str(source_tree), "add", "-A"])
+                            "--work-tree", str(work_tree), "add", "-A"])
             if add.returncode != 0:
                 return _fail("(b)", f"无法计算本地树: {add.stderr.strip()[:200]}")
             force_add = []
             for rel in sorted(remote_set):
-                if not (Path(source_tree) / rel).is_file():
+                if not (work_tree / rel).is_file():
                     return _fail("(b)", f"本地 --source-tree 缺少远端树中的文件: {rel}")
-                chk = _git_run(["-C", str(source_tree), "--git-dir", str(td / ".git"),
+                chk = _git_run(["-C", str(work_tree), "--git-dir", str(td / ".git"),
                                 "ls-files", "--error-unmatch", "--", rel])
                 if chk.returncode != 0:
                     force_add.append(rel)
             if force_add:
-                fa = _git_run(["-C", str(source_tree), "--git-dir", str(td / ".git"),
+                fa = _git_run(["-C", str(work_tree), "--git-dir", str(td / ".git"),
                                "add", "-f", "--", *force_add])
                 if fa.returncode != 0:
                     return _fail("(b)", f"force-add 失败: {fa.stderr.strip()[:200]}")
@@ -482,7 +494,12 @@ def _build_install_bundle(lock_path: Path, target_name: str, source_tree: Path,
     shutil.copyfile(Path(__file__).resolve().parents[1] / "scripts" / "install.py",
                     bundle / "installer" / "install.py")
     for name in sorted(expected):
-        src = Path(source_tree) if name == target_name else Path(skills_home) / name
+        if name == target_name:
+            src = Path(source_tree)
+            if new_lock["skills"].get(name, {}).get("path"):
+                src = src / new_lock["skills"][name]["path"].strip("/")
+        else:
+            src = Path(skills_home) / name
         copy_tree(src, bundle / "locked-skills" / name)
     shutil.copyfile(Path(__file__).resolve().parents[1] / "config.example.env",
                     bundle / "config.example.env")
@@ -555,7 +572,11 @@ def build_rows(targets: list[str], lock_skills: dict, skills_home: Path,
         entry = lock_skills[name]
         if source_tree is not None:
             # 档44 source-tree mode: all fields derived from the upgrade tree
+            # 76K/合集仓:entry.path(如 skills/super-writer)存在时,skill_dir =
+            # source-tree 根 + path 子目录;branch 取合集仓根仓库分支。
             skill_dir = Path(source_tree)
+            if entry.get("path"):
+                skill_dir = skill_dir / entry["path"].strip("/")
             if not skill_dir.is_dir():
                 raise ValueError(f"{name}: --source-tree dir missing: {skill_dir}")
             root_sha, man_sha, nfiles = compute_skill_hashes(skill_dir)
@@ -568,7 +589,8 @@ def build_rows(targets: list[str], lock_skills: dict, skills_home: Path,
                 "runtime_file_count": nfiles,
                 "full_commit_sha": source_commit,
                 "source_tree_sha": remote_tree_sha,
-                "branch": _source_branch_of(skill_dir) or entry.get("branch"),
+                "branch": (_source_branch_of(Path(source_tree)) if entry.get("path")
+                    else _source_branch_of(skill_dir)) or entry.get("branch"),
                 # 档45R: skill_version MUST come from the exact same source doctor
                 # uses (skill_discovery._read_version L273-278 — for gzh-design that
                 # is RELEASE_NOTES.md line 1). Any divergence would write A in the
@@ -807,7 +829,9 @@ def main(argv=None) -> int:
             if not repo_url:
                 _err(f"{args.skill}: lock entry has no repository_url — remote witness impossible")
                 return EXIT_USAGE
-            ok_w, msg_w, info_w = verify_remote_witness(repo_url, source_commit, source_tree)
+            ok_w, msg_w, info_w = verify_remote_witness(
+                repo_url, source_commit, source_tree,
+                path=(lock_skills.get(args.skill) or {}).get("path"))
             print(msg_w)
             if not ok_w:
                 _err(msg_w)
