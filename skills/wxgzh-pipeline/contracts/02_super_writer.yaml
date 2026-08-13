@@ -13,6 +13,10 @@ outputs:
     - material-ledger.yaml
     - evidence-map.md
     - canonical_claim_registry.json
+    # 76Q/OBS-287:canonical_claim_registry.json 顶层必须是 dict {claims:[],materials:[]},
+    # 禁止数组;materials[].dedup_id 与 deduplicated_items.json 的 id 逐字一致;
+    # claim 与 material 的 source_url 逐字相等(含锚点)。完整规则与示例见
+    # super-writer/references/material-ingestion.md;机械层由 validate_single_product.py 强制。
     - core-card.md
     - outline.md
     - semantic-map.yaml

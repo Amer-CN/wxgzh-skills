@@ -102,6 +102,58 @@ claims:
     coverage: covered            # covered / partial / missing
 ```
 
+## canonical_claim_registry（主张注册表）
+
+`canonical_claim_registry.json` 是 super-writer 阶段必检产物（full-mode 12 件之一），
+顶层必须是 **对象（dict）**，禁止数组（76Q/OBS-287：76F 首版工具误按数组实现，
+与生产产物不符，三轮生产各踩一次返工）。
+
+### 结构（唯一真源形状）
+
+```json
+{
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "claim_text": "Grok 4.6 于 2026-08-12 发布",
+      "material_id": "M-01",
+      "source_url": "https://x.ai/news/grok-4-6",
+      "aihot_permalink": "https://aihot.virxact.com/items/...",
+      "source_excerpt": "逐字摘录", "numbers": [],
+      "support_strength": "strong", "qualifier": "", "conflict_status": "none"
+    }
+  ],
+  "materials": [
+    {
+      "material_id": "M-01",
+      "dedup_id": "cmsqabu...",
+      "source_url": "https://x.ai/news/grok-4-6",
+      "aihot_permalink": "https://aihot.virxact.com/items/...",
+      "provenance": "normal"
+    }
+  ]
+}
+```
+
+### 必填字段
+
+- `claims[].claim_id / claim_text / material_id / source_url / source_excerpt` 必填（76G-R）；
+- `materials[].material_id / dedup_id / source_url` 必填（76Q/OBS-287）。
+
+### dedup-id ↔ material_id 映射（76Q/OBS-287）
+
+`materials[].dedup_id` 必须与 aihot 阶段 `deduplicated_items.json` 对应条目的 `id`
+逐字一致（dedup 池内 id 是唯一键，aihot_permalink 类字段名税绝版）；
+`materials[].material_id` 是 registry 内部标识（M-NN）。claim 通过 `material_id` 挂到
+material；任何 claim 的 `material_id` 必须在 materials 中存在，否则 registry 无效。
+
+### claim / material source_url 逐字一致（76Q/OBS-287）
+
+同一 material 在 `claims[].source_url` 与 `materials[].source_url` 必须**逐字完全相等**
+——含锚点：一边带 `#anchor` 一边不带即不一致；大小写、协议、尾部斜杠均不得漂移。
+该规则由 `validate_single_product.py --product registry` 机械层强制（76Q 起），
+不再依赖 agent 自觉。
+
 ## 三层覆盖率
 
 ### source_coverage（素材覆盖率）

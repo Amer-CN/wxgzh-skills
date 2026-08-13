@@ -114,19 +114,21 @@ def test_validate_single_product_handoff(tmp_path):
     p = tmp_path / "handoff.yaml"
     p.write_text("schema_version: '2.2'\n", encoding="utf-8")
     errors, _ = VSP.check_handoff(p)
-    assert any("prose_craft_applied" in e for e in errors)
-    good = """schema_version: "2.2"
-prose_craft_applied: true
-prose_craft_version: "1.0"
-title_candidates: ["A", "B"]
-hook_line: "钩子"
-selected_title: "A"
-title_selection_reason: "具体"
-formatter:
-  cover:
-    kicker: null
-    strike: null
-    tags: null
+    # 76Q/OBS-285:与 full-mode 同构——顶层必须 {handoff: {...}} 双层包裹,单层平铺直接拒。
+    assert any("顶层必须是 {handoff: {...}}" in e for e in errors)
+    good = """handoff:
+  schema_version: "2.2"
+  prose_craft_applied: true
+  prose_craft_version: "1.0"
+  title_candidates: ["A", "B"]
+  hook_line: "钩子"
+  selected_title: "A"
+  title_selection_reason: "具体"
+  formatter:
+    cover:
+      kicker: null
+      strike: null
+      tags: null
 """
     p.write_text(good, encoding="utf-8")
     errors, _ = VSP.check_handoff(p)
@@ -138,10 +140,14 @@ def test_validate_single_product_registry(tmp_path):
     p.write_text(json.dumps([{"claim_id": "c1", "claim_text": "t",
                               "material_id": "m1"}]), encoding="utf-8")
     errors, _ = VSP.check_registry(p)
-    assert any("source_excerpt" in e for e in errors)
-    p.write_text(json.dumps([{"claim_id": "c1", "claim_text": "t",
-                              "material_id": "m1", "source_excerpt": "s"}]),
-                 encoding="utf-8")
+    # 76Q/OBS-287:registry 真实形状 = dict {claims, materials},数组形状直接拒。
+    assert any("顶层必须是对象" in e for e in errors)
+    p.write_text(json.dumps({
+        "claims": [{"claim_id": "c1", "claim_text": "t", "material_id": "m1",
+                    "source_url": "https://x.ai/a", "source_excerpt": "s"}],
+        "materials": [{"material_id": "m1", "dedup_id": "d1",
+                       "source_url": "https://x.ai/a"}],
+    }), encoding="utf-8")
     errors, _ = VSP.check_registry(p)
     assert not errors
 

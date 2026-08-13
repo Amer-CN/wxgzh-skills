@@ -4,7 +4,7 @@ import os, sys, hashlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.dirname(ROOT)
-BUNDLE_NAME = "super-writer-v0.3.8-rc1-source-bundle.md"
+BUNDLE_NAME = "super-writer-v0.3.9-rc1-source-bundle.md"
 BUNDLE_PATH = os.path.join(OUTPUT_DIR, BUNDLE_NAME)
 
 EXCLUDE_DIRS = {'__pycache__', '.git', '.pytest_cache'}

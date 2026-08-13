@@ -1,5 +1,17 @@
 # Release notes
 
+## v0.1.4
+
+76Q(档76Q):
+
+- OBS-286 修复:fidelity_guard 显式粗体豁免——extract_bold_spans 提取 `**text**` 加粗
+  span,compare_code 将粗体正文排除在行内代码比较之外(防御:未来即使把配对语法扩到
+  `**`,粗体也绝不误报为代码);extract_inline_code 契约文档化(仅反引号是行内代码
+  标记)。根因实证:渲染器不支持 `**` 加粗,语法门 probe 如实报 unsupported(非误判),
+  ADM/Harness 两轮「语法门拒加粗/去粗体根治」的行为层引导已写入 pipeline 指令。
+- run_tests.py:新增 FS-006(含 `**加粗**` 正文零 fail)/FS-007(真行内代码改动仍 fail)/
+  FS-008(粗体内行内代码改动仍 fail)。测试基数 82 → 85。
+
 ## v0.1.3
 
 76D(档76D):

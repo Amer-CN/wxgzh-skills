@@ -5,7 +5,7 @@ and creates a WeChat DRAFT. No formal publish / mass-send / schedule / delete
 capability exists in this package.
 """
 
-__version__ = "0.1.0-dev2-hotfix7R4"
+__version__ = "0.1.0-dev2-hotfix8R1"
 
 STAGES = [
     "aihot",

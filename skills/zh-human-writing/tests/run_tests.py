@@ -1164,10 +1164,48 @@ def test_forbidden_term_proper_noun():
                               f'strong={len(ft2)}'))
     return results
 
+
+def test_fidelity_bold_span():
+    """76Q/OBS-286:含 `**` 加粗标记的正文不得被误判/报告为行内代码;
+    真行内代码(反引号)仍逐字比较。"""
+    results = []
+    # 原/编两侧粗体正文一致 → 零 fail(此前「语法门拒加粗/去粗体根治」根因防护)
+    orig1 = "这是 **加粗的正文** 与普通文字。"
+    edit1 = "这是 **加粗的正文** 与普通文字(微调)。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig1),
+                              '--edited', write_temp(edit1), '--output', 'json'])
+    data = json.loads(out)
+    ok1 = data['fails'] == 0
+    results.append(TestResult('FS-006', 'fidelity-bold-span', ok1,
+                              f'含**加粗**正文 fails={data["fails"]}'))
+    # 真行内代码被改动 → 仍 fail(豁免只作用于粗体,不放宽代码门)
+    orig2 = "运行 `pip install wxgzh` 后重启。"
+    edit2 = "运行 `pip install other` 后重启。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig2),
+                              '--edited', write_temp(edit2), '--output', 'json'])
+    data2 = json.loads(out)
+    code_fails = [r for r in data2.get('fail_details', []) if r.get('category') == 'code']
+    ok2 = data2['fails'] > 0 and any(r['status'] == 'fail' for r in code_fails)
+    results.append(TestResult('FS-007', 'fidelity-inline-code-kept', ok2,
+                              f'行内代码改动 fails={data2["fails"]}'))
+    # 粗体内的行内代码改动 → 仍 fail(豁免不遮蔽代码)
+    orig3 = "详见 **`run.py --help`** 说明。"
+    edit3 = "详见 **`run.py --x`** 说明。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig3),
+                              '--edited', write_temp(edit3), '--output', 'json'])
+    data3 = json.loads(out)
+    code3 = [r for r in data3.get('fail_details', []) if r.get('category') == 'code']
+    ok3 = data3['fails'] > 0 and any(r['status'] == 'fail' for r in code3)
+    results.append(TestResult('FS-008', 'fidelity-bold-inline-code', ok3,
+                              f'粗体内行内代码改动 fails={data3["fails"]}'))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
     all_results = []
+    all_results.extend(test_fidelity_bold_span())
     all_results.extend(test_must_preserve())
     all_results.extend(test_must_edit())
     all_results.extend(test_fidelity_stress())

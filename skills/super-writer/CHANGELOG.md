@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.3.9-rc1 (2026-08-14) — 档76Q：76F 工具契约对齐 + 文档税打包
+
+### 修复
+
+- **validate_single_product.py**（OBS-285）：handoff 校验与 full-mode 同构——顶层必须
+  是 {handoff: {...}} 双层包裹，单层平铺直接拒（错误信息指向包进 handoff: 键下）；
+  registry 校验改为生产真实形状 dict {claims, materials}（数组形状直接拒），并新增
+  materials[].dedup_id / source_url 必填、claim.material_id 必须在 materials 中存在、
+  claim/material source_url 逐字一致（含锚点）三条机械校验。
+
+### 文档
+
+- **material-ingestion.md**（OBS-287）：canonical_claim_registry dict 形状（claims+
+  materials）与示例、dedup-id ↔ material_id 映射规则、claim/material source_url 逐字
+  一致规则（含锚点处理）三节落档；机械层由 validate_single_product --product registry 强制。
+
 ## v0.3.8-rc1 (2026-08-13) — 档76F：产物预校验 + 大纲预算自动对齐
 
 ### 新增

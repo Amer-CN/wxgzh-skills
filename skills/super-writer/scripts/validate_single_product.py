@@ -103,20 +103,30 @@ def check_handoff(path: Path) -> tuple[list, dict]:
     if not isinstance(data, dict):
         out_errors.append("handoff: 顶层必须是映射")
         return out_errors, {}
+    # 76Q/OBS-285:与 full-mode 校验器同构——顶层必须是 {handoff: {...}} 双层包裹。
+    # (76F 首版误按顶层平铺实现,与 validate_article_length.py --full-mode 的
+    # 嵌套期望冲突,agent 被迫手工嵌套;现以 full-mode 为准绳,两工具同判。)
+    if not isinstance(data.get("handoff"), dict):
+        out_errors.append("handoff: 顶层必须是 {handoff: {...}}(双层包裹,与 full-mode "
+                          "校验器同构);请把全部字段包进 handoff: 键下")
+        return out_errors, {}
+    h = data["handoff"]
     for field in HANDOFF_REQUIRED_FIELDS:
         # formatter.cover 为嵌套路径
         if "." in field:
             head, tail = field.split(".", 1)
-            if not isinstance(data.get(head), dict) or tail not in data[head]:
-                out_errors.append(f"handoff: 缺必填字段 `{field}`")
-        elif field not in data:
-            out_errors.append(f"handoff: 缺必填字段 `{field}`")
+            cover = h.get(head)
+            if not isinstance(cover, dict) or not isinstance(cover.get(tail), dict) \
+                    or not cover[tail]:
+                out_errors.append(f"handoff: 缺必填字段 `handoff.{field}`(非空 dict)")
+        elif h.get(field) in (None, ""):
+            out_errors.append(f"handoff: 缺必填字段 `handoff.{field}`")
     for field, ftype in HANDOFF_TITLE_FIELDS.items():
-        if field not in data:
-            out_errors.append(f"handoff: 缺标题字段 `{field}`(76A/76B)")
-        elif not isinstance(data.get(field), ftype):
-            out_errors.append(f"handoff: `{field}` 类型应为 {ftype.__name__}")
-    return out_errors, {"schema_version": data.get("schema_version")}
+        if field not in h:
+            out_errors.append(f"handoff: 缺标题字段 `handoff.{field}`(76A/76B)")
+        elif not isinstance(h.get(field), ftype):
+            out_errors.append(f"handoff: `handoff.{field}` 类型应为 {ftype.__name__}")
+    return out_errors, {"schema_version": h.get("schema_version")}
 
 
 def check_registry(path: Path) -> tuple[list, dict]:
@@ -126,17 +136,52 @@ def check_registry(path: Path) -> tuple[list, dict]:
     except ValueError as exc:
         return [f"registry: JSON 解析失败: {exc}"], {}
     out_errors = []
-    if not isinstance(data, list):
-        out_errors.append("registry: 顶层必须是数组")
+    # 76Q/OBS-287:registry 真实形状 = dict {claims: [...], materials: [...]}
+    # (76F 首版误按顶层数组实现,与生产产物不符,agent 被迫返工)。
+    if not isinstance(data, dict):
+        out_errors.append("registry: 顶层必须是对象 {claims: [...], materials: [...]}")
         return out_errors, {}
-    for i, row in enumerate(data):
+    claims = data.get("claims")
+    materials = data.get("materials")
+    if not isinstance(claims, list):
+        out_errors.append("registry: 缺 claims 数组(76Q/OBS-287)")
+    if not isinstance(materials, list):
+        out_errors.append("registry: 缺 materials 数组(76Q/OBS-287)")
+    if not isinstance(claims, list) or not isinstance(materials, list):
+        return out_errors, {"claims": type(claims).__name__,
+                            "materials": type(materials).__name__}
+    for i, row in enumerate(claims):
         if not isinstance(row, dict):
-            out_errors.append(f"registry[{i}]: 条目必须是对象")
+            out_errors.append(f"registry.claims[{i}]: 条目必须是对象")
             continue
-        for field in ("material_id", "claim_id", "claim_text", "source_excerpt"):
+        for field in ("claim_id", "claim_text", "material_id", "source_url",
+                      "source_excerpt"):
             if not row.get(field):
-                out_errors.append(f"registry[{i}]: 缺必填字段 `{field}`(76G-R)")
-    return out_errors, {"entries": len(data)}
+                out_errors.append(f"registry.claims[{i}]: 缺必填字段 `{field}`(76G-R)")
+    material_ids = {}
+    for i, row in enumerate(materials):
+        if not isinstance(row, dict):
+            out_errors.append(f"registry.materials[{i}]: 条目必须是对象")
+            continue
+        for field in ("material_id", "dedup_id", "source_url"):
+            if not row.get(field):
+                out_errors.append(f"registry.materials[{i}]: 缺必填字段 `{field}`(76Q/OBS-287)")
+        mid = row.get("material_id")
+        if mid:
+            material_ids[mid] = row
+    for i, row in enumerate(claims):
+        mid = row.get("material_id")
+        if mid and mid not in material_ids:
+            out_errors.append(f"registry.claims[{i}]: material_id `{mid}` 在 materials 中不存在"
+                              f"(dedup-id ↔ material_id 映射,76Q/OBS-287)")
+        mat = material_ids.get(mid)
+        if mat and row.get("source_url") and mat.get("source_url"):
+            # 逐字一致含锚点:两边必须原样相等,不得一边带 #anchor 一边不带。
+            if row["source_url"] != mat["source_url"]:
+                out_errors.append(
+                    f"registry.claims[{i}]: source_url 与 materials[{mid}].source_url "
+                    f"逐字不一致(含锚点原样一致,76Q/OBS-287)")
+    return out_errors, {"claims": len(claims), "materials": len(materials)}
 
 
 CHECKERS = {

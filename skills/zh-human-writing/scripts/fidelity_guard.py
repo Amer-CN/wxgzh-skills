@@ -69,9 +69,22 @@ def extract_code_blocks(text):
     return blocks
 
 def extract_inline_code(text):
-    """提取行内代码（`code`）。"""
+    """提取行内代码(`code`)。
+
+    76Q/OBS-286:仅成对反引号是行内代码标记;`**`(Markdown 加粗)不是行内代码,
+    含加粗标记的正文不得被归类/报告为行内代码段。契约由 tests 固定。
+    """
     codes = re.findall(r'`([^`]+)`', text)
     return codes
+
+
+def extract_bold_spans(text):
+    """提取 Markdown 加粗 span(`**text**`,非贪婪跨行)。
+
+    76Q/OBS-286:加粗是散文强调,不是行内代码;compare_code 用本函数做显式
+    豁免保护——即使未来有人把行内代码配对语法扩到 `**`,粗体正文也绝不
+    进入代码比较(不误报、不要求 agent 处理)。"""
+    return re.findall(r'\*\*(.+?)\*\*', text, re.DOTALL)
 
 def extract_commands(text):
     """提取命令行（以 $ 或 > 开头，或常见命令前缀）。"""
@@ -292,6 +305,14 @@ def compare_code(original, edited):
 
     orig_inline = extract_inline_code(original)
     edit_inline = extract_inline_code(edited)
+
+    # 76Q/OBS-286 防御:加粗 span 显式豁免——粗体正文绝不进入行内代码比较,
+    # 防止 tokenizer 把 `**` 配对误判为代码(ADM/Harness 轮「语法门拒加粗、
+    # 去粗体根治」的共同根因防护)。
+    bold_orig = set(extract_bold_spans(original))
+    bold_edit = set(extract_bold_spans(edited))
+    orig_inline = [c for c in orig_inline if c not in bold_orig]
+    edit_inline = [c for c in edit_inline if c not in bold_edit]
 
     for i, code in enumerate(orig_inline):
         if code not in edit_inline:
