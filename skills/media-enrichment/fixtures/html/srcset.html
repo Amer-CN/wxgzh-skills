@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Srcset Test</title></head>
+<body>
+  <h1>Test Page for srcset</h1>
+  <img src="https://example.com/images/fallback.jpg"
+       srcset="https://example.com/images/small.jpg 480w, https://example.com/images/medium.jpg 800w, https://example.com/images/large.jpg 1200w"
+       alt="Srcset test">
+  <picture>
+    <source srcset="https://example.com/images/webp-small.webp 480w, https://example.com/images/webp-large.webp 1200w">
+    <img src="https://example.com/images/fallback2.jpg" alt="Picture element">
+  </picture>
+</body>
+</html>

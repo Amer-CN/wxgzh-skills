@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install runtime and test dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt pytest pytest-json-report jsonschema
+      - name: Byte-compile all Python sources
+        run: python -m compileall -q .
+      - name: Run full offline pytest suite
+        run: python -m pytest -q --json-report --json-report-file=test-results.json
+      - name: Record skipped-test reasons
+        if: always()
+        run: python -m pytest -q -rs > pytest-skip-reasons.txt || true
+      - name: Enforce non-skippable safety suites
+        run: python -m pytest -q tests/test_single_asset_e2e.py tests/test_input_contract.py tests/test_uploader_manifest.py tests/test_validator.py tests/test_url_security.py
+      - name: wxgzh-pipeline integration lock present
+        run: test -f WXGZH_PIPELINE_INTEGRATION.md
+      - name: Upload structured test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-enrichment-pytest-results
+          path: |
+            test-results.json
+            pytest-skip-reasons.txt
+          if-no-files-found: error

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><title>Malicious SSRF Test</title></head>
+<body>
+  <h1>Test Page for SSRF Prevention</h1>
+  <!-- Private network URLs -->
+  <img src="http://127.0.0.1:8080/internal/secret" alt="Loopback">
+  <img src="http://192.168.1.1/admin" alt="Private network">
+  <img src="http://10.0.0.1/metadata" alt="Class A private">
+  <img src="http://169.254.169.254/latest/meta-data/" alt="AWS metadata">
+  <img src="http://localhost:3000/api/secrets" alt="Localhost">
+  <img src="http://100.100.100.200/latest/meta-data/" alt="Alibaba metadata">
+  <!-- Dangerous protocols -->
+  <img src="file:///etc/passwd" alt="File protocol">
+  <img src="javascript:alert(1)" alt="JavaScript protocol">
+  <img src="data:text/html,<script>alert(1)</script>" alt="Data protocol">
+  <!-- URLs with credentials -->
+  <img src="http://user:password@example.com/image.jpg" alt="URL with credentials">
+</body>
+</html>
