@@ -1,4 +1,4 @@
-​
+​<img src="docs/assets/cover.png" alt="wxgzh-skills 封面" width="100%">
 <div align="center">
 
 # 🧰 wxgzh-skills
