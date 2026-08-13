@@ -1,4 +1,4 @@
-​<img src="docs/assets/cover.png" alt="wxgzh-skills 封面" width="100%">
+​
 <div align="center">
 
 # 🧰 wxgzh-skills
@@ -8,6 +8,8 @@
 [![Skills](https://img.shields.io/badge/Skills-5-10B981?style=for-the-badge)](#-五个-skill)
 [![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-8B5CF6?style=for-the-badge)](https://agentskills.io)
 [![Pipeline](https://img.shields.io/badge/Pipeline-六阶段-3B82F6?style=for-the-badge)](#-它怎么工作)
+
+<img src="docs/assets/cover.png" alt="wxgzh-skills 封面" width="100%">
 
 </div>
 
