@@ -10,7 +10,6 @@
 [![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-8B5CF6?style=for-the-badge)](https://agentskills.io)
 [![Pipeline](https://img.shields.io/badge/Pipeline-六阶段-3B82F6?style=for-the-badge)](#-它怎么工作)
 
-<img src="docs/assets/cover.png" alt="gzh-forge 封面" width="100%">
 
 </div>
 
@@ -28,6 +27,8 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 ​
 一句话选题 → AI HOT 素材（含超窗补料）→ 材料重型长文写作 → 去 AI 味编辑
 → 配图（抓取/视频封面/数据图表 + 版权证据）→ 主题排版 → 微信草稿箱
+
+<img src="docs/assets/cover.png" alt="gzh-forge 流水线：选题→写作→去AI味→配图→排版→草稿箱" width="100%">
 
 每一步都有 receipt 回执；任何一关证据不足，宁可停机报告也不硬闯。
 **它只进草稿箱——发布、群发、定时永远是你手动。**
