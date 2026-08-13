@@ -2,6 +2,13 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
+## 0.1.0-dev19 (2026-08-13)
+
+- OBS-275(76F):discover 快失败 + 有界并行——页面抓取 ThreadPoolExecutor(worker=4)
+  并行、资产构建串行(asset_id 顺序稳定);x.com/twitter.com 原文页短超时(5s)
+  失败即跳过并记 manifest.discovery_side_effects,不拖整段;站内页/官方源保持 15s;
+  config.short_timeout_domains 可配置;pool 抓取同样短超时。测试 +3。
+
 ## 0.1.0-dev18 (2026-08-13)
 
 - OBS-270(76J):站内页绑定一致性——continue 重分类的 source 一致性检查认可

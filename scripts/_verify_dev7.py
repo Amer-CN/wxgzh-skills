@@ -13,7 +13,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_ROOT = SCRIPT_DIR.parent
 EVIDENCE_DIR = SKILL_ROOT / "evidence"
 
-REQUIRED_VERSION = "0.1.0-dev18"
+REQUIRED_VERSION = "0.1.0-dev19"
 
 
 def main():

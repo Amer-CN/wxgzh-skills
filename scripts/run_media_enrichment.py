@@ -20,6 +20,114 @@ sys.path.insert(0, str(SKILL_ROOT / "src"))
 from media_enrichment import __version__ as SKILL_VERSION
 from media_enrichment.input_contract import validate_request
 from media_enrichment.page_fetcher import fetch_page, scan_no_repost
+
+# 76F/OBS-275:已知不可抓域名(原文页动态渲染)——短超时 + 立即跳过,
+# 记 discovery_side_effects,不拖整段;aihot 站内页 / img-proxy / 官方源不受影响。
+SHORT_TIMEOUT_DOMAINS = {"x.com", "twitter.com"}
+SHORT_TIMEOUT_SECONDS = 5
+DEFAULT_FETCH_TIMEOUT = 15
+FETCH_WORKERS = 4
+
+
+def _host_of(url: str) -> str:
+    try:
+        from urllib.parse import urlsplit
+        return (urlsplit(url or "").hostname or "").lower()
+    except Exception:
+        return ""
+
+
+def _fetch_material_pages(mat: dict, network_mode: str, fixture_dir,
+                          short_domains=frozenset(SHORT_TIMEOUT_DOMAINS)) -> dict:
+    """76F:单素材三连抓取(站内页优先 → source 兜底+no-repost → permalink),
+    供 ThreadPoolExecutor 并行;返回结果字典,主循环按素材顺序串行消费,
+    保证资产 id 顺序稳定。x.com/twitter.com 原文页短超时(5s)失败即跳过。"""
+    material_id = mat.get("material_id", "")
+    permalink = (mat.get("aihot_permalink") or "").strip()
+    source_url = (mat.get("source_url") or "").strip()
+    internal_url = (mat.get("aihot_internal_url") or "").strip()
+    page_url = ""
+    fetch_result = None
+    extraction = None
+    page_kind = ""
+    no_repost_hits: list[str] = []
+    fallback_page = ""
+    fallback_fetch = None
+    fallback_extraction = None
+    fetched: set[str] = set()
+    side_effects: list[dict] = []
+    src_is_short = _host_of(source_url) in short_domains
+
+    # ① AI HOT 站内页优先(76C pool 通道同源;links.aihot 直出 HTML)
+    if internal_url and internal_url != source_url:
+        fr_in = fetch_page(internal_url, mode=network_mode, fixture_dir=fixture_dir,
+                           timeout=DEFAULT_FETCH_TIMEOUT)
+        fetched.add(internal_url)
+        if fr_in.success:
+            ex_in = extract_images(fr_in.content, page_url=internal_url)
+            if ex_in.candidates:
+                page_url, fetch_result, extraction, page_kind = (
+                    internal_url, fr_in, ex_in, "aihot_internal")
+            else:
+                fallback_page = internal_url
+                fallback_fetch = fr_in
+                fallback_extraction = ex_in
+        # 站内页无候选的 warning 由主循环按 page_kind/fallback 语义补(保持原输出)
+
+    # ② 原始来源页:无论主用页为何都抓取做 no-repost 扫描(规则保留);
+    #    已知不可抓域名短超时,失败即跳过并留痕,不拖整段。
+    if source_url and source_url not in fetched:
+        fr_src = fetch_page(source_url, mode=network_mode, fixture_dir=fixture_dir,
+                            timeout=SHORT_TIMEOUT_SECONDS if src_is_short
+                            else DEFAULT_FETCH_TIMEOUT)
+        fetched.add(source_url)
+        if fr_src.success:
+            no_repost_hits = scan_no_repost(fr_src.content)
+            if not page_url:
+                ex_src = extract_images(fr_src.content, page_url=source_url)
+                if ex_src.candidates:
+                    page_url, fetch_result, extraction, page_kind = (
+                        source_url, fr_src, ex_src, "source_url")
+                else:
+                    fallback_page = fallback_page or source_url
+                    fallback_fetch = fallback_fetch or fr_src
+                    fallback_extraction = fallback_extraction or ex_src
+        elif src_is_short:
+            side_effects.append({
+                "material_id": material_id, "url": source_url,
+                "skipped_reason": "short_timeout_domain:" + _host_of(source_url),
+                "duration_ms": fr_src.duration_ms})
+        # source 失败且站内页有候选:不额外 warning(原逻辑仅在无 page_url 时提示)
+
+    # ③ aihot_permalink 兜底(追溯链)
+    if not page_url and permalink and permalink not in fetched:
+        fr_p = fetch_page(permalink, mode=network_mode, fixture_dir=fixture_dir,
+                          timeout=DEFAULT_FETCH_TIMEOUT)
+        fetched.add(permalink)
+        if fr_p.success:
+            ex_p = extract_images(fr_p.content, page_url=permalink)
+            if ex_p.candidates:
+                page_url, fetch_result, extraction, page_kind = (
+                    permalink, fr_p, ex_p, "aihot_permalink")
+            else:
+                fallback_page = fallback_page or permalink
+                fallback_fetch = fallback_fetch or fr_p
+                fallback_extraction = fallback_extraction or ex_p
+
+    if not page_url and fallback_page:
+        page_url = fallback_page
+        fetch_result = fallback_fetch
+        extraction = fallback_extraction
+        page_kind = "fallback_no_candidates"
+
+    return {"material_id": material_id, "internal_url": internal_url,
+            "page_url": page_url, "fetch_result": fetch_result,
+            "extraction": extraction, "page_kind": page_kind,
+            "no_repost_hits": no_repost_hits,
+            "fallback_page": fallback_page, "fallback_fetch": fallback_fetch,
+            "fallback_extraction": fallback_extraction, "side_effects": side_effects}
+
+
 from media_enrichment.image_extractor import extract_images
 from media_enrichment.section_align import section_matches_claims
 from media_enrichment.proxy_decoder import decode_proxy_url
@@ -143,6 +251,7 @@ def main():
         print(f"[media-enrichment] ERROR: {exc}")
         sys.exit(1)
 
+    discovery_side_effects: list[dict] = []
     materials = request.get("materials", [])
     claims = request.get("claims", [])
     materials_by_id = {m["material_id"]: m for m in materials}
@@ -397,6 +506,20 @@ def main():
             accepted_assets_added += 1
         print(f"  User image {asset_id}: {url} — {decision}")
 
+    # 76F/OBS-275:页面抓取有界并行(worker=4)——抓取阶段并行、资产构建串行
+    # (asset_id 顺序稳定);x.com/twitter.com 原文页短超时跳过已留痕。
+    from concurrent.futures import ThreadPoolExecutor
+    _short_domains = frozenset(config.get("short_timeout_domains")
+                               or SHORT_TIMEOUT_DOMAINS)
+    fetch_results: dict[str, dict] = {}
+    if args.phase != "continue":
+        with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as _pool:
+            _done = list(_pool.map(
+                lambda _m: _fetch_material_pages(
+                    _m, network_mode, fixture_dir, _short_domains),
+                materials))
+        fetch_results = {r["material_id"]: r for r in _done}
+
     for mat in ([] if args.phase == "continue" else materials):
         material_id = mat["material_id"]
         permalink = mat.get("aihot_permalink", "")
@@ -414,69 +537,31 @@ def main():
             continue
 
         builder.pages_requested += 1
-        # 76E/OBS-260(用户确认业务规则):AI HOT 站内页优先——站内内容已经过
-        # 筛选、无广告图;站内页无候选图 → 原始来源页兜底;原始页「禁止转载/
-        # 禁止使用」扫描与来源追溯继续保留。
-        internal_url = (mat.get("aihot_internal_url") or "").strip()
-        page_url = ""
-        fetch_result = None
-        extraction = None
-        page_kind = ""
-        no_repost_hits: list[str] = []
-        fallback_page = ""  # 页面抓取成功但无候选时保留(无图属正常,走图表/降级车道)
-        fallback_fetch = None
-        fallback_extraction = None
-        fetched: set[str] = set()
-        # ① AI HOT 站内页优先(76C pool 通道同源;links.aihot 直出 HTML)
-        if internal_url and internal_url != source_url:
-            fr_in = fetch_page(internal_url, mode=network_mode, fixture_dir=fixture_dir)
-            fetched.add(internal_url)
-            if fr_in.success:
-                ex_in = extract_images(fr_in.content, page_url=internal_url)
-                if ex_in.candidates:
-                    page_url, fetch_result, extraction, page_kind = (
-                        internal_url, fr_in, ex_in, "aihot_internal")
-                else:
-                    fallback_page = internal_url
-                    fallback_fetch = fr_in
-                    fallback_extraction = ex_in
-                    builder.warnings.append(
-                        f"{material_id}: aihot internal page has no image candidates "
-                        "— falling back to source page")
-        # ② 原始来源页:无论主用页为何都抓取做 no-repost 扫描(规则保留);
-        #    站内页无候选时同时作为候选兜底。source_url==permalink 只抓一次。
-        if source_url and source_url not in fetched:
-            fr_src = fetch_page(source_url, mode=network_mode, fixture_dir=fixture_dir)
-            fetched.add(source_url)
-            if fr_src.success:
-                no_repost_hits = scan_no_repost(fr_src.content)
-                if not page_url:
-                    ex_src = extract_images(fr_src.content, page_url=source_url)
-                    if ex_src.candidates:
-                        page_url, fetch_result, extraction, page_kind = (
-                            source_url, fr_src, ex_src, "source_url")
-                    else:
-                        fallback_page = fallback_page or source_url
-                        fallback_fetch = fallback_fetch or fr_src
-                        fallback_extraction = fallback_extraction or ex_src
-            elif not page_url:
-                builder.warnings.append(
-                    f"{material_id}: source_url fetch failed — falling back to "
-                    f"aihot_permalink ({str(fr_src.error)[:120]})")
-        # ③ aihot_permalink 兜底(追溯链)
-        if not page_url and permalink and permalink not in fetched:
-            fr_p = fetch_page(permalink, mode=network_mode, fixture_dir=fixture_dir)
-            fetched.add(permalink)
-            if fr_p.success:
-                ex_p = extract_images(fr_p.content, page_url=permalink)
-                if ex_p.candidates:
-                    page_url, fetch_result, extraction, page_kind = (
-                        permalink, fr_p, ex_p, "aihot_permalink")
-                else:
-                    fallback_page = fallback_page or permalink
-                    fallback_fetch = fallback_fetch or fr_p
-                    fallback_extraction = fallback_extraction or ex_p
-
+        # 76F/OBS-275:抓取已在并行阶段完成(_fetch_material_pages),此处按素材
+        # 顺序消费结果——资产 id 顺序稳定;站内页优先语义不变。
+        fr = fetch_results.get(material_id) or _fetch_material_pages(
+            mat, network_mode, fixture_dir, _short_domains)
+        internal_url = fr["internal_url"]
+        page_url = fr["page_url"]
+        fetch_result = fr["fetch_result"]
+        extraction = fr["extraction"]
+        page_kind = fr["page_kind"]
+        no_repost_hits = fr["no_repost_hits"]
+        fallback_page = fr["fallback_page"]
+        fallback_fetch = fr["fallback_fetch"]
+        fallback_extraction = fr["fallback_extraction"]
+        discovery_side_effects.extend(fr["side_effects"])
+        # 保持原 warning 语义:站内页无候选回退 source;source 失败且无主用页。
+        if (internal_url and internal_url != source_url and not page_url
+                and fr["fallback_page"] == internal_url):
+            builder.warnings.append(
+                f"{material_id}: aihot internal page has no image candidates "
+                "— falling back to source page")
+        if (source_url and not page_url and fetch_result is not None
+                and not fetch_result.success):
+            builder.warnings.append(
+                f"{material_id}: source_url fetch failed — falling back to "
+                f"aihot_permalink ({str(fetch_result.error)[:120]})")
         if not page_url and fallback_page:
             page_url = fallback_page
             fetch_result = fallback_fetch
@@ -730,7 +815,9 @@ def main():
         for kind, page_url in page_candidates:
             if accepted_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
                 break
-            fr = fetch_page(page_url, mode=network_mode, fixture_dir=fixture_dir)
+            fr = fetch_page(page_url, mode=network_mode, fixture_dir=fixture_dir,
+                            timeout=SHORT_TIMEOUT_SECONDS if _host_of(page_url) in _short_domains
+                            else DEFAULT_FETCH_TIMEOUT)
             pool_fetched += 1
             if not fr.success:
                 continue
@@ -1102,6 +1189,7 @@ def main():
         builder.errors.extend([f"SECRET_DETECTED: {s}" for s in secrets])
         manifest = builder.build()
     manifest["gate"]["secrets_detected"] = len(secrets) > 0
+    manifest["discovery_side_effects"] = discovery_side_effects
 
     manifest_path = output_dir / "media_manifest.json"
     with open(manifest_path, "w", encoding="utf-8") as f:
