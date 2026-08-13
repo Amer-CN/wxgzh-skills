@@ -1,0 +1,69 @@
+# author/sample-manifest.template.yaml
+# zh-human-writing v1 — 样本清单模板
+# 本文件是模板，不包含真实样本数据。
+
+meta:
+  version: "1.0"
+  description: "作者样本清单模板，用于记录样本来源和元数据"
+
+# 生成规则：
+# 1. 少于 3 个样本时不生成正式 profile
+# 2. 样本必须有可验证的来源（URL + 哈希）
+# 3. 每个样本需采集前 200 字摘要
+
+samples:
+  - sample_id: "sample-001"
+    source_url: "https://example.com/article-001"
+    source_hash: "[SHA-256 哈希]"
+    short_excerpt: "[前 200 字摘要]"
+    word_count: 0  # 实际字数
+    collected_date: "2026-01-01"
+    verification_status: "verified"  # verified / unverified
+
+  - sample_id: "sample-002"
+    source_url: "https://example.com/article-002"
+    source_hash: "[SHA-256 哈希]"
+    short_excerpt: "[前 200 字摘要]"
+    word_count: 0
+    collected_date: "2026-01-01"
+    verification_status: "verified"
+
+  - sample_id: "sample-003"
+    source_url: "https://example.com/article-003"
+    source_hash: "[SHA-256 哈希]"
+    short_excerpt: "[前 200 字摘要]"
+    word_count: 0
+    collected_date: "2026-01-01"
+    verification_status: "verified"
+
+# 证据文章列表
+evidence_articles:
+  - article_id: "sample-001"
+    title: "[文章标题]"
+    url: "https://example.com/article-001"
+    hash: "[SHA-256]"
+    word_count: 0
+    genre: "essay"  # essay / technical / social
+    collected_date: "2026-01-01"
+
+  - article_id: "sample-002"
+    title: "[文章标题]"
+    url: "https://example.com/article-002"
+    hash: "[SHA-256]"
+    word_count: 0
+    genre: "essay"
+    collected_date: "2026-01-01"
+
+  - article_id: "sample-003"
+    title: "[文章标题]"
+    url: "https://example.com/article-003"
+    hash: "[SHA-256]"
+    word_count: 0
+    genre: "essay"
+    collected_date: "2026-01-01"
+
+# 适用文体
+applicable_genres:
+  - essay
+  # - technical
+  # - social

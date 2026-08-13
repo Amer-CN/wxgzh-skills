@@ -1,0 +1,125 @@
+{
+  "hard_residue": {
+    "count": 5,
+    "items": [
+      {
+        "rule_id": "HR-002",
+        "group": "hard_residue",
+        "severity": "audit",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "mark",
+        "location": "第1段第1句",
+        "span_text": "作为AI，我为您分析了当前市场上的产品趋势。{{产品名称}}是一款表现优秀的产品，值得推荐。\n\n希望这对你有帮助！如果还有其他问题，请随时告诉我。\n",
+        "reason": "AI自我标识:单次出现即可判定为AI残留",
+        "suggestion": "删除或替换该片段",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "HR-001",
+        "group": "hard_residue",
+        "severity": "audit",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "mark",
+        "location": "第1段第2句",
+        "span_text": "{{产品名称}}是一款表现优秀的产品，值得推荐。\n\n希望这对你有帮助！如果还有其他问题，请随时告诉我。\n",
+        "reason": "模板占位符:单次出现即可判定为AI残留",
+        "suggestion": "删除或替换该片段",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "HR-004",
+        "group": "hard_residue",
+        "severity": "audit",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "mark",
+        "location": "第2段第1句",
+        "span_text": "希望这对你有帮助！如果还有其他问题，请随时告诉我。\n",
+        "reason": "聊天助手残留:单次出现即可判定为AI残留",
+        "suggestion": "删除或替换该片段",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "HR-004",
+        "group": "hard_residue",
+        "severity": "audit",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "mark",
+        "location": "第2段第2句",
+        "span_text": "如果还有其他问题，请随时告诉我。\n",
+        "reason": "聊天助手残留:单次出现即可判定为AI残留",
+        "suggestion": "删除或替换该片段",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "HR-004",
+        "group": "hard_residue",
+        "severity": "audit",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "mark",
+        "location": "第2段第2句",
+        "span_text": "如果还有其他问题，请随时告诉我。\n",
+        "reason": "聊天助手残留:单次出现即可判定为AI残留",
+        "suggestion": "删除或替换该片段",
+        "language_origin": "language_general"
+      }
+    ]
+  },
+  "strong_contextual": {
+    "count": 0,
+    "high_confidence": [],
+    "low_confidence": []
+  },
+  "advisory_only": {
+    "count": 3,
+    "items": [
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第1句",
+        "span_text": "作为AI，我为您分析了当前市场上的产品趋势。{{产品名称}}是一款表现优秀的产品，值得推荐。\n\n希望这对你有帮助！如果还有其他问题，请随时告诉我。\n",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-007",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第1句",
+        "span_text": "希望这对你有帮助！如果还有其他问题，请随时告诉我。\n",
+        "reason": "二人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第2句",
+        "span_text": "如果还有其他问题，请随时告诉我。\n",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      }
+    ]
+  },
+  "overall": {
+    "pass_fail": "fail",
+    "description": "pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。"
+  }
+}

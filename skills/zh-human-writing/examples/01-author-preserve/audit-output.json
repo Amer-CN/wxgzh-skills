@@ -1,0 +1,59 @@
+{
+  "hard_residue": {
+    "count": 0,
+    "items": []
+  },
+  "strong_contextual": {
+    "count": 0,
+    "high_confidence": [],
+    "low_confidence": []
+  },
+  "advisory_only": {
+    "count": 3,
+    "items": [
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第3句",
+        "span_text": "我爬起来去看，发现它在追一只飞蛾。住了三年这个小区，第一次知道半夜的窗外有飞蛾。\n\n后来我查了一下，城市里的飞蛾大多是趋光性的。楼下的路灯大概就是吸引源。猫比我知道得多，它早就发现了这件事，只是没人告…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第1句",
+        "span_text": "后来我查了一下，城市里的飞蛾大多是趋光性的。楼下的路灯大概就是吸引源。猫比我知道得多，它早就发现了这件事，只是没人告诉它那叫趋光性。\n",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第3句",
+        "span_text": "猫比我知道得多，它早就发现了这件事，只是没人告诉它那叫趋光性。\n",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      }
+    ]
+  },
+  "overall": {
+    "pass_fail": "pass",
+    "description": "pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。"
+  }
+}

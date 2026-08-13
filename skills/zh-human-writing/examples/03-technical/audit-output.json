@@ -1,0 +1,19 @@
+{
+  "hard_residue": {
+    "count": 0,
+    "items": []
+  },
+  "strong_contextual": {
+    "count": 0,
+    "high_confidence": [],
+    "low_confidence": []
+  },
+  "advisory_only": {
+    "count": 0,
+    "items": []
+  },
+  "overall": {
+    "pass_fail": "pass",
+    "description": "pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。"
+  }
+}

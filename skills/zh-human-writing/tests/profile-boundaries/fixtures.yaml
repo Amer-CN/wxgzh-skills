@@ -1,0 +1,112 @@
+# tests/profile-boundaries/fixtures.yaml
+# zh-human-writing v1 — profile-boundaries 测试用例
+# 验证 profile 边界不被越界。
+
+test_cases:
+  - test_id: "PB-001"
+    description: "technical profile 不报告步骤说明"
+    input:
+      text: "首先，安装 Node.js。然后，运行 npm install。最后，执行 npm start。"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "保留步骤说明"
+      prohibited_actions:
+        - "将步骤说明当作阶段递进结构壳删除"
+        - "改变步骤顺序"
+      must_preserve:
+        - "首先，安装 Node.js"
+        - "然后，运行 npm install"
+        - "最后，执行 npm start"
+      allowed_changes: []
+    judgment:
+      method: "步骤说明在终稿中逐字存在"
+      auto_check: "pattern_audit.py pass"
+      manual_check: "无"
+
+  - test_id: "PB-002"
+    description: "essay profile 步骤说明"
+    input:
+      text: "首先，安装 Node.js。然后，运行 npm install。最后，执行 npm start。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "essay 正常执行"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py 不崩溃"
+      auto_check: "pattern_audit.py"
+      manual_check: "无"
+
+  - test_id: "PB-003"
+    description: "social profile 假互动不报告"
+    input:
+      text: "你可能会问，这个产品好用吗？你想知道吗？"
+      source: "ai_draft"
+      profile: "social"
+      output: "diff"
+    expected:
+      action: "假互动在社媒中是常态"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py pass"
+      auto_check: "pattern_audit.py"
+      manual_check: "无"
+
+  - test_id: "PB-004"
+    description: "essay profile 假互动"
+    input:
+      text: "你可能会问，这个产品好用吗？你想知道吗？你想了解更多吗？"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "essay 正常检测"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py 不崩溃"
+      auto_check: "pattern_audit.py"
+      manual_check: "无"
+
+  - test_id: "PB-005"
+    description: "technical profile 被动语态不检测"
+    input:
+      text: "代码被执行。数据被处理。结果被返回。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "被动语态在技术文档中是常态"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py pass"
+      auto_check: "pattern_audit.py"
+      manual_check: "无"
+
+  - test_id: "PB-006"
+    description: "social profile 短句不检测"
+    input:
+      text: "好。对。行。可以。没问题。"
+      source: "ai_draft"
+      profile: "social"
+      output: "diff"
+    expected:
+      action: "短句在社媒中是常态"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py pass"
+      auto_check: "pattern_audit.py"
+      manual_check: "无"

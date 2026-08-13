@@ -1,0 +1,196 @@
+{
+  "hard_residue": {
+    "count": 0,
+    "items": []
+  },
+  "strong_contextual": {
+    "count": 4,
+    "high_confidence": [
+      {
+        "rule_id": "SC-005",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第24句",
+        "span_text": "我心里暗笑他的迂；他们只认得钱，托他们只是白托！而且我这样大年纪的人，难道还不能料理自己么？唉，我现在想想，那时真是太聪明了！\n\n我说道：“爸爸，你走吧。”他望车外看了看说：“我买几个橘子去。你就在此…",
+        "reason": "连续等长句:连续3句句长相近",
+        "suggestion": "复核是否真为同构句式;修辞排比应保留",
+        "language_origin": "language_general",
+        "cluster_count": 3,
+        "cluster_threshold": 3
+      },
+      {
+        "rule_id": "SC-005",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第24句",
+        "span_text": "我心里暗笑他的迂；他们只认得钱，托他们只是白托！而且我这样大年纪的人，难道还不能料理自己么？唉，我现在想想，那时真是太聪明了！\n\n我说道：“爸爸，你走吧。”他望车外看了看说：“我买几个橘子去。你就在此…",
+        "reason": "连续等长句:连续4句句长相近",
+        "suggestion": "复核是否真为同构句式;修辞排比应保留",
+        "language_origin": "language_general",
+        "cluster_count": 4,
+        "cluster_threshold": 3
+      },
+      {
+        "rule_id": "SC-005",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第4句",
+        "span_text": "”我看那边月台的栅栏外有几个卖东西的等着顾客。走到那边月台，须穿过铁道，须跳下去又爬上去。父亲是一个胖子，走过去自然要费事些。我本来要去的，他不肯，只好让他去。我看见他戴着黑布小帽，穿着黑布大马褂，深…",
+        "reason": "连续等长句:连续3句句长相近",
+        "suggestion": "复核是否真为同构句式;修辞排比应保留",
+        "language_origin": "language_general",
+        "cluster_count": 3,
+        "cluster_threshold": 3
+      },
+      {
+        "rule_id": "SC-005",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第4句",
+        "span_text": "”我看那边月台的栅栏外有几个卖东西的等着顾客。走到那边月台，须穿过铁道，须跳下去又爬上去。父亲是一个胖子，走过去自然要费事些。我本来要去的，他不肯，只好让他去。我看见他戴着黑布小帽，穿着黑布大马褂，深…",
+        "reason": "连续等长句:连续4句句长相近",
+        "suggestion": "复核是否真为同构句式;修辞排比应保留",
+        "language_origin": "language_general",
+        "cluster_count": 4,
+        "cluster_threshold": 3
+      }
+    ],
+    "low_confidence": []
+  },
+  "advisory_only": {
+    "count": 7,
+    "items": [
+      {
+        "rule_id": "AO-003",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第3句",
+        "span_text": "我从北京到徐州，打算跟着父亲奔丧回家。到徐州见着父亲，看见满院狼藉的东西，又想起祖母，不禁簌簌地流下眼泪。父亲说：“事已如此，不必难过，好在天无绝人之路！”回家变卖典质，父亲还了亏空；又借钱办了丧事。…",
+        "reason": "从…到…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-006",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第25句",
+        "span_text": "而且我这样大年纪的人，难道还不能料理自己么？唉，我现在想想，那时真是太聪明了！\n\n我说道：“爸爸，你走吧。”他望车外看了看说：“我买几个橘子去。你就在此地，不要走动。”我看那边月台的栅栏外有几个卖东西…",
+        "reason": "反问:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第1句",
+        "span_text": "我与父亲不相见已二年余了，我最不能忘记的是他的背影。那年冬天，祖母死了，父亲的差使也交卸了，正是祸不单行的日子。我从北京到徐州，打算跟着父亲奔丧回家。到徐州见着父亲，看见满院狼藉的东西，又想起祖母，不…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general",
+        "occurrence_count": 22
+      },
+      {
+        "rule_id": "AO-002",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第15句",
+        "span_text": "过铁道时，他先将橘子散放在地上，自己慢慢爬下，再抱起橘子走。到这边时，我赶紧去搀他。他和我走到车上，将橘子一股脑儿放在我的皮大衣上。于是扑扑衣上的泥土，心里很轻松似的。过一会说：“我走了，到那边来信！…",
+        "reason": "先…再…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-007",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第1句",
+        "span_text": "我说道：“爸爸，你走吧。”他望车外看了看说：“我买几个橘子去。你就在此地，不要走动。”我看那边月台的栅栏外有几个卖东西的等着顾客。走到那边月台，须穿过铁道，须跳下去又爬上去。父亲是一个胖子，走过去自然…",
+        "reason": "二人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general",
+        "occurrence_count": 2
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第1句",
+        "span_text": "我说道：“爸爸，你走吧。”他望车外看了看说：“我买几个橘子去。你就在此地，不要走动。”我看那边月台的栅栏外有几个卖东西的等着顾客。走到那边月台，须穿过铁道，须跳下去又爬上去。父亲是一个胖子，走过去自然…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general",
+        "occurrence_count": 17
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第3段第1句",
+        "span_text": "近几年来，父亲和我都是东奔西走，家中光景是一日不如一日。他少年出外谋生，独力支持，做了许多大事。哪知老境却如此颓唐！他触目伤怀，自然情不能自已。情郁于中，自然要发之于外；家庭琐屑便往往触他之怒。他待我…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general",
+        "occurrence_count": 10
+      }
+    ]
+  },
+  "statistical": {
+    "count": 1,
+    "items": [
+      {
+        "rule_id": "ST-005",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "我与父亲不相见已二年余了，我最不能忘记的是他的背影。那年冬天，祖母死了，父亲的差使也交卸了，正是祸不单行的日子。我从北京到徐州，打算跟着父亲奔丧回家。到徐州见着父亲，看见满院狼藉的东西，又想起祖母，不…",
+        "reason": "长前置成分 4 处(句首至首逗号 >= 12 汉字),超过阈值 max(2, H//1200)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 4,
+        "threshold": 2
+      }
+    ]
+  },
+  "overall": {
+    "pass_fail": "pass",
+    "description": "pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。"
+  }
+}

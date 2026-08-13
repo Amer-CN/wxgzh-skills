@@ -1,0 +1,72 @@
+# tests/long-form/fixtures.yaml
+# zh-human-writing v1 — long-form 测试用例
+# 验证长文编辑不缩水。
+
+test_cases:
+  - test_id: "LF-001"
+    description: "strict 模式字数留存 ≥ 0.90"
+    input:
+      text: "（3000+ 字文章）"
+      source: "author_written"
+      strategy: "preserve"
+      profile: "essay"
+      length_retention: "strict"
+      output: "diff"
+    expected:
+      action: "只做句内改写，不删整句"
+      prohibited_actions:
+        - "删除整句"
+        - "合并段落"
+        - "字数留存率 < 0.90"
+      must_preserve:
+        - "段落数不变"
+        - "字数留存率 ≥ 0.90"
+      allowed_changes:
+        - "句内词语替换"
+        - "删除 hard-residue"
+    judgment:
+      method: "change_report.py 长度比例 ≥ 0.90"
+      auto_check: "change_report.py"
+      manual_check: "确认无整句删除"
+
+  - test_id: "LF-002"
+    description: "balanced 模式字数留存 ≥ 0.80"
+    input:
+      text: "（3000+ 字文章）"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "essay"
+      length_retention: "balanced"
+      output: "diff"
+    expected:
+      action: "可删空句，字数留存 ≥ 0.80"
+      prohibited_actions:
+        - "字数留存率 < 0.80"
+      must_preserve:
+        - "字数留存率 ≥ 0.80"
+      allowed_changes:
+        - "删除空句"
+        - "句内改写"
+    judgment:
+      method: "change_report.py 长度比例 ≥ 0.80"
+      auto_check: "change_report.py"
+      manual_check: "无"
+
+  - test_id: "LF-003"
+    description: "strict 模式长度不足 → 不达标"
+    input:
+      text: "（3000+ 字文章）"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "essay"
+      length_retention: "strict"
+      output: "diff"
+    expected:
+      action: "长度不足 0.90 标记为不达标"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "change_report.py meets_threshold=false"
+      auto_check: "change_report.py"
+      manual_check: "无"

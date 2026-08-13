@@ -1,0 +1,203 @@
+# tests/must-preserve/fixtures.yaml
+# zh-human-writing v1 — must-preserve 测试用例
+# 验证不应被修改的内容在编辑后保持不变。
+
+test_cases:
+  - test_id: "MP-001"
+    description: "数字在编辑后不变"
+    input:
+      text: "系统响应时间为 100ms，在 2024 年 1 月 15 日的测试中，延迟降低了 30%。"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "technical"
+      length_retention: "balanced"
+      output: "diff"
+    expected:
+      action: "可改写周围文字，但数字不变"
+      prohibited_actions:
+        - "将 100ms 改为 99ms"
+        - "将 30% 改为 35%"
+      must_preserve:
+        - "100ms"
+        - "30%"
+        - "2024 年 1 月 15 日"
+      allowed_changes:
+        - "删除无信息提示层"
+    judgment:
+      method: "在终稿中搜索 '100ms'、'30%'，必须逐字存在"
+      auto_check: "fidelity_guard.py 数字检查"
+      manual_check: "无"
+
+  - test_id: "MP-002"
+    description: "数字被改变时检测到"
+    input:
+      text: "系统响应时间为 100ms。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "fidelity_guard 输出 fail"
+      prohibited_actions:
+        - "将 100ms 改为 99ms"
+      must_preserve:
+        - "100ms"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py 检测到数字变化"
+      auto_check: "fidelity_guard.py fail > 0"
+      manual_check: "无"
+
+  - test_id: "MP-003"
+    description: "日期格式变化允许"
+    input:
+      text: "在 2024 年 1 月 15 日，系统上线。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "日期格式可从 YYYY年M月D日 变为 YYYY-MM-DD"
+      prohibited_actions:
+        - "改变日期值"
+      must_preserve:
+        - "2024-01-15（等价）"
+      allowed_changes:
+        - "日期格式变化"
+    judgment:
+      method: "fidelity_guard.py 日期检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"
+
+  - test_id: "MP-004"
+    description: "URL 不变"
+    input:
+      text: "详见 https://example.com/docs/api/v2"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "URL 逐字保留"
+      prohibited_actions:
+        - "改变 URL 路径"
+      must_preserve:
+        - "https://example.com/docs/api/v2"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py URL 检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"
+
+  - test_id: "MP-005"
+    description: "URL 被改变时检测到"
+    input:
+      text: "详见 https://example.com/docs/api/v2"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "fidelity_guard 输出 fail"
+      prohibited_actions:
+        - "将 v2 改为 v3"
+      must_preserve:
+        - "https://example.com/docs/api/v2"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py 检测到 URL 变化"
+      auto_check: "fidelity_guard.py fail > 0"
+      manual_check: "无"
+
+  - test_id: "MP-006"
+    description: "行内代码不变"
+    input:
+      text: "使用命令 `npm install` 安装依赖。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "行内代码逐字保留"
+      prohibited_actions:
+        - "将 npm install 改为 npm i"
+      must_preserve:
+        - "npm install"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py 代码检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"
+
+  - test_id: "MP-007"
+    description: "代码被改变时检测到"
+    input:
+      text: "使用命令 `npm install` 安装依赖。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "fidelity_guard 输出 fail"
+      prohibited_actions:
+        - "将 npm install 改为 npm i"
+      must_preserve:
+        - "npm install"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py 代码检查 fail"
+      auto_check: "fidelity_guard.py fail > 0"
+      manual_check: "无"
+
+  - test_id: "MP-008"
+    description: "千分位格式变化允许"
+    input:
+      text: "处理了 1,000,000 次请求。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "千分位可去掉或添加"
+      prohibited_actions:
+        - "改变数值"
+      must_preserve:
+        - "1000000（等价）"
+      allowed_changes:
+        - "千分位格式变化"
+    judgment:
+      method: "fidelity_guard.py 数字检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"
+
+  - test_id: "MP-009"
+    description: "百分比符号变化允许"
+    input:
+      text: "增长了 25%。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "% ↔ ％ 允许"
+      prohibited_actions:
+        - "改变数值"
+      must_preserve:
+        - "25%（等价）"
+      allowed_changes:
+        - "百分比符号变化"
+    judgment:
+      method: "fidelity_guard.py 百分比检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"
+
+  - test_id: "MP-010"
+    description: "用户 protected spans 不变"
+    input:
+      text: "[[protected]]这段不能改[[/protected]]"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "用户标记的片段逐字保留"
+      prohibited_actions:
+        - "修改 protected span 内容"
+      must_preserve:
+        - "这段不能改"
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py user_protected 检查 pass"
+      auto_check: "fidelity_guard.py fails=0"
+      manual_check: "无"

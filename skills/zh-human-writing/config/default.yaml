@@ -1,0 +1,137 @@
+# config/default.yaml
+# zh-human-writing v1 — 默认配置
+
+meta:
+  version: "1.0"
+
+# 默认参数（与 input-contract.md 一致）
+defaults:
+  source: unknown
+  strategy: null  # 由 source 推导
+  profile: essay
+  length_retention: balanced
+  output: clean
+
+# source → strategy 映射
+source_strategy_mapping:
+  author_written: preserve
+  ai_draft: balance
+  mixed: balance
+  unknown: preserve
+
+# 长度留存率阈值
+length_retention_thresholds:
+  strict: 0.90
+  balanced: 0.80
+  free: 0.00
+
+# 模式聚集阈值
+cluster_thresholds:
+  strong_contextual: 2  # 同段 ≥2 次才标记
+  consecutive_isomorphic: 3  # 连续 ≥3 个相同句式
+
+# 档72C-2/§7:逐规则逐 profile 阈值(单一真源,由 pattern_audit.load_config 注入)。
+# 取值=references/patterns/strong-contextual.md 逐条声明;SC-007a 阈值 1(§4)。
+pattern_thresholds:
+  SC-001: {essay: 2, technical: 3, social: 2}
+  SC-002: {essay: 2, technical: 3, social: 2}
+  SC-003: {essay: 2, technical: 3, social: 2}
+  SC-004: {essay: 2, technical: 2, social: 2}
+  SC-005: {essay: 3, technical: 3, social: 3}
+  SC-006: {essay: 2, technical: 2, social: 4}
+  SC-007a: {essay: 1, technical: 1, social: 1}
+  # 档72C-4:词表规则阈值(词本体在 references/lexicon-deai.yaml)
+  SC-009: {essay: 1, technical: 1, social: 1}  # 绝对黑话
+  SC-010: {essay: 1, technical: 1, social: 1}  # 模型路标
+  SC-011: {essay: 2, technical: 2, social: 2}  # 抒情聚集(同段 AO-014 >=2)
+
+# 保真检查
+fidelity:
+  deterministic_checks:
+    - number
+    - date
+    - url
+    - code
+    - command
+    - path
+    - quote
+    - user_protected
+  warning_checks:
+    - negation
+    - condition
+    - causation
+    - responsibility
+    - uncertainty
+    - register_drift
+    - voice_drift
+  rollback_on_fail: true
+  auto_retry: false
+
+# 残留检查
+residual_check:
+  max_rounds: 1
+  check_level: hard_residue_only
+
+# 档72C-6R/任务4:统计检测层(任务书 §4 逐字照抄)。阈值与词表全部在此,标注「待校准基线」。
+# H=屏蔽后总汉字数(D1);方向不一致,禁止统一乘数(D2);词表逐字照抄任务书。
+statistical:
+  st001_cv:
+    name: 句长变异系数
+    enabled: {essay: true, technical: true, social: false}
+    threshold: {essay: 0.42, technical: 0.30, social: null}  # 待校准基线
+    min_sentence_len: 4
+    min_sentences: 12
+    exempt_list_steps: true
+  st002_conjunction_density:
+    name: 连词密度
+    enabled: {essay: true, technical: true, social: false}
+    threshold: {essay: 7.0, technical: 10.0, social: null}  # 待校准基线
+    min_h: 600
+    exempt_list_steps: true
+    words: [因为, 所以, 但是, 然而, 同时, 此外, 而且, 并且, 因此, 不仅]
+  st003_quote_highlight:
+    name: 「」高亮
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 3  # 待校准基线
+    formula_divisor: 700  # 待校准基线
+  st004_soft_signposts:
+    name: 软路标
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 2  # 待校准基线
+    formula_divisor: 900  # 待校准基线
+    words: [真正, 本质上, 更深层次, 归根结底, 换句话说, 不可否认, 核心是, 关键在于, 这意味着]
+  st005_long_prelude:
+    name: 长前置成分
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 2  # 待校准基线
+    formula_divisor: 1200  # 待校准基线
+    min_hanzi: 12
+  st006_heavy_de:
+    name: 重"的"长句
+    enabled: {essay: true, technical: true, social: true}
+    formula_base: 1  # 待校准基线
+    formula_divisor: 1500  # 待校准基线
+    min_sentence_hanzi: 38
+    min_de: 4
+  st007_single_sentence_para:
+    name: 单句段占比
+    enabled: {essay: true, technical: true, social: false}
+    ratio: 0.75  # 待校准基线
+    min_paragraphs: 10
+    exempt_list_steps: true
+  st008_consecutive_short_paras:
+    name: 连续短段
+    enabled: {essay: true, technical: true, social: false}
+    min_run: 4  # 待校准基线
+    max_hanzi: 24
+    max_sentences: 1
+    exempt_list_steps: true
+  st009_para_opening_repeat:
+    name: 段落开场重复
+    enabled: {essay: true, technical: true, social: true}
+    min_hits: 4  # 待校准基线
+    words: [其实, 不过, 当然, 所以, 但是, 后来, 当时, 很多人, 问题是, 更重要的是, 说到这里]
+# 输出
+output:
+  max_audit_issues: 5
+  benchmark_limitation_notice: true

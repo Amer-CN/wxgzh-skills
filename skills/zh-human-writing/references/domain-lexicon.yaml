@@ -1,0 +1,116 @@
+# references/domain-lexicon.yaml
+# zh-human-writing v1 — 核心术语词典
+# 不维护大型固定行业白名单。只包含高频、稳定的技术术语。
+# 用户可扩展。
+
+meta:
+  version: "1.0"
+  description: >
+    核心词典只包含高频、稳定的技术术语。
+    不包含名人昵称和互联网速记（过时风险大）。
+    用户可在此基础上有扩展。
+
+# 技术术语（中英混排高频词）
+# 这些术语在编辑中应逐字保护，不替换为非标准译名
+technical_terms:
+  # 前端
+  - term: "Node.js"
+    category: "framework"
+  - term: "npm"
+    category: "package_manager"
+  - term: "React"
+    category: "framework"
+  - term: "Vue"
+    category: "framework"
+  - term: "Angular"
+    category: "framework"
+  - term: "TypeScript"
+    category: "language"
+  - term: "JavaScript"
+    category: "language"
+  - term: "CSS"
+    category: "language"
+  - term: "HTML"
+    category: "language"
+
+  # 后端
+  - term: "Python"
+    category: "language"
+  - term: "Java"
+    category: "language"
+  - term: "Go"
+    category: "language"
+  - term: "Rust"
+    category: "language"
+  - term: "Docker"
+    category: "tool"
+  - term: "Kubernetes"
+    category: "tool"
+  - term: "Redis"
+    category: "database"
+  - term: "PostgreSQL"
+    category: "database"
+  - term: "MySQL"
+    category: "database"
+  - term: "MongoDB"
+    category: "database"
+
+  # 通用
+  - term: "API"
+    category: "concept"
+  - term: "SDK"
+    category: "concept"
+  - term: "CLI"
+    category: "concept"
+  - term: "CPU"
+    category: "hardware"
+  - term: "GPU"
+    category: "hardware"
+  - term: "SSD"
+    category: "hardware"
+  - term: "RAM"
+    category: "hardware"
+  - term: "URL"
+    category: "concept"
+  - term: "HTTP"
+    category: "protocol"
+  - term: "HTTPS"
+    category: "protocol"
+  - term: "JSON"
+    category: "format"
+  - term: "XML"
+    category: "format"
+  - term: "YAML"
+    category: "format"
+  - term: "CSV"
+    category: "format"
+  - term: "REST"
+    category: "architecture"
+  - term: "gRPC"
+    category: "protocol"
+  - term: "CI/CD"
+    category: "concept"
+  - term: "Git"
+    category: "tool"
+  - term: "GitHub"
+    category: "platform"
+  - term: "GitLab"
+    category: "platform"
+
+# 常见命令（应逐字保护）
+common_commands:
+  - "npm install"
+  - "npm run"
+  - "npm start"
+  - "npm test"
+  - "pip install"
+  - "docker build"
+  - "docker run"
+  - "git clone"
+  - "git commit"
+  - "git push"
+  - "git pull"
+
+# 用户扩展接口
+# 用户可在 user_extensions 下添加自己的术语
+user_extensions: {}

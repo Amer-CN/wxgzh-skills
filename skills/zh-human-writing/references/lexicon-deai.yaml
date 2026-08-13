@@ -1,0 +1,88 @@
+# references/lexicon-deai.yaml
+# zh-human-writing — 去 AI 味检测词表（档72C-4 新建,OBS-233 闭合）
+# 用途:检测词表(哪些词该被标记),与 references/domain-lexicon.yaml(误杀防护:
+# 哪些词别碰)用途相反,故不混写。词表逐字照任务书 §3.2~§3.5,一个不增一个不减。
+# 词只在本文件,阈值只在 config/default.yaml pattern_thresholds,两处不得出现第二份。
+
+version: 1
+
+# §3.2 绝对黑话(27 词) → SC-009(strong,threshold 1,confidence high)
+absolute_jargon:
+  - 赋能
+  - 抓手
+  - 商业闭环
+  - 价值闭环
+  - 能力沉淀
+  - 拉通
+  - 底层逻辑
+  - 顶层设计
+  - 认知跃迁
+  - 价值释放
+  - 能力建设
+  - 降本增效
+  - 内容矩阵
+  - 全链路
+  - 组合拳
+  - 打开想象空间
+  - 结构性机会
+  - 关键命题
+  - 深层逻辑
+  - 技术底座
+  - 公共底座
+  - 技术主权
+  - 单点风险
+  - 主脊柱
+  - 材料锚点
+  - 认知增量
+  - 迭代闭环
+
+# §3.6 禁用词(76D/OBS-253 新增,2 词) → FT-001(strong;命中疑似专名时降级 advisory)
+# 背景:Luma Agents 三轮连中 + 流水线 ×2——"Agent" 被当作禁用词强制改写,违反
+# 「不得改产品名」铁律。机制:forbidden_term 命中疑似专名(大写开头英文词、
+# 引号/「」内文本、产品名语境)时降级为 advisory(报告留痕,不强制改写、不判
+# fail);普通命中语义不变(strong)。
+forbidden_term:
+  - Agent
+  - 智能体助手
+
+# §3.3 语境黑话(14 词) → AO-013(advisory,永不升 strong)
+contextual_jargon:
+  - 沉淀
+  - 颗粒度
+  - 对齐
+  - 协同
+  - 链路
+  - 生态位
+  - 心智
+  - 范式
+  - 方法论
+  - 核心变量
+  - 打法
+  - 想象空间
+  - 闭环
+  - 不丢
+
+# §3.4 抒情词(12 词) → AO-014(advisory,单发只 advisory;同段 >=2 升 SC-011)
+lyrical:
+  - 安放
+  - 抵达
+  - 微光
+  - 褶皱
+  - 丰盈
+  - 滚烫
+  - 轻盈
+  - 赤裸
+  - 剥开
+  - 锋利
+  - 坚硬
+  - 柔软
+
+# §3.5 模型路标(6 词) → SC-010(strong,threshold 1,confidence high)
+# 「还有一层」按前缀模式:r'还有一层[^。！？!?\n]',后接实际内容才命中。
+model_signposts:
+  - 更微妙的是
+  - 还有一层
+  - 只说对了一半
+  - 值得注意的是
+  - 需要指出的是
+  - 从某种意义上说

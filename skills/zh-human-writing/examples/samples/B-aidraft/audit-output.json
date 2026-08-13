@@ -1,0 +1,180 @@
+{
+  "hard_residue": {
+    "count": 0,
+    "items": []
+  },
+  "strong_contextual": {
+    "count": 2,
+    "high_confidence": [
+      {
+        "rule_id": "SC-010",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第4段第1句",
+        "span_text": "还有一层容易被忽略：工具本身的输出质量，取决于团队是否建立了清晰的反馈回路。如果团队没有可执行的规范、没有可靠的测试基线、没有对历史决策的记录，工具只会把混乱放大得更快。反之，当工程基础足够扎实，工具…",
+        "reason": "模型路标:同段聚集1次,达到阈值1",
+        "suggestion": "结合上下文复核;确为无信息填充则改写或删除",
+        "language_origin": "chinese_specific",
+        "cluster_count": 1,
+        "cluster_threshold": 1
+      },
+      {
+        "rule_id": "SC-005",
+        "group": "strong_contextual",
+        "severity": "strong",
+        "confidence": "high",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第4段第2句",
+        "span_text": "如果团队没有可执行的规范、没有可靠的测试基线、没有对历史决策的记录，工具只会把混乱放大得更快。反之，当工程基础足够扎实，工具就能把工程师从重复劳动中解放出来，让他们把精力放在真正需要人的地方。\n\n所以…",
+        "reason": "连续等长句:连续3句句长相近",
+        "suggestion": "复核是否真为同构句式;修辞排比应保留",
+        "language_origin": "language_general",
+        "cluster_count": 3,
+        "cluster_threshold": 3
+      }
+    ],
+    "low_confidence": []
+  },
+  "advisory_only": {
+    "count": 6,
+    "items": [
+      {
+        "rule_id": "AO-003",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第1段第2句",
+        "span_text": "过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正发生的变化要深刻得多：它改变了需求、设计与实现之间的关…",
+        "reason": "从…到…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-002",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第3句",
+        "span_text": "现在工程师可以直接把模糊的想法丢给工具，先跑出一个可以讨论的版本，再逐步收敛。这听起来很高效，但风险也同步出现：当生成代码的成本趋近于零，团队很容易陷入“先写出来再说”的节奏，把本该在需求阶段想清楚的…",
+        "reason": "先…再…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-002",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第2段第4句",
+        "span_text": "这听起来很高效，但风险也同步出现：当生成代码的成本趋近于零，团队很容易陷入“先写出来再说”的节奏，把本该在需求阶段想清楚的问题，推迟到了代码评审阶段。换句话说，效率的提升并没有消除决策的复杂性，只是把…",
+        "reason": "先…再…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-001",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第5段第6句",
+        "span_text": "这种担心有一定道理，但同质化的根源从来不是工具，而是思考方式的懒惰。工具给出的是一个起点，而不是终点。真正拉开差距的，仍然是团队对问题的定义能力、对质量的坚持，以及在关键时刻做出取舍的判断力。工具的普…",
+        "reason": "不是…而是…:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general"
+      },
+      {
+        "rule_id": "AO-004",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第5段第2句",
+        "span_text": "行业的门槛并没有降低，而是转移了——从“能不能写出来”，变成了“知不知道为什么要写”。对于个人来说，与其焦虑工具会取代自己，不如尽快建立属于自己的判断体系：理解业务、理解系统、理解取舍。这才是未来几年…",
+        "reason": "破折号:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "chinese_specific"
+      },
+      {
+        "rule_id": "AO-011",
+        "group": "advisory_only",
+        "severity": "advisory",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "suggest",
+        "location": "第5段第1句",
+        "span_text": "所以我的判断是：AI 编程工具不会让工程师失业，但它会加速淘汰那些只停留在“会写代码”层面的角色。行业的门槛并没有降低，而是转移了——从“能不能写出来”，变成了“知不知道为什么要写”。对于个人来说，与…",
+        "reason": "第一人称:真人写作中也常见,仅作建议",
+        "suggestion": "仅提示,不自动修改",
+        "language_origin": "language_general",
+        "occurrence_count": 1
+      }
+    ]
+  },
+  "statistical": {
+    "count": 3,
+    "items": [
+      {
+        "rule_id": "ST-004",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "软路标词 5 次,超过阈值 max(2, H//900)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 5,
+        "threshold": 2
+      },
+      {
+        "rule_id": "ST-005",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "长前置成分 7 处(句首至首逗号 >= 12 汉字),超过阈值 max(2, H//1200)=2",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 7,
+        "threshold": 2
+      },
+      {
+        "rule_id": "ST-006",
+        "group": "statistical",
+        "severity": "audit",
+        "confidence": "medium",
+        "profile": "essay",
+        "action": "review_only",
+        "location": "全文",
+        "span_text": "AI 编程工具正在把软件工程行业推向一个关键的转折点。过去两年，从代码补全到多文件重构，再到可以直接接管整个任务的智能体，工具的能力边界被一次次改写。表面上看，这只是把“写代码”这件事变得更快，但真正…",
+        "reason": "重'的'长句 2 句(>= 38 汉字且'的'>=4),超过阈值 max(1, H//1500)=1",
+        "suggestion": "统计信号,仅提示;由人工判断是否需要处理",
+        "language_origin": "language_general",
+        "metric_value": 2,
+        "threshold": 1
+      }
+    ]
+  },
+  "overall": {
+    "pass_fail": "pass",
+    "description": "pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。"
+  }
+}

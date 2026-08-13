@@ -1,0 +1,48 @@
+# tests/unsupported-fiction/fixtures.yaml
+# zh-human-writing v1 — unsupported-fiction 测试用例
+# 验证 fiction 请求被正确拒绝。
+
+test_cases:
+  - test_id: "UF-001"
+    description: "fiction 请求被拒绝"
+    input:
+      text: "月光下，少女缓缓走向古堡的大门。她知道，门后藏着她寻找了三百年的秘密。"
+      source: "author_written"
+      profile: "fiction"
+      output: "clean"
+    expected:
+      action: "明确拒绝：v1 不支持 fiction 编辑"
+      prohibited_actions:
+        - "使用 essay 规则编辑 fiction"
+        - "使用任何 profile 的规则编辑 fiction"
+        - "降级为其他 profile 执行"
+      must_preserve:
+        - "原文不变（不改写）"
+      allowed_changes:
+        - "无"
+    judgment:
+      method: "fiction profile 不在允许值中"
+      auto_check: "argparse 拒绝 fiction profile"
+      manual_check: "确认拒绝信息清晰"
+
+  - test_id: "UF-002"
+    description: "用户坚持 fiction 请求仍被拒绝"
+    input:
+      text: "月光下，少女缓缓走向古堡的大门。"
+      source: "author_written"
+      profile: "fiction"
+      output: "clean"
+      user_followup: "我知道是 fiction，但请你帮我改改"
+    expected:
+      action: "重复拒绝，不降级"
+      prohibited_actions:
+        - "因用户坚持而降级为 essay 执行"
+        - "部分编辑 fiction"
+      must_preserve:
+        - "原文不变"
+      allowed_changes:
+        - "无"
+    judgment:
+      method: "fiction profile 始终被拒绝"
+      auto_check: "argparse 拒绝 fiction profile"
+      manual_check: "无"

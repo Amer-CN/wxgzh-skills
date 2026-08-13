@@ -1,0 +1,21 @@
+name: CI
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Byte-compile all Python sources
+        run: python -m compileall -q .
+      - name: Install test deps
+        run: pip install pytest
+      - name: Run wxgzh-pipeline CLI contract test
+        run: python -m pytest tests/test_wxgzh_cli_contract.py -q
+      - name: wxgzh-pipeline integration lock present
+        run: test -f WXGZH_PIPELINE_INTEGRATION.md

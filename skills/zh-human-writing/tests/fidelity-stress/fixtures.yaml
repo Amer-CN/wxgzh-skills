@@ -1,0 +1,99 @@
+# tests/fidelity-stress/fixtures.yaml
+# zh-human-writing v1 — fidelity-stress 测试用例
+# 验证保真机制在极端条件下的表现。
+
+test_cases:
+  - test_id: "FS-001"
+    description: "密集数字文本的保真检查"
+    input:
+      text: "处理了 1,234,567 次请求，平均响应时间 45ms，错误率 0.03%。增长了 25%。"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "所有数字逐字保留"
+      prohibited_actions:
+        - "改变任何数字"
+        - "改变单位"
+        - "四舍五入"
+      must_preserve:
+        - "1,234,567"
+        - "45ms"
+        - "0.03%"
+        - "25%"
+      allowed_changes:
+        - "改写非数字的描述文字"
+    judgment:
+      method: "fidelity_guard.py fails=0"
+      auto_check: "fidelity_guard.py"
+      manual_check: "无"
+
+  - test_id: "FS-002"
+    description: "密集数字被改变时检测到"
+    input:
+      text: "处理了 1,234,567 次请求，平均响应时间 45ms。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "fidelity_guard 输出 fail"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py fails > 0"
+      auto_check: "fidelity_guard.py"
+      manual_check: "无"
+
+  - test_id: "FS-003"
+    description: "否定词变化触发 warning"
+    input:
+      text: "这个方案不会导致系统崩溃。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "warning"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py warnings > 0"
+      auto_check: "fidelity_guard.py"
+      manual_check: "确认否定语义"
+
+  - test_id: "FS-004"
+    description: "条件词变化触发 warning"
+    input:
+      text: "如果配置正确，系统正常运行。"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "warning"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "fidelity_guard.py warnings > 0"
+      auto_check: "fidelity_guard.py"
+      manual_check: "确认条件语义"
+
+  - test_id: "FS-005"
+    description: "change_report 长度比例计算正确"
+    input:
+      text: "这是一段测试文本，用于验证长度比例计算的正确性。" * 10
+      source: "ai_draft"
+      profile: "essay"
+      length_retention: "balanced"
+      output: "diff"
+    expected:
+      action: "长度比例正确计算"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "change_report.py length_ratio 在预期范围"
+      auto_check: "change_report.py"
+      manual_check: "无"

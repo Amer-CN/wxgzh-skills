@@ -1,0 +1,187 @@
+# tests/must-edit/fixtures.yaml
+# zh-human-writing v1 — must-edit 测试用例
+# 验证应该被修改的内容在编辑后被正确检测。
+
+test_cases:
+  - test_id: "ME-001"
+    description: "模板占位符被检测"
+    input:
+      text: "{{产品名称}}是一款{{产品类型}}，旨在帮助用户{{核心价值}}。"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "标记模板占位符为 hard-residue"
+      prohibited_actions:
+        - "自动猜测占位符的值并填入"
+        - "保留占位符不变"
+      must_preserve: []
+      allowed_changes:
+        - "删除占位符并提示用户"
+    judgment:
+      method: "pattern_audit.py 检测到 hard-residue"
+      auto_check: "hard_residue count > 0"
+      manual_check: "确认提示信息合理"
+
+  - test_id: "ME-002"
+    description: "AI 自我标识被检测"
+    input:
+      text: "作为AI，我无法直接体验产品，但根据用户反馈，这款产品的交互设计有待改进。"
+      source: "ai_draft"
+      strategy: "balance"
+      profile: "essay"
+      output: "clean"
+    expected:
+      action: "检测到 '作为AI'"
+      prohibited_actions:
+        - "保留 '作为AI'"
+      must_preserve:
+        - "根据用户反馈"
+        - "这款产品的交互设计有待改进"
+      allowed_changes:
+        - "删除 AI 自我标识"
+    judgment:
+      method: "pattern_audit.py 检测到 hard-residue"
+      auto_check: "hard_residue count > 0"
+      manual_check: "确认语义保留"
+
+  - test_id: "ME-003"
+    description: "知识截止声明被检测"
+    input:
+      text: "截至我的知识截止日期，这个功能尚未发布。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "检测到知识截止声明"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes:
+        - "删除知识截止声明"
+    judgment:
+      method: "pattern_audit.py 检测到 hard-residue"
+      auto_check: "hard_residue count > 0"
+      manual_check: "无"
+
+  - test_id: "ME-004"
+    description: "聊天助手残留被检测"
+    input:
+      text: "请问还有什么可以帮助您的？随时告诉我。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "检测到聊天助手残留"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes:
+        - "删除聊天助手残留"
+    judgment:
+      method: "pattern_audit.py 检测到 hard-residue"
+      auto_check: "hard_residue count > 0"
+      manual_check: "无"
+
+  - test_id: "ME-005"
+    description: "AI 来源参数被检测"
+    input:
+      text: "model=gpt-4 temperature=0.7 生成结果"
+      source: "ai_draft"
+      profile: "technical"
+      output: "diff"
+    expected:
+      action: "检测到 AI 来源参数"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes:
+        - "删除 AI 来源参数"
+    judgment:
+      method: "pattern_audit.py 检测到 hard-residue"
+      auto_check: "hard_residue count > 0"
+      manual_check: "无"
+
+  - test_id: "ME-006"
+    description: "无 hard-residue 时 pass"
+    input:
+      text: "这是一篇普通文章，没有 AI 残留。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "clean"
+    expected:
+      action: "pass"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py pass_fail=pass"
+      auto_check: "pass_fail == 'pass'"
+      manual_check: "无"
+
+  - test_id: "ME-007"
+    description: "有 hard-residue 时 fail"
+    input:
+      text: "作为AI，我认为这个产品不错。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "clean"
+    expected:
+      action: "fail"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pattern_audit.py pass_fail=fail"
+      auto_check: "pass_fail == 'fail'"
+      manual_check: "无"
+
+  - test_id: "ME-008"
+    description: "退出码正确（pass → 0）"
+    input:
+      text: "这是一段正常的文字。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "clean"
+    expected:
+      action: "退出码 0"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "退出码 == 0"
+      auto_check: "rc == 0"
+      manual_check: "无"
+
+  - test_id: "ME-009"
+    description: "退出码正确（fail → 2）"
+    input:
+      text: "作为AI，我建议..."
+      source: "ai_draft"
+      profile: "essay"
+      output: "clean"
+    expected:
+      action: "退出码 2"
+      prohibited_actions: []
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "退出码 == 2"
+      auto_check: "rc == 2"
+      manual_check: "无"
+
+  - test_id: "ME-010"
+    description: "advisory-only 不影响 pass/fail"
+    input:
+      text: "不是因为它不好看，而是因为它太贵了。这不是问题。"
+      source: "ai_draft"
+      profile: "essay"
+      output: "diff"
+    expected:
+      action: "advisory-only 列出但 pass/fail 不受影响"
+      prohibited_actions:
+        - "advisory-only 影响 pass/fail"
+      must_preserve: []
+      allowed_changes: []
+    judgment:
+      method: "pass_fail == 'pass' 且 advisory_only count > 0"
+      auto_check: "pass_fail == 'pass' and ao_count > 0"
+      manual_check: "无"
