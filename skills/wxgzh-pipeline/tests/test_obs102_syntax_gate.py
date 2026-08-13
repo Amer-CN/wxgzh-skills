@@ -30,7 +30,8 @@ from wxgzh_pipeline.stages.gzh_design import _normalize_text, _body_plain_text
 
 FIX = SKILL_ROOT / "tests" / "fixtures" / "obs102"
 CURRENT_RUN_ARTICLE = FIX / "current_run_final_article.md"
-CURRENT_RUN_SHA256 = "6A03F0CF095A3FF7476D50AFA328A2B8A833A7B2CFFCE9645F51E7A94DD38999"
+# 76K:fixture sha 按行尾归一化后计算(CRLF/LF 工作树跨环境稳定);常量=LF 版。
+CURRENT_RUN_SHA256 = "30904A8F6F1E1A21C48D046243C04A24C43343EE04068881EAEC753003A5FC06"
 STUB_RENDERER = FIX / "stub_renderer_supports_fence.py"
 
 
@@ -137,7 +138,7 @@ def test_obs102_current_run_article_passes(tmp_path):
     else:
         pytest.skip("现 RUN 冻结文章不可得(未设置 WXGZH_OBS102_RUN_ARTICLE 且 fixture 缺失)")
     # 断言冻结 fixture 的 sha256(防止 fixture 被静默替换)
-    sha = hashlib.sha256(article.read_bytes()).hexdigest()
+    sha = hashlib.sha256(article.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     assert sha.upper() == CURRENT_RUN_SHA256.upper(), f"fixture sha mismatch: {sha}"
     code, rep = validate_syntax_gate(article, renderer, tmp_path / "probe")
     assert code == 0, rep
