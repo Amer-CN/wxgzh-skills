@@ -1,6 +1,16 @@
-# gzh-design v2026.08.13-hammer.13
+# gzh-design v2026.08.13-hammer.14
+
+## v2026.08.13-hammer.14(档76L)
+
+- OBS-282 交付凭证门:publish_wechat_draft.py 新增强制参数 --evidence(本 RUN 的
+  gzh_design/stage_receipt.json)——receipt 校验通过 + html sha 与待推 HTML 一致 +
+  HTML 含 hammer 主题签名(#B3593B)三项缺一即 FAIL_CLOSED(报错指引走管线
+  wechat_draft 阶段);无后门参数;独立手工发布=公众号后台手动。测试 +6。
+- 渲染器/设计系统零改动(render_entry 不变)。
 
 ## v2026.08.13-hammer.13(档76J)
+
+## v2026.08.13-hammer.14(档76J)
 
 - OBS-271 表格/列表支持:render_article.py 解析标准 Markdown 表格(首行 header +
   分隔行跳过)与 `- `/`* `/`1. ` 列表块;渲染走既有 hammer 组件样式——表格

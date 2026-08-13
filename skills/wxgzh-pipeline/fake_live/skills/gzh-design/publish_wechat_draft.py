@@ -26,7 +26,14 @@ def main(argv=None) -> int:
     ap.add_argument("--thumb-media-id", default=None)
     ap.add_argument("--cover", default=None)
     ap.add_argument("--expect-sha256", default=None)
+    ap.add_argument("--evidence", default=None,
+                    help="76L/OBS-282:交付凭证(管线 wechat_draft 必传);fake_live 校验存在性")
     a = ap.parse_args(argv)
+    if not a.evidence or not Path(a.evidence).is_file():
+        print(json.dumps({"status": "FAIL_CLOSED",
+                          "error": "交付凭证缺失: --evidence 必填(走管线 wechat_draft 阶段,"
+                                   "禁止绕过管线直接调用本脚本)"}, ensure_ascii=False))
+        return 1
 
     html = Path(a.html).read_text(encoding="utf-8") if Path(a.html).is_file() else ""
     if "<section" not in html:

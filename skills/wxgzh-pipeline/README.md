@@ -117,3 +117,16 @@ aihot 阶段按下列顺序取料（写入手握手指令，agent 执行）：
    （registry/ledger `provenance: supplemental`，携带 source_url + 抓取证据 +
    登记理由，不再被 dedup 对齐挤出）。
 5. 仍缺 → 明示用户手动注入（`items_file_injection` 既有通道），不得静默降级。
+5. 仍缺 → 明示用户手动注入（`items_file_injection` 既有通道），不得静默降级。
+
+## 交付边界（76L/OBS-282/283，发文 SOP 红旗规则）
+
+- **禁止顶包**：禁止手写 HTML 或其他脚本顶包 gzh_design 渲染产物；禁止绕过阶段
+  直接调用 `publish_wechat_draft.py`（该脚本 76L 起强制 `--evidence` 凭证门，
+  只认管线 wechat_draft 阶段传入的本 RUN receipt）。
+- **遇阻的正确动作**：停下并报告（对照 Z Code 的诚实停机先例），不得自行绕过
+  或另走侧门。
+- **红旗规则**：发现草稿已存在但六阶段 receipt（aihot / super_writer /
+  zh_human_writing / media_enrichment / gzh_design / wechat_draft）不齐 =
+  顶包红旗——该草稿不可发、不可引用，全程复查并报告。
+- 独立手工发布场景 = 公众号后台手动操作，不走本脚本、不走本管线。

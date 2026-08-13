@@ -7,6 +7,7 @@ draft (simulated=true). Also asserts the script has NO formal-publish capability
 """
 import json
 import os
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -17,7 +18,8 @@ PUBLISH = SKILL_ROOT / "scripts" / "publish_wechat_draft.py"
 
 # minimal WeChat-compliant fragment (passes preflight: ERROR=0, WARNING=0)
 CLEAN_HTML = ('<section style="color:#555555;font-size:14px;">'
-              '<span leaf="">这是一段用于草稿审计的中文测试内容。</span></section>')
+              '<span leaf="">这是一段用于草稿审计的中文测试内容。</span>'
+              '<span leaf="" style="color:#B3593B;">主题签名占位</span></section>')
 
 
 def _run_audit(dry_run=True):
@@ -25,8 +27,15 @@ def _run_audit(dry_run=True):
     html = td / "final.html"
     html.write_text(CLEAN_HTML, encoding="utf-8")
     audit = td / "audit"
+    # 76L/OBS-282:构造本 RUN 凭证(receipt 绑定 final.html sha + exit 0)
+    evidence = td / "stage_receipt.json"
+    evidence.write_text(json.dumps({
+        "validator_exit_code": 0,
+        "output_hashes": {"final.html": hashlib.sha256(html.read_bytes()).hexdigest()},
+    }), encoding="utf-8")
     argv = [sys.executable, "-X", "utf8", str(PUBLISH),
             "--html", str(html), "--title", "草稿审计测试",
+            "--evidence", str(evidence),
             "--audit-dir", str(audit)]
     if dry_run:
         argv.append("--dry-run")

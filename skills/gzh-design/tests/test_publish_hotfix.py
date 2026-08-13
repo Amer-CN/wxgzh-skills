@@ -40,6 +40,8 @@
 import hashlib
 import json
 import os
+
+import pytest
 import sys
 import tempfile
 import unittest
@@ -88,6 +90,14 @@ ADVERSARIAL_MARKDOWN = '## 这是 Markdown 标题\n\n正文内容\n\n![图片](u
 ADVERSARIAL_PLAIN_CN = '这只是普通中文文本，没有任何 HTML 标签。'
 ADVERSARIAL_NO_CJK_HTML = '<section style="color:red;"><span leaf="">English only text no Chinese</span></section>'
 ADVERSARIAL_SCRIPT_HTML = '<section style="color:red;"><span leaf="">中文<script>alert(1)</script></span></section>'
+
+
+@pytest.fixture(autouse=True)
+def _skip_pipeline_evidence(monkeypatch):
+    """76L/OBS-282:凭证门专项测试在 test_hf76l_evidence.py;本文件正路径打桩
+    凭证校验(argparse 的 --evidence 必填仍生效,仅跳过 receipt 内容校验)。"""
+    monkeypatch.setattr(pub, "verify_pipeline_evidence",
+                        lambda *a, **k: (True, []))
 
 
 def _run_main_with_content(content, suffix=".html"):
@@ -410,6 +420,7 @@ class TestExpectSha256(unittest.TestCase):
                 "--html", path,
                 "--title", "测试",
                 "--thumb-media-id", "fake",
+                "--evidence", "evidence-placeholder.json",
                 "--expect-sha256", "0000000000000000000000000000000000000000000000000000000000000000",
             ]
             try:
@@ -439,6 +450,7 @@ class TestExpectSha256(unittest.TestCase):
                 "--html", path,
                 "--title", "测试",
                 "--thumb-media-id", "fake",
+                "--evidence", "evidence-placeholder.json",
                 "--expect-sha256", raw_sha,
             ]
             os.environ["WECHAT_APP_ID"] = "fake"

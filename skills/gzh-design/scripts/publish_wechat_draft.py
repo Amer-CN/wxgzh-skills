@@ -51,6 +51,10 @@ from urllib.parse import urlparse
 # WeChat image hosts (exact-match gate; dev2-hotfix2)
 WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
 
+# 76L/OBS-282:交付凭证门——本脚本只能由管线 wechat_draft 阶段调用。
+# 主题签名 = hammer 主题 primary 色值(渲染产物必有;缺失即非管线渲染产物)。
+THEME_SIGNATURE = "#B3593B"
+
 
 def normalize_wechat_image_url(url):
     """Upgrade http->https and require the hostname to EQUAL a WeChat image
@@ -548,9 +552,43 @@ def run_audit_mode(args, html_content, raw_file_sha256, sha256):
     return result
 
 
+def verify_pipeline_evidence(evidence_path, html_path, html_sha, html_content):
+    """76L/OBS-282:交付凭证门——三项缺一即 FAIL_CLOSED。
+
+    1. 凭证存在且 receipt 校验通过(validator_exit_code == 0);
+    2. 待推 HTML 的 raw sha 与 receipt.output_hashes["final.html"] 一致;
+    3. HTML 含 hammer 主题签名(非管线渲染产物/手工顶包 HTML 无此签名)。
+
+    报错文案一律指引「走管线 wechat_draft 阶段」。返回 (ok, errors[])。
+    """
+    errors = []
+    try:
+        receipt = json.loads(Path(evidence_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return False, [f"凭证不可读: {evidence_path} ({exc})",
+                       "正确动作:走管线 wechat_draft 阶段,不要直接调用本脚本"]
+    if receipt.get("validator_exit_code") != 0:
+        errors.append(f"凭证 receipt 校验未通过(validator_exit_code="
+                      f"{receipt.get('validator_exit_code')!r} != 0)")
+    bound_sha = (receipt.get("output_hashes") or {}).get("final.html")
+    if not bound_sha:
+        errors.append("凭证 receipt 未绑定 final.html(output_hashes 缺 final.html)")
+    elif bound_sha != html_sha:
+        errors.append(f"HTML sha 与凭证不一致: 待推 {html_sha[:16]}… != 凭证 {bound_sha[:16]}…")
+    if THEME_SIGNATURE.lower() not in (html_content or "").lower():
+        errors.append(f"HTML 缺主题签名({THEME_SIGNATURE})——疑似手工顶包/非管线渲染产物")
+    if errors:
+        errors.append("FAIL_CLOSED: 交付凭证缺失或不符;正确动作=走管线 wechat_draft 阶段,"
+                      "禁止绕过管线直接调用本脚本")
+    return (not errors), errors
+
+
 def main():
     ap = argparse.ArgumentParser(description="微信公众号草稿创建")
     ap.add_argument("--html", required=True, help="article.wechat.html 路径")
+    ap.add_argument("--evidence", required=True,
+                    help="本 RUN 的 gzh_design/stage_receipt.json 路径(76L/OBS-282 凭证门,"
+                         "必填;无凭证直接调用一律 FAIL_CLOSED,走管线 wechat_draft 阶段)")
     ap.add_argument("--title", required=True, help="文章标题")
     ap.add_argument("--expect-sha256", help="期望的 HTML 文件 SHA-256（raw bytes），不一致则停止")
     group = ap.add_mutually_exclusive_group(required=False)
@@ -608,6 +646,16 @@ def main():
     sha256 = preflight_html(html_content, html_path, raw_file_sha256=raw_file_sha256,
                             audit_dir=Path(args.audit_dir) if args.audit_dir else None,
                             allow_warnings=args.allow_warnings)
+
+    # 76L/OBS-282:交付凭证门——receipt ok + html sha 一致 + 主题签名,缺一即停。
+    # 必须在获取 access_token / 调用微信 API 之前完成。
+    evidence_ok, evidence_errors = verify_pipeline_evidence(
+        args.evidence, html_path, raw_file_sha256, html_content)
+    if not evidence_ok:
+        for line in evidence_errors:
+            print(f"错误: {line}")
+        sys.exit(1)
+    print(f"  交付凭证验证通过 ✅ (receipt 绑定 + sha 一致 + 主题签名)")
 
     # ---- 审计模式：快照前后草稿数并写审计产物（--dry-run 时不触网、无副作用）----
     if args.audit_dir:
