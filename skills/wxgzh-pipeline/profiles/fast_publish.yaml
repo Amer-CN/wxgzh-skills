@@ -1,0 +1,31 @@
+# fast_publish —— "发文：<选题>" 的固定默认模式
+profile: fast_publish
+description: 日常发文。顺序跑完六阶段并创建微信草稿后停止。
+defaults:
+  PROFILE: fast_publish
+  CREATE_WECHAT_DRAFT: true
+  FORMAL_PUBLISH: false
+  PIPELINE_AGENT_COUNT: 1
+  STAGES_SEQUENTIAL: true
+  THEME: smartisan
+  THEME_FALLBACK: false
+creates_wechat_draft: true
+uploads_images: true
+# 只运行文章生产必需门禁
+gates:
+  - skill_version_and_hash
+  - input_output_contracts
+  - super_writer_full_mode
+  - fact_preservation
+  - media_bindings
+  - theme_identity
+  - draft_safety
+  - secrets_scan
+  - stage_timing
+# fast_publish 明确不运行
+skips:
+  - full_skill_pytest
+  - reproducible_zip
+  - historical_fixture
+  - version_residue_scan
+  - full_skill_source_audit

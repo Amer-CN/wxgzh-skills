@@ -1,0 +1,7 @@
+{
+  "draft_media_id_redacted": "CCCCCCCC[REDACTED]",
+  "thumb_media_id_redacted": "DDDDDDDD[REDACTED]",
+  "offline_mock": true,
+  "formally_published": false,
+  "action": "offline fixture — no real WeChat API call"
+}

@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "medium",
+  "cjk_chars": 2205,
+  "latin_words": 111,
+  "visible_chars_no_whitespace": 3071,
+  "paragraphs": 43,
+  "sections": 5,
+  "target_visible_chars": 3000,
+  "acceptable_min": 2500,
+  "acceptable_max": 4000,
+  "section_budgets": [
+    {
+      "title": "我给 AI 编程装的「安全气囊」，第一版其实是一张纸条",
+      "weight": 0.144,
+      "budget": 432,
+      "actual_chars": 416,
+      "deviation": 0.037
+    },
+    {
+      "title": "以前为什么拦不住：它只是一本更厚的书",
+      "weight": 0.212,
+      "budget": 636,
+      "actual_chars": 632,
+      "deviation": 0.006
+    },
+    {
+      "title": "v2.0：体检脚本 + 强制护栏",
+      "weight": 0.253,
+      "budget": 759,
+      "actual_chars": 761,
+      "deviation": 0.003
+    },
+    {
+      "title": "v2.1：两条新铁律，全是这一天撞出来的",
+      "weight": 0.247,
+      "budget": 741,
+      "actual_chars": 738,
+      "deviation": 0.004
+    },
+    {
+      "title": "现在的位置，和它诚实的样子",
+      "weight": 0.144,
+      "budget": 432,
+      "actual_chars": 434,
+      "deviation": 0.005
+    }
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}

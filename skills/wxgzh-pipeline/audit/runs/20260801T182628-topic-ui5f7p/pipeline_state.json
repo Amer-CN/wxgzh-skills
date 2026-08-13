@@ -1,0 +1,38 @@
+{
+  "completed_stages": [
+    "aihot",
+    "super_writer",
+    "zh_human_writing",
+    "media_enrichment",
+    "gzh_design"
+  ],
+  "current_stage": "wechat_draft",
+  "draft_created": false,
+  "failed_stage": "wechat_draft",
+  "final_article_sha256": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576",
+  "formally_published": false,
+  "input_hashes": {},
+  "output_hashes": {
+    "aihot": {
+      "deduplicated_count": 10
+    },
+    "final_article_sha256": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576",
+    "gzh_design": {
+      "theme_identity": "PASS"
+    }
+  },
+  "profile": "fast_publish",
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "side_effects": [
+    {
+      "real_upload": true,
+      "stage": "media_enrichment",
+      "uploaded_image_count": 2
+    }
+  ],
+  "started_at": "2026-08-01T10:26:28Z",
+  "theme": "smartisan",
+  "topic": "智能体时代的数据库身份安全",
+  "updated_at": "2026-08-01T12:16:27Z",
+  "uploaded_image_count": 2
+}

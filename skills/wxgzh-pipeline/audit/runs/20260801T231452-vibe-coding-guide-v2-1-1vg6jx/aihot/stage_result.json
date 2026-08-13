@@ -1,0 +1,49 @@
+{
+  "errors": [],
+  "outputs": {
+    "deduplicated_items.json": "dfeeece01ae3ce1c3eacf4813175a1f735e56ad136c3392cbbf7de5d3af61009",
+    "fetch_log.json": "aa316d03837b398ac42ab562f13928fa9031e6e50db27300a3598a36bd08a5e3",
+    "raw_items.json": "ef327920c78660bc0caa820265d89891efab092121439f6abd12c8f14ff0f2c7"
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage": "aihot",
+  "status": "success",
+  "validator_report": {
+    "AIHOT": "PASS",
+    "contract": {
+      "CONTRACT": "PASS",
+      "checks": {
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "1 != 1",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing []",
+          "ok": true
+        },
+        "stage_matches": {
+          "detail": "aihot != aihot",
+          "ok": true
+        }
+      },
+      "contract_file": "01_aihot.yaml",
+      "must_run_after": null,
+      "problems": [],
+      "required_outputs": [
+        "raw_items.json",
+        "deduplicated_items.json",
+        "fetch_log.json"
+      ],
+      "stage": "aihot"
+    },
+    "deduplicated_count": 18
+  }
+}

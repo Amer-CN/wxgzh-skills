@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StageReceipt",
+  "type": "object",
+  "required": [
+    "skill_name",
+    "skill_dir",
+    "skill_version",
+    "skill_root_sha256",
+    "invoked_entrypoint",
+    "input_files",
+    "input_hashes",
+    "output_files",
+    "output_hashes",
+    "validator_path",
+    "validator_sha256",
+    "validator_exit_code",
+    "started_at",
+    "ended_at",
+    "elapsed_seconds",
+    "side_effects"
+  ],
+  "properties": {
+    "skill_name": {
+      "type": "string"
+    },
+    "skill_dir": {
+      "type": "string"
+    },
+    "skill_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "skill_root_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoked_entrypoint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input_files": {
+      "type": "array"
+    },
+    "input_hashes": {
+      "type": "object"
+    },
+    "output_files": {
+      "type": "array"
+    },
+    "output_hashes": {
+      "type": "object"
+    },
+    "validator_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validator_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validator_exit_code": {
+      "type": "integer"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "ended_at": {
+      "type": "string"
+    },
+    "elapsed_seconds": {
+      "type": "number"
+    },
+    "side_effects": {
+      "type": "array"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "article_sha256": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576",
+  "body_image_count": 2,
+  "body_images": [
+    {
+      "alt_text": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+      "asset_id": "A-003",
+      "asset_origin": "source",
+      "caption": "图：AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+      "claim_ids": [
+        "C-02"
+      ],
+      "material_ids": [
+        "M-02"
+      ],
+      "placement": {
+        "anchor": "## 一、数据库身份，智能体安全的新落点",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/mmbiz_png/Rejn3syibRSY73DEibmyGCA6OcK4LXlmLp04g3ic1Tn42LTxn7IMDxDdluh30yCkP2icLD4OxHO4mxvmEo17TGm9Ajmk9MeNLvqBlzfdH8TT71c/0?from=appmsg",
+      "response_sha256": "3bc0c9b252bcc9b910554019838a9e055398f3cad5158b018312b295563b84bd",
+      "sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+      "asset_id": "A-004",
+      "asset_origin": "source",
+      "caption": "图：AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+      "claim_ids": [
+        "C-02"
+      ],
+      "material_ids": [
+        "M-02"
+      ],
+      "placement": {
+        "anchor": "## 一、数据库身份，智能体安全的新落点",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSZBJOyF383He5ibsMqLEvRzbWQXmot0Q0NibR9Q0ib77xZzodAbnvHq4UJw84mEe8gFVykgYcqfg6427CRZYxK80l6TfpqSdgpyac/0?from=appmsg",
+      "response_sha256": "4cc0833535b8470eda79180a7e6af960eee9910ecd8fd9b40938dc17185a01de",
+      "sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
+      "upload_mode": "wechat_image_host"
+    }
+  ],
+  "publish_allowed": false,
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "schema_version": "1.0",
+  "skill_version": "0.1.0-dev7-hotfix4"
+}

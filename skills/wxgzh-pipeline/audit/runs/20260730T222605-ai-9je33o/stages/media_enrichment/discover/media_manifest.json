@@ -1,0 +1,56 @@
+{
+  "assets": [],
+  "created_at": "2026-07-30T15:33:06Z",
+  "errors": [
+    "Failed to fetch page for M-01: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-02: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-03: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-04: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-05: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-06: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-07: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-08: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com",
+    "Failed to fetch page for M-09: URL security check failed: DNS resolves to blocked IP: 198.18.0.85 for hostname aihot.virxact.com"
+  ],
+  "gate": {
+    "input_contract_pass": false,
+    "provenance_complete": true,
+    "publish_allowed": false,
+    "secrets_detected": false,
+    "security_checks_pass": false
+  },
+  "input": {
+    "article_sha256": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386",
+    "claims_total": 9,
+    "materials_total": 9,
+    "request_sha256": "9cf7c93aa9a2b4fc63dbc5a8be477f1841311f8c960c9dfd734cc2705ed45627"
+  },
+  "run_id": "20260730T222605-ai-9je33o",
+  "schema_version": "1.0",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "summary": {
+    "candidates_discovered": 0,
+    "downloads_succeeded": 0,
+    "eligible_assets": 0,
+    "exact_duplicates_removed": 0,
+    "generated_charts": 0,
+    "pages_fetched": 0,
+    "pages_requested": 9,
+    "perceptual_duplicates_removed": 0,
+    "rejected_assets": 0,
+    "review_required_assets": 0,
+    "uploaded_assets": 0
+  },
+  "warnings": [
+    "M-01: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.84 for hostname x.com)",
+    "M-02: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.86 for hostname www.anthropic.com)",
+    "M-03: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.87 for hostname the-decoder.com)",
+    "M-04: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.84 for hostname x.com)",
+    "M-05: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.87 for hostname the-decoder.com)",
+    "M-06: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.88 for hostname techcrunch.com)",
+    "M-07: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.88 for hostname techcrunch.com)",
+    "M-08: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.89 for hostname www.ithome.com)",
+    "M-09: source_url fetch failed — falling back to aihot_permalink (URL security check failed: DNS resolves to blocked IP: 198.18.0.89 for hostname www.ithome.com)",
+    "No claims with numbers — no charts generated"
+  ]
+}

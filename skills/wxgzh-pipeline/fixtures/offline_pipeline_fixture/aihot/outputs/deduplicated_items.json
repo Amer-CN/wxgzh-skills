@@ -1,0 +1,12 @@
+[
+  {
+    "id": 0,
+    "title": "示例资讯 0",
+    "source_url": "https://example.com/a"
+  },
+  {
+    "id": 1,
+    "title": "示例资讯 1",
+    "source_url": "https://example.com/b"
+  }
+]

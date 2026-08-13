@@ -1,0 +1,396 @@
+[
+ {
+  "id": "M-001",
+  "title": "旧显卡本地 AI 画图机",
+  "source_url": "https://www.example-source.test/rx580-local-ai",
+  "links": {
+   "aihot": "https://aihot.virxact.com/items/rx580",
+   "original": "https://www.example-source.test/rx580-local-ai"
+  },
+  "content": "示例",
+  "published_at": "",
+  "category": "tip",
+  "score": 60,
+  "selected": true,
+  "aihot_permalink": "https://aihot.virxact.com/items/rx580"
+ },
+ {
+  "id": "M-002",
+  "title": "AMD 卡跑 Stable Diffusion",
+  "source_url": "https://www.example-source.test/sd-webui-amd",
+  "links": {
+   "aihot": "https://aihot.virxact.com/items/sd-amd",
+   "original": "https://www.example-source.test/sd-webui-amd"
+  },
+  "content": "示例",
+  "published_at": "",
+  "category": "tip",
+  "score": 60,
+  "selected": true,
+  "aihot_permalink": "https://aihot.virxact.com/items/sd-amd"
+ },
+ {
+  "id": "mat-001",
+  "title": "AISI 报告 GPT-5.6 Sol 等 5 款 AI 模型均存\"作弊\"行为",
+  "source_url": "https://www.ithome.com/0/980/471.htm",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-001",
+   "original": "https://www.ithome.com/0/980/471.htm"
+  },
+  "content": "AISI 报告 GPT-5.6 Sol 等 5 款 AI 模型均存\"作弊\"行为",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-002",
+  "title": "OpenAI 发布 GPT-5.6 模型家族：Sol、Terra 与 Luna",
+  "source_url": "https://openai.com/index/gpt-5-6-frontier-intelligence-efficiency",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-002",
+   "original": "https://openai.com/index/gpt-5-6-frontier-intelligence-efficiency"
+  },
+  "content": "OpenAI 发布 GPT-5.6 模型家族：Sol、Terra 与 Luna",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-003",
+  "title": "Claude Opus 5 在模拟售货机任务中展现欺骗与背叛，创下新纪录",
+  "source_url": "https://techcrunch.com/2026/07/29/claude-opus-5-became-downright-ruthless-when-tasked-with-running-a-vending-machine",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-003",
+   "original": "https://techcrunch.com/2026/07/29/claude-opus-5-became-downright-ruthless-when-tasked-with-running-a-vending-machine"
+  },
+  "content": "Claude Opus 5 在模拟售货机任务中展现欺骗与背叛，创下新纪录",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-004",
+  "title": "Miles 在 Blackwell 架构上实现端到端 MXFP8 与逐 token NVFP4 强化学习方案",
+  "source_url": "https://www.lmsys.org/blog/2026-07-29-mxfp8-nvfp4-rl",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-004",
+   "original": "https://www.lmsys.org/blog/2026-07-29-mxfp8-nvfp4-rl"
+  },
+  "content": "Miles 在 Blackwell 架构上实现端到端 MXFP8 与逐 token NVFP4 强化学习方案",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-005",
+  "title": "Perplexity 开源智能体检测层 Numbat",
+  "source_url": "https://x.com/perplexity_ai/status/2082511900580196596",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-005",
+   "original": "https://x.com/perplexity_ai/status/2082511900580196596"
+  },
+  "content": "Perplexity 开源智能体检测层 Numbat",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-006",
+  "title": "OpenAI 为学术研究者免费提供前沿模型",
+  "source_url": "https://x.com/sherwinwu/status/2082517015944741342",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-006",
+   "original": "https://x.com/sherwinwu/status/2082517015944741342"
+  },
+  "content": "OpenAI 为学术研究者免费提供前沿模型",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-007",
+  "title": "Replit 用环境智能重塑 AI 设计体验",
+  "source_url": "https://x.com/Replit/status/2082504096095903811",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-007",
+   "original": "https://x.com/Replit/status/2082504096095903811"
+  },
+  "content": "Replit 用环境智能重塑 AI 设计体验",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-008",
+  "title": "Google DeepMind 在 Flow Music 中推出 Lyria 3.5，提升音乐性、歌词、人声与创作控制",
+  "source_url": "https://deepmind.google/blog/were-launching-lyria-35-in-google-flow-music-with-advances-across-musicality-lyrics-vocals-and-creative-control",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-008",
+   "original": "https://deepmind.google/blog/were-launching-lyria-35-in-google-flow-music-with-advances-across-musicality-lyrics-vocals-and-creative-control"
+  },
+  "content": "Google DeepMind 在 Flow Music 中推出 Lyria 3.5，提升音乐性、歌词、人声与创作控制",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-009",
+  "title": "开源引擎可在任何 M 系列 Mac 上以 2 GB 内存运行 Gemma 4 26B",
+  "source_url": "https://github.com/drumih/turbo-fieldfare",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-009",
+   "original": "https://github.com/drumih/turbo-fieldfare"
+  },
+  "content": "开源引擎可在任何 M 系列 Mac 上以 2 GB 内存运行 Gemma 4 26B",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-010",
+  "title": "算力价格未来可能上涨 10 倍以上",
+  "source_url": "https://www.dwarkesh.com/p/why-compute-might-get-10x-more-expensive",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-010",
+   "original": "https://www.dwarkesh.com/p/why-compute-might-get-10x-more-expensive"
+  },
+  "content": "算力价格未来可能上涨 10 倍以上",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-011",
+  "title": "Martha Stewart 联合创办 AI 初创公司 Hint，为房主提供家居管理 AI 助手",
+  "source_url": "https://techcrunch.com/2026/07/29/hint-a-new-ai-startup-co-founded-by-martha-stewart-offers-an-ai-assistant-for-homeowners",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-011",
+   "original": "https://techcrunch.com/2026/07/29/hint-a-new-ai-startup-co-founded-by-martha-stewart-offers-an-ai-assistant-for-homeowners"
+  },
+  "content": "Martha Stewart 联合创办 AI 初创公司 Hint，为房主提供家居管理 AI 助手",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-012",
+  "title": "SpaceXAI 起诉明尼苏达州，反对\"AI 脱衣\"应用禁令",
+  "source_url": "https://www.ithome.com/0/983/298.htm",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-012",
+   "original": "https://www.ithome.com/0/983/298.htm"
+  },
+  "content": "SpaceXAI 起诉明尼苏达州，反对\"AI 脱衣\"应用禁令",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-013",
+  "title": "腾讯混元开源 AngelSpec 投机解码框架",
+  "source_url": "https://x.com/TencentHunyuan/status/2082447023626944936",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-013",
+   "original": "https://x.com/TencentHunyuan/status/2082447023626944936"
+  },
+  "content": "腾讯混元开源 AngelSpec 投机解码框架",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-014",
+  "title": "OpenAI 失控 AI 智能体不止攻击了 Hugging Face，还入侵了多家公司",
+  "source_url": "https://www.theverge.com/ai-artificial-intelligence/972441/openai-rogue-ai-agent-hacked-more-than-hugging-face",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-014",
+   "original": "https://www.theverge.com/ai-artificial-intelligence/972441/openai-rogue-ai-agent-hacked-more-than-hugging-face"
+  },
+  "content": "OpenAI 失控 AI 智能体不止攻击了 Hugging Face，还入侵了多家公司",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-015",
+  "title": "我的Claude账号被封了",
+  "source_url": "https://mp.weixin.qq.com/s/Sb4YYeEYsBAAczDo8n41UA",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-015",
+   "original": "https://mp.weixin.qq.com/s/Sb4YYeEYsBAAczDo8n41UA"
+  },
+  "content": "我的Claude账号被封了",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-016",
+  "title": "在 M1 Max 上运行 2.8T 参数的 Kimi K3：Deltafin 项目实现 0.0687 token/s 推理",
+  "source_url": "https://github.com/gavamedia/deltafin",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-016",
+   "original": "https://github.com/gavamedia/deltafin"
+  },
+  "content": "在 M1 Max 上运行 2.8T 参数的 Kimi K3：Deltafin 项目实现 0.0687 token/s 推理",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-017",
+  "title": "1100多名AI员工联名呼吁美国政府控制AI发展速度，OpenAI CEO奥尔特曼表态支持",
+  "source_url": "https://www.ithome.com/0/982/816.htm",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-017",
+   "original": "https://www.ithome.com/0/982/816.htm"
+  },
+  "content": "1100多名AI员工联名呼吁美国政府控制AI发展速度，OpenAI CEO奥尔特曼表态支持",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-018",
+  "title": "OpenRouter 推出专用 LangChain 集成包，支持 400+ 模型与自动故障切换",
+  "source_url": "https://openrouter.ai/blog/tutorials/langchain-chatopenrouter-setup",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-018",
+   "original": "https://openrouter.ai/blog/tutorials/langchain-chatopenrouter-setup"
+  },
+  "content": "OpenRouter 推出专用 LangChain 集成包，支持 400+ 模型与自动故障切换",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-019",
+  "title": "Anthropic 支持 AI 发展节奏请愿",
+  "source_url": "https://x.com/AnthropicAI/status/2082228994653696371",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-019",
+   "original": "https://x.com/AnthropicAI/status/2082228994653696371"
+  },
+  "content": "Anthropic 支持 AI 发展节奏请愿",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-020",
+  "title": "OpenAI 发布 Codex 安全 CLI 与 SDK",
+  "source_url": "https://x.com/thsottiaux/status/2082241164850364555",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-020",
+   "original": "https://x.com/thsottiaux/status/2082241164850364555"
+  },
+  "content": "OpenAI 发布 Codex 安全 CLI 与 SDK",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-021",
+  "title": "OpenAI 失控模型二次入侵 Modal 客户",
+  "source_url": "https://x.com/AISafetyMemes/status/2082223372214448303",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-021",
+   "original": "https://x.com/AISafetyMemes/status/2082223372214448303"
+  },
+  "content": "OpenAI 失控模型二次入侵 Modal 客户",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-022",
+  "title": "OpenAI 呼吁为前沿AI发展设定节奏",
+  "source_url": "https://x.com/OpenAI/status/2082208694142730340",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-022",
+   "original": "https://x.com/OpenAI/status/2082208694142730340"
+  },
+  "content": "OpenAI 呼吁为前沿AI发展设定节奏",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-023",
+  "title": "OpenAI 推出两款新转录模型 API",
+  "source_url": "https://x.com/OpenAIDevs/status/2082201169443905798",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-023",
+   "original": "https://x.com/OpenAIDevs/status/2082201169443905798"
+  },
+  "content": "OpenAI 推出两款新转录模型 API",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-024",
+  "title": "Hugging Face 公开自主智能体网络攻击详情",
+  "source_url": "https://x.com/ClementDelangue/status/2082201245813514613",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-024",
+   "original": "https://x.com/ClementDelangue/status/2082201245813514613"
+  },
+  "content": "Hugging Face 公开自主智能体网络攻击详情",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-025",
+  "title": "Andrew Ng 创办 LearnVector，用 AI 实现一对一学习",
+  "source_url": "https://x.com/AndrewYNg/status/2082199333920027009",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-025",
+   "original": "https://x.com/AndrewYNg/status/2082199333920027009"
+  },
+  "content": "Andrew Ng 创办 LearnVector，用 AI 实现一对一学习",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ },
+ {
+  "id": "mat-026",
+  "title": "Sam Altman 态度转变：AI 发展或需\"减速\"以让社会做好准备",
+  "source_url": "https://techcrunch.com/2026/07/28/sam-altman-is-ready-to-decelerate",
+  "links": {
+   "aihot": "https://aihot.example/items/mat-026",
+   "original": "https://techcrunch.com/2026/07/28/sam-altman-is-ready-to-decelerate"
+  },
+  "content": "Sam Altman 态度转变：AI 发展或需\"减速\"以让社会做好准备",
+  "published_at": "",
+  "category": "ai-products",
+  "score": 60,
+  "selected": true
+ }
+]

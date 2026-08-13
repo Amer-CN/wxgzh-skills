@@ -1,0 +1,93 @@
+{
+  "elapsed_seconds": 0.0,
+  "ended_at": "2026-07-31T06:09:59Z",
+  "entrypoint_path": null,
+  "entrypoint_sha256": null,
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\full_mode_validator_report.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\article.md": "96682f16ee204b30f615bfb31f00ab4a7e36669c6e25858e0afe8e9d1b8c5ae4",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\canonical_claim_registry.json": "413df2bc2dd0555da79de90709f95029f6e34819743d8741273707e1a011ee0f",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\full_mode_validator_report.json": "35b159fedb6ec755e76692302117655ee7bc974851218f3d9ae55521d40e5f2f",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\stage_request.json": "aacee2e5893692b3b7bc4f8b19ec2039deb1493d92608174fc4e2068751a03e4"
+  },
+  "invoked_entrypoint": "agent_handshake:zh_human_writing",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.095,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+      "sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f84e862c223f5fea6685ff5236c3335b3c8d2c29730b286e98484bae03e7f5bb"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+        "--text",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.083,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\pattern_audit.py",
+      "sha256": "c0ef34320947abc7821b9bc1974eb0cd6c4b96966b9c012be5361362880c9048",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f17c9b01bfc16e9bcad14d2644f90a3a2e99d3af63712f9787800c0f45128846"
+    },
+    {
+      "command": [
+        "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+        "-X",
+        "utf8",
+        "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+        "--original",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\super_writer\\article.md",
+        "--edited",
+        "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md"
+      ],
+      "elapsed_seconds": 0.085,
+      "exit_code": 0,
+      "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\change_report.py",
+      "sha256": "849f68ed34b7e74f3b71db6adae9b2de150fb30b35d151bf093786991efe3772",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "cad3288600e445d31cecbb4a751741adf5af619156732758a48f416749b7ebb9"
+    }
+  ],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\zh_human_writing\\fidelity_report.json"
+  ],
+  "output_hashes": {
+    "fidelity_report.json": "575d9292323a23825d5c9e24d2b93848efc1c6e217b8e81418b07b101a05a9a7",
+    "final_article.md": "5a71680fbce596224341f31414afe9eb07f356c03a1443946731c0a90f0f0b6f"
+  },
+  "side_effects": [],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing",
+  "skill_name": "zh-human-writing",
+  "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+  "skill_version": "0.1.0",
+  "stage": "zh_human_writing",
+  "started_at": "2026-07-31T06:09:59Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\zh-human-writing\\scripts\\fidelity_guard.py",
+  "validator_sha256": "27a7fa11a49418c74852cf1ba07b91adc980d65cc1e52f2f38b91d786a8890a2"
+}

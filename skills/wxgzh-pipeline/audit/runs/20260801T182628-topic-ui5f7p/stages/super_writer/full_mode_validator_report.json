@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "medium",
+  "cjk_chars": 1856,
+  "latin_words": 46,
+  "visible_chars_no_whitespace": 2308,
+  "paragraphs": 23,
+  "sections": 5,
+  "target_visible_chars": 2000,
+  "acceptable_min": 1900,
+  "acceptable_max": 2600,
+  "section_budgets": [
+    {
+      "title": "一、数据库身份，智能体安全的新落点",
+      "weight": 0.3,
+      "budget": 600,
+      "actual_chars": 613,
+      "deviation": 0.022
+    },
+    {
+      "title": "二、非人类身份正在成为独立的安全市场",
+      "weight": 0.25,
+      "budget": 500,
+      "actual_chars": 520,
+      "deviation": 0.04
+    },
+    {
+      "title": "三、信任从模型与终端两侧下沉",
+      "weight": 0.23,
+      "budget": 460,
+      "actual_chars": 448,
+      "deviation": 0.026
+    },
+    {
+      "title": "四、企业先做对的四件事",
+      "weight": 0.22,
+      "budget": 440,
+      "actual_chars": 460,
+      "deviation": 0.045
+    }
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}

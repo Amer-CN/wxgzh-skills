@@ -1,0 +1,7 @@
+{
+  "approval_id": "AP-20260801T1830-INDEPENDENT-REVIEW-001",
+  "body_images_min": 2,
+  "default_value": 6,
+  "reason": "候选池仅 2 张待审查资产获批准,凑不出 6 张",
+  "set_by": "independent_reviewer"
+}

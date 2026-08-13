@@ -1,0 +1,45 @@
+{
+  "completed_stages": [
+    "aihot",
+    "super_writer",
+    "zh_human_writing",
+    "media_enrichment",
+    "gzh_design",
+    "wechat_draft"
+  ],
+  "current_stage": null,
+  "draft_created": true,
+  "failed_stage": null,
+  "final_article_sha256": "5a71680fbce596224341f31414afe9eb07f356c03a1443946731c0a90f0f0b6f",
+  "formally_published": false,
+  "input_hashes": {},
+  "output_hashes": {
+    "aihot": {
+      "deduplicated_count": 6
+    },
+    "final_article_sha256": "5a71680fbce596224341f31414afe9eb07f356c03a1443946731c0a90f0f0b6f",
+    "gzh_design": {
+      "theme_identity": "PASS"
+    }
+  },
+  "profile": "fast_publish",
+  "run_id": "20260731T135947-ai-bbg4al",
+  "side_effects": [
+    {
+      "real_upload": true,
+      "stage": "media_enrichment",
+      "uploaded_image_count": 2
+    },
+    {
+      "draft_created": true,
+      "formally_published": false,
+      "real_api": true,
+      "stage": "wechat_draft"
+    }
+  ],
+  "started_at": "2026-07-31T05:59:47Z",
+  "theme": "smartisan",
+  "topic": "AI智能体正在重写网络安全攻防",
+  "updated_at": "2026-08-01T05:42:17Z",
+  "uploaded_image_count": 2
+}

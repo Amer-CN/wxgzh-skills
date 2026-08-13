@@ -1,0 +1,78 @@
+{
+  "elapsed_seconds": 9.0,
+  "ended_at": "2026-08-01T16:05:09Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "entrypoint_sha256": "afc2e5a512b30f9ed836d00b5363290cf69bb65465070f99f6bd4d1e4c39987a",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\aihot\\deduplicated_items.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_discovery_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_continuation_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\asset_discovery_manifest.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\copyright_approval.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover_request_validation.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\continue_request_validation.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\aihot\\deduplicated_items.json": "dfeeece01ae3ce1c3eacf4813175a1f735e56ad136c3392cbbf7de5d3af61009",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\continue_request_validation.json": "6478260aff1c8a21a4b0c366b8f0f589b0d3d3fe0ee5c79930ee7fab1a6d4ac7",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\copyright_approval.json": "5b69f5d3b110305a9bbec907fd3593ad090b91859b88cf567651a93ebd9025eb",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\asset_discovery_manifest.json": "6f1a3f099cc728f28a1a7ba0f8b7360467224451d1d2e8ad98cf2651817ec018",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover_request_validation.json": "10f28ad3caec0437a7d3d5dcb6f02670104e55edf62a29f3be06b8462f951837",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_continuation_request.json": "c01f23ff34a8d9b77a00b7efb0832e87de8420279fd87321c062360330ce16d7",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_discovery_request.json": "59d8d71f89d056b360fecdf1faf0529bba06e8d45468fde1273984c544feeade",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\stage_request.json": "fb25c00d43f7eade8686715591c4b07164039ca0999a27c53166a7be1786c642",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\super_writer\\canonical_claim_registry.json": "ad00416fff91c403b16fc234717560f03bb9c0516fa2651a86faf76ca8962dcf",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\zh_human_writing\\final_article.md": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "network_mode": "live",
+  "official_validator": {
+    "command": [
+      "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "-X",
+      "utf8",
+      "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+      "--manifest",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\continue\\media_manifest.json",
+      "--request",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_continuation_request.json",
+      "--bindings",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\continue\\article_image_bindings.json"
+    ],
+    "elapsed_seconds": 0.952,
+    "exit_code": 0,
+    "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+    "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "f23bf03f119e4ccd03d13abbdd1bb4a54ffee2a626ecee3e85989690083a6254"
+  },
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_manifest.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\article_image_bindings.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\upload_events.json"
+  ],
+  "output_hashes": {
+    "article_image_bindings.json": "9be8eb3427e34d54b8a52c7a1eaebc5fae49ad01a208ee24f1f3132a4b041e64",
+    "media_manifest.json": "6a41d0d3ca7fb37b6e0db29aa21918cd7638d9baccdcfd58345cd6b7b3c20d81",
+    "upload_events.json": "e51c9d41099b2d6e835539cfb58de5e01b2fb7cff05c89812ddd876292df02e9"
+  },
+  "side_effects": [
+    {
+      "detail": "serial uploadimg to mmbiz.qpic.cn",
+      "type": "wechat_image_upload"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+  "skill_name": "media-enrichment",
+  "skill_root_sha256": "0c2d676bc11cd224e37367b66861294e2128a30916d98de7301202b664b18eaf",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "stage": "media_enrichment",
+  "started_at": "2026-08-01T16:05:00Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+  "validator_sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af"
+}

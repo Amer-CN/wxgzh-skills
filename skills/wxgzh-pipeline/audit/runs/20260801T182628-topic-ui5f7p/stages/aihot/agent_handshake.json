@@ -1,0 +1,16 @@
+{
+  "agent_id": "agent",
+  "handshake_token": "75e937951dc73889b7575f2cd6e2131faad59ba3be214cb3e89addf76f1484c5",
+  "produced_files": [
+    "deduplicated_items.json",
+    "fetch_log.json",
+    "raw_items.json"
+  ],
+  "produced_hashes": {
+    "deduplicated_items.json": "747d2ba11aab109e735ee2f96564bcd3d6ac734357cf7bca9aef9ffa697e02c4",
+    "fetch_log.json": "1d435ad3f96518254976274b08b8c3a7a2b35ee0ae043f9b8ca621493487268d",
+    "raw_items.json": "f020b1a1a96ee769078f197e0ebea39f71b6320b3cec5fa40a7c2b17f0f89f41"
+  },
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "stage": "aihot"
+}

@@ -1,0 +1,321 @@
+{
+  "renderer_sha256": "5414ed083b10cb078c9eae42c1735028ce14ccb35497fd56d09c615af34aa350",
+  "generated_at_utc": "2026-08-12T20:27:05+00:00",
+  "anchors": [
+    {
+      "sentinel": "S_ALERT_BODY_CAUTION",
+      "component": "alert",
+      "slot": "body",
+      "mode": "type=caution",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_ALERT_BODY_IMPORTANT",
+      "component": "alert",
+      "slot": "body",
+      "mode": "type=important",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_ALERT_BODY_NOTE",
+      "component": "alert",
+      "slot": "body",
+      "mode": "type=note",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_ALERT_BODY_TIP",
+      "component": "alert",
+      "slot": "body",
+      "mode": "type=tip",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_ALERT_BODY_WARNING",
+      "component": "alert",
+      "slot": "body",
+      "mode": "type=warning",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_ALERT_TITLE",
+      "component": "alert",
+      "slot": "title",
+      "mode": "type=*",
+      "style": "margin:0 0 8px;font-size:15px;font-weight:700;color:#B3593B;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_AFTER_NO",
+      "component": "code-compare",
+      "slot": "after",
+      "mode": "lang=无",
+      "style": "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_AFTER_YES",
+      "component": "code-compare",
+      "slot": "after",
+      "mode": "lang=有",
+      "style": "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#C8E6C9;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_BEFORE_NO",
+      "component": "code-compare",
+      "slot": "before",
+      "mode": "lang=无",
+      "style": "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_BEFORE_YES",
+      "component": "code-compare",
+      "slot": "before",
+      "mode": "lang=有",
+      "style": "margin:0;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:13px;line-height:1.6;color:#E2E8F0;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_TITLE_NO",
+      "component": "code-compare",
+      "slot": "title",
+      "mode": "lang=无",
+      "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_CODE_COMPARE_TITLE_YES",
+      "component": "code-compare",
+      "slot": "title",
+      "mode": "lang=有",
+      "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_MSG_1",
+      "component": "dialogue",
+      "slot": "msg",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_MSG_2",
+      "component": "dialogue",
+      "slot": "msg",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_MSG_3",
+      "component": "dialogue",
+      "slot": "msg",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_NAME_1",
+      "component": "dialogue",
+      "slot": "name",
+      "mode": "默认",
+      "style": "margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;text-align:right;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_NAME_2",
+      "component": "dialogue",
+      "slot": "name",
+      "mode": "默认",
+      "style": "margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_NAME_3",
+      "component": "dialogue",
+      "slot": "name",
+      "mode": "默认",
+      "style": "margin:0 0 4px;font-size:11px;font-weight:700;color:#B3593B;text-align:right;"
+    },
+    {
+      "sentinel": "S_DIALOGUE_TITLE",
+      "component": "dialogue",
+      "slot": "title",
+      "mode": "默认",
+      "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_FOOTNOTES_FN_TEXT_1",
+      "component": "footnotes",
+      "slot": "fn_text",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;"
+    },
+    {
+      "sentinel": "S_FOOTNOTES_FN_TEXT_2",
+      "component": "footnotes",
+      "slot": "fn_text",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;"
+    },
+    {
+      "sentinel": "S_FOOTNOTES_FN_TEXT_3",
+      "component": "footnotes",
+      "slot": "fn_text",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:12px;color:#737373;line-height:1.7;"
+    },
+    {
+      "sentinel": "S_GALLERY_CAPTION_1",
+      "component": "gallery",
+      "slot": "caption",
+      "mode": "默认",
+      "style": "margin:0 0 16px;font-size:12px;color:#737373;text-align:center;"
+    },
+    {
+      "sentinel": "S_GALLERY_CAPTION_2",
+      "component": "gallery",
+      "slot": "caption",
+      "mode": "默认",
+      "style": "margin:0 0 16px;font-size:12px;color:#737373;text-align:center;"
+    },
+    {
+      "sentinel": "S_GALLERY_CAPTION_3",
+      "component": "gallery",
+      "slot": "caption",
+      "mode": "默认",
+      "style": "margin:0 0 16px;font-size:12px;color:#737373;text-align:center;"
+    },
+    {
+      "sentinel": "S_GALLERY_TITLE",
+      "component": "gallery",
+      "slot": "title",
+      "mode": "默认",
+      "style": "margin:0 0 14px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_LIST_ITEM_OL",
+      "component": "list",
+      "slot": "item_ol",
+      "mode": "默认",
+      "style": "font-size:14px;color:#555555;margin:0;line-height:1.9;flex:1;"
+    },
+    {
+      "sentinel": "S_LIST_ITEM_UL",
+      "component": "list",
+      "slot": "item_ul",
+      "mode": "默认",
+      "style": "margin:0 0 6px;font-size:13px;line-height:1.6;color:#555555;"
+    },
+    {
+      "sentinel": "S_LONG_IMAGE_CAPTION",
+      "component": "long-image",
+      "slot": "caption",
+      "mode": "默认",
+      "style": "margin:0 0 24px;font-size:12px;color:#737373;text-align:center;"
+    },
+    {
+      "sentinel": "S_LONG_IMAGE_IMAGE",
+      "component": "long-image",
+      "slot": "image",
+      "mode": "默认",
+      "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_MEDIA_TEXT_CAP",
+      "component": "media-text",
+      "slot": "cap",
+      "mode": "默认",
+      "style": "margin:0 0 8px;font-size:12px;color:#737373;text-align:center;"
+    },
+    {
+      "sentinel": "S_MEDIA_TEXT_EXP",
+      "component": "media-text",
+      "slot": "exp",
+      "mode": "默认",
+      "style": "margin:0 0 24px;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_QUOTE_SOURCE_SOURCED",
+      "component": "quote",
+      "slot": "source",
+      "mode": "type=sourced",
+      "style": "margin:8px 0 0;font-size:12px;color:#737373;"
+    },
+    {
+      "sentinel": "S_QUOTE_TEXT_HIGHLIGHT",
+      "component": "quote",
+      "slot": "text",
+      "mode": "type=highlight",
+      "style": "margin:0;font-size:16px;font-weight:800;color:#8A4530;line-height:1.7;"
+    },
+    {
+      "sentinel": "S_QUOTE_TEXT_NORMAL",
+      "component": "quote",
+      "slot": "text",
+      "mode": "type=normal",
+      "style": "margin:0;font-size:14px;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_QUOTE_TEXT_SOURCED",
+      "component": "quote",
+      "slot": "text",
+      "mode": "type=sourced",
+      "style": "margin:0;font-size:15px;font-weight:600;color:#555555;line-height:1.8;"
+    },
+    {
+      "sentinel": "S_RESOURCES_LINK_TEXT_1",
+      "component": "resources",
+      "slot": "link_text",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;"
+    },
+    {
+      "sentinel": "S_RESOURCES_LINK_TEXT_2",
+      "component": "resources",
+      "slot": "link_text",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;"
+    },
+    {
+      "sentinel": "S_RESOURCES_LINK_TEXT_3",
+      "component": "resources",
+      "slot": "link_text",
+      "mode": "默认",
+      "style": "margin:0;font-size:14px;color:#555555;font-weight:600;line-height:1.6;"
+    },
+    {
+      "sentinel": "S_RESOURCES_TITLE",
+      "component": "resources",
+      "slot": "title",
+      "mode": "默认",
+      "style": "margin:0 0 12px;font-size:15px;font-weight:700;color:#555555;line-height:1.5;"
+    },
+    {
+      "sentinel": "S_RESOURCES_URL_1",
+      "component": "resources",
+      "slot": "url",
+      "mode": "默认",
+      "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_RESOURCES_URL_2",
+      "component": "resources",
+      "slot": "url",
+      "mode": "默认",
+      "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_RESOURCES_URL_3",
+      "component": "resources",
+      "slot": "url",
+      "mode": "默认",
+      "style": "URL_SLOT"
+    },
+    {
+      "sentinel": "S_TABLE_BODY",
+      "component": "table",
+      "slot": "body",
+      "mode": "默认",
+      "style": "margin:0;font-size:13px;line-height:1.6;color:#555555;"
+    },
+    {
+      "sentinel": "S_TABLE_HEADER",
+      "component": "table",
+      "slot": "header",
+      "mode": "默认",
+      "style": "margin:0;font-size:13px;line-height:1.6;color:#fff;"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PipelineState",
+  "type": "object",
+  "required": [
+    "run_id",
+    "topic",
+    "profile",
+    "current_stage",
+    "completed_stages",
+    "failed_stage",
+    "input_hashes",
+    "output_hashes",
+    "side_effects",
+    "uploaded_image_count",
+    "draft_created",
+    "formally_published",
+    "started_at",
+    "updated_at"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
+    "profile": {
+      "enum": [
+        "fast_publish",
+        "release_audit"
+      ]
+    },
+    "current_stage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "completed_stages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failed_stage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input_hashes": {
+      "type": "object"
+    },
+    "output_hashes": {
+      "type": "object"
+    },
+    "side_effects": {
+      "type": "array"
+    },
+    "uploaded_image_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "draft_created": {
+      "type": "boolean"
+    },
+    "formally_published": {
+      "const": false
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

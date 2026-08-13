@@ -1,0 +1,142 @@
+{
+  "errors": [],
+  "outputs": {
+    "component_usage_report.json": "3556da6178273a5bb55f2499f4ca817a5d47fa9201dbafcc59124ea6e7476611",
+    "final.html": "2f749834e7f391e9673dd4710bfa6c95e006f2e5aa0f1ab357899a8c7afc9979",
+    "final_runtime.html": "8cf0eafe7a7a8f30215f0af7c5a9c76847f9da21ff12d62fd210caf356c4eb51",
+    "theme_identity_report.json": "a1f6f886a9cdccbcada146603124663eb754e405a75c3ebb16c3880856a888de"
+  },
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "stage": "gzh_design",
+  "status": "success",
+  "validator_report": {
+    "COMPONENT_SOURCE_HASH_MATCHES_LOCK": true,
+    "GZH_COMMIT_LOCKED": "0007d7e6a4493aab59070d9c31dcde83830302fd",
+    "GZH_EXECUTION_EVIDENCE_PRESENT": true,
+    "HAMMER_CHAPTER_TITLE_COUNT": 4,
+    "HAMMER_COVER_BREAKING_COUNT": 1,
+    "HAMMER_FOOTER_CTA_COUNT": 1,
+    "HAMMER_SIGNATURE_COUNT": 1,
+    "HAMMER_TOC_MATCHES_CHAPTERS": true,
+    "HAMMER_TOC_SCROLL_COUNT": 1,
+    "INSTALLED_ROOT_MATCHES_LOCK": true,
+    "INSTALL_RECEIPT_PRESENT": true,
+    "INSTALL_RECEIPT_ROOT_MATCHES": true,
+    "INSTALL_SOURCE_COMMIT_MATCHES_LOCK": true,
+    "LINE_THROUGH_COUNT": 1,
+    "OFFICIAL_GZH_CALL": true,
+    "OFFICIAL_IMAGE_COMPONENT_TYPES": 2,
+    "RENDER_ENTRY_HASH_MATCHES_LOCK": true,
+    "RUNTIME_MANIFEST_MATCHES_LOCK": true,
+    "THEME_FALLBACK_USED": false,
+    "THEME_IDENTITY": "PASS",
+    "actual_component_source_sha256": "02c0d884f8c8e85293914e01688af3fac649c64c26be458903c25924dd769c84",
+    "actual_render_entry_sha256": "e40237269265b63af73860bd9ef81b34a9e1b7bb80af59f3ebef4947baa5c095",
+    "chapters_source": "frozen final_article.md (## headings)",
+    "components": {
+      "chapter_title": {
+        "final_fragment_sha256": "269e8113001698f8ecc75e616efe83468ba0af644a2a45c6e0cfad45e1c4f119",
+        "occurrences": 4
+      },
+      "cover_breaking": {
+        "final_fragment_sha256": "9a19438685b4fa472c8b4692ed21398f9039ac41358cd3c011c5a4ceaaad37e4",
+        "occurrences": 1
+      },
+      "footer_cta": {
+        "final_fragment_sha256": "35dec1efd373da069cb671c3a88f37f84a5ceb1faaa3148f1d430bc659a9aebd",
+        "occurrences": 1
+      },
+      "image_2a_standard": {
+        "final_fragment_sha256": "5f43c1f4710116826a5798cee89ccb07f61597c2fde5381ccfc908c1cc7555e7",
+        "occurrences": 5
+      },
+      "image_media_text_card": {
+        "final_fragment_sha256": "e768c3fcda3d73162121151f0eccf574c4fc54bf2e88f8c272042c8019c44047",
+        "occurrences": 1
+      },
+      "signature": {
+        "final_fragment_sha256": "d4a0ff822ddd4a9899269ee07147d85d3cad23e931f41ca232ebcead8a63256b",
+        "occurrences": 1
+      },
+      "toc_scroll": {
+        "final_fragment_sha256": "b965fd10698cc3f2e4ad049c5b7bc1458a0f32bedfae0e6cd4dbfcd4fdf9584a",
+        "occurrences": 1
+      }
+    },
+    "contract": {
+      "CONTRACT": "PASS",
+      "checks": {
+        "current_root_matches_lock": {
+          "detail": "installed root sha != locked",
+          "ok": true
+        },
+        "current_version_matches_lock": {
+          "detail": "v2026.07.18-hammer.1 != v2026.07.18-hammer.1",
+          "ok": true
+        },
+        "locked_commit_present": {
+          "detail": "gzh-design full_commit_sha not locked",
+          "ok": true
+        },
+        "locked_version_present": {
+          "detail": "gzh-design version not locked",
+          "ok": true
+        },
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "no_theme_fallback": {
+          "detail": "hammer primary absent or moyu-green present",
+          "ok": true
+        },
+        "official_entry_present": {
+          "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\render_article.py",
+          "ok": true
+        },
+        "official_validator_present": {
+          "detail": "validator F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\validate_gzh_html.py",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "5 != 5",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing []",
+          "ok": true
+        },
+        "stage_matches": {
+          "detail": "gzh_design != gzh_design",
+          "ok": true
+        },
+        "theme_fallback_not_used": {
+          "detail": "fallback used",
+          "ok": true
+        }
+      },
+      "contract_file": "05_gzh_design.yaml",
+      "must_run_after": null,
+      "problems": [],
+      "required_outputs": [
+        "final.html",
+        "final_runtime.html",
+        "component_usage_report.json",
+        "theme_identity_report.json"
+      ],
+      "stage": "gzh_design"
+    },
+    "expected_chapters": 4,
+    "image_types_present": [
+      "image_2a_standard",
+      "image_media_text_card"
+    ],
+    "strikethrough_forbidden_rgba_present": false,
+    "strikethrough_props_ok": true,
+    "structure_ok": true
+  }
+}

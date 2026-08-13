@@ -1,0 +1,311 @@
+--- a/media-enrichment/scripts/run_media_enrichment.py
++++ b/media-enrichment/scripts/run_media_enrichment.py
+@@ -26,7 +26,9 @@
+ from media_enrichment.image_deduplicator import deduplicate_asset, DedupState
+ from media_enrichment.image_classifier import classify_image
+ from media_enrichment.chart_generator import build_chart_specs, generate_chart
+-from media_enrichment.uploader import create_uploader, scan_for_secrets, timed_upload
++from media_enrichment.uploader import (
++    create_uploader, normalize_wechat_url, scan_for_secrets, timed_upload,
++)
+ from media_enrichment.placement_planner import find_anchors
+ from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
+ from media_enrichment.asset_approval import (
+@@ -90,6 +92,21 @@
+     upload_mode = "dry_run" if args.phase == "discover" else requested_upload_mode
+     # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
+     upload_events: list = []
++    existing_upload_events: dict[str, dict] = {}
++    if args.phase == "continue":
++        events_path = output_dir / "upload_events.json"
++        if events_path.is_file():
++            try:
++                prior_events = json.loads(
++                    events_path.read_text(encoding="utf-8")).get("events", [])
++                upload_events.extend(prior_events)
++                for event in prior_events:
++                    if (event.get("status") == "success"
++                            and event.get("url")
++                            and normalize_wechat_url(event.get("url"))):
++                        existing_upload_events[event["asset_id"]] = event
++            except (OSError, ValueError, TypeError):
++                builder.errors.append("existing upload_events.json is invalid")
+ 
+     # Validate upload_mode. Discovery is side-effect-free regardless of request.
+     try:
+@@ -512,19 +529,46 @@
+                     and asset.quality_status == "pass"
+                     and asset.relevance_status == "relevant"
+                     and asset.duplicate_of is None):
+-                upload_result = timed_upload(
+-                    uploader, upload_events, local_path, asset.asset_id,
+-                    copyright_status=asset.copyright_status,
+-                )
+-                asset.upload = {
+-                    "mode": upload_mode, "status": upload_result.status,
+-                    "remote_url": upload_result.remote_url,
+-                    "response_sha256": upload_result.response_sha256,
+-                }
+-                if upload_result.status != "success":
+-                    builder.errors.append(
+-                        f"upload failed for {asset.asset_id}: "
+-                        f"{upload_result.error or 'no success response'}")
++                prior = existing_upload_events.get(asset.asset_id)
++                if prior is not None:
++                    asset.upload = {
++                        "mode": prior.get("mode", upload_mode),
++                        "status": "success",
++                        "remote_url": prior["url"],
++                        "response_sha256": prior.get("response_sha256"),
++                    }
++                    upload_events.append({
++                        "asset_id": asset.asset_id,
++                        "mode": prior.get("mode", upload_mode),
++                        "status": "skipped_already_uploaded",
++                        "started_at": prior.get("started_at"),
++                        "ended_at": prior.get("ended_at"),
++                        "start_monotonic": prior.get("start_monotonic"),
++                        "end_monotonic": prior.get("end_monotonic"),
++                        "http_status": prior.get("http_status"),
++                        "wechat_errcode": prior.get("wechat_errcode"),
++                        "wechat_errmsg": prior.get("wechat_errmsg"),
++                        "request_elapsed_seconds": 0.0,
++                        "endpoint_path": prior.get("endpoint_path"),
++                        "request_attempt_index": prior.get("request_attempt_index"),
++                        "media_id": prior.get("media_id"),
++                        "url": prior["url"],
++                        "source_event": "existing_success_event",
++                    })
++                else:
++                    upload_result = timed_upload(
++                        uploader, upload_events, local_path, asset.asset_id,
++                        copyright_status=asset.copyright_status,
++                    )
++                    asset.upload = {
++                        "mode": upload_mode, "status": upload_result.status,
++                        "remote_url": upload_result.remote_url,
++                        "response_sha256": upload_result.response_sha256,
++                    }
++                    if upload_result.status != "success":
++                        builder.errors.append(
++                            f"upload failed for {asset.asset_id}: "
++                            f"{upload_result.error or 'no success response'}")
+ 
+     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
+         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
+--- a/media-enrichment/tests/test_single_asset_e2e.py
++++ b/media-enrichment/tests/test_single_asset_e2e.py
+@@ -245,6 +245,68 @@
+         _assert_no_upload(continued, events)
+         assert any("frozen sha256 mismatch" in e for e in continued["errors"])
+ 
++    def test_existing_success_event_skips_reupload_and_reuses_url(self, tmp_path):
++        fixtures = _fixtures(tmp_path)
++        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
++        approval = _approval(frozen, "A-001")
++        request = _write_request(tmp_path, [approval])
++        phase_out = tmp_path / "idempotent" / "continue"
++        cmd = [
++            sys.executable, "-X", "utf8",
++            str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
++            "--request", str(request), "--output-dir", str(phase_out),
++            "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
++            "--discovery-manifest", str(out / "asset_discovery_manifest.json"),
++        ]
++        first = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
++        assert first.returncode == 0, first.stdout + first.stderr
++        first_events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
++        first_url = next(e["url"] for e in first_events if e["status"] == "success")
++        second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
++        assert second.returncode == 0, second.stdout + second.stderr
++        events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
++        assert sum(e["status"] == "success" for e in events) == 1
++        skipped = [e for e in events if e["status"] == "skipped_already_uploaded"]
++        assert len(skipped) == 1 and skipped[0]["url"] == first_url
++
++    def test_existing_success_does_not_bypass_frozen_file_sha(self, tmp_path):
++        fixtures = _fixtures(tmp_path)
++        _, out, manifest, frozen, _ = _cli(tmp_path, fixtures, "discover")
++        approval = _approval(frozen, "A-001")
++        request = _write_request(tmp_path, [approval])
++        phase_out = tmp_path / "tamper-after-success" / "continue"
++        cmd = [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
++               "--request", str(request), "--output-dir", str(phase_out),
++               "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
++               "--discovery-manifest", str(out / "asset_discovery_manifest.json")]
++        assert subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180).returncode == 0
++        target = next(a for a in manifest["assets"] if a["asset_id"] == "A-001")
++        Path(target["local_path"]).write_bytes(b"tampered-after-success")
++        second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
++        assert second.returncode != 0
++        continued = json.loads((phase_out / "media_manifest.json").read_text(encoding="utf-8"))
++        assert any("frozen sha256 mismatch" in e for e in continued["errors"])
++
++    def test_failed_event_is_not_reused(self, tmp_path):
++        fixtures = _fixtures(tmp_path)
++        _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
++        approval = _approval(frozen, "A-001")
++        request = _write_request(tmp_path, [approval])
++        phase_out = tmp_path / "failed-event" / "continue"
++        phase_out.mkdir(parents=True)
++        (phase_out / "upload_events.json").write_text(
++            json.dumps({"schema_version":"1.0","serial":True,"events":[
++                {"asset_id":"A-001","status":"failed","url":None}]}), encoding="utf-8")
++        cmd = [sys.executable, "-X", "utf8", str(SKILL_ROOT / "scripts" / "run_media_enrichment.py"),
++               "--request", str(request), "--output-dir", str(phase_out),
++               "--fixture-dir", str(fixtures / "html"), "--phase", "continue",
++               "--discovery-manifest", str(out / "asset_discovery_manifest.json")]
++        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=180)
++        assert result.returncode == 0, result.stdout + result.stderr
++        events = json.loads((phase_out / "upload_events.json").read_text(encoding="utf-8"))["events"]
++        assert any(e.get("status") == "success" for e in events)
++        assert not any(e.get("status") == "skipped_already_uploaded" for e in events)
++
+     def test_continue_mirrors_required_outputs_to_stage_root(self, tmp_path):
+         fixtures = _fixtures(tmp_path)
+         _, out, _, frozen, _ = _cli(tmp_path, fixtures, "discover")
+--- a/wxgzh-pipeline/validators/validate_media_bindings.py
++++ b/wxgzh-pipeline/validators/validate_media_bindings.py
+@@ -26,7 +26,11 @@
+     return p.scheme == "https" and p.hostname in MMBIZ_HOSTS
+ 
+ 
+-def validate(media_manifest: str | Path, bindings: str | Path) -> tuple[int, dict]:
++def validate(media_manifest: str | Path, bindings: str | Path,
++             body_images_min: int = MIN_BODY_IMAGES,
++             body_images_min_source: str = "default") -> tuple[int, dict]:
++    if not isinstance(body_images_min, int) or isinstance(body_images_min, bool) or body_images_min < 1:
++        raise ValueError("body_images_min must be an integer >= 1")
+     man = json.loads(Path(media_manifest).read_text(encoding="utf-8"))
+     bnd = json.loads(Path(bindings).read_text(encoding="utf-8"))
+     by_id = {a["asset_id"]: a for a in man.get("assets", []) if a.get("decision") == "eligible"}
+@@ -48,15 +52,18 @@
+             problems.append(f"{aid}: binding sha256 != manifest sha256")
+     count = len(body)
+     report = {
+-        "body_image_count": count, "min_required": MIN_BODY_IMAGES, "target": TARGET_BODY_IMAGES,
+-        "min_met": count >= MIN_BODY_IMAGES, "target_met": count >= TARGET_BODY_IMAGES,
++        "body_image_count": count, "min_required": body_images_min,
++        "body_images_min_source": body_images_min_source,
++        "target": TARGET_BODY_IMAGES,
++        "min_met": count >= body_images_min, "target_met": count >= TARGET_BODY_IMAGES,
+         "target_not_met_is_warning": True, "problems": problems,
+         "all_bindings_consistent": not problems,
+     }
+-    ok = (count >= MIN_BODY_IMAGES) and (count <= 8) and not problems
++    ok = (count >= body_images_min) and (count <= 8) and not problems
+     report["MEDIA_BINDINGS"] = "PASS" if ok else "FAIL"
+-    if count < MIN_BODY_IMAGES:
+-        report["blocking_reason"] = "fewer than 6 bound images — MUST NOT upload"
++    if count < body_images_min:
++        report["blocking_reason"] = (
++            f"fewer than {body_images_min} bound images — MUST NOT upload")
+     return (0 if ok else 1), report
+ 
+ 
+@@ -64,8 +71,11 @@
+     ap = argparse.ArgumentParser()
+     ap.add_argument("--media-manifest", required=True)
+     ap.add_argument("--bindings", required=True)
++    ap.add_argument("--body-images-min", type=int, default=MIN_BODY_IMAGES)
+     a = ap.parse_args(argv)
+-    code, report = validate(a.media_manifest, a.bindings)
++    code, report = validate(a.media_manifest, a.bindings,
++                            body_images_min=a.body_images_min,
++                            body_images_min_source="--body-images-min" if "--body-images-min" in (argv or sys.argv) else "default")
+     print(json.dumps(report, ensure_ascii=False))
+     return code
+ 
+--- a/wxgzh-pipeline/wxgzh_pipeline/stages/media_enrichment.py
++++ b/wxgzh-pipeline/wxgzh_pipeline/stages/media_enrichment.py
+@@ -43,7 +43,17 @@
+     if not man.is_file() or not bnd.is_file():
+         return 1, {"reason": "media_manifest.json or article_image_bindings.json missing"}, vpath, vsha
+     mod = load_validator("validate_media_bindings")
+-    code, report = mod.validate(man, bnd)
++    config_path = sd / "validation_config.json"
++    body_images_min = 6
++    body_images_min_source = "default"
++    if config_path.is_file():
++        import json
++        config = json.loads(config_path.read_text(encoding="utf-8"))
++        body_images_min = config.get("body_images_min", 6)
++        body_images_min_source = str(config_path)
++    code, report = mod.validate(
++        man, bnd, body_images_min=body_images_min,
++        body_images_min_source=body_images_min_source)
+     # depends-on-freeze: bindings must reference the frozen article sha
+     if state.final_article_sha256:
+         txt = bnd.read_text(encoding="utf-8")
+--- a/wxgzh-pipeline/wxgzh_pipeline/contracts.py
++++ b/wxgzh-pipeline/wxgzh_pipeline/contracts.py
+@@ -174,6 +174,10 @@
+             body = bnd.get("body_images", [])
+             counts = c.get("counts", {})
+             cmin = counts.get("BODY_IMAGES_MIN", 6)
++            validation_config = sd / "validation_config.json"
++            if validation_config.is_file():
++                config = json.loads(validation_config.read_text(encoding="utf-8"))
++                cmin = config.get("body_images_min", cmin)
+             chk("body_images_min", len(body) >= cmin, f"{len(body)} < {cmin}")
+             per = c.get("per_bound_image", {})
+             host = per.get("remote_url_host", "mmbiz.qpic.cn")
+@@ -207,7 +211,9 @@
+                     chk("upload_events_present", False, "upload_events.json missing")
+                 else:
+                     events = json.loads(ev_p.read_text(encoding="utf-8")).get("events", [])
+-                    ordered = sorted(events, key=lambda e: e.get("start_monotonic", 0))
++                    ordered = sorted(
++                        (e for e in events if e.get("status") != "skipped_already_uploaded"),
++                        key=lambda e: e.get("start_monotonic", 0))
+                     overlap = any(ordered[i + 1].get("start_monotonic", 0) < ordered[i].get("end_monotonic", 0)
+                                   for i in range(len(ordered) - 1))
+                     chk("upload_no_overlap", not overlap, "parallel/overlapping uploads detected")
+--- /dev/null
++++ b/wxgzh-pipeline/tests/test_obs53_min_images.py
+@@ -0,0 +1,45 @@
++import json
++from pathlib import Path
++import pytest
++
++from wxgzh_pipeline.stages import load_validator
++
++validate_media_bindings = load_validator("validate_media_bindings")
++
++
++def _files(tmp_path, count=2):
++    man = tmp_path / "media_manifest.json"
++    bnd = tmp_path / "article_image_bindings.json"
++    assets = []
++    body = []
++    for i in range(count):
++        aid = f"A-{i+1:03d}"
++        url = f"https://mmbiz.qpic.cn/{aid}"
++        sha = f"{i+1:064d}"
++        assets.append({"asset_id": aid, "decision": "eligible", "sha256": sha,
++                       "upload": {"status": "success", "remote_url": url}})
++        body.append({"asset_id": aid, "sha256": sha})
++    man.write_text(json.dumps({"assets": assets}), encoding="utf-8")
++    bnd.write_text(json.dumps({"body_images": body}), encoding="utf-8")
++    return man, bnd
++
++
++def test_explicit_min_two_passes_and_reports_source(tmp_path):
++    man, bnd = _files(tmp_path)
++    code, report = validate_media_bindings.validate(man, bnd, 2, "validation_config.json")
++    assert code == 0
++    assert report["min_required"] == 2
++    assert report["body_images_min_source"] == "validation_config.json"
++
++
++def test_default_min_remains_six(tmp_path):
++    man, bnd = _files(tmp_path)
++    code, report = validate_media_bindings.validate(man, bnd)
++    assert code == 1
++    assert report["min_required"] == 6
++
++@pytest.mark.parametrize("value", [0, -1])
++def test_min_less_than_one_rejected(tmp_path, value):
++    man, bnd = _files(tmp_path)
++    with pytest.raises(ValueError, match=">= 1"):
++        validate_media_bindings.validate(man, bnd, value)

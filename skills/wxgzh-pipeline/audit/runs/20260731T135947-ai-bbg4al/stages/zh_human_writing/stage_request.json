@@ -1,0 +1,12 @@
+{
+  "config": {
+    "responsibility": "de-AI only; no new facts; freeze article"
+  },
+  "inputs": {
+    "super_writer_article": "../super_writer/article.md"
+  },
+  "network_mode": "live",
+  "run_id": "20260731T135947-ai-bbg4al",
+  "skill_name": "zh-human-writing",
+  "stage": "zh_human_writing"
+}

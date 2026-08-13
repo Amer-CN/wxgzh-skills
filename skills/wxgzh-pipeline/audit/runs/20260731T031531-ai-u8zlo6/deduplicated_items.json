@@ -1,0 +1,130 @@
+[
+  {
+    "id": "cms5a9tpy00utro7c9bw0s295",
+    "title": "OpenAI 发布 Codex 安全 CLI 与 SDK",
+    "summary": null,
+    "source": {
+      "name": "X：Tibo (@thsottiaux)"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "original": "https://x.com/thsottiaux/status/2082241164850364555"
+    },
+    "sourceCount": 7,
+    "signalCount": 6,
+    "latestAt": "2026-07-29T11:55:36.798Z",
+    "source_url": "https://x.com/thsottiaux/status/2082241164850364555",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms7q9upv0q0gro2ev1apyhwk",
+    "title": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+    "originalTitle": "AlloyDB adds group authentication to secure enterprise scale and AI agents",
+    "summary": "Google Cloud 宣布 AlloyDB 推出 IAM 群组认证（预览版），允许安全团队通过最多 200 个 Google Groups 管理数据库访问。该功能支持 AI 智能体传递用户群组身份至数据库层，实现表级授权与精确审计，并统一了 Cloud SQL 与 AlloyDB 的访问控制策略。",
+    "source": {
+      "name": "Google Cloud：Databases（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "original": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    },
+    "publishedAt": "2026-07-30T16:00:00.000Z",
+    "discoveredAt": "2026-07-30T16:28:22.749Z",
+    "category": "ai-products",
+    "score": 53,
+    "selected": false,
+    "source_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms6lhleg06ourohzls7gb1hk",
+    "title": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位",
+    "originalTitle": "Discover what's next for AI， from the SaaS reckoning to the agent security gap， at TechCrunch Disrupt 2026",
+    "summary": "TechCrunch Disrupt 2026将于10月13-15日在旧金山Moscone Center举办AI Stage，由Google for Startups呈现。议程将探讨模型商品化下的AI产品定价、需从基础设施重建的智能体安全，以及AI原生市场策略。Databricks、Decart、Luma AI和Clay等公司高管将参与讨论。",
+    "source": {
+      "name": "TechCrunch：AI（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "original": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    "publishedAt": "2026-07-29T21:16:39.000Z",
+    "discoveredAt": "2026-07-29T21:26:44.431Z",
+    "category": "industry",
+    "score": 22,
+    "selected": false,
+    "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5suoi10selrobkfvb0mwoe",
+    "title": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个",
+    "originalTitle": "国内 PC 产品首个：华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证",
+    "summary": "华为鸿蒙电脑成为国内首个整机、OS、芯片全链路通过 CC EAL5+ 认证的 PC 产品。其搭载的鸿蒙系统也是首个通过国测 II 级的电脑 OS，依托星盾安全架构与原生 AI 安全底座，聚焦智能体安全、金融安全、企业办公安全三大核心场景。",
+    "source": {
+      "name": "IT之家（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+      "original": "https://www.ithome.com/0/983/125.htm"
+    },
+    "publishedAt": "2026-07-29T07:59:54.000Z",
+    "discoveredAt": "2026-07-29T08:05:03.105Z",
+    "category": "industry",
+    "score": 52,
+    "selected": false,
+    "source_url": "https://www.ithome.com/0/983/125.htm",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5cgsgp01osro7cbxt8b2wq",
+    "title": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求",
+    "originalTitle": "Cyera agrees to acquire Oasis Security for $1B to safeguard proliferating AI agents",
+    "summary": "数据安全公司 Cyera 宣布签署意向书，以约 10 亿美元（大部分现金加部分股票）收购专注于非人类身份（主要是 AI 智能体）安全的 Oasis Security。Oasis 成立于 2022 年，已从 Accel、Craft Ventures 等融资约 1.95 亿美元。收购后，Cyera 计划将 Oasis 技术整合到统一身份与数据安全平台，以应对企业面临的 AI 武器化威胁。",
+    "source": {
+      "name": "TechCrunch：AI（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq",
+      "original": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents"
+    },
+    "publishedAt": "2026-07-29T00:09:05.000Z",
+    "discoveredAt": "2026-07-29T00:26:24.250Z",
+    "category": "industry",
+    "score": 57,
+    "selected": false,
+    "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms3yedcz040qro82up1ya5bf",
+    "title": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash",
+    "originalTitle": "纳德拉官宣微软首个 AI 安全模型 MAI-Cyber-1-Flash，跑分超 Mythos 5 和 GPT-5.5 Cyber",
+    "summary": "微软发布首个网络安全 AI 模型 MAI-Cyber-1-Flash，在 CyberGym 基准测试中取得 95.95% 的成功率，超过 Claude Mythos 5 和 GPT-5.5 Cyber。该模型接入多智能体安全系统 MDASH，可处理约 90% 的网络安全任务，与 GPT-5.4 的组合成本比此前配置降低近 50%。",
+    "source": {
+      "name": "IT之家（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+      "original": "https://www.ithome.com/0/982/312.htm"
+    },
+    "publishedAt": "2026-07-28T00:59:36.000Z",
+    "discoveredAt": "2026-07-28T01:04:49.287Z",
+    "category": "ai-models",
+    "score": 60,
+    "selected": false,
+    "source_url": "https://www.ithome.com/0/982/312.htm",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+    "query_origin": "items:all:q=智能体安全",
+    "duplicate_ids": [
+      "cms3jb9vz00dmroiy63upwy4b",
+      "cms3iitej002grobn3kqeyjgu",
+      "cms3h61yj0019roth0lej5m4z"
+    ]
+  }
+]

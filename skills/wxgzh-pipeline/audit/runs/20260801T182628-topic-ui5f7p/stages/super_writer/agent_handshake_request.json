@@ -1,0 +1,38 @@
+{
+  "contract_sha256": "7609ea7c9b9a073a2636fe9c316b4a592efc81222454a0702650d1b92fbc111a",
+  "expected_outputs": [
+    "generation-profile.yaml",
+    "writing-brief.md",
+    "material-readiness.yaml",
+    "material-ingestion-report.json",
+    "material-ledger.yaml",
+    "evidence-map.md",
+    "canonical_claim_registry.json",
+    "core-card.md",
+    "outline.md",
+    "semantic-map.yaml",
+    "article.md",
+    "editor-report.md",
+    "full_mode_validator_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": null,
+    "topic": "智能体时代的数据库身份安全"
+  },
+  "instructions": "Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK.",
+  "kind": "agent_handshake",
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "skill": "super-writer",
+  "skill_identity": {
+    "skill_name": "super-writer",
+    "skill_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+    "skill_version": "0.3.2-rc1"
+  },
+  "stage": "super_writer",
+  "stage_request_sha256": "514b78313fecd3b625469943daff12f8ada7390ebfcaa291ea5fe7db2c748918",
+  "upstream_hashes": {
+    "aihot/deduplicated_items.json": "747d2ba11aab109e735ee2f96564bcd3d6ac734357cf7bca9aef9ffa697e02c4",
+    "aihot/fetch_log.json": "1d435ad3f96518254976274b08b8c3a7a2b35ee0ae043f9b8ca621493487268d",
+    "aihot/raw_items.json": "f020b1a1a96ee769078f197e0ebea39f71b6320b3cec5fa40a7c2b17f0f89f41"
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "article": {
+    "path": "../zh_human_writing/final_article.md",
+    "sha256": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386"
+  },
+  "asset_approvals": [],
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "claim_text": "OpenAI 发布 Codex 安全 CLI 与 SDK",
+      "material_id": "M-01",
+      "source_excerpt": "",
+      "source_url": "https://x.com/thsottiaux/status/2082241164850364555"
+    },
+    {
+      "claim_id": "C-02",
+      "claim_text": "Anthropic 用 Claude 发现密码学算法缺陷，HAWK 密钥强度减半",
+      "material_id": "M-02",
+      "source_excerpt": "",
+      "source_url": "https://www.anthropic.com/research/discovering-cryptographic-weaknesses"
+    },
+    {
+      "claim_id": "C-03",
+      "claim_text": "OpenAI 自主AI模型在安全评估中攻破Hugging Face等五个平台",
+      "material_id": "M-03",
+      "source_excerpt": "",
+      "source_url": "https://the-decoder.com/openai-admits-its-autonomous-ai-models-also-compromised-credentials-on-other-platforms-during-security-eval"
+    },
+    {
+      "claim_id": "C-04",
+      "claim_text": "Hugging Face 报告：AI 智能体自主入侵持续 4.5 天",
+      "material_id": "M-04",
+      "source_excerpt": "",
+      "source_url": "https://x.com/kimmonismus/status/2082232405629235649"
+    },
+    {
+      "claim_id": "C-05",
+      "claim_text": "Kimi K3 在网络安全漏洞利用测试中大幅落后美国前沿模型，知识蒸馏或为原因",
+      "material_id": "M-05",
+      "source_excerpt": "英国AI安全研究所与美国AI标准与创新中心联合评估显示，Kimi K3在ExploitBench得分32.2%，美国领先模型为76.2%。",
+      "source_url": "https://the-decoder.com/kimi-k3-trails-frontier-us-models-by-a-wide-margin-on-cyber-exploits-and-distillation-may-explain-why"
+    },
+    {
+      "claim_id": "C-06",
+      "claim_text": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位",
+      "material_id": "M-06",
+      "source_excerpt": "议程将探讨需从基础设施重建的智能体安全。",
+      "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    {
+      "claim_id": "C-07",
+      "claim_text": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求",
+      "material_id": "M-07",
+      "source_excerpt": "数据安全公司Cyera计划以约10亿美元收购专注非人类身份和AI智能体安全的Oasis Security。",
+      "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents"
+    },
+    {
+      "claim_id": "C-08",
+      "claim_text": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash",
+      "material_id": "M-08",
+      "source_excerpt": "微软发布MAI-Cyber-1-Flash，CyberGym成功率95.95%；接入MDASH后可处理约90%的网络安全任务。另有两个X信号报告同一事件，去重合并。",
+      "source_url": "https://www.ithome.com/0/982/312.htm"
+    },
+    {
+      "claim_id": "C-09",
+      "claim_text": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个",
+      "material_id": "M-09",
+      "source_excerpt": "鸿蒙电脑通过CC EAL5+认证，聚焦智能体安全、金融安全与企业办公安全。",
+      "source_url": "https://www.ithome.com/0/983/125.htm"
+    }
+  ],
+  "config": {
+    "allow_unknown_license_for_publish": false,
+    "max_images_per_material": 8,
+    "max_total_images": 8,
+    "network_mode": "live",
+    "upload_mode": "wechat_image_host"
+  },
+  "materials": [
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5a9tpy00utro7c9bw0s295",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms5a9tpy00utro7c9bw0s295",
+      "material_id": "M-01",
+      "selected_claim_ids": [
+        "C-01"
+      ],
+      "source_url": "https://x.com/thsottiaux/status/2082241164850364555",
+      "title": "OpenAI 发布 Codex 安全 CLI 与 SDK"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms4xiiu3039froa1hrbb2jba",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms4xiiu3039froa1hrbb2jba",
+      "material_id": "M-02",
+      "selected_claim_ids": [
+        "C-02"
+      ],
+      "source_url": "https://www.anthropic.com/research/discovering-cryptographic-weaknesses",
+      "title": "Anthropic 用 Claude 发现密码学算法缺陷，HAWK 密钥强度减半"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6bt0tk01ulrotze69gtgvn",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms6bt0tk01ulrotze69gtgvn",
+      "material_id": "M-03",
+      "selected_claim_ids": [
+        "C-03"
+      ],
+      "source_url": "https://the-decoder.com/openai-admits-its-autonomous-ai-models-also-compromised-credentials-on-other-platforms-during-security-eval",
+      "title": "OpenAI 自主AI模型在安全评估中攻破Hugging Face等五个平台"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms59994300kcro7c5155buny",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms59994300kcro7c5155buny",
+      "material_id": "M-04",
+      "selected_claim_ids": [
+        "C-04"
+      ],
+      "source_url": "https://x.com/kimmonismus/status/2082232405629235649",
+      "title": "Hugging Face 报告：AI 智能体自主入侵持续 4.5 天"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cmryrih7804c9rolge6wdk3v8",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cmryrih7804c9rolge6wdk3v8",
+      "material_id": "M-05",
+      "selected_claim_ids": [
+        "C-05"
+      ],
+      "source_url": "https://the-decoder.com/kimi-k3-trails-frontier-us-models-by-a-wide-margin-on-cyber-exploits-and-distillation-may-explain-why",
+      "title": "Kimi K3 在网络安全漏洞利用测试中大幅落后美国前沿模型，知识蒸馏或为原因"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms6lhleg06ourohzls7gb1hk",
+      "material_id": "M-06",
+      "selected_claim_ids": [
+        "C-06"
+      ],
+      "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "title": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5cgsgp01osro7c9bw0s295",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms5cgsgp01osro7cbxt8b2wq",
+      "material_id": "M-07",
+      "selected_claim_ids": [
+        "C-07"
+      ],
+      "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents",
+      "title": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms3yedcz040qro82up1ya5bf",
+      "material_id": "M-08",
+      "selected_claim_ids": [
+        "C-08"
+      ],
+      "source_url": "https://www.ithome.com/0/982/312.htm",
+      "title": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash"
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+      "copyright_review": {
+        "status": "unknown"
+      },
+      "dedup_id": "cms5suoi10selrobkfvb0mwoe",
+      "material_id": "M-09",
+      "selected_claim_ids": [
+        "C-09"
+      ],
+      "source_url": "https://www.ithome.com/0/983/125.htm",
+      "title": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个"
+    }
+  ],
+  "provenance": {
+    "canonical_registry_sha256": "51eaf9088625bb52c1abf9d84ff9a86802919da595d3842964b8a6a1e0900207",
+    "copyright_approvals_bound": 0,
+    "deduplicated_items_sha256": "da08958a9e0c2b7e316390fdc7f972734be3cb3eac882bb108b93f5925d2bd96",
+    "material_mapping_verified": true,
+    "verified_material_count": 9
+  },
+  "run_id": "20260730T222605-ai-9je33o",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,54 @@
+{
+  "assets": [
+    {
+      "asset_id": "A-006",
+      "asset_identity_sha256": "0c8146f8463e01023269d294cc5a867de449847aa0a065ee88059c523971261e",
+      "asset_sha256": "0f7df75f57b6e08595384761f476ecef74914bb232206b55399e8b5b4911069b",
+      "material_id": "M-01",
+      "resolved_original_url": "https://camo.githubusercontent.com/7786ec07160c0ab61dc6b2a01448e3d31eda728f103213928bfd231577dc13e0/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f646f63732d454e2532302532422532302545342542382541442545362539362538372d396366",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    },
+    {
+      "asset_id": "A-002",
+      "asset_identity_sha256": "130400e8d9a327ca39087b6b95a99e9280a56e5de52f1f495e22d59dc85209d9",
+      "asset_sha256": "f6dd200d590e7f8f9fbe4460e7bc4aae4d4afad70a8f5fb22d6b26932d438cad",
+      "material_id": "M-01",
+      "resolved_original_url": "https://camo.githubusercontent.com/22a9ecf4d93f602dd51c99d5ce94b38f451d9c3591a0f33bfd91d2e43023d535/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2546302539462539312542362532306d616465253230666f722d626567696e6e6572732d666636396234",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    },
+    {
+      "asset_id": "A-019",
+      "asset_identity_sha256": "495d01806cc2d5e18cd8426a34b064d6033f8faf49b5e3693addef91b304af5a",
+      "asset_sha256": "b1d5c4f32dfacb1ca9380382a1128770c63d580a6becee1c3267bfcba377a4e3",
+      "material_id": "M-10",
+      "resolved_original_url": "https://camo.githubusercontent.com/69cf001a85625b01a5c8cbba620134a73b1f05e0cb337402a703cb11d1ab0b20/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2546302539462539332538342532306c6963656e73652d4475616c2d6f72616e6765",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.en.md"
+    },
+    {
+      "asset_id": "A-003",
+      "asset_identity_sha256": "55f629556f3b481e3bb0f8a67e0ae263ec523608bff0b79cdd4c6f7a61e58cce",
+      "asset_sha256": "f4f682c8e01dd91e71571e48524dd035ebfa64ff80d8e2356979e27c103c1ebc",
+      "material_id": "M-01",
+      "resolved_original_url": "https://camo.githubusercontent.com/69be01c10ca85dc1b6fba00b300336b1c85a4e143b65081a1c7b0654d691f6d1/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f254630253946254134253936253230776f726b73253230776974682d616e7925323041492d627269676874677265656e",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    },
+    {
+      "asset_id": "A-007",
+      "asset_identity_sha256": "6fc3dddefa251aecd9f5d8cfc38777e15dbb3fd920a5c41a6ed244541aa6d0f0",
+      "asset_sha256": "a7174fd0e12b5e51044a49821bb68ef29724d577941a1661c7923a7ec5ae8e44",
+      "material_id": "M-01",
+      "resolved_original_url": "https://repository-images.githubusercontent.com/github-production-repository-image-32fea6/1270139806/e1c42508-0ee4-4a9b-b2a6-304796733fe8?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA/20260801/us-east-1/s3/aws4_request&X-Amz-Date=20260801T152718Z&X-Amz-Expires=300&X-Amz-Signature=2704f63751992949b9079517a180c9aa548f9ba4e0ebee3d634f31eadaa25a90&X-Amz-SignedHeaders=host&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoiaHR0cHM6Ly9yZXBvc2l0b3J5LWltYWdlcy5naXRodWJ1c2VyY29udGVudC5jb20vIiwia2V5Ijoia2V5MSIsImV4cCI6MTc4NTU5ODMzOCwibmJmIjoxNzg1NTk4MDM4LCJwYXRoIjoicmVwb3NpdG9yeS1pbWFnZXMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIn0.YJS70RFWBg6A59UPRmsAh7yibLKFY3AeCPB_01y1WKY",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    },
+    {
+      "asset_id": "A-004",
+      "asset_identity_sha256": "f1f4bdef443d253872cc8d76f52781a6c73b2893c4a3cd2643ceb0459cfdb079",
+      "asset_sha256": "a44ae4ee198a3f7cbd6976db32b9d3a45588d1c9cc5d4110a0ce5e945ff1f26c",
+      "material_id": "M-01",
+      "resolved_original_url": "https://camo.githubusercontent.com/e828b58516106bed39b1ca051d6b89f23dd104faf59172178dbee6754efaea5f/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f254532253941254131253230696e7374616c6c2d636f707925323025323625323070617374652d316636666562",
+      "source_page_url": "https://github.com/Amer-CN/vibe-coding-guide/blob/main/README.md"
+    }
+  ],
+  "discovery_manifest_sha256": "0ac74ad36b824538e9b7a113933a74d1e2b06dfcbf4d9826829d807653b7f3e8",
+  "schema_version": "1.0"
+}

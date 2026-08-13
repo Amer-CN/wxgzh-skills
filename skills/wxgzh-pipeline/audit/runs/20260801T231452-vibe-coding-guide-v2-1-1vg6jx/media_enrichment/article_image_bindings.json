@@ -1,0 +1,148 @@
+{
+  "article_sha256": "289770d735c1af8dfd3d635960ab6b463f8507d326f05adea7d3bf470ff985c1",
+  "body_image_count": 6,
+  "body_images": [
+    {
+      "alt_text": "红线数量·红线条数对比（共2项）：v1.0 8.0条；v1.2.0 11.0条",
+      "asset_id": "A-032",
+      "asset_origin": "generated",
+      "caption": "红线数量·红线条数对比（共2项）：v1.0 8.0条；v1.2.0 11.0条",
+      "claim_ids": [
+        "C-02",
+        "C-04"
+      ],
+      "material_ids": [
+        "M-02",
+        "M-04"
+      ],
+      "placement": {
+        "anchor": "",
+        "confidence": 0.0,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSa4wiawhKD7jPbTLKkTlzv79TWqwlSVjic8MiaBRibh2uFaBywljI2AyL4jtx649JyW7QtcUL3lOTouBCRDadOWylRooNp9uQ02x8Q/0?from=appmsg",
+      "response_sha256": "365f37f2213ed8e5c15fa5613dfb9107a25d501b6efecb1089fcbe61c79a5137",
+      "sha256": "46d83857d12e70fef795a0e883bbb89812e88302a9db5d5acc5b043d0656977b",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "红线数量·红线条数对比（共2项）：v1.0 8.0条；v1.2.0 11.0条",
+      "asset_id": "A-033",
+      "asset_origin": "generated",
+      "caption": "红线数量·红线条数对比（共2项）：v1.0 8.0条；v1.2.0 11.0条",
+      "claim_ids": [
+        "C-02",
+        "C-04"
+      ],
+      "material_ids": [
+        "M-02",
+        "M-04"
+      ],
+      "placement": {
+        "anchor": "",
+        "confidence": 0.0,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/mmbiz_png/Rejn3syibRSbq5Dw2hFSqicqsLsdn7DxXFZu08FQTibS1vLrtfZCdpwqBqX096icpBhB0qiaRicUk9laXEe49GRj9OzxeeCpBqFKBzSj7CHnMJzgE/0?from=appmsg",
+      "response_sha256": "5fc8fed0414e8a527a0bde71de5cbac728c346e8680e4badaff3dfbe975681f2",
+      "sha256": "d52b7b44e041cc207642f1bcaa4e247b1151cefb996fbef774cfb2ad79e184ec",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "协作铁律·铁律条数对比（共2项）：v2.1 5.0条；v1.0 4.0条",
+      "asset_id": "A-034",
+      "asset_origin": "generated",
+      "caption": "协作铁律·铁律条数对比（共2项）：v2.1 5.0条；v1.0 4.0条",
+      "claim_ids": [
+        "C-07",
+        "C-11"
+      ],
+      "material_ids": [
+        "M-07",
+        "M-11"
+      ],
+      "placement": {
+        "anchor": "## v2.1：两条新铁律，全是这一天撞出来的",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/mmbiz_png/Rejn3syibRSZ9Ebr4ygVicCb3nGp16SezhpsKhHKHQdoYRnUVSAXNhicxm2mC1H9cgmYzEfIHSzUMFhFjxMiak1h8gT4t8ghveibQK1U8cibjiaxyE/0?from=appmsg",
+      "response_sha256": "bb3a4d6e6fddf606fb83ea6ba6a68a31803e332c1c0d7ea6fac15c87bfee553b",
+      "sha256": "2c44177582309ead757c99bc7e68bd1e4601f918cf5d4d5e50c8aec09e1702d9",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "协作铁律·铁律条数对比（共2项）：v2.1 5.0条；v1.0 4.0条",
+      "asset_id": "A-035",
+      "asset_origin": "generated",
+      "caption": "协作铁律·铁律条数对比（共2项）：v2.1 5.0条；v1.0 4.0条",
+      "claim_ids": [
+        "C-07",
+        "C-11"
+      ],
+      "material_ids": [
+        "M-07",
+        "M-11"
+      ],
+      "placement": {
+        "anchor": "## v2.1：两条新铁律，全是这一天撞出来的",
+        "confidence": 0.5,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSY7KQaydV5P2Jvr4z0edmQQc33km56Yy8waopIicJpoznfHbpawWKacWxrtADfnXBVCL7qTSTmVOdAibqtqYAxryiawxyWCia2Tf8w/0?from=appmsg",
+      "response_sha256": "ad776149a40101d433a1ae58768c64d11f8b6e62edfab376fb1615d77cc4e8d7",
+      "sha256": "3116603b65fde57120f4cc5e795d3ec04a82ab736095c6a0ea3eb133b8d75645",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "测试覆盖·测试断言数对比（共2项）：v1.0 32.0条；v2.1 62.0条",
+      "asset_id": "A-036",
+      "asset_origin": "generated",
+      "caption": "测试覆盖·测试断言数对比（共2项）：v1.0 32.0条；v2.1 62.0条",
+      "claim_ids": [
+        "C-08",
+        "C-13"
+      ],
+      "material_ids": [
+        "M-08",
+        "M-13"
+      ],
+      "placement": {
+        "anchor": "",
+        "confidence": 0.0,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/Rejn3syibRSacBZQTxnrbmX2o9jfMiaRjxD8E45TqoDnlmpy1VGST5rj0m95ZUSCKygle28lyahUnUYBkCBib7XByDmYcfibX1K4CDHLibp783I0/0?from=appmsg",
+      "response_sha256": "54454a39862d2bbd9028d4477c8d4fbb5da4a84cb144966a72420efebecb6e9a",
+      "sha256": "62187244d84d1f0c9744aabf81fe2c7dbf9b1304a0cfa55ff808acb57e152fe7",
+      "upload_mode": "wechat_image_host"
+    },
+    {
+      "alt_text": "测试覆盖·测试断言数对比（共2项）：v1.0 32.0条；v2.1 62.0条",
+      "asset_id": "A-037",
+      "asset_origin": "generated",
+      "caption": "测试覆盖·测试断言数对比（共2项）：v1.0 32.0条；v2.1 62.0条",
+      "claim_ids": [
+        "C-08",
+        "C-13"
+      ],
+      "material_ids": [
+        "M-08",
+        "M-13"
+      ],
+      "placement": {
+        "anchor": "",
+        "confidence": 0.0,
+        "position": "after"
+      },
+      "remote_url": "https://mmbiz.qpic.cn/mmbiz_png/Rejn3syibRSbTSpq0AJVslmnChHuyPgPTdcKOX2o0Seibkvfu2ibVZHmASefjA2fRIZkEZZFPfR1ibtKicYoxecWSk4fLfSe6KTD9LVPPyXWXMhg/0?from=appmsg",
+      "response_sha256": "bd96cfbdc1f653358c6bdb5bbbd8e016652e6ec6c7596386a97a0d052069df33",
+      "sha256": "065258ed131231b093790a7cd074069b6b304e5132416157bf85f7b6752bb3b0",
+      "upload_mode": "wechat_image_host"
+    }
+  ],
+  "publish_allowed": false,
+  "run_id": "20260801T231452-vibe-coding-guide-v2-1-1vg6jx",
+  "schema_version": "1.0",
+  "skill_version": "0.1.0-dev7-hotfix4"
+}

@@ -1,0 +1,32 @@
+{
+  "approvals": [
+    {
+      "approval_evidence_sha256": "331c940af98f5aeb0bf9b63e7c5ad8087e309932cdd9c56a425e27be3f45c659",
+      "approval_id": "AP-20260801T1830-INDEPENDENT-REVIEW-001",
+      "approved_at": "2026-08-01T18:30:00+08:00",
+      "approved_by": "independent_reviewer",
+      "approved_scope": "single_asset",
+      "asset_id": "A-003",
+      "asset_identity_sha256": "ab1f59153db7eac712690c0018b113c6373c2fe3eb4f3d45ae0419687eb5cd2c",
+      "asset_sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
+      "discovery_manifest_sha256": "750f8a6eecba5008b6d7c04c64af2c0ec27008925b3f8fe31d822b2067532e90",
+      "material_id": "M-02",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    },
+    {
+      "approval_evidence_sha256": "331c940af98f5aeb0bf9b63e7c5ad8087e309932cdd9c56a425e27be3f45c659",
+      "approval_id": "AP-20260801T1830-INDEPENDENT-REVIEW-001",
+      "approved_at": "2026-08-01T18:30:00+08:00",
+      "approved_by": "independent_reviewer",
+      "approved_scope": "single_asset",
+      "asset_id": "A-004",
+      "asset_identity_sha256": "353e242b00d7c0c4f0038770d1e6d096ef99a2b4c07fadd9646d13e680dabaa3",
+      "asset_sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
+      "discovery_manifest_sha256": "750f8a6eecba5008b6d7c04c64af2c0ec27008925b3f8fe31d822b2067532e90",
+      "material_id": "M-02",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    }
+  ]
+}

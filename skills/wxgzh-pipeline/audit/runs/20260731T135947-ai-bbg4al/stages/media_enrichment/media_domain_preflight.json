@@ -1,0 +1,43 @@
+{
+  "hosts": [
+    {
+      "host": "www.anthropic.com",
+      "ok": true,
+      "ips": [
+        "160.79.104.10",
+        "2607:6bc0::10"
+      ],
+      "error": null,
+      "elapsed_seconds": 0.047
+    },
+    {
+      "host": "cloud.google.com",
+      "ok": true,
+      "ips": [
+        "142.250.197.46"
+      ],
+      "error": null,
+      "elapsed_seconds": 0.031
+    },
+    {
+      "host": "techcrunch.com",
+      "ok": true,
+      "ips": [
+        "192.0.66.220",
+        "2a04:fa87:fffd::c000:42dc"
+      ],
+      "error": null,
+      "elapsed_seconds": 0.047
+    },
+    {
+      "host": "www.ithome.com",
+      "ok": true,
+      "ips": [
+        "2409:8c6c:550:1203::2782:8323",
+        "39.130.131.35"
+      ],
+      "error": null,
+      "elapsed_seconds": 0.031
+    }
+  ]
+}

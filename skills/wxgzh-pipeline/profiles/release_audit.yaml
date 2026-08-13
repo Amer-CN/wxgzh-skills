@@ -1,0 +1,22 @@
+# release_audit —— 仅 "验收编排Skill" 触发；开发者验收本编排 Skill
+profile: release_audit
+description: 验收 wxgzh-pipeline 本身。不生产文章、不上传微信、不创建草稿。
+defaults:
+  PROFILE: release_audit
+  CREATE_WECHAT_DRAFT: false
+  FORMAL_PUBLISH: false
+creates_wechat_draft: false
+uploads_images: false
+# 普通"发文"禁止触发本 profile
+triggered_only_by: "验收编排Skill"
+# release_audit 运行的验收项（全部只读/离线）
+audits:
+  - skills_lock_consistency        # 版本 + 根 Hash 与 skills.lock.json 一致
+  - documented_entrypoints_exist
+  - validators_exist
+  - no_formal_publish_capability   # 代码内无 publish/mass-send/schedule/delete
+  - path_resolution_cross_platform
+  - reproducible_zip
+  - offline_fixture_state_machine  # 用离线 fixture 跑完整状态机，无真实副作用
+  - secrets_scan
+side_effects: none

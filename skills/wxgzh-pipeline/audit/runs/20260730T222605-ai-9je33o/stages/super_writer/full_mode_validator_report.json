@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "medium",
+  "cjk_chars": 2011,
+  "latin_words": 68,
+  "visible_chars_no_whitespace": 2564,
+  "paragraphs": 24,
+  "sections": 5,
+  "target_visible_chars": 2180,
+  "acceptable_min": 2000,
+  "acceptable_max": 2800,
+  "section_budgets": [
+    {"title": "一、当安全工具开始自己行动", "weight": 0.21, "budget": 457, "actual_chars": 463, "deviation": 0.013},
+    {"title": "二、能力不是一个分数", "weight": 0.265, "budget": 577, "actual_chars": 577, "deviation": 0.0},
+    {"title": "三、身份治理成为新边界", "weight": 0.263, "budget": 573, "actual_chars": 574, "deviation": 0.002},
+    {"title": "四、企业现在该补什么", "weight": 0.262, "budget": 571, "actual_chars": 566, "deviation": 0.009}
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,18 @@
+{
+  "source": "reverse-parsed from final.html (program-generated, not hand-declared)",
+  "theme": "smartisan / 锤子风格",
+  "structural_components": {
+    "cover_breaking": 1,
+    "toc_scroll": 1,
+    "chapter_title": 4,
+    "signature": 1,
+    "footer_cta": 1
+  },
+  "image_components": {
+    "image_2a_standard": 5,
+    "image_media_text_card": 1
+  },
+  "official_image_component_types": 2,
+  "theme_fallback_used": false,
+  "official_gzh_call": true
+}

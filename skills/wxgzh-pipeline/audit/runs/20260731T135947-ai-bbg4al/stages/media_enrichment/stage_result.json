@@ -1,0 +1,114 @@
+{
+  "errors": [],
+  "outputs": {
+    "article_image_bindings.json": "2c2769a78ed8b61f0f8dea910ec06ec000fb15897d2222e4023c478971eaaa0c",
+    "media_manifest.json": "4d821f210377675fea537d3aabe3201e53ed6bc8aaa83432ad65427a0f879e0b",
+    "upload_events.json": "88287e782b1157993552a6673cc2078e39b05ef76dc7fe007ed823e06696d97a"
+  },
+  "run_id": "20260731T135947-ai-bbg4al",
+  "stage": "media_enrichment",
+  "status": "success",
+  "validator_report": {
+    "MEDIA_BINDINGS": "PASS",
+    "all_bindings_consistent": true,
+    "body_image_count": 2,
+    "body_images_min_source": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\validation_config.json",
+    "contract": {
+      "CONTRACT": "PASS",
+      "checks": {
+        "body_images_min": {
+          "detail": "2 < 2",
+          "ok": true
+        },
+        "current_root_matches_lock": {
+          "detail": "installed root sha != locked",
+          "ok": true
+        },
+        "current_version_matches_lock": {
+          "detail": "0.1.0-dev7-hotfix4 != 0.1.0-dev7-hotfix4",
+          "ok": true
+        },
+        "every_bound_asset_uploaded_once": {
+          "detail": "bound-but-not-in-log: []",
+          "ok": true
+        },
+        "frozen_article_hash": {
+          "detail": "frozen sha mismatch want=5a71680fbce5 cur=5a71680fbce5",
+          "ok": true
+        },
+        "locked_commit_present": {
+          "detail": "media-enrichment full_commit_sha not locked",
+          "ok": true
+        },
+        "locked_version_present": {
+          "detail": "media-enrichment version not locked",
+          "ok": true
+        },
+        "must_run_after_verified": {
+          "detail": "zh_human_writing receipt invalid: []",
+          "ok": true
+        },
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "official_entry_present": {
+          "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+          "ok": true
+        },
+        "official_validator_present": {
+          "detail": "validator F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+          "ok": true
+        },
+        "one_success_per_asset": {
+          "detail": "multiple successful uploads: []",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "4 != 4",
+          "ok": true
+        },
+        "per_bound_image_rules": {
+          "detail": "[]",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing []",
+          "ok": true
+        },
+        "stage_matches": {
+          "detail": "media_enrichment != media_enrichment",
+          "ok": true
+        },
+        "upload_no_overlap": {
+          "detail": "parallel/overlapping uploads detected",
+          "ok": true
+        },
+        "upload_serial_declared": {
+          "detail": "serial not declared",
+          "ok": true
+        }
+      },
+      "contract_file": "04_media_enrichment.yaml",
+      "must_run_after": "zh_human_writing",
+      "problems": [],
+      "required_outputs": [
+        "media_manifest.json",
+        "article_image_bindings.json",
+        "upload_events.json"
+      ],
+      "stage": "media_enrichment"
+    },
+    "min_met": true,
+    "min_required": 2,
+    "problems": [],
+    "references_frozen_article_sha": true,
+    "target": 8,
+    "target_met": false,
+    "target_not_met_is_warning": true
+  }
+}

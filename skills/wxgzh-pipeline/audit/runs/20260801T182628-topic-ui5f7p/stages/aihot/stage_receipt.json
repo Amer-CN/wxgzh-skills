@@ -1,0 +1,41 @@
+{
+  "elapsed_seconds": 0.0,
+  "ended_at": "2026-08-01T10:28:44Z",
+  "entrypoint_path": null,
+  "entrypoint_sha256": null,
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\stage_request.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\stage_request.json": "87c9b568f3d3ce9c23675c0ec115ec34a59c0fd3016d274440cbbfa287ff89dd"
+  },
+  "invoked_entrypoint": "agent_handshake:aihot",
+  "network_mode": "live",
+  "official_validator": null,
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\raw_items.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\deduplicated_items.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\fetch_log.json"
+  ],
+  "output_hashes": {
+    "deduplicated_items.json": "747d2ba11aab109e735ee2f96564bcd3d6ac734357cf7bca9aef9ffa697e02c4",
+    "fetch_log.json": "1d435ad3f96518254976274b08b8c3a7a2b35ee0ae043f9b8ca621493487268d",
+    "raw_items.json": "f020b1a1a96ee769078f197e0ebea39f71b6320b3cec5fa40a7c2b17f0f89f41"
+  },
+  "side_effects": [
+    {
+      "detail": "anonymous read-only AI HOT API",
+      "type": "network_read"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\aihot",
+  "skill_name": "aihot",
+  "skill_root_sha256": null,
+  "skill_version": null,
+  "stage": "aihot",
+  "started_at": "2026-08-01T10:28:44Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\repos\\wxgzh-pipeline\\validators\\validate_stage_receipt.py",
+  "validator_sha256": "a33eb9f37cbc8519dc54e5058231f3621c85b83cd77e521aeac7a16f2b603abe"
+}

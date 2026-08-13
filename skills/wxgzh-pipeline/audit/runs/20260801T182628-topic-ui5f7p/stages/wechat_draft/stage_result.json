@@ -1,0 +1,154 @@
+{
+  "errors": [
+    {
+      "AFTER_TOTAL": 2,
+      "AFTER_eq_BEFORE_plus_1": true,
+      "BEFORE_TOTAL": 1,
+      "DRAFT_DELTA": "FAIL",
+      "NEW_DRAFT_COUNT": 0,
+      "NEW_DRAFT_UNIQUE": false,
+      "OLD_DRAFTS_PRESERVED": true,
+      "contract": {
+        "CONTRACT": "PASS",
+        "checks": {
+          "current_root_matches_lock": {
+            "detail": "installed root sha != locked",
+            "ok": true
+          },
+          "current_version_matches_lock": {
+            "detail": "v2026.07.18-hammer.1 != v2026.07.18-hammer.1",
+            "ok": true
+          },
+          "draft_only": {
+            "detail": "formal publish / non-draft detected",
+            "ok": true
+          },
+          "locked_commit_present": {
+            "detail": "gzh-design full_commit_sha not locked",
+            "ok": true
+          },
+          "locked_version_present": {
+            "detail": "gzh-design version not locked",
+            "ok": true
+          },
+          "no_banned_side_effects": {
+            "detail": "banned side-effects: set()",
+            "ok": true
+          },
+          "no_mass_send": {
+            "detail": "mass/scheduled",
+            "ok": true
+          },
+          "official_entry_present": {
+            "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+            "ok": true
+          },
+          "order_matches": {
+            "detail": "6 != 6",
+            "ok": true
+          },
+          "real_inputs_present": {
+            "detail": "missing inputs []",
+            "ok": true
+          },
+          "required_outputs_present": {
+            "detail": "missing []",
+            "ok": true
+          },
+          "stage_matches": {
+            "detail": "wechat_draft != wechat_draft",
+            "ok": true
+          }
+        },
+        "contract_file": "06_wechat_draft.yaml",
+        "must_run_after": null,
+        "problems": [],
+        "required_outputs": [
+          "draft_before.json",
+          "draft_after.json",
+          "draft_creation_result.json"
+        ],
+        "stage": "wechat_draft"
+      }
+    }
+  ],
+  "outputs": {
+    "draft_after.json": "32c904d53daf438b97135e3aa51d94482c80f1f728a5df8d235ab7a3ee06d96c",
+    "draft_before.json": "50fd16ef8ac67c7a4a381730faad66b2cc0667e85c96c79e2567e1691bc1bd5d",
+    "draft_creation_result.json": "e01483dab26c5bf5123aefbcb0cebcdd81d1ef590a36e9d3b5ddd463c8728e8f"
+  },
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "stage": "wechat_draft",
+  "status": "failed",
+  "validator_report": {
+    "AFTER_TOTAL": 2,
+    "AFTER_eq_BEFORE_plus_1": true,
+    "BEFORE_TOTAL": 1,
+    "DRAFT_DELTA": "FAIL",
+    "NEW_DRAFT_COUNT": 0,
+    "NEW_DRAFT_UNIQUE": false,
+    "OLD_DRAFTS_PRESERVED": true,
+    "contract": {
+      "CONTRACT": "PASS",
+      "checks": {
+        "current_root_matches_lock": {
+          "detail": "installed root sha != locked",
+          "ok": true
+        },
+        "current_version_matches_lock": {
+          "detail": "v2026.07.18-hammer.1 != v2026.07.18-hammer.1",
+          "ok": true
+        },
+        "draft_only": {
+          "detail": "formal publish / non-draft detected",
+          "ok": true
+        },
+        "locked_commit_present": {
+          "detail": "gzh-design full_commit_sha not locked",
+          "ok": true
+        },
+        "locked_version_present": {
+          "detail": "gzh-design version not locked",
+          "ok": true
+        },
+        "no_banned_side_effects": {
+          "detail": "banned side-effects: set()",
+          "ok": true
+        },
+        "no_mass_send": {
+          "detail": "mass/scheduled",
+          "ok": true
+        },
+        "official_entry_present": {
+          "detail": "entry F:\\AIXM\\wxgzh\\.agents\\skills\\gzh-design\\scripts\\publish_wechat_draft.py",
+          "ok": true
+        },
+        "order_matches": {
+          "detail": "6 != 6",
+          "ok": true
+        },
+        "real_inputs_present": {
+          "detail": "missing inputs []",
+          "ok": true
+        },
+        "required_outputs_present": {
+          "detail": "missing []",
+          "ok": true
+        },
+        "stage_matches": {
+          "detail": "wechat_draft != wechat_draft",
+          "ok": true
+        }
+      },
+      "contract_file": "06_wechat_draft.yaml",
+      "must_run_after": null,
+      "problems": [],
+      "required_outputs": [
+        "draft_before.json",
+        "draft_after.json",
+        "draft_creation_result.json"
+      ],
+      "stage": "wechat_draft"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+stage: media_enrichment
+order: 4
+skill: media-enrichment
+responsibility: 针对冻结终稿选图；抓取原始来源；分类/去重/上传；canonical manifest + bindings
+must_run_after: zh_human_writing
+depends_on_freeze: final_article_sha256
+copyright_policy:
+  COPYRIGHT_POLICY: ALLOW_UNLESS_EXPLICITLY_PROHIBITED
+  USER_BLANKET_APPROVAL: true
+  PER_IMAGE_MANUAL_REVIEW_REQUIRED: false
+  LICENSE_VERIFICATION_REQUIRED: false
+  VISIBLE_SOURCE_CAPTION_REQUIRED: false
+  UNKNOWN_COPYRIGHT_BLOCKING: false
+image_discovery:
+  - source_url_first
+  - aihot_link_only_for_trace_and_fallback
+  - reject_dynamic_social_share_card
+  - reject_non_rendered_og_preview
+  - reject_avatar_logo_ad_decoration
+  - reject_duplicate
+  - keep_dev7_hotfix1_url_path_segment_rule
+counts:
+  BODY_IMAGES_MIN: 6
+  BODY_IMAGES_TARGET: 8
+  TARGET_NOT_MET_IS_WARNING: true
+  MIN_NOT_MET_IS_BLOCKING: true
+upload:
+  serial: true
+  manifest_single_writer: true
+  no_orchestrator_bypass: true
+per_bound_image:
+  decision: eligible
+  upload_status: success
+  remote_url_host: mmbiz.qpic.cn
+  binding_sha256_equals_manifest_sha256: true

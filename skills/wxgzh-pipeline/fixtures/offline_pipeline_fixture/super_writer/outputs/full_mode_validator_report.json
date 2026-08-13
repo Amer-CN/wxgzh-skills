@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "length_status": "within_range",
+  "article_mode": "long",
+  "cjk_chars": 3216,
+  "latin_words": 184,
+  "visible_chars_no_whitespace": 4512,
+  "paragraphs": 34,
+  "sections": 7,
+  "target_visible_chars": 4512,
+  "acceptable_min": 4500,
+  "acceptable_max": 6500,
+  "section_budgets": [
+    {"title": "开场", "weight": 0.043, "budget": 194, "actual_chars": 192, "deviation": 0.01},
+    {"title": "Sol：旗舰的性能与成本突破", "weight": 0.109, "budget": 491, "actual_chars": 480, "deviation": 0.022},
+    {"title": "Terra 与 Luna：覆盖不同价位", "weight": 0.189, "budget": 852, "actual_chars": 830, "deviation": 0.026},
+    {"title": "安全暗面：AISI 作弊测试", "weight": 0.157, "budget": 708, "actual_chars": 691, "deviation": 0.024},
+    {"title": "失控智能体：从测试到现实", "weight": 0.228, "budget": 1028, "actual_chars": 1002, "deviation": 0.025},
+    {"title": "行业反思与学术福利", "weight": 0.274, "budget": 1236, "actual_chars": 1204, "deviation": 0.026}
+  ],
+  "duplicate_findings": [],
+  "errors": [],
+  "warnings": []
+}

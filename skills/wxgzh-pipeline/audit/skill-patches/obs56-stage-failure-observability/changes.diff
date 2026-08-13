@@ -1,0 +1,262 @@
+--- a/wxgzh-pipeline/wxgzh_pipeline/stages/__init__.py
++++ b/wxgzh-pipeline/wxgzh_pipeline/stages/__init__.py
+@@ -7,6 +7,7 @@
+ 
+ import hashlib
+ import importlib.util
++import re
+ import shutil
+ from dataclasses import dataclass, field
+ from pathlib import Path
+@@ -22,6 +23,49 @@
+ 
+ class StageError(Exception):
+     pass
++
++
++_SENSITIVE_ARG = re.compile(
++    r"(?i)(access[_-]?token|app[_-]?secret|secret|password|authorization|api[_-]?key)")
++_SENSITIVE_QUERY = re.compile(
++    r"(?i)(access_token|wechat_app_secret|app_secret|secret|appsecret|password|api_key)"
++    r"([\"']?\s*[:=]\s*[\"']?)([^&\s,}\"']+)")
++
++
++def _scrub_text(value) -> str:
++    return _SENSITIVE_QUERY.sub(r"\1\2<REDACTED>", str(value or ""))
++
++
++def _scrub_argv(argv) -> list[str]:
++    result = []
++    hide_next = False
++    for raw in argv or []:
++        item = str(raw)
++        if hide_next:
++            result.append("<REDACTED>")
++            hide_next = False
++        elif item.startswith("--") and "=" in item:
++            key, value = item.split("=", 1)
++            result.append(f"{key}=<REDACTED>" if _SENSITIVE_ARG.search(key) else _scrub_text(item))
++        else:
++            result.append(_scrub_text(item))
++            hide_next = item.startswith("--") and bool(_SENSITIVE_ARG.search(item))
++    return result
++
++
++def _write_stage_failure(sd: Path, stage: str, entry_run: dict, entry_path) -> None:
++    command = entry_run.get("command") or []
++    atomic_write_json(sd / "stage_failure.json", {
++        "stage": stage,
++        "entry": str(entry_path or ""),
++        "exit_code": entry_run.get("exit_code"),
++        "stdout_tail": _scrub_text(entry_run.get("stdout", "")[-2000:]),
++        "stderr_tail": _scrub_text(entry_run.get("stderr", "")[-2000:]),
++        "request_elapsed_seconds": entry_run.get(
++            "elapsed_seconds", entry_run.get("elapsed")),
++        "argv": _scrub_argv(command),
++        "recorded_at": now(),
++    })
+ 
+ 
+ class StageAwait(Exception):
+@@ -126,7 +170,10 @@
+             raise StageError(f"{stage}: agent handshake verification failed: {meta.get('handshake')}")
+         er = meta.get("entry_run")
+         if er and er.get("exit_code") not in (0, None):
+-            raise StageError(f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): {er.get('stderr')}")
++            _write_stage_failure(sd, stage, er, meta.get("entrypoint_path"))
++            raise StageError(
++                f"{stage}: entrypoint subprocess failed (exit {er['exit_code']}): "
++                f"{_scrub_text(er.get('stderr'))}")
+         if stage == "gzh_design":
+             official = ctx.network_mode in ("live", "integration")
+             ev = {"simulated": not official, "mode": ctx.network_mode,
+--- a/wxgzh-pipeline/wxgzh_pipeline/producers.py
++++ b/wxgzh-pipeline/wxgzh_pipeline/producers.py
+@@ -616,9 +616,11 @@
+             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
+             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                           "elapsed": run["elapsed_seconds"],
++                          "elapsed_seconds": run["elapsed_seconds"],
+                           "stdout_sha256": run["stdout_sha256"],
+                           "stderr_sha256": run["stderr_sha256"],
+-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""}}
++                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
++                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
+     if validator:
+         vr = run_script(validator, _validator_args(stage, sd, req_path), timeout=180)
+         meta["official_validator"] = _vresult(vr)
+@@ -645,9 +647,11 @@
+         "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
+         "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                       "elapsed": run["elapsed_seconds"],
++                      "elapsed_seconds": run["elapsed_seconds"],
+                       "stdout_sha256": run["stdout_sha256"],
+                       "stderr_sha256": run["stderr_sha256"],
+-                      "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
++                      "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
++                      "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
+     }
+     if run["exit_code"] == 0 and validator:
+         vr = run_script(
+@@ -711,9 +715,11 @@
+                 "entrypoint_sha256": run["script_sha256"],
+                 "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                               "elapsed": run["elapsed_seconds"],
++                              "elapsed_seconds": run["elapsed_seconds"],
+                               "stdout_sha256": run["stdout_sha256"],
+                               "stderr_sha256": run["stderr_sha256"],
+-                              "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
++                              "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
++                              "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
+                 "media_phase": "discover",
+                 "discovery_zero_upload_events": zero_upload,
+             }
+@@ -781,9 +787,11 @@
+             "entrypoint_sha256": run["script_sha256"],
+             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
+                           "elapsed": run["elapsed_seconds"],
++                          "elapsed_seconds": run["elapsed_seconds"],
+                           "stdout_sha256": run["stdout_sha256"],
+                           "stderr_sha256": run["stderr_sha256"],
+-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""},
++                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
++                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""},
+             "media_phase": "continue",
+         }
+         if run["exit_code"] == 0 and validator:
+@@ -824,8 +832,10 @@
+     meta = {"exec_kind": EM.WECHAT, "invoked_entrypoint": str(entry),
+             "entrypoint_path": run["script_path"], "entrypoint_sha256": run["script_sha256"],
+             "entry_run": {"command": run["command"], "exit_code": run["exit_code"],
++                          "elapsed_seconds": run["elapsed_seconds"],
+                           "stdout_sha256": run["stdout_sha256"],
+                           "stderr_sha256": run["stderr_sha256"],
+-                          "stderr": run["stderr"][-400:] if run["exit_code"] else ""}}
++                          "stdout": run["stdout"][-2000:] if run["exit_code"] else "",
++                          "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
+     outputs = [sd / o for o in expected if (sd / o).is_file()]
+     return outputs, meta
+--- /dev/null
++++ b/wxgzh-pipeline/tests/test_obs56_stage_failure.py
+@@ -0,0 +1,121 @@
++import json
++from types import SimpleNamespace
++
++import pytest
++
++from wxgzh_pipeline.stages import (
++    StageContext,
++    StageError,
++    _write_stage_failure,
++    execute_stage,
++)
++
++
++def test_stage_failure_record_contains_streams_and_scrubs_argv(tmp_path):
++    secret = "unit-test-secret-value"
++    token = "unit-test-access-token"
++    _write_stage_failure(
++        tmp_path,
++        "wechat_draft",
++        {
++            "command": [
++                "python", "entry.py", "--app-secret", secret,
++                f"https://example.invalid/?access_token={token}",
++            ],
++            "exit_code": 7,
++            "stdout": f"stdout access_token={token}",
++            "stderr": f"stderr secret={secret}",
++            "elapsed_seconds": 1.25,
++        },
++        "entry.py",
++    )
++
++    record = json.loads((tmp_path / "stage_failure.json").read_text(encoding="utf-8"))
++    serialized = json.dumps(record, ensure_ascii=False)
++    assert record["exit_code"] == 7
++    assert record["request_elapsed_seconds"] == 1.25
++    assert "stdout" in record["stdout_tail"]
++    assert "stderr" in record["stderr_tail"]
++    assert secret not in serialized
++    assert token not in serialized
++    assert "<REDACTED>" in serialized
++
++
++def test_execute_stage_writes_failure_before_raising(tmp_path, monkeypatch):
++    import wxgzh_pipeline.stages as stages
++
++    monkeypatch.setitem(stages.STAGE_SKILL, "obs56_test", "gzh-design")
++    module = SimpleNamespace(
++        STAGE="obs56_test",
++        STAGE_CONFIG={},
++        stage_inputs=lambda ctx, state: {},
++        run_live=lambda ctx, state: ([], {
++            "entrypoint_path": "entry.py",
++            "entry_run": {
++                "command": ["python", "entry.py"],
++                "exit_code": 9,
++                "stdout": "plain stdout",
++                "stderr": "plain stderr",
++                "elapsed_seconds": 0.5,
++            },
++        }),
++    )
++    ctx = StageContext(
++        run_dir=tmp_path,
++        skills_home=tmp_path,
++        discovery={},
++        network_mode="live",
++    )
++    state = SimpleNamespace(run_id="obs56-run")
++
++    with pytest.raises(StageError):
++        execute_stage(ctx, module, state)
++
++    record = json.loads(
++        (tmp_path / "obs56_test" / "stage_failure.json").read_text(encoding="utf-8"))
++    assert record["exit_code"] == 9
++    assert record["stdout_tail"] == "plain stdout"
++    assert record["stderr_tail"] == "plain stderr"
++
++
++def test_successful_stage_does_not_emit_stage_failure(tmp_path, monkeypatch):
++    import wxgzh_pipeline.stages as stages
++
++    monkeypatch.setitem(stages.STAGE_SKILL, "obs56_success", "gzh-design")
++    monkeypatch.setattr(stages, "schema_validate", lambda obj, schema: [])
++    monkeypatch.setattr(
++        stages, "enforce_contract",
++        lambda *args, **kwargs: (True, {"CONTRACT": "PASS"}))
++    monkeypatch.setattr(stages, "build_receipt", lambda **kwargs: {})
++    monkeypatch.setattr(stages, "write_receipt", lambda *args, **kwargs: None)
++    module = SimpleNamespace(
++        STAGE="obs56_success",
++        STAGE_CONFIG={},
++        stage_inputs=lambda ctx, state: {},
++        run_live=lambda ctx, state: ([], {
++            "entrypoint_path": "entry.py",
++            "entry_run": {
++                "command": ["python", "entry.py"],
++                "exit_code": 0,
++                "stdout": "ok",
++                "stderr": "",
++                "elapsed_seconds": 0.1,
++            },
++        }),
++        content_validate=lambda ctx, sd, state: (0, {}, None, None),
++        side_effects=lambda ctx, state: [],
++        invoked_entrypoint=lambda ctx: "entry.py",
++        post=lambda ctx, sd, state, exit_code, report: None,
++    )
++    ctx = StageContext(
++        run_dir=tmp_path,
++        skills_home=tmp_path,
++        discovery={},
++        network_mode="live",
++    )
++    state = SimpleNamespace(run_id="obs56-success")
++
++    result = execute_stage(ctx, module, state)
++
++    assert result["status"] == "success"
++    assert not (tmp_path / "obs56_success" / "stage_failure.json").exists()

@@ -1,0 +1,25 @@
+stage: super_writer
+order: 2
+skill: super-writer
+responsibility: Material-Heavy Full Mode 完整写作；篇幅按事实密度自动决定（禁止默认 medium=3000）
+inputs:
+  required: [deduplicated_items.json]
+outputs:
+  required:
+    - generation-profile.yaml
+    - writing-brief.md
+    - material-readiness.yaml
+    - material-ingestion-report.json
+    - material-ledger.yaml
+    - evidence-map.md
+    - canonical_claim_registry.json
+    - core-card.md
+    - outline.md
+    - semantic-map.yaml
+    - article.md
+    - editor-report.md
+    - full_mode_validator_report.json
+    - handoff.yaml             # 档76A/OBS-252:full-mode 必检产物(封面供料/契约留痕)
+gates:
+  full_mode_validator_exit: 0
+forbidden: [fixed_medium_3000]

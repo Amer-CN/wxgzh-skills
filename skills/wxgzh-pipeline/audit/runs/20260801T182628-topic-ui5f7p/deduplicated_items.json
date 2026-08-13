@@ -1,0 +1,271 @@
+[
+  {
+    "id": "cms8mb361000prof1z6fg37om",
+    "title": "DeepSeek-V4-Flash 正式版 API 上线公测",
+    "source": {
+      "name": "DeepSeek：API 更新日志"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms8mb361000prof1z6fg37om",
+      "original": "https://api-docs.deepseek.com/zh-cn/updates#%E6%97%B6%E9%97%B4-2026-07-31"
+    },
+    "sourceCount": 14,
+    "signalCount": 28,
+    "sourceNames": [
+      "DeepSeek：API 更新日志",
+      "IT之家（RSS）",
+      "X：DeepSeek (@deepseek_ai)",
+      "Hacker News 热门（buzzing.cc 中文翻译）",
+      "X：Kim (@kimmonismus)",
+      "X：阿易 AI Notes (@AYi_AInotes)",
+      "X：Rohan Paul (@rohanpaul_ai)",
+      "X：Artificial Analysis (@ArtificialAnlys)",
+      "X：Emad Mostaque (@EMostaque)",
+      "X：X.PIN (@thexpin)",
+      "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+      "MarkTechPost（RSS）",
+      "Simon Willison 博客",
+      "X：硅基流动 SiliconFlow (@SiliconFlowAI)"
+    ],
+    "latestAt": "2026-08-01T07:59:08.945Z",
+    "source_url": "https://api-docs.deepseek.com/zh-cn/updates#%E6%97%B6%E9%97%B4-2026-07-31",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms8mb361000prof1z6fg37om",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms7sdkx702mjropbnq4l267q",
+    "title": "GPT-5.6 如何推进性价比前沿",
+    "source": {
+      "name": "OpenAI：官网动态（RSS · 排除企业/客户案例）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms7sdkx702mjropbnq4l267q",
+      "original": "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6"
+    },
+    "sourceCount": 14,
+    "signalCount": 27,
+    "sourceNames": [
+      "X：OpenAI (@OpenAI)",
+      "OpenAI：官网动态（RSS · 排除企业/客户案例）",
+      "X：OpenAI Developers (@OpenAIDevs)",
+      "X：Sam Altman (@sama)",
+      "X：Tibo (@thsottiaux)",
+      "X：Kim (@kimmonismus)",
+      "X：Greg Brockman (@gdb)",
+      "Hacker News 热门（buzzing.cc 中文翻译）",
+      "The Decoder：AI News（RSS）",
+      "X：Nathan Lambert (@natolambert)",
+      "IT之家（RSS）",
+      "X：Rohan Paul (@rohanpaul_ai)",
+      "X：Artificial Analysis (@ArtificialAnlys)",
+      "Simon Willison 博客"
+    ],
+    "latestAt": "2026-07-31T00:52:35.343Z",
+    "source_url": "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms7sdkx702mjropbnq4l267q",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms859a0e01k4roeqf9u8mvnp",
+    "title": "Anthropic 调查发现 Claude 模型在网络安全评估中入侵三家组织生产基础设施",
+    "source": {
+      "name": "Anthropic：Newsroom（网页）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp",
+      "original": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals"
+    },
+    "sourceCount": 11,
+    "signalCount": 4,
+    "sourceNames": [
+      "Anthropic：Newsroom（网页）",
+      "X：Anthropic (@AnthropicAI)",
+      "Simon Willison 博客",
+      "X：AI Safety Memes (@AISafetyMemes)",
+      "TechCrunch：AI（RSS）",
+      "IT之家（RSS）",
+      "Hacker News 热门（buzzing.cc 中文翻译）",
+      "X：Kim (@kimmonismus)",
+      "The Decoder：AI News（RSS）",
+      "The Verge：AI（RSS）",
+      "Ars Technica：AI（RSS）"
+    ],
+    "latestAt": "2026-07-31T20:59:16.957Z",
+    "source_url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cmsa77lmk02tcrox0gfhj3rcq",
+    "title": "OpenAI 发布“下一代主要模型”Astra，攻克十道多年未解数学难题",
+    "source": {
+      "name": "The Decoder：AI News（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cmsa77lmk02tcrox0gfhj3rcq",
+      "original": "https://the-decoder.com/openai-announces-its-next-major-model-astra-by-dropping-ten-previously-unsolved-math-solutions"
+    },
+    "sourceCount": 5,
+    "signalCount": 1,
+    "sourceNames": [
+      "X：Greg Brockman (@gdb)",
+      "X：Noam Brown (@polynoamial)",
+      "IT之家（RSS）",
+      "X：Kim (@kimmonismus)",
+      "The Decoder：AI News（RSS）"
+    ],
+    "latestAt": "2026-08-01T09:58:05.601Z",
+    "source_url": "https://the-decoder.com/openai-announces-its-next-major-model-astra-by-dropping-ten-previously-unsolved-math-solutions",
+    "aihot_permalink": "https://aihot.virxact.com/items/cmsa77lmk02tcrox0gfhj3rcq",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms8f7n9q0bezrot06im88lqu",
+    "title": "字节发布 Seedance 2.5：单次生成 30 秒视频，支持多模态参考与精准编辑",
+    "source": {
+      "name": "字节 Seed：Research Feed（网页内嵌数据）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms8f7n9q0bezrot06im88lqu",
+      "original": "https://seed.bytedance.com/zh/blog/%E4%B8%80%E9%95%9C%E6%88%90%E7%89%87-%E9%9A%8F%E5%BF%83%E5%8F%82%E8%80%83-seedance-2-5-%E6%AD%A3%E5%BC%8F%E5%8F%91%E5%B8%83"
+    },
+    "sourceCount": 5,
+    "signalCount": 9,
+    "sourceNames": [
+      "字节 Seed：Research Feed（网页内嵌数据）",
+      "IT之家（RSS）",
+      "X：阿易 AI Notes (@AYi_AInotes)",
+      "X：Deedy Das (@deedydas)",
+      "X：Testing Catalog (@testingcatalog)"
+    ],
+    "latestAt": "2026-07-31T15:36:42.891Z",
+    "source_url": "https://seed.bytedance.com/zh/blog/%E4%B8%80%E9%95%9C%E6%88%90%E7%89%87-%E9%9A%8F%E5%BF%83%E5%8F%82%E8%80%83-seedance-2-5-%E6%AD%A3%E5%BC%8F%E5%8F%91%E5%B8%83",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms8f7n9q0bezrot06im88lqu",
+    "query_origin": "hot-topics"
+  },
+  {
+    "id": "cms7q9upv0q0gro2ev1apyhwk",
+    "title": "AlloyDB 推出 IAM 群组认证预览版，强化企业级与 AI 智能体安全",
+    "originalTitle": "AlloyDB adds group authentication to secure enterprise scale and AI agents",
+    "summary": "Google Cloud 宣布 AlloyDB 推出 IAM 群组认证（预览版），允许安全团队通过最多 200 个 Google Groups 管理数据库访问。该功能支持 AI 智能体传递用户群组身份至数据库层，实现表级授权与精确审计，并统一了 Cloud SQL 与 AlloyDB 的访问控制策略。",
+    "source": {
+      "name": "Google Cloud：Databases（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "original": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents"
+    },
+    "publishedAt": "2026-07-30T16:00:00.000Z",
+    "discoveredAt": "2026-07-30T16:28:22.749Z",
+    "category": "ai-products",
+    "score": 53,
+    "selected": false,
+    "attribution": {
+      "name": "AI HOT",
+      "url": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk"
+    },
+    "source_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms6lhleg06ourohzls7gb1hk",
+    "title": "TechCrunch Disrupt 2026 AI Stage：聚焦定价、智能体安全与GTM新岗位",
+    "originalTitle": "Discover what's next for AI， from the SaaS reckoning to the agent security gap， at TechCrunch Disrupt 2026",
+    "summary": "TechCrunch Disrupt 2026将于10月13-15日在旧金山Moscone Center举办AI Stage，由Google for Startups呈现。议程将探讨模型商品化下的AI产品定价、需从基础设施重建的智能体安全，以及AI原生市场策略。Databricks、Decart、Luma AI和Clay等公司高管将参与讨论。",
+    "source": {
+      "name": "TechCrunch：AI（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "original": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026"
+    },
+    "publishedAt": "2026-07-29T21:16:39.000Z",
+    "discoveredAt": "2026-07-29T21:26:44.431Z",
+    "category": "industry",
+    "score": 22,
+    "selected": false,
+    "attribution": {
+      "name": "AI HOT",
+      "url": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk"
+    },
+    "source_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5suoi10selrobkfvb0mwoe",
+    "title": "华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证，系国内 PC 产品首个",
+    "originalTitle": "国内 PC 产品首个：华为鸿蒙电脑全链路通过整机、OS、芯片 CC EAL5+ 认证",
+    "summary": "华为鸿蒙电脑成为国内首个整机、OS、芯片全链路通过 CC EAL5+ 认证的 PC 产品。其搭载的鸿蒙系统也是首个通过国测 II 级的电脑 OS，依托星盾安全架构与原生 AI 安全底座，聚焦智能体安全、金融安全、企业办公安全三大核心场景。",
+    "source": {
+      "name": "IT之家（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+      "original": "https://www.ithome.com/0/983/125.htm"
+    },
+    "publishedAt": "2026-07-29T07:59:54.000Z",
+    "discoveredAt": "2026-07-29T08:05:03.105Z",
+    "category": "industry",
+    "score": 52,
+    "selected": false,
+    "attribution": {
+      "name": "AI HOT",
+      "url": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe"
+    },
+    "source_url": "https://www.ithome.com/0/983/125.htm",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms5suoi10selrobkfvb0mwoe",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms5cgsgp01osro7cbxt8b2wq",
+    "title": "Cyera 以约 10 亿美元收购 Oasis Security，应对激增的 AI 智能体安全需求",
+    "originalTitle": "Cyera agrees to acquire Oasis Security for $1B to safeguard proliferating AI agents",
+    "summary": "数据安全公司 Cyera 宣布签署意向书，以约 10 亿美元（大部分现金加部分股票）收购专注于非人类身份（主要是 AI 智能体）安全的 Oasis Security。Oasis 成立于 2022 年，已从 Accel、Craft Ventures 等融资约 1.95 亿美元。收购后，Cyera 计划将 Oasis 技术整合到统一身份与数据安全平台，以应对企业面临的 AI 武器化威胁。",
+    "source": {
+      "name": "TechCrunch：AI（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq",
+      "original": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents"
+    },
+    "publishedAt": "2026-07-29T00:09:05.000Z",
+    "discoveredAt": "2026-07-29T00:26:24.250Z",
+    "category": "industry",
+    "score": 57,
+    "selected": false,
+    "attribution": {
+      "name": "AI HOT",
+      "url": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq"
+    },
+    "source_url": "https://techcrunch.com/2026/07/28/cyera-agrees-to-acquire-oasis-security-for-1b-to-safeguard-proliferating-ai-agents",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms5cgsgp01osro7cbxt8b2wq",
+    "query_origin": "items:all:q=智能体安全"
+  },
+  {
+    "id": "cms3yedcz040qro82up1ya5bf",
+    "title": "微软推出首个网络安全 AI 模型 MAI-Cyber-1-Flash",
+    "originalTitle": "纳德拉官宣微软首个 AI 安全模型 MAI-Cyber-1-Flash，跑分超 Mythos 5 和 GPT-5.5 Cyber",
+    "summary": "微软发布首个网络安全 AI 模型 MAI-Cyber-1-Flash，在 CyberGym 基准测试中取得 95.95% 的成功率，超过 Claude Mythos 5 和 GPT-5.5 Cyber。该模型接入多智能体安全系统 MDASH，可处理约 90% 的网络安全任务，与 GPT-5.4 的组合成本比此前配置降低近 50%。",
+    "source": {
+      "name": "IT之家（RSS）"
+    },
+    "links": {
+      "aihot": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+      "original": "https://www.ithome.com/0/982/312.htm"
+    },
+    "publishedAt": "2026-07-28T00:59:36.000Z",
+    "discoveredAt": "2026-07-28T01:04:49.287Z",
+    "category": "ai-models",
+    "score": 60,
+    "selected": false,
+    "attribution": {
+      "name": "AI HOT",
+      "url": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf"
+    },
+    "source_url": "https://www.ithome.com/0/982/312.htm",
+    "aihot_permalink": "https://aihot.virxact.com/items/cms3yedcz040qro82up1ya5bf",
+    "query_origin": "items:all:q=智能体安全"
+  }
+]

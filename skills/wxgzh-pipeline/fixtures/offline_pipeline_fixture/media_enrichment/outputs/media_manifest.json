@@ -1,0 +1,70 @@
+{
+  "assets": [
+    {
+      "asset_id": "A-000",
+      "decision": "eligible",
+      "sha256": "e80629f5343528a37c66bf73d50d0646a5b04464d1bf56167cc0c168171f1dda",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic0fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-001",
+      "decision": "eligible",
+      "sha256": "c3801b99a9b59b05c20cb8b74365d2a35f2d0e0b14da8917f30d591a8473e425",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic1fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-002",
+      "decision": "eligible",
+      "sha256": "cbaf3b5b99647d572abf11a7c2648fc0e27fac903b2160ce65cba17d64bf2467",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic2fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-003",
+      "decision": "eligible",
+      "sha256": "b84f10da8f1d8d4d47d125e10a8e7397fa5b45268bc745869ee2dce9eeb06d99",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic3fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-004",
+      "decision": "eligible",
+      "sha256": "140b5ea27f2ea549914c4471d1cb2e1f2de7a086f0210948bb204572d90364f6",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic4fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-005",
+      "decision": "eligible",
+      "sha256": "503eec4400be0cebb3b81c8ff8d61990d3099de7f97885a8b48c15ecd43e5355",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic5fixtureurl",
+        "status": "success"
+      }
+    },
+    {
+      "asset_id": "A-006",
+      "decision": "eligible",
+      "sha256": "51d2f859b20f5bbda055f14911322d7346fac3b592541908cfbed136661d1441",
+      "upload": {
+        "remote_url": "https://mmbiz.qpic.cn/sz_mmbiz_png/synthetic6fixtureurl",
+        "status": "success"
+      }
+    }
+  ],
+  "gate": {
+    "secrets_detected": false
+  }
+}

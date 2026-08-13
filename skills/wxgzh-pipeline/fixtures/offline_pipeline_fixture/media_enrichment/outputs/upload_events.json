@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "serial": true,
+  "events": [
+    {
+      "asset_id": "A-000",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 100.0,
+      "end_monotonic": 100.5
+    },
+    {
+      "asset_id": "A-001",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 101.0,
+      "end_monotonic": 101.5
+    },
+    {
+      "asset_id": "A-002",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 102.0,
+      "end_monotonic": 102.5
+    },
+    {
+      "asset_id": "A-003",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 103.0,
+      "end_monotonic": 103.5
+    },
+    {
+      "asset_id": "A-004",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 104.0,
+      "end_monotonic": 104.5
+    },
+    {
+      "asset_id": "A-005",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 105.0,
+      "end_monotonic": 105.5
+    },
+    {
+      "asset_id": "A-006",
+      "mode": "wechat_image_host",
+      "status": "success",
+      "started_at": "2026-07-28T00:00:00Z",
+      "ended_at": "2026-07-28T00:00:01Z",
+      "start_monotonic": 106.0,
+      "end_monotonic": 106.5
+    }
+  ]
+}

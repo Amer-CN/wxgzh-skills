@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+    "-X",
+    "utf8",
+    "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+    "--phase",
+    "discover",
+    "--request",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\media_discovery_request.json",
+    "--output-dir",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover"
+  ],
+  "entry": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "exit_code": 1,
+  "recorded_at": "2026-08-01T15:27:04Z",
+  "request_elapsed_seconds": 96.294,
+  "stage": "media_enrichment",
+  "stderr_tail": "",
+  "stdout_tail": "/LICENSE.md\n  Fetched via aihot_permalink: 200\n  Candidates: 1\n\n[media-enrichment] Processing material M-14: https://github.com/Amer-CN/vibe-coding-guide/blob/main/install.sh\n  Fetched via aihot_permalink: 200\n  Candidates: 1\n\n[media-enrichment] Generating charts...\n  WARN: timeline skipped for chart group '红线数量': data points ['C-02', 'C-04'] lack a real time_value (input order must not be used as a time axis)\n  WARN: timeline skipped for chart group '协作铁律': data points ['C-07', 'C-11'] lack a real time_value (input order must not be used as a time axis)\n  WARN: timeline skipped for chart group '测试覆盖': data points ['C-08', 'C-13'] lack a real time_value (input order must not be used as a time axis)\n  Chart 1: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-001.png (bar)\n  Chart 2: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-002.png (comparison)\n  Chart 3: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-003.png (bar)\n  Chart 4: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-004.png (comparison)\n  Chart 5: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-005.png (bar)\n  Chart 6: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\charts\\chart-006.png (comparison)\n\n[media-enrichment] Manifest: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\media_manifest.json\n[media-enrichment] Bindings: F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T231452-vibe-coding-guide-v2-1-1vg6jx\\media_enrichment\\discover\\article_image_bindings.json\n  Assets: 31\n  Eligible: 6\n  Review: 5\n  Rejected: 20\n  Errors: 1\n  Warnings: 3\n"
+}

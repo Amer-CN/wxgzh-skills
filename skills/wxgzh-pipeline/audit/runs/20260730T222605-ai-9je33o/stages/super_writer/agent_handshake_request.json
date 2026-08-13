@@ -1,0 +1,38 @@
+{
+  "contract_sha256": "7609ea7c9b9a073a2636fe9c316b4a592efc81222454a0702650d1b92fbc111a",
+  "expected_outputs": [
+    "generation-profile.yaml",
+    "writing-brief.md",
+    "material-readiness.yaml",
+    "material-ingestion-report.json",
+    "material-ledger.yaml",
+    "evidence-map.md",
+    "canonical_claim_registry.json",
+    "core-card.md",
+    "outline.md",
+    "semantic-map.yaml",
+    "article.md",
+    "editor-report.md",
+    "full_mode_validator_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386",
+    "topic": "AI智能体正在重写网络安全攻防"
+  },
+  "instructions": "Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK.",
+  "kind": "agent_handshake",
+  "run_id": "20260730T222605-ai-9je33o",
+  "skill": "super-writer",
+  "skill_identity": {
+    "skill_name": "super-writer",
+    "skill_root_sha256": "46a00a1bcdd5eeafae1ce6723241f97a6c1cd92f14f7baf8dc3625c9aed3018a",
+    "skill_version": "0.3.2-rc1"
+  },
+  "stage": "super_writer",
+  "stage_request_sha256": "ea8109a6f3d38090eeebb06105cacc7731291de2e26f64bc316a7a556b62a255",
+  "upstream_hashes": {
+    "aihot/deduplicated_items.json": "da08958a9e0c2b7e316390fdc7f972734be3cb3eac882bb108b93f5925d2bd96",
+    "aihot/fetch_log.json": "25c7144e1cf0c0d1c6ee8e04d95185b4728fc6f9193cee7f81bab944fe6ca80c",
+    "aihot/raw_items.json": "5c3b0f039e01cf316105e8b1b0df1609c394aa0d8f9bcfb40637c73dc492fd1c"
+  }
+}

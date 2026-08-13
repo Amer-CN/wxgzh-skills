@@ -1,0 +1,19 @@
+{
+  "source": "ai_draft",
+  "strategy": "balance",
+  "profile": "technical",
+  "length_retention": "strict",
+  "output": "clean",
+  "edit_summary": "No body rewrite was needed after review; the validated Super Writer article was frozen byte-for-byte to maximize factual fidelity.",
+  "NEW_UNREGISTERED_FACTS": 0,
+  "NUMBER_CHANGES": 0,
+  "ATTRIBUTION_LOSS": 0,
+  "QUALIFIER_LOSS": 0,
+  "CLAIM_SEMANTIC_CHANGE": 0,
+  "HARD_RESIDUE": 0,
+  "protected_items_checked": [
+    "32.2%", "76.2%", "24.4%", "95.95%", "约90%", "约10亿美元", "4.5天",
+    "OpenAI", "Anthropic", "Hugging Face", "Kimi K3", "MAI-Cyber-1-Flash", "MDASH"
+  ],
+  "status": "PASS"
+}

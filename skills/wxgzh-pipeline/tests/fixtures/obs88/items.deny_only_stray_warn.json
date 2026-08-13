@@ -1,0 +1,22 @@
+[
+ {
+  "id": "m-1",
+  "title": "guard-bash.sh(仅 deny 条目)",
+  "summary": "deny() { emit \"deny\" \"⛔ vibe-coding-guide 拦截：$1。确需执行请你自己在终端手动运行。$CLOSE_HINT\"; }\nmatch 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)+(/|~|\\$HOME|\\*)([[:space:]]|$)' \\\n\t&& deny '这是对根目录或家目录的递归删除，会清空整台机器（铁律 1）'\n# ⚠️ 说明：本文档中的 ⚠️ 只出现在模板示例与说明文字里，本素材没有任何 ask 条目。",
+  "source_provenance": {
+   "source_type": "repo_path",
+   "original_ref": "fixture@deny_only_stray_warn",
+   "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  }
+ },
+ {
+  "id": "m-2",
+  "title": "guard-bash.sh(deny 续)",
+  "summary": "match 'rm[[:space:]]+(-[a-z]*[rf][a-z]*[[:space:]]+)+/(usr|etc|var|bin|lib|opt|home|root|System|Library|Users)([[:space:]/]|$)' \\\n\t&& deny '这是对系统目录的递归删除，会让系统无法启动（铁律 1）'",
+  "source_provenance": {
+   "source_type": "repo_path",
+   "original_ref": "fixture@deny_only_stray_warn",
+   "content_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  }
+ }
+]

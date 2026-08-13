@@ -1,0 +1,27 @@
+{
+  "contract_sha256": "7a95c4f2798bf92225fe2e36eb584339c3d2ee67bb5e01be26f4b797c50a303d",
+  "expected_outputs": [
+    "final_article.md",
+    "fidelity_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386",
+    "topic": "AI智能体正在重写网络安全攻防"
+  },
+  "instructions": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
+  "kind": "agent_handshake",
+  "run_id": "20260730T222605-ai-9je33o",
+  "skill": "zh-human-writing",
+  "skill_identity": {
+    "skill_name": "zh-human-writing",
+    "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+    "skill_version": "0.1.0"
+  },
+  "stage": "zh_human_writing",
+  "stage_request_sha256": "660b3956d45b5070cd463bd9cd12e75a09c5f00880249e765a3bf45aab6fe83d",
+  "upstream_hashes": {
+    "super_writer/article.md": "b51f06c3bf0726f09aa0d45c4ae172b8a51a8dfab7b95e2363ab77a252dd8386",
+    "super_writer/canonical_claim_registry.json": "51eaf9088625bb52c1abf9d84ff9a86802919da595d3842964b8a6a1e0900207",
+    "super_writer/full_mode_validator_report.json": "1ee53bd64a950c1d97def0c6bfeb54b111835f0d40ad0e1477fc80f2849b566e"
+  }
+}

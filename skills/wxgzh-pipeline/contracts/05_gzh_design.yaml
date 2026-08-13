@@ -1,0 +1,36 @@
+stage: gzh_design
+order: 5
+skill: gzh-design
+responsibility: 真实调用正式锤子主题入口 + 正式组件库，产出微信 HTML
+theme:
+  GZH_THEME: smartisan
+  THEME_NAME: 锤子风格
+  THEME_FALLBACK_ALLOWED: false
+required_components:
+  cover_breaking: 1
+  toc_scroll: 1
+  chapter_title: equals_article_chapter_count
+  fixed_signature: 1
+  footer_cta: 1
+  official_image_component_types: [2, 4]
+# OBS-98(档69):删除线规格按形态语义描述,不硬编码具体色值——
+# 每个 line-through 元素必须:声明 text-decoration-color、与自身 color 同色、
+# thickness <= 1px、不得使用主题主色、白底对比度 >= 4.5。
+strikethrough:
+  color: 与 text-decoration-color 同色(同色系细线,67A 第 7 条)
+  text_decoration_color: 等于该元素 color,且不得为主题主色 #B3593B
+  text_decoration_thickness: "<= 1px"
+  white_bg_min_contrast: "4.5:1"
+  forbidden: "rgba(202,202,199,0.35) 作 line-through 文字色(无豁免)"
+forbidden:
+  - self_written_gray_html
+  - color_mimicry_only
+  - image_border_only
+  - hand_written_component_report
+  - generic_html_validator_as_theme_validator
+  - silent_fallback_on_entry_failure
+theme_identity_validator:
+  reverse_parse_from_final_html: true
+  emits: theme_identity_report.json
+  component_usage_report_program_generated: true
+  gate: THEME_IDENTITY == PASS

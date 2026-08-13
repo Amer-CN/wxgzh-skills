@@ -1,0 +1,16 @@
+{
+  "after_total": 1,
+  "before_total": 0,
+  "content_sha256": "5962fc7a10e303dfc3e33b835a3ef0e83eb4b75f12f6a6c0ff49cec108df6800",
+  "deleted_any": false,
+  "delta": 1,
+  "draft_only": true,
+  "formally_published": false,
+  "mass_send": false,
+  "media_id": "Y3aIagws[REDACTED]",
+  "raw_file_sha256": "5962fc7a10e303dfc3e33b835a3ef0e83eb4b75f12f6a6c0ff49cec108df6800",
+  "real_api_call": true,
+  "scheduled": false,
+  "simulated": false,
+  "title": "AI智能体正在重写网络安全攻防"
+}

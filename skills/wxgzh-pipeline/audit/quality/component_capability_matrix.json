@@ -1,0 +1,97 @@
+{
+  "criteria_version": "v4",
+  "criteria_changelog": [
+    "v4 (76J/OBS-271): 新增 table/list 锚——标准 Markdown 表格/列表经语法门 probe 判「支持」(锚 45 条);四名单 APPROVED 9→11 类",
+    "v3 -> v4 (档71C-R5): anchor_ok 口径改写(JSON锚与渲染器同步+哨兵在最近<p>内,删全量覆盖已证措辞); component_anchors.json slot 列改 SLOTS 真实槽名(源头函数反查,单一来源); 锚 41 条; 五列全比测试"
+  ],
+  "renderer_path": "gzh-design-skill/scripts/render_article.py",
+  "renderer_sha256": "437fb8aa04916b2cb88d96626cad9b128a584700a96e230898b2ca76daf95378",
+  "generated_at_utc": "2026-08-06T14:33:17+00:00",
+  "lists_exported": {
+    "quarantined": [],
+    "multiline": [],
+    "anchor_gap": [],
+    "approved": [
+      "alert",
+      "code-compare",
+      "dialogue",
+      "footnotes",
+      "gallery",
+      "long-image",
+      "media-text",
+      "quote",
+      "resources",
+      "list",
+      "table"
+    ]
+  },
+  "assertions_executed": true,
+  "components": {
+    "alert": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "code-compare": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "dialogue": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": true
+    },
+    "footnotes": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": true
+    },
+    "gallery": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": true
+    },
+    "long-image": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "media-text": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "quote": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "resources": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": true
+    },
+    "list": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    },
+    "table": {
+      "render_ok": true,
+      "struct_ok": true,
+      "anchor_ok": true,
+      "per_item_ok": null
+    }
+  }
+}

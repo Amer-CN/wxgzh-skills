@@ -1,0 +1,27 @@
+{
+  "contract_sha256": "7a95c4f2798bf92225fe2e36eb584339c3d2ee67bb5e01be26f4b797c50a303d",
+  "expected_outputs": [
+    "final_article.md",
+    "fidelity_report.json"
+  ],
+  "inputs": {
+    "frozen_article_sha256": null,
+    "topic": "智能体时代的数据库身份安全"
+  },
+  "instructions": "De-AI the Super Writer article only; freeze final_article.md (no new facts).",
+  "kind": "agent_handshake",
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "skill": "zh-human-writing",
+  "skill_identity": {
+    "skill_name": "zh-human-writing",
+    "skill_root_sha256": "18491b361060a28d5eaf228f58b9b75e6ebde697eaa1149573bf468e0daea786",
+    "skill_version": "0.1.0"
+  },
+  "stage": "zh_human_writing",
+  "stage_request_sha256": "b35ef7919072d145012b7987252c99cb05430e912f88c9f496572c060a0023e0",
+  "upstream_hashes": {
+    "super_writer/article.md": "705093800f28ed953de1e0a6a743b71b965f63df8c370b71c606e248974823be",
+    "super_writer/canonical_claim_registry.json": "5ffd9bbeb8546449be7ee1d4d699574260c0e83fd3926a3a658b8b9c214d6abe",
+    "super_writer/full_mode_validator_report.json": "03cbff130860fb0fadd5a0f8eaa3437f94fdaf377c20e47fe66627d67a4bbbf3"
+  }
+}

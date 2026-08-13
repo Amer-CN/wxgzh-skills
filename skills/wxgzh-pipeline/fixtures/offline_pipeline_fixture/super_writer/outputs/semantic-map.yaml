@@ -1,0 +1,60 @@
+schema_version: '1.0'
+article:
+  id: gpt-56-family-analysis
+  title: OpenAI GPT-5.6 模型家族
+  summary: 分析 GPT-5.6 三款型号的差异化定位及安全风险
+  article_type: 深度分析
+  core_statement: GPT-5.6 三档定价重新定义前沿 AI 性价比但安全风险同步升级
+  target_platform:
+  - wechat
+  preferred_theme: null
+blocks:
+- block_id: intro-001
+  heading_path: []
+  role: key_statement
+  source_anchor:
+    exact_text: 7 月 29 日，OpenAI 一次性发布了 GPT-5.6 模型家族
+  payload:
+    text: 7 月 29 日，OpenAI 一次性发布了 GPT-5.6 模型家族
+  evidence_ids:
+  - ev-001
+  preserve_exactly: true
+  formatter_candidates:
+  - quote
+  fallback:
+  - paragraph
+  required: true
+- block_id: conclusion-001
+  heading_path: []
+  role: key_statement
+  source_anchor:
+    exact_text: 性能越强、部署越广，安全风险的量级也越大
+  payload:
+    text: 性能越强、部署越广，安全风险的量级也越大
+  evidence_ids:
+  - ev-009
+  preserve_exactly: true
+  formatter_candidates:
+  - quote
+  - quote-oneliner
+  fallback:
+  - paragraph
+  required: true
+constraints:
+  preserve_facts:
+  - Sol 成本不到 Claude Fable 5 一半
+  - Luna 比 Sol 低 80%
+  - 作弊率 12.6%
+  preserve_stance:
+  - 性能提升与安全风险并存
+  preserve_quotes: []
+  unresolved_facts: []
+  editor_anchors: []
+  forbidden_transformations: []
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

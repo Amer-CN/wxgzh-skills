@@ -1,0 +1,165 @@
+--- a/media-enrichment/scripts/run_media_enrichment.py
++++ b/media-enrichment/scripts/run_media_enrichment.py
+@@ -521,6 +521,10 @@
+                     "remote_url": upload_result.remote_url,
+                     "response_sha256": upload_result.response_sha256,
+                 }
++                if upload_result.status != "success":
++                    builder.errors.append(
++                        f"upload failed for {asset.asset_id}: "
++                        f"{upload_result.error or 'no success response'}")
+ 
+     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
+         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
+--- a/media-enrichment/src/media_enrichment/uploader.py
++++ b/media-enrichment/src/media_enrichment/uploader.py
+@@ -191,6 +191,7 @@
+     def __init__(self):
+         self.app_id = os.environ.get("WECHAT_APP_ID", "")
+         self.app_secret = os.environ.get("WECHAT_APP_SECRET", "")
++        self._access_token: str | None = None
+         self._last_token_observation = {
+             "http_status": None, "wechat_errcode": None,
+             "wechat_errmsg": None, "request_elapsed_seconds": 0.0,
+@@ -198,6 +199,8 @@
+         }
+ 
+     def _get_access_token(self) -> tuple[str, str]:
++        if self._access_token:
++            return self._access_token, ""
+         if not self.app_id or not self.app_secret:
+             return "", "WECHAT_APP_ID or WECHAT_APP_SECRET not set"
+         try:
+@@ -217,7 +220,8 @@
+                 "request_attempt_index": 1,
+             }
+             if "access_token" in data:
+-                return data["access_token"], ""
++                self._access_token = data["access_token"]
++                return self._access_token, ""
+             return "", _scrub_token(f"WeChat token error: {data.get('errmsg', 'unknown')}")
+         except Exception as exc:
+             return "", _scrub_token(f"token request failed: {exc}")
+--- a/media-enrichment/tests/test_uploader_manifest.py
++++ b/media-enrichment/tests/test_uploader_manifest.py
+@@ -6,6 +6,7 @@
+ from media_enrichment.uploader import (
+     DryRunUploader, MockUploader, sanitize_response, scan_for_secrets,
+     create_uploader, _scrub_token, timed_upload, UploadResult,
++    WechatImageHostUploader,
+ )
+ from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
+ 
+@@ -86,6 +87,34 @@
+         assert "access_token" not in json.dumps(event)
+ 
+ 
++class TestCredentialSourceAndTokenCache:
++    def test_missing_credentials_fail_closed(self, monkeypatch):
++        monkeypatch.delenv("WECHAT_APP_ID", raising=False)
++        monkeypatch.delenv("WECHAT_APP_SECRET", raising=False)
++        result = WechatImageHostUploader().upload("missing.png", "A-003", "known_allowed")
++        assert result.status == "failed"
++        assert result.media_id is None
++
++    def test_token_cached_within_uploader_instance(self, monkeypatch):
++        import sys
++        from types import SimpleNamespace
++        monkeypatch.setenv("WECHAT_APP_ID", "wx-test-id")
++        monkeypatch.setenv("WECHAT_APP_SECRET", "test-secret")
++        calls = []
++        response = SimpleNamespace(
++            status_code=200,
++            json=lambda: {"access_token": "test-token-value"},
++        )
++        fake_requests = SimpleNamespace(
++            get=lambda *args, **kwargs: (calls.append(1) or response),
++        )
++        monkeypatch.setitem(sys.modules, "requests", fake_requests)
++        uploader = WechatImageHostUploader()
++        assert uploader._get_access_token() == ("test-token-value", "")
++        assert uploader._get_access_token() == ("test-token-value", "")
++        assert len(calls) == 1
++
++
+ class TestSecretsSanitization:
+     def test_sanitize_response_removes_token(self):
+         data = {"url": "https://cdn.example.com/img.jpg", "token": "secret123"}
+--- a/wxgzh-pipeline/wxgzh_pipeline/producers.py
++++ b/wxgzh-pipeline/wxgzh_pipeline/producers.py
+@@ -30,6 +30,7 @@
+ 
+ from . import execmodel as EM
+ from . import agent_handshake as AH
++from . import secrets as SEC
+ from .state import sha256_file
+ from .subprocess_runner import run_script
+ 
+@@ -660,6 +661,18 @@
+     return [sd / name for name in expected if (sd / name).is_file()], meta
+ 
+ 
++def _media_subprocess_env(ctx) -> dict:
++    """Use the exact credential source doctor validates: process/context env,
++    then project .env as setdefault. Values are passed only to the subprocess."""
++    env = dict(os.environ)
++    env.update(getattr(ctx, "env", {}) or {})
++    dotenv = Path(ctx.run_dir).parents[2] / ".env"
++    if dotenv.is_file():
++        for key, value in SEC.parse_env_file(dotenv).items():
++            env.setdefault(key, value)
++    return env
++
++
+ def _media_two_phase(ctx, sd, expected, state, entry, validator):
+     """State-machine-owned media discover/continue execution.
+ 
+@@ -681,7 +694,7 @@
+                 entry,
+                 _entry_args(ctx, "media_enrichment", sd, state, request_path,
+                             media_phase="discover"),
+-                timeout=300,
++                timeout=300, env=_media_subprocess_env(ctx),
+             )
+             events_path = discover_dir / "upload_events.json"
+             zero_upload = False
+@@ -759,7 +772,7 @@
+             entry,
+             _entry_args(ctx, "media_enrichment", sd, state, request_path,
+                         media_phase="continue", discovery_manifest=frozen),
+-            timeout=300,
++            timeout=300, env=_media_subprocess_env(ctx),
+         )
+         meta = {
+             "exec_kind": EM.SUBPROC,
+--- /dev/null
++++ b/wxgzh-pipeline/tests/test_obs47_credential_source.py
+@@ -0,0 +1,28 @@
++from pathlib import Path
++from types import SimpleNamespace
++
++from wxgzh_pipeline import producers as P
++from wxgzh_pipeline.secrets import wechat_credentials_present
++
++
++def test_media_subprocess_env_matches_doctor_dotenv_source(tmp_path, monkeypatch):
++    project = tmp_path
++    run_dir = project / ".temp" / "wxgzh-pipeline" / "run-obs47"
++    run_dir.mkdir(parents=True)
++    (project / ".env").write_text(
++        "WECHAT_APP_ID=wx-fake-doctor-id\nWECHAT_APP_SECRET=fake-doctor-secret\n",
++        encoding="utf-8",
++    )
++    monkeypatch.delenv("WECHAT_APP_ID", raising=False)
++    monkeypatch.delenv("WECHAT_APP_SECRET", raising=False)
++
++    child_env = P._media_subprocess_env(SimpleNamespace(run_dir=run_dir, env={}))
++    ok, detail = wechat_credentials_present(child_env)
++
++    assert ok is True
++    assert detail == {
++        "WECHAT_APP_ID_nonempty": True,
++        "WECHAT_APP_SECRET_nonempty": True,
++    }
++    assert child_env["WECHAT_APP_ID"] == "wx-fake-doctor-id"
++    assert child_env["WECHAT_APP_SECRET"] == "fake-doctor-secret"

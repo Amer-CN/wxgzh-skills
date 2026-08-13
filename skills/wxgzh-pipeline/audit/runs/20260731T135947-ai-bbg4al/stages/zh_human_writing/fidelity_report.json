@@ -1,0 +1,18 @@
+{
+  "source": "ai_draft",
+  "strategy": "balance",
+  "profile": "technical",
+  "length_retention": "strict",
+  "output": "clean",
+  "edit_summary": "Two template-like sentences received real minimal wording edits while preserving negation, facts and qualifiers.",
+  "NEW_UNREGISTERED_FACTS": 0,
+  "NUMBER_CHANGES": 0,
+  "ATTRIBUTION_LOSS": 0,
+  "QUALIFIER_LOSS": 0,
+  "CLAIM_SEMANTIC_CHANGE": 0,
+  "HARD_RESIDUE": 0,
+  "fidelity_guard": {"total_checks": 13, "passes": 13, "fails": 0, "warnings": 0},
+  "pattern_audit": {"hard_residue": 0, "strong_contextual": 0, "advisory_only": 0, "pass_fail": "pass"},
+  "change_report": {"original_chars": 2260, "edited_chars": 2267, "change_ratio": 0.0031, "protected_span_changes": 0},
+  "status": "PASS_WITH_REAL_EDITS"
+}

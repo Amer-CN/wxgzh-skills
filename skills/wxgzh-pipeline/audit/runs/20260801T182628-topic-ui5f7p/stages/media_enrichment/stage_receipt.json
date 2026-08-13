@@ -1,0 +1,78 @@
+{
+  "elapsed_seconds": 6.0,
+  "ended_at": "2026-08-01T12:16:19Z",
+  "entrypoint_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "entrypoint_sha256": "a346dc9c0603756f9c1629857e34cdd68f441fb350d21c7d5cd78eac65cec034",
+  "input_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\stage_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\canonical_claim_registry.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\deduplicated_items.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_discovery_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_continuation_request.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\discover\\asset_discovery_manifest.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\copyright_approval.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\discover_request_validation.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\continue_request_validation.json"
+  ],
+  "input_hashes": {
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\aihot\\deduplicated_items.json": "747d2ba11aab109e735ee2f96564bcd3d6ac734357cf7bca9aef9ffa697e02c4",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\continue_request_validation.json": "7b8f03670fb6e3e2f94a2a125976e76ad05f0dd901d8e0e5da99c82937883b9d",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\copyright_approval.json": "961ab1a13b022aa594040ed8130dcd4ac7567c0823c62a8debe58d98fef7c49b",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\discover\\asset_discovery_manifest.json": "486316171e858c2f0e600b05cffd1bc01f2e7e9a0a6880854bcd535e2021dbc0",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\discover_request_validation.json": "c92ffd060710a5ef493d9e6b2ef12dcecf9c56e2d9d0cc3adfc61a04940ab02a",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_continuation_request.json": "7868a3f43a67fa789ea3f14ba78dc70d742fa2d76ffc83daf8b8de795ce67c4f",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_discovery_request.json": "e2c94ed24ebb1683f02a003316beee75d9219b2fc64089b633c206930e1416f0",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\stage_request.json": "13b860b67012b406cf246e0c14576db17ec811dbe992eff718e8325da5fbac55",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\super_writer\\canonical_claim_registry.json": "5ffd9bbeb8546449be7ee1d4d699574260c0e83fd3926a3a658b8b9c214d6abe",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\zh_human_writing\\final_article.md": "736ff00f7858fe7018dfa84f69524ee6c0aa9720463d5ba0c75f254869169576"
+  },
+  "invoked_entrypoint": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\run_media_enrichment.py",
+  "network_mode": "live",
+  "official_validator": {
+    "command": [
+      "C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "-X",
+      "utf8",
+      "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+      "--manifest",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\continue\\media_manifest.json",
+      "--request",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_continuation_request.json",
+      "--bindings",
+      "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\continue\\article_image_bindings.json"
+    ],
+    "elapsed_seconds": 0.627,
+    "exit_code": 0,
+    "path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+    "sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "92f8a34e4ed65760167b9b22e541b342ad1e2411f6951d44e5085bf19f6447bc"
+  },
+  "official_validators": [],
+  "output_files": [
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\media_manifest.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\article_image_bindings.json",
+    "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260801T182628-topic-ui5f7p\\media_enrichment\\upload_events.json"
+  ],
+  "output_hashes": {
+    "article_image_bindings.json": "bdc45e429b25cab37fd28d3a1464c30b29a386d6bb0d7e942ffebe8e90054e9b",
+    "media_manifest.json": "3bfbd12695b3323040a4fc8c3ae1072ebacea87cbb2ac38dc6117057bd1fb1e3",
+    "upload_events.json": "a11d138065eb23e1f38e333bc842c2656fe1e6f9866b8d91c6bf9fa53cb6749e"
+  },
+  "side_effects": [
+    {
+      "detail": "serial uploadimg to mmbiz.qpic.cn",
+      "type": "wechat_image_upload"
+    }
+  ],
+  "skill_dir": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment",
+  "skill_name": "media-enrichment",
+  "skill_root_sha256": "0d8aea2169cec17c4e9f95af66b6b4da3c532554a0a316fe3fb604bd0b7ab3a3",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "stage": "media_enrichment",
+  "started_at": "2026-08-01T12:16:13Z",
+  "validator_exit_code": 0,
+  "validator_path": "F:\\AIXM\\wxgzh\\.agents\\skills\\media-enrichment\\scripts\\validate_media_manifest.py",
+  "validator_sha256": "eda71700a0ce1d820c5c13ba850088d3b775e5352b64eb0e436f3434d5aa98af"
+}

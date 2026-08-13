@@ -1,0 +1,152 @@
+schema_version: "1.0"
+article:
+  id: "vibe-coding-guide-v2-upgrade"
+  title: "我给 AI 编程装的「安全气囊」，第一版其实是一张纸条"
+blocks:
+  -
+    block_id: "intro-1"
+    heading_path:
+    role: "paragraph"
+    source_anchor:
+      exact_text: "今天先认个账：第一版，它拦不住任何东西。"
+    payload:
+      text: "今天先认个账：第一版，它拦不住任何东西。"
+    evidence_ids:
+      - "E02"
+    preserve_exactly: false
+    formatter_candidates:
+      - "paragraph"
+    fallback:
+    required: true
+  -
+    block_id: "sec-1"
+    heading_path:
+      - "以前为什么拦不住：它只是一本更厚的书"
+    role: "article_section"
+    source_anchor:
+      exact_text: "拆文件最危险的从来不是内容丢了，是内容还在、但跑到了没人会读的地方。"
+    payload:
+      text: "拆文件最危险的从来不是内容丢了，是内容还在、但跑到了没人会读的地方。"
+      heading_text: "以前为什么拦不住：它只是一本更厚的书"
+      section_index: 1
+    evidence_ids:
+      - "E03"
+      - "E04"
+    preserve_exactly: false
+    formatter_candidates:
+      - "chapter-title"
+    fallback:
+    required: true
+  -
+    block_id: "sec-2"
+    heading_path:
+      - "v2.0：体检脚本 + 强制护栏"
+    role: "article_section"
+    source_anchor:
+      exact_text: "第二件，才是真正的护栏。"
+    payload:
+      text: "第二件，才是真正的护栏。"
+      heading_text: "v2.0：体检脚本 + 强制护栏"
+      section_index: 2
+    evidence_ids:
+      - "E05"
+      - "E06"
+      - "E07"
+      - "E15"
+      - "E14"
+    preserve_exactly: false
+    formatter_candidates:
+      - "chapter-title"
+    fallback:
+    required: true
+  -
+    block_id: "sec-3"
+    heading_path:
+      - "v2.1：两条新铁律，全是这一天撞出来的"
+    role: "article_section"
+    source_anchor:
+      exact_text: "AI 的处理方式是——把测试样例改成一行的。"
+    payload:
+      text: "AI 的处理方式是——把测试样例改成一行的。"
+      heading_text: "v2.1：两条新铁律，全是这一天撞出来的"
+      section_index: 3
+    evidence_ids:
+      - "E08"
+      - "E09"
+      - "E10"
+      - "E11"
+    preserve_exactly: false
+    formatter_candidates:
+      - "chapter-title"
+    fallback:
+    required: true
+  -
+    block_id: "sec-4"
+    heading_path:
+      - "现在的位置，和它诚实的样子"
+    role: "article_section"
+    source_anchor:
+      exact_text: "安全带系没系好，要真的拉一下才知道"
+    payload:
+      text: "安全带系没系好，要真的拉一下才知道"
+      heading_text: "现在的位置，和它诚实的样子"
+      section_index: 4
+    evidence_ids:
+      - "E12"
+      - "E13"
+      - "E16"
+    preserve_exactly: false
+    formatter_candidates:
+      - "chapter-title"
+    fallback:
+    required: true
+  -
+    block_id: "sig-1"
+    heading_path:
+    role: "article_signature"
+    source_anchor:
+    payload:
+    evidence_ids:
+    preserve_exactly: false
+    formatter_candidates:
+      - "footer-signature-brand"
+    fallback:
+    required: false
+constraints:
+  preserve_facts:
+    - "33.7 KB"
+    - "32 条"
+    - "62 条"
+    - "8 条"
+    - "25 条"
+    - "9 类"
+    - "12 类"
+    - "11 条"
+    - "5 条"
+    - "22:00"
+    - "6 月 15 日"
+    - "8 月 1 日"
+    - "277"
+    - "261"
+    - "16 条"
+    - "94%"
+  preserve_stance:
+    - "实测环境只写 Windows + Claude Code，不写全平台亲测"
+    - "不写「再也不会翻车」，只写 9 类硬拦 + 12 类弹确认"
+    - "必须写失效场景：无 bash 时护栏静默失效；install.sh 路径不保证生效"
+  preserve_quotes:
+    - "测试全绿」和「功能能用」，是两件完全不同的事"
+    - "双向纠错，才叫协作。单向服从，那叫赌博"
+    - "护栏是第二道锁，不是第一道。第一道永远是你自己看清楚，再点确认"
+    - "「你这样装可能没有安全」"
+  unresolved_facts:
+  editor_anchors:
+  forbidden_transformations:
+    - "不得虚构"
+component_policy:
+  force_all_components: false
+  formatter_has_final_choice: true
+  allow_fallback: true
+  max_primary_advanced_components: 6
+  prohibit_content_invention: true
+  prohibit_duplicate_full_content: true

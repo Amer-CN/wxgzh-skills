@@ -1,0 +1,15 @@
+{
+  "skill": "aihot",
+  "skill_version": "1.2.1",
+  "topic": "vibe-coding-guide v2.1 升级",
+  "mode": "user_materials_override",
+  "aihot_api_skipped": true,
+  "reason": "用户明确要求跳过 aihot 选题流程，素材由用户直接提供（pasted-text.txt 整理版）；source_url 已逐条分配仓库内唯一真实文件 URL 以便 media 阶段追溯",
+  "source_material": "F:/AIXM/wxgzh/articles/vibe-coding-guide-v2/materials/材料说明-用户整理.txt",
+  "source_material_sha256": "7c20d44e394559a6c9115b4941b0c84ca4cb9594cdd9029f431dd8b79ecd31c2",
+  "queries": [],
+  "raw_count": 18,
+  "deduplicated_count": 18,
+  "dedup_notes": "18 个素材条目按事件互不重复，无需合并；material_id 已分配 M-01..M-18；source_url 唯一化完成（素材 6-9 为作者当天新增，挂接仓库内对应真实文件）",
+  "generated_at": "2026-08-01T15:17:42.593839+00:00"
+}

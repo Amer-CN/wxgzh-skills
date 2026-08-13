@@ -1,0 +1,14 @@
+{
+  "config": {
+    "length": "auto_by_fact_density",
+    "mode": "material_heavy_full_mode"
+  },
+  "inputs": {
+    "deduplicated_items": "../aihot/deduplicated_items.json",
+    "topic": "智能体时代的数据库身份安全"
+  },
+  "network_mode": "live",
+  "run_id": "20260801T182628-topic-ui5f7p",
+  "skill_name": "super-writer",
+  "stage": "super_writer"
+}

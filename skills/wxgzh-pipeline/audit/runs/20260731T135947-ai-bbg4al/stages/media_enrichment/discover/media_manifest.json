@@ -1,0 +1,556 @@
+{
+  "assets": [
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-001",
+      "asset_identity_sha256": "816010992210bddd33ae2dbd6ee0863c8c697fa4c6113ae37cf27fff1f1b3180",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://www-cdn.anthropic.com/images/4zrzovbb/website/d3dd09ad16c68461dc3fb01df5e84cf7ccafda6c-1000x1000.svg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 13263,
+      "height": 0,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\c397f44118a2dc07c07e1b70b3f976ed21cca8353e321f93a8f24f168a45577f",
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": "image/svg+xml",
+      "perceptual_hash": "",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "SVG images are not directly publishable as photos",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://www-cdn.anthropic.com/images/4zrzovbb/website/d3dd09ad16c68461dc3fb01df5e84cf7ccafda6c-1000x1000.svg",
+      "sha256": "c397f44118a2dc07c07e1b70b3f976ed21cca8353e321f93a8f24f168a45577f",
+      "source_page_url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 0
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms859a0e01k4roeqf9u8mvnp",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-002",
+      "asset_identity_sha256": "c2e7bbaffaa4189cf7792b87d84dbe87563a4d9f5f2fe74a102ac50ba8dd0550",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-01"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "url_decode",
+      "dedup_method": "",
+      "discovered_url": "https://www.anthropic.com/api/opengraph-illustration?name=Hand%20Lock&backgroundColor=heather",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "og:image",
+      "file_size": 76767,
+      "height": 1000,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\a83ca5f045dfea5198d6cc35711155ae32da68e479993721e8152c2c86e8d6b8.png",
+      "material_ids": [
+        "M-01"
+      ],
+      "mime_type": "image/png",
+      "perceptual_hash": "e6e6333398c9cc31",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "social share card / link preview image (extraction_method=og:image) — not rendered in page body"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://www.anthropic.com/api/opengraph-illustration?name=Hand Lock&backgroundColor=heather",
+      "sha256": "a83ca5f045dfea5198d6cc35711155ae32da68e479993721e8152c2c86e8d6b8",
+      "source_page_url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1900
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-003",
+      "asset_identity_sha256": "ab1f59153db7eac712690c0018b113c6373c2fe3eb4f3d45ae0419687eb5cd2c",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-02"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 606786,
+      "height": 559,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf.png",
+      "material_ids": [
+        "M-02"
+      ],
+      "mime_type": "image/png",
+      "perceptual_hash": "f91586ca6931b46d",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_9mv7QXp.max-1100x1100.png",
+      "sha256": "418d841fed238ad485cfc959555d518e5e1d6d005efd35080ce3a9035f2b87cf",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1024
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-004",
+      "asset_identity_sha256": "353e242b00d7c0c4f0038770d1e6d096ef99a2b4c07fadd9646d13e680dabaa3",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-02"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 229157,
+      "height": 394,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c.png",
+      "material_ids": [
+        "M-02"
+      ],
+      "mime_type": "image/png",
+      "perceptual_hash": "d55cdb75261232c3",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/1_TdmG649.max-700x700.png",
+      "sha256": "5346d55e5a7478a5e7f21a12060900a912c616664e11a2eb8ee1c8ebc09e5e9c",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 700
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-005",
+      "asset_identity_sha256": "4939f6422757a988e8245dec8be309dfe7f334817ceecc6b3e565cc282006ddd",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-02"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-700x700.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 17155,
+      "height": 344,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\8e2aa5872a1a73e6750e4aa7d7b91ca3bcba0cf9c47ad03a6aaaada1454e3bd8.jpg",
+      "material_ids": [
+        "M-02"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "be639594e09dc03e",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "dimensions 700x344 below minimum 640x360"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-700x700.jpg",
+      "sha256": "8e2aa5872a1a73e6750e4aa7d7b91ca3bcba0cf9c47ad03a6aaaada1454e3bd8",
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 700
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms7q9upv0q0gro2ev1apyhwk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-006",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-02"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://www.gstatic.com/cgc/super_cloud_gradient.png",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-02"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "fail",
+      "reasons": [
+        "URL security: DNS resolution failed for hostname: www.gstatic.com"
+      ],
+      "relevance_status": "irrelevant",
+      "resolved_original_url": "https://www.gstatic.com/cgc/super_cloud_gradient.png",
+      "sha256": null,
+      "source_page_url": "https://cloud.google.com/blog/products/databases/alloydb-adds-group-authentication-to-secure-enterprise-scale-and-ai-agents",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": null,
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-007",
+      "asset_identity_sha256": null,
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-02"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": null,
+      "dedup_method": "phash",
+      "discovered_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-2600x2600.jpg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": "A-005",
+      "extraction_method": null,
+      "file_size": null,
+      "height": null,
+      "local_path": null,
+      "material_ids": [
+        "M-02"
+      ],
+      "mime_type": null,
+      "perceptual_hash": null,
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "perceptual hash distance 0 with A-005"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://storage.googleapis.com/gweb-cloudblog-publish/images/10_-_Databases.max-2600x2600.jpg",
+      "sha256": "e2705ad8fd017aa4dbab1f230e41d25dfb426d5f3b58554840493dd648b3ce15",
+      "source_page_url": null,
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": null
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-008",
+      "asset_identity_sha256": "a0c45cc2f32642cc33eefaf178b69fe8d9b82be8e9bda70fceb1afa53f955796",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-03"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://techcrunch.com/wp-content/uploads/2026/05/tc-lockup-hp.svg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 3212,
+      "height": 0,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\376f83cfdfc05c8b4f7b668b38266b3687136391cb35fe4685af1d56f0d2fa81",
+      "material_ids": [
+        "M-03"
+      ],
+      "mime_type": "image/svg+xml",
+      "perceptual_hash": "",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "context indicates logo/brandmark"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2026/05/tc-lockup-hp.svg",
+      "sha256": "376f83cfdfc05c8b4f7b668b38266b3687136391cb35fe4685af1d56f0d2fa81",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 0
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-009",
+      "asset_identity_sha256": "6f021a766aa76b2a7165244adc5a915822b3978c95aa71f71b353a52739bb94e",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-03"
+      ],
+      "copyright_risk": "high",
+      "copyright_status": "unknown",
+      "decision": "rejected",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 389,
+      "height": 0,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\26ddc3f8a8a2427b8e3ab0987e35aa802e6369d17836f1e4b242cc0ca85e32b7",
+      "material_ids": [
+        "M-03"
+      ],
+      "mime_type": "image/svg+xml",
+      "perceptual_hash": "",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "URL matches logo/brandmark pattern: https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2024/09/tc-logo-mobile.svg",
+      "sha256": "26ddc3f8a8a2427b8e3ab0987e35aa802e6369d17836f1e4b242cc0ca85e32b7",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 0
+    },
+    {
+      "aihot_permalink": "https://aihot.virxact.com/items/cms6lhleg06ourohzls7gb1hk",
+      "alt_text": null,
+      "approval_evidence_sha256": null,
+      "approval_id": null,
+      "approval_identity_mismatch": [],
+      "approved_at": null,
+      "approved_by": null,
+      "approved_scope": null,
+      "asset_approval_consumed": false,
+      "asset_id": "A-010",
+      "asset_identity_sha256": "606e1811817b1a64519eceddf4b2e18d5ef4e9146d4b16d96222a165ea46aa67",
+      "asset_origin": "source",
+      "caption": null,
+      "claim_ids": [
+        "C-03"
+      ],
+      "copyright_risk": "medium",
+      "copyright_status": "unknown",
+      "decision": "review_required",
+      "decode_method": "none",
+      "dedup_method": "",
+      "discovered_url": "https://techcrunch.com/wp-content/uploads/2026/07/TechCrunch-Disrupt-2026-Stage-Generic-Assets-AI-Crop.jpg?w=1024",
+      "discovery_manifest_sha256": null,
+      "duplicate_of": null,
+      "extraction_method": "img.src",
+      "file_size": 100794,
+      "height": 535,
+      "local_path": "F:\\AIXM\\wxgzh\\.temp\\wxgzh-pipeline\\20260731T135947-ai-bbg4al\\media_enrichment\\discover\\images\\3381ff4e4f06874660a8150cff02474949c64e238b33f06d83327ea99e80254b.jpg",
+      "material_ids": [
+        "M-03"
+      ],
+      "mime_type": "image/jpeg",
+      "perceptual_hash": "8f6da4768e4dc470",
+      "placement": null,
+      "quality_status": "pass",
+      "reasons": [
+        "appears to be a photograph but source context unclear",
+        "copyright status unknown — cannot auto-approve for publishing"
+      ],
+      "relevance_status": "uncertain",
+      "resolved_original_url": "https://techcrunch.com/wp-content/uploads/2026/07/TechCrunch-Disrupt-2026-Stage-Generic-Assets-AI-Crop.jpg?w=1024",
+      "sha256": "3381ff4e4f06874660a8150cff02474949c64e238b33f06d83327ea99e80254b",
+      "source_page_url": "https://techcrunch.com/2026/07/29/discover-whats-next-for-ai-from-the-saas-reckoning-to-the-agent-security-gap-at-techcrunch-disrupt-2026",
+      "upload": {
+        "mode": "dry_run",
+        "remote_url": null,
+        "response_sha256": null,
+        "status": "not_uploaded"
+      },
+      "width": 1024
+    }
+  ],
+  "created_at": "2026-07-31T06:10:33Z",
+  "errors": [],
+  "gate": {
+    "input_contract_pass": true,
+    "provenance_complete": true,
+    "publish_allowed": false,
+    "secrets_detected": false,
+    "security_checks_pass": true
+  },
+  "input": {
+    "article_sha256": "5a71680fbce596224341f31414afe9eb07f356c03a1443946731c0a90f0f0b6f",
+    "claims_total": 6,
+    "materials_total": 6,
+    "request_sha256": "93d5e2251add99202e943b98f528030218af02f752cb7d26fb3499918365fdaa"
+  },
+  "run_id": "20260731T135947-ai-bbg4al",
+  "schema_version": "1.0",
+  "skill_version": "0.1.0-dev7-hotfix4",
+  "summary": {
+    "candidates_discovered": 39,
+    "downloads_succeeded": 9,
+    "eligible_assets": 0,
+    "exact_duplicates_removed": 0,
+    "generated_charts": 0,
+    "pages_fetched": 3,
+    "pages_requested": 3,
+    "perceptual_duplicates_removed": 1,
+    "rejected_assets": 6,
+    "review_required_assets": 4,
+    "uploaded_assets": 0
+  },
+  "warnings": [
+    "No claims with numbers — no charts generated",
+    "max_total_images (8) reached — skipping M-04",
+    "max_total_images (8) reached — skipping M-05",
+    "max_total_images (8) reached — skipping M-06",
+    "max_total_images (8) reached — stopping discovery"
+  ]
+}
