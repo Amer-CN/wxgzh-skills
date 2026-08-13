@@ -4,7 +4,7 @@
   "skills": {
     "super-writer": {
       "skill_name": "super-writer",
-      "repository_url": "https://github.com/Amer-CN/gzh-forge",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "main",
       "full_commit_sha": "87abc89831ab75b5f361de32c3b0c253f34155d8",
       "source_tree_sha": "738ebc37cc31553338e2a70ce19a74996b062049",
@@ -27,7 +27,7 @@
     },
     "zh-human-writing": {
       "skill_name": "zh-human-writing",
-      "repository_url": "https://github.com/Amer-CN/gzh-forge",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "main",
       "full_commit_sha": "87abc89831ab75b5f361de32c3b0c253f34155d8",
       "source_tree_sha": "4e81c88d3791407f7be6753c1b913ceb2b0dddb1",
@@ -52,7 +52,7 @@
     },
     "media-enrichment": {
       "skill_name": "media-enrichment",
-      "repository_url": "https://github.com/Amer-CN/gzh-forge",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "main",
       "full_commit_sha": "87abc89831ab75b5f361de32c3b0c253f34155d8",
       "source_tree_sha": "4c109a3968c9955cfdbaad9706b7401d45df701e",
@@ -76,7 +76,7 @@
     },
     "gzh-design": {
       "skill_name": "gzh-design",
-      "repository_url": "https://github.com/Amer-CN/gzh-forge",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "main",
       "full_commit_sha": "e263c21bb6089f57fdb3e96819a2e9e09dfb088e",
       "source_tree_sha": "ed1058a84ee9e76d555e16f7e4bdbeb0cb4e86fa",

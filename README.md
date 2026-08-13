@@ -1,4 +1,4 @@
-<p align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=0:B3593B,100:7A2E1D&height=170&section=header&text=gzh-forge&fontSize=64&fontColor=ffffff&animation=fadeIn" width="100%"></p>
+<p align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=0:B3593B,100:7A2E1D&height=170&section=header&text=wxgzh-skills&fontSize=64&fontColor=ffffff&animation=fadeIn" width="100%"></p>
 
 <div align="center">
 
@@ -20,6 +20,33 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 遵循 [Agent Skills](https://agentskills.io) 开放标准，Claude Code、Codex 等
 40+ 支持该标准的 Agent 都能装。
 
+## 🍼 小白三分钟上手（第一次接触 Agent Skill？从这里开始）
+
+**你不需要会编程。** 只需要两样东西：
+
+1. **一个支持 Agent Skills 的 AI 工具**——Claude Code、Codex、Cursor
+   等 40+ 个都行（没装过的话，装一个
+   [Claude Code](https://claude.ai/code) 即可）；
+2. **想试哪个功能，就装哪个 skill**——不用全装。
+
+**第一步：装。** 把这句话原样发给你的 AI 工具：
+
+​
+帮我安装这个 skill：[https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer](https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer)
+
+**第二步：用。** 装好后直接说人话，比如：
+
+​
+帮我把这些素材写成一篇公众号文章
+
+就完了。写作（super-writer）、去 AI 味（zh-human-writing）、排版
+（gzh-design）三个都能这样单独用，**零配置、不需要公众号**。
+
+**想要「一句话发文」完整流水线？** 那需要你有自己的微信公众号（推送
+草稿要用公众号开发者凭证，在 mp.weixin.qq.com「设置与开发 → 基本配置」
+里取），然后按 [skills/wxgzh-pipeline](./skills/wxgzh-pipeline) 的
+README 装全家桶。没有公众号也不影响——前三个 skill 照常用。
+
 ---
 
 ## 🚀 它怎么工作
@@ -28,7 +55,7 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 一句话选题 → AI HOT 素材（含超窗补料）→ 材料重型长文写作 → 去 AI 味编辑
 → 配图（抓取/视频封面/数据图表 + 版权证据）→ 主题排版 → 微信草稿箱
 
-<img src="docs/assets/cover.png" alt="gzh-forge 流水线：选题→写作→去AI味→配图→排版→草稿箱" width="100%">
+<img src="docs/assets/cover.png" alt="流水线：选题→写作→去AI味→配图→排版→草稿箱" width="100%">
 
 每一步都有 receipt 回执；任何一关证据不足，宁可停机报告也不硬闯。
 **它只进草稿箱——发布、群发、定时永远是你手动。**
@@ -44,32 +71,6 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 <td align="center"><img src="docs/assets/preview-minimax-h3.jpg" width="260"><br><sub><b>MiniMax H3</b><br>封面 + 目录 + 图注</sub></td>
 </tr>
 </table>
-
-## 📦 安装
-
-**只装一个 skill**（比如只要写作）：在 Claude Code / Codex 等支持
-Agent Skills 的工具里直接说：
-
-​
-帮我安装这个 skill：[https://github.com/Amer-CN/gzh-forge/tree/main/skills/super-writer](https://github.com/Amer-CN/gzh-forge/tree/main/skills/super-writer)
-
-把结尾的 `super-writer` 换成你要的那个即可——每个子目录都是完整独立的
-skill（SKILL.md / 脚本 / 文档 / 许可齐全）。super-writer、
-zh-human-writing、gzh-design 三个零依赖、单装即用；media-enrichment
-为流水线配套设计（吃 super-writer 的产物格式），一般不单装。
-
-**装整个流水线**（一句话发文）：
-
-​
-git clone [https://github.com/Amer-CN/gzh-forge.git](https://github.com/Amer-CN/gzh-forge.git)
-
-然后按 `skills/wxgzh-pipeline` 的 README 安装——编排器的 doctor 会用
-`skills.lock.json` 强制校验其余四个依赖 skill 必须齐、版本与哈希必须对，
-缺一个直接拒跑。
-
-**AIHOT（第三方依赖，不入仓）**：AI HOT 资讯查询 Skill 由卡兹克开发，
-用作者官网安装器安装（自带 SHA-256 校验）：
-👉 https://aihot.virxact.com/aihot-skill
 
 ## 📋 五个 Skill
 
@@ -142,10 +143,10 @@ FAIL。改写不是黑箱：每处改动进 change_report，可回放、可审�
   （alert / quote / code-compare / media-text / gallery / timeline /
   decision / faq / checklist 等）+ 主题适配器；
 - **第七套主题「锤子（smartisan）」**：完整组件库 + 文章类型配方表；
-- **确定性渲染器 `render_article.py`**：把排版从「agent 手工装配」
+- **确定性渲染器 `render\_article.py`**：把排版从「agent 手工装配」
   固化为可复现的 CLI 渲染管线；
 - **组件锚点校验体系**：锚点 JSON + 能力矩阵 + 主题身份反解校验；
-- **草稿推送 `publish_wechat_draft.py`**：含流水线凭证门（receipt
+- **草稿推送 `publish\_wechat\_draft.py`**：含流水线凭证门（receipt
   绑定 + 内容哈希 + 主题签名，缺一拒发）；
 - **生产加固**：内链 45166 修复、WebP→JPEG 转码、表格/列表渲染。
 
