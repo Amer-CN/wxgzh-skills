@@ -1,4 +1,3 @@
-
 ​
 <div align="center">
 
@@ -13,7 +12,7 @@
 </div>
 
 把「写一篇公众号文章」变成一句话的事。五个相互配合的 Skill + 一个编排器：
-AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）、锤子风格排版、
+AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）、精致排版、
 进微信草稿箱——全程留痕，永不自动发布，最后一下永远由你点。
 
 遵循 [Agent Skills](https://agentskills.io) 开放标准，Claude Code、Codex 等
@@ -22,9 +21,10 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 ---
 
 ## 🚀 它怎么工作
+
 ​
 一句话选题 → AI HOT 素材（含超窗补料）→ 材料重型长文写作 → 去 AI 味编辑
-→ 配图（抓取/视频封面/数据图表 + 版权证据）→ 锤子主题排版 → 微信草稿箱
+→ 配图（抓取/视频封面/数据图表 + 版权证据）→ 主题排版 → 微信草稿箱
 
 每一步都有 receipt 回执；任何一关证据不足，宁可停机报告也不硬闯。
 **它只进草稿箱——发布、群发、定时永远是你手动。**
@@ -33,8 +33,9 @@ AI 热点里选素材、写长文、去 AI 味、配图（带版权证据链）�
 
 **只装一个 skill**（比如只要写作）：在 Claude Code / Codex 等支持
 Agent Skills 的工具里直接说：
+
 ​
-帮我安装这个 skill：https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer
+帮我安装这个 skill：[https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer](https://github.com/Amer-CN/wxgzh-skills/tree/main/skills/super-writer)
 
 把结尾的 `super-writer` 换成你要的那个即可——每个子目录都是完整独立的
 skill（SKILL.md / 脚本 / 文档 / 许可齐全）。super-writer、
@@ -42,8 +43,9 @@ zh-human-writing、gzh-design 三个零依赖、单装即用；media-enrichment
 为流水线配套设计（吃 super-writer 的产物格式），一般不单装。
 
 **装整个流水线**（一句话发文）：
+
 ​
-git clone https://github.com/Amer-CN/wxgzh-skills.git
+git clone [https://github.com/Amer-CN/wxgzh-skills.git](https://github.com/Amer-CN/wxgzh-skills.git)
 
 然后按 `skills/wxgzh-pipeline` 的 README 安装——编排器的 doctor 会用
 `skills.lock.json` 强制校验其余四个依赖 skill 必须齐、版本与哈希必须对，
@@ -59,7 +61,7 @@ git clone https://github.com/Amer-CN/wxgzh-skills.git
 |---|---|---|---|
 | ✍️ [super-writer](./skills/super-writer) | 材料重型中文长文写作：先堆素材证据，再写文章 | ✅ 零依赖 | 0.3.8-rc1 |
 | 🧼 [zh-human-writing](./skills/zh-human-writing) | 去 AI 味编辑：词表审计 + 逐句保真门禁 | ✅ 零依赖 | 0.1.3 |
-| 🔨 [gzh-design](./skills/gzh-design) | 锤子风格排版引擎：Markdown → 公众号精致 HTML | ✅ 零依赖 | hammer.14 |
+| 🔨 [gzh-design](./skills/gzh-design) | 排版引擎：Markdown → 公众号精致 HTML（**基于 isjiamu 版增强，见来源与致谢**） | ✅ 零依赖 | hammer.14 |
 | 🖼️ [media-enrichment](./skills/media-enrichment) | 配图管线：抓取/视频封面/数据图表 + 版权证据链 | 流水线配套 | 0.1.0-dev19 |
 | 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 | 需装齐四个依赖 | dev2 |
 
@@ -111,13 +113,28 @@ FAIL。改写不是黑箱：每处改动进 change_report，可回放、可审�
 
 <table><tr><td>
 
-### 🔨 gzh-design（锤子排版引擎）
+### 🔨 gzh-design（排版引擎，基于 isjiamu 版增强）
 
 > *"Markdown 进去，能直接粘进公众号编辑器的精致 HTML 出来。"*
 
-锤子主题组件库（封面/目录/章节卡/引用/表格/图注/署名）+ 组件级锚点
-校验：渲染产物必须带主题签名，样式漂移当场报警。推送草稿要出示流水线
-凭证（receipt 绑定 + 内容哈希 + 主题签名），缺一拒发。
+**来源**：本 skill 基于
+[isjiamu/gzh-design-skill](https://github.com/isjiamu/gzh-design-skill)
+（作者：**甲木 × 摸鱼小李**，AGPL-3.0）增强而来——原版提供 6 套精选
+主题、主题生成器与双关卡校验的优秀地基，本仓在此基础上做了生产级增强：
+
+- **高级视觉组件体系**：`:::` 围栏语法 + 脚注 + 17 类高级组件
+  （alert / quote / code-compare / media-text / gallery / timeline /
+  decision / faq / checklist 等）+ 主题适配器；
+- **第七套主题「锤子（smartisan）」**：完整组件库 + 文章类型配方表；
+- **确定性渲染器 `render_article.py`**：把排版从「agent 手工装配」
+  固化为可复现的 CLI 渲染管线；
+- **组件锚点校验体系**：锚点 JSON + 能力矩阵 + 主题身份反解校验；
+- **草稿推送 `publish_wechat_draft.py`**：含流水线凭证门（receipt
+  绑定 + 内容哈希 + 主题签名，缺一拒发）；
+- **生产加固**：内链 45166 修复、WebP→JPEG 转码、表格/列表渲染。
+
+原版权与许可声明完整保留在 `skills/gzh-design/LICENSE`（AGPL-3.0 ©
+2026 甲木 × 摸鱼小李）；按 AGPL-3.0 要求，本修改为开源并保留署名。
 
 → [SKILL.md](./skills/gzh-design/SKILL.md)
 
@@ -148,12 +165,20 @@ receipt 双时制入账（校验秒数 + 真实墙钟分开记）、锁链治理
   验证证据全公开在 `skills/wxgzh-pipeline/audit/`；
 - **安全边界**：只进草稿箱，永不自动发布/群发/定时/删除。
 
+## 🙏 来源与致谢
+
+- **gzh-design** 基于
+  [isjiamu/gzh-design-skill](https://github.com/isjiamu/gzh-design-skill)
+  增强（AGPL-3.0）——感谢 **甲木 × 摸鱼小李** 开源的排版组件库与
+  主题设计标准，没有这个地基就没有这个流水线；
+- **AIHOT** 资讯查询 Skill 由 **卡兹克** 开发并开源，感谢；
+- 各子 skill 的 LICENSE 保留在各自子目录内，引用/分发请遵守对应
+  许可条款。
+
 ## 🌟 关于
 
 这套合集从真实日更公众号的生产需求里长出来，每个 skill 都在生产环境里
 跑过多轮才定型。如果觉得有用，给个 ⭐；问题建议在 Issues 里说。
-
-AIHOT 资讯查询 Skill 版权归原作者所有，感谢卡兹克开源。
 
 <div align="center">
 
