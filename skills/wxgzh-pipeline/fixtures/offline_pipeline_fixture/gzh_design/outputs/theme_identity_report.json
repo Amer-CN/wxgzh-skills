@@ -1,0 +1,20 @@
+{
+  "chapters": 6,
+  "component_source": "scripts/generate_hammer_upgrade_samples.py",
+  "fingerprints": {
+    "chapter_title": 6,
+    "cover_breaking": 1,
+    "fixed_signature": 1,
+    "footer_cta": 1,
+    "image_2a_standard": 6,
+    "image_media_text_card": 1,
+    "toc_scroll": 1
+  },
+  "hammer_primary": "#B3593B",
+  "hammer_primary_present": true,
+  "moyu_green_absent": true,
+  "render_entry": "scripts/render_article.py",
+  "theme": "hammer",
+  "theme_alias": "smartisan",
+  "theme_fallback_used": false
+}

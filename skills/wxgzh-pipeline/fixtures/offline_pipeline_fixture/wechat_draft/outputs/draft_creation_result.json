@@ -3,5 +3,6 @@
   "thumb_media_id_redacted": "DDDDDDDD[REDACTED]",
   "offline_mock": true,
   "formally_published": false,
-  "action": "offline fixture — no real WeChat API call"
+  "action": "offline fixture — no real WeChat API call",
+  "draft_only": true
 }
