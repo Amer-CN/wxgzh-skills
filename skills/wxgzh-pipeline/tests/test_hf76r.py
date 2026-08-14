@@ -79,7 +79,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         for r in old_rules:
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
-        assert extra <= {"76R/OBS-290", "76T/OBS-293"}, f"{k}: 意外新增规则 {extra}"
+        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -98,6 +98,36 @@ def test_obs293_strike_assumption_instruction():
     assert "不再用 hook_line 填充划线位" in instr
 
 
+def test_obs294_parallel_fetch_instruction():
+    """76U/OBS-294:aihot 指令含窗口内并行取料要求,超窗五步保持串行。"""
+    instr = PR.AGENT_INSTRUCTIONS["aihot"]
+    assert "76U/OBS-294" in instr and "取料并行化" in instr
+    assert "并行发出" in instr and "禁止无依赖查询串行排队" in instr
+    assert "每路查询增记耗时" in instr
+    assert "保持串行不动" in instr
+
+
+def test_obs294_superwindow_sequence_untouched():
+    """76U/OBS-294:超窗五步递进顺序条文逐字未动(日报→快照→回溯→直采→注入)。"""
+    instr = PR.AGENT_INSTRUCTIONS["aihot"]
+    assert "①已知关键日期" in instr and "/api/v1/dailies/{date}" in instr
+    assert "②精选池快照检索" in instr and "selected/snapshot" in instr
+    assert "③热点事件回溯" in instr and "/api/v1/stories/{publicId}" in instr
+    assert "④官方源直采" in instr and "provenance=supplemental" in instr
+    assert "⑤仍缺 → 明示用户手动注入" in instr and "items_file_injection" in instr
+    # 顺序断言:五步按序出现
+    i1 = instr.find("①已知关键日期"); i2 = instr.find("②精选池快照")
+    i3 = instr.find("③热点事件回溯"); i4 = instr.find("④官方源直采")
+    i5 = instr.find("⑤仍缺")
+    assert i1 < i2 < i3 < i4 < i5, "超窗五步顺序被破坏"
+
+
+def test_obs294_fetch_log_contract():
+    """76U/OBS-294:contracts/01_aihot.yaml 无 fetch_log 耗时字段,由指令语义覆盖。"""
+    text = (SKILL_ROOT / "contracts" / "01_aihot.yaml").read_text(encoding="utf-8")
+    assert "fetch_log.json" in text
+
+
 def test_obs293_contract_declares_strike_assumption():
     """76T/OBS-293:02_super_writer.yaml 契约声明 strike_assumption 字段。"""
     text = (SKILL_ROOT / "contracts" / "02_super_writer.yaml").read_text(
@@ -110,8 +140,19 @@ def test_obs293_contract_declares_strike_assumption():
 def test_obs288_instruction_text_unchanged_except_278():
     """产物指令逐字一致(唯一差异=278→288 硬步骤升级 + 290 明规新增,其余零改动)。"""
     old_instr = _extract_old_instructions()
-    for k in ("aihot", "zh_human_writing"):
-        assert old_instr[k] == PR.AGENT_INSTRUCTIONS[k], f"{k} 指令发生非预期变化"
+    # aihot:76U/OBS-294 并行化条文新增(仅此段),其余逐字一致
+    old_a = old_instr["aihot"]
+    new_a = PR.AGENT_INSTRUCTIONS["aihot"]
+    assert "76U/OBS-294" in new_a and "76U/OBS-294" not in old_a
+    a_head = old_a[:old_a.find("AIHOT 授权边界不变")]
+    assert new_a.startswith(a_head), "aihot 指令 294 段之前发生非预期变化"
+    # 294 段插在授权边界句后:授权边界句保留,且授权边界句之后的旧内容(76J/76F/76L 段)
+    # 在 new_a 中完整保留(294 插入不删任何旧条文)
+    assert "AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。" in new_a
+    for keep in ("76J/OBS-273", "76F/OBS-276", "76F/OBS-279", "76L/OBS-283"):
+        assert keep in new_a, f"aihot 旧条文丢失 {keep}"
+    # zh 逐字一致(未变)
+    assert old_instr["zh_human_writing"] == PR.AGENT_INSTRUCTIONS["zh_human_writing"], "zh 指令发生非预期变化"
     old_sw = old_instr["super_writer"]
     new_sw = PR.AGENT_INSTRUCTIONS["super_writer"]
     # 变更点:278→288(硬步骤)+ 290 新增(明规);其余内容逐字保留

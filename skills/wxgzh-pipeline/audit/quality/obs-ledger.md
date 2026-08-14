@@ -213,6 +213,7 @@
 | 291 | pool-fetch 裸 iid 登记致审批断链:池抓资产登记为原始 iid(如 cmssmdkwd09c2roffx7lgv8ht)而非规范 M-XX,material 级审批覆盖不到、readiness「页面位置未知」不可 single_asset 批准→无批准依据候选→FAIL_CLOSED | 已修(76R:pool-fetch ID 规范化——iid↔canonical material_id 映射表(materials[].dedup_id ↔ pool_items[].id),凡归属已选素材的池内图(含池内重复图)一律映射回 M-XX 登记,禁止裸 iid;映射不到才独立登记并如实标注来源;continue 阶段不重抓 pool(只消费冻结清单);测试 +4) | media-enrichment scripts/run_media_enrichment.py+tests/test_hf76r_pool_id.py | 76R |
 | 292 | upgrade-chain 查找被早期残缺 relock 记录短路误报 TAMPERED:skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,_find_upgrade_chain 遍历到即整体短路 return None,此后任何合法升级链都找不到 | 已修(76S:receipts.py _find_upgrade_chain 先按 skill 过滤、残缺非目标记录跳过不再短路(只对目标 skill 严格要求 old/new/entry_id);现场抢修于装机树,本档补正式落账归仓并同步装机树;测试 +4(残缺非目标跳过/非目标不干扰/目标残缺仍 FAIL/正常链回归);纪律注记:现场抢修须在 24h 内补档落账) | wxgzh-pipeline wxgzh_pipeline/receipts.py+tests/test_hf76s_receipts_chain.py | 76S |
 | 293 | 划线句语义与删除线样式冲突:锤子封面删除线本意=划掉旧认知,现行 strike=hook_line 把文章核心论点(最反直觉点)划掉,内容与样式打架(GLM 稿实证) | 已修(76T:handoff 契约新增 formatter.cover.strike_assumption(可选,≤40 字)=被本文证据否定的旧认知/流行看法,须素材可支撑禁稻草人;渲染端 render_article --strike-assumption 驱动划线句槽,缺失整行不渲染(不再用 hook_line/默认文案填充,消灭语义冲突);旧 strike 保留读取兼容但不驱动划线槽;hook_line 仅导读段副标题兜底;sw 契约/指令/校验(advisory)同步;锚 JSON 随 render_entry 重生成(HF-6R,45 行零差异);测试 +6(gzh 3+sw 3)+pipeline 指令/契约断言 2) | gzh-design scripts/render_article.py+generate_hammer_upgrade_samples.py+tests/test_hf76t_strike_assumption.py;super-writer references/handoff.md+validate_single_product.py+tests/test_hf76t_strike_assumption.py;wxgzh-pipeline producers.py+contracts/02_super_writer.yaml | 76T |
+| 294 | aihot 窗口内独立查询串行排队:hot-topics / selected / all×N 等多路互不依赖查询串行发出,冷启动实测 aihot 阶段 293s 大头在串行等待 | 已修(76U:01_aihot 指令取料段改并行化——窗口内常规取料的独立查询必须同一轮并行发出,禁止无依赖查询串行排队;fetch_log 每路查询增记耗时或并行批次标记;超窗取料五步递进顺序(日报→快照→回溯→直采→注入)条件递进设计保持串行不动,条文逐字未动;测试 +3(并行要求在场/超窗五步顺序未动/契约 fetch_log)) | wxgzh-pipeline wxgzh_pipeline/producers.py+tests/test_hf76r.py | 76U |
 
 ## 本台账口径
 
@@ -306,6 +307,9 @@
 
 　　【76T-F 补记】档 76T 验收 PASS——76T-R 复核确认锁产物在册(中间 commit a036dfb:锁 22 改 + history +42 + backups ×2 + 锚 4 + observability 同步);doctor / OBS_69 / OBS_68 双侧 MATCH、relock dry-run ×4 全「无变化」。
 　　【审核方缺陷 #100】76T 初验仅点验首尾两颗 commit(feat 23b6a74 + docs eac2b77)、漏查中间 commit a036dfb,误报「锁产物未归仓」——审核方缺陷(验收方法论)。修正规则两条:①审核侧:批次末端点验必须枚举上一 tip 至新 tip 的完整 commit 区间、逐颗核 stat,不得只验首尾;②执行侧:回报的 commit 链列表必须列全区间内所有 commit(76T 原报告把 a036dfb 内容归到 docs commit 名下,为本次误报诱因,一并记入)。
+
+59. 76U(aihot 取料并行化,用户批准 2026-08-14,本档无授权变更——指令文本非锁钉字段,RELOCK/GZH 键维持 0):OBS-294——8-14 冷启动实测 aihot 阶段 293s,大头是 hot-topics+selected+all×N 多路独立查询串行发出;修复=01_aihot 指令取料段改并行化(窗口内常规取料独立查询同一轮并行发出,禁止无依赖串行排队;fetch_log 每路查询增记耗时或并行批次标记);超窗五步递进顺序条文一字未动(条件递进设计保持串行)。升版:pipeline 0.1.0-dev2-hotfix9R4;测试 +3;pipeline pytest 498 passed/22 skipped/7 failed(与 76N 基线一致的环境红态)。程序校验:唯一编号 176(119–294 连续)、R59 22=22 差集空。
+
 
 
 
