@@ -114,9 +114,15 @@ def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
                                    ("maximum_chars", ns["new_max"])):
                 if new_val is None:
                     continue
-                m = re.match(rf"^(\s*-\s*{field}[\uff1a:])\s*\d+(\s*)$", line)
+                m = re.match(rf"^(\s*-\s*{field}[\uff1a:]\s*)\d+(\s*)$", line)
                 if m:
                     lines[idx] = f"{m.group(1)}{new_val}{m.group(2)}"
+            # 76W/OBS-300:weight_percent 与 planned_chars 原子一致——同一分配结果
+            # 同步写回(round 到 1 位小数,各节合计≈100%)。
+            mw = re.match(r"^(\s*-\s*weight_percent[\uff1a:]\s*)[\d.]+(\s*)$", line)
+            if mw and target:
+                wv = round(ns["new"] / target * 100, 1)
+                lines[idx] = f"{mw.group(1)}{wv}{mw.group(2)}"
     total_new = sum(ns["new"] for ns in new_sections)
     deviation = abs(total_new - target) / target if target else 0.0
     return "\n".join(lines), {

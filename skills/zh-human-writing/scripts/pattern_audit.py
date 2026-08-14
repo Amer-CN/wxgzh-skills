@@ -444,6 +444,12 @@ def detect_strong_contextual(masked, original, profile, protected):
                         first_span = (pstart + sstart, pstart + send)
                         first_si = sent_idx
                         break
+                # 76W/OBS-298:跨句正则(如「不在于…而在于」跨句)命中计数但单句搜不到
+                # span → first_span 为 None 曾致 _finding 解包崩溃;现用段落 span 兜底,
+                # 跨句匹配失败=正常命中(span 指向段首),永不许异常崩溃。
+                if first_span is None:
+                    first_span = (pstart, pend)
+                    first_si = 0
                 confidence = 'medium' if pattern_def['id'] == 'SC-007a' else 'high'
                 reason = f"{pattern_def['name']}:同段聚集{count}次,达到阈值{threshold}"
                 findings.append(_finding(
@@ -532,6 +538,9 @@ def detect_strong_contextual(masked, original, profile, protected):
                         first_span = (pstart + sstart, pstart + send)
                         first_si = sent_idx
                         break
+                if first_span is None:
+                    first_span = (pstart, pend)
+                    first_si = 0
                 sc007b_def = {'id': 'SC-007b',
                               'name': '不是…而是…(低置信升级)',
                               'language_origin': 'language_general'}
@@ -561,6 +570,9 @@ def detect_strong_contextual(masked, original, profile, protected):
                         first_span = (pstart + sstart, pstart + send)
                         first_si = sent_idx
                         break
+                if first_span is None:
+                    first_span = (pstart, pend)
+                    first_si = 0
                 findings.append(_finding(
                     'strong_contextual', profile, sc011_def,
                     f'第{para_idx+1}段第{first_si+1}句', first_span,

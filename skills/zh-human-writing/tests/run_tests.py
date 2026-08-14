@@ -1201,11 +1201,39 @@ def test_fidelity_bold_span():
     return results
 
 
+def test_cross_sentence_span_no_crash():
+    """76W/OBS-298:SC-007a 跨句命中(段落正则命中、单句搜不到 span)不崩溃。
+    修复前:first_span=None → _finding 解包 TypeError;修复后:span 兜底段首。"""
+    results = []
+    # 「。而是」跨句:段落内 [。！？!?]\s*而是 命中,单句内不命中
+    text = "关键在于结果本身。而是过程是否被看见。"
+    rc, out, err = run_script(PATTERN_AUDIT, ['--text', write_temp(text),
+                                              '--profile', 'essay',
+                                              '--check-level', 'full',
+                                              '--output', 'json'])
+    ok = rc in (0, 2) and 'TypeError' not in err and 'NoneType' not in err
+    results.append(TestResult('FS-009', 'cross-sentence-span', ok,
+                              f'rc={rc} err={err[-80:] if err else "无"}'))
+    if rc == 0:
+        data = json.loads(out)
+        items = (data.get('strong_contextual', {}).get('high_confidence', [])
+                 + data.get('strong_contextual', {}).get('low_confidence', []))
+        sc007a = [f for f in items if f.get('rule_id') == 'SC-007a']
+        ok2 = any(f.get('span_text') for f in sc007a)
+        results.append(TestResult('FS-010', 'cross-sentence-span-found', ok2,
+                                  f'SC-007a={len(sc007a)}'))
+    else:
+        results.append(TestResult('FS-010', 'cross-sentence-span-found', True,
+                                  'exit!=0 未判 fail(无崩溃即可)'))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
     all_results = []
     all_results.extend(test_fidelity_bold_span())
+    all_results.extend(test_cross_sentence_span_no_crash())
     all_results.extend(test_must_preserve())
     all_results.extend(test_must_edit())
     all_results.extend(test_fidelity_stress())

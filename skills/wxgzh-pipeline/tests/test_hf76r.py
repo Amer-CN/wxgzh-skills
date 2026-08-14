@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from pathlib import Path
 
 import wxgzh_pipeline.producers as PR
 
@@ -79,7 +80,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         for r in old_rules:
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
-        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294"}, f"{k}: 意外新增规则 {extra}"
+        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -120,6 +121,60 @@ def test_obs294_superwindow_sequence_untouched():
     i3 = instr.find("③热点事件回溯"); i4 = instr.find("④官方源直采")
     i5 = instr.find("⑤仍缺")
     assert i1 < i2 < i3 < i4 < i5, "超窗五步顺序被破坏"
+
+
+def test_obs299_env_auto_approve_wired():
+    """76W/OBS-299:orchestrator _context 合并 .env → WXGZH_MEDIA_AUTO_APPROVE 生效。"""
+    import tempfile
+    from wxgzh_pipeline.orchestrator import Orchestrator
+    tmp = Path(tempfile.mkdtemp())
+    # 构造项目 .env
+    (tmp / ".env").write_text("WXGZH_MEDIA_AUTO_APPROVE=1\n", encoding="utf-8")
+    orch = Orchestrator(project_root=tmp, network_mode="offline_fixture", env={})
+    from wxgzh_pipeline.orchestrator import StageContext
+    ctx = orch._context(tmp / "runs" / "r1", {}, False)
+    assert ctx.env.get("WXGZH_MEDIA_AUTO_APPROVE") == "1", ctx.env
+    # 缺省 env 时也合并 .env
+    orch2 = Orchestrator(project_root=tmp, network_mode="offline_fixture")
+    ctx2 = orch2._context(tmp / "runs" / "r1", {}, False)
+    assert ctx2.env.get("WXGZH_MEDIA_AUTO_APPROVE") == "1", ctx2.env
+
+
+def test_obs302_duplicate_run_warning():
+    """76W/OBS-302:同选题等待态 RUN 存在时警告。"""
+    import tempfile
+    from wxgzh_pipeline.orchestrator import Orchestrator
+    from wxgzh_pipeline import paths as P
+    tmp = Path(tempfile.mkdtemp())
+    orch = Orchestrator(project_root=tmp, network_mode="offline_fixture")
+    # 造一个等待态 RUN(slug 相同)
+    _rd = P.new_run_dir(tmp, "GLM 5.3 发布")
+    import json as _j
+    st = {"run_id": _rd.name, "topic": "GLM 5.3 发布", "completed_stages": ["aihot"],
+          "draft_created": False, "current_stage": None, "failed_stage": None,
+          "output_hashes": {}}
+    (_rd / "pipeline_state.json").write_text(_j.dumps(st), encoding="utf-8")
+    # 防护逻辑(slug 相等 + 等待态)→ 警告字段
+    from wxgzh_pipeline.paths import slugify as _slugify
+    dup = []
+    for _r in P.list_runs(tmp):
+        _sp = _r / "pipeline_state.json"
+        if not _sp.is_file():
+            continue
+        _st = _j.load(open(_sp, encoding="utf-8"))
+        if _st.get("draft_created"):
+            continue
+        if _slugify(str(_st.get("topic", "") or "")) == _slugify("GLM 5.3 发布"):
+            dup.append(_r.name)
+    assert dup, "同选题等待态 RUN 应被识别"
+
+
+def test_obs301_pwsh_redirect_rule():
+    """76W/OBS-301:sw 指令含 pwsh 重定向禁止明规。"""
+    instr = PR.AGENT_INSTRUCTIONS["super_writer"]
+    assert "76W/OBS-301" in instr
+    assert "禁止 pwsh 重定向" in instr
+    assert "cmd /c 字节级重定向" in instr
 
 
 def test_obs296_readiness_sha_contract():

@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## v0.4.2-rc1 (2026-08-15) — 档76V：预算分节加权
+## v0.4.3-rc1 (2026-08-15) — 档76W：权重原子同步 + 报告落盘明规
+
+### 76W(档76W)
+
+- **OBS-300 权重原子同步**:align_outline_budget 写回时 planned_chars 与
+  weight_percent 同一分配结果同步写(round 1 位小数,合计≈100%);修复 76V
+  只改 planned 不同步 weight 的缝;写回保留冒号后空格(格式缝顺带修)。
+- **OBS-301 报告落盘明规**:校验报告/JSON 落盘禁止 pwsh 重定向(> / >>,
+  PowerShell UTF-16 写导致中文乱码、哈希比对抬升 exit=3);一律 cmd /c
+  字节级重定向或 python 写文件(encoding=utf-8)。
 
 ### 76V(档76V)
 

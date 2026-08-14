@@ -171,9 +171,17 @@ class Orchestrator:
         return ok, report
 
     def _context(self, run_dir: Path, disc: dict, create_draft: bool) -> StageContext:
+        # 76W/OBS-299:.env 开关对消费点生效——ctx.env = 传入 env + 项目 .env 合并
+        # (与 doctor() 同链路;使 WXGZH_MEDIA_AUTO_APPROVE 等 .env 内键对
+        # _build_media_request 等消费点可见)。
+        env = dict(self.env) if self.env is not None else dict(_os_environ())
+        dotenv = self.project_root / ".env"
+        if dotenv.is_file():
+            for k, v in SEC.parse_env_file(dotenv).items():
+                env.setdefault(k, v)
         return StageContext(run_dir=run_dir, skills_home=self.skills_home, discovery=disc,
                             network_mode=self.network_mode, fixture_dir=self.fixture_dir,
-                            env=self.env or {}, create_wechat_draft=create_draft)
+                            env=env, create_wechat_draft=create_draft)
 
     # ---------- run ----------
     def run(self, topic: str, profile: str = "fast_publish",
@@ -184,13 +192,36 @@ class Orchestrator:
             return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport,
                         "run_wall_seconds": self._wall_seconds(st)}
         disc = dreport["skills"]
+        # 76W/OBS-302:RUN 创建防护——已存在同选题(slug 规范化标题相同)等待态 RUN
+        # (未完成且未出草稿)时警告并要求显式确认(不硬拦,用户可有意复跑)。
+        from wxgzh_pipeline.paths import slugify as _slugify
+        dup = []
+        for _r in P.list_runs(self.project_root):
+            _sp = _r / "pipeline_state.json"
+            if not _sp.is_file():
+                continue
+            _st = load_state(_r)
+            if _st.is_complete() or _st.draft_created:
+                continue
+            if _slugify(str(getattr(_st, "topic", "") or "")) == _slugify(topic):
+                dup.append(_r.name)
+        dup_warning = None
+        if dup:
+            dup_warning = {
+                "duplicate_topic_warning": True,
+                "existing_waiting_runs": sorted(dup),
+                "note": "已存在同选题等待态 RUN——若是有意复跑请忽略;误触发请改用该 RUN_ID 续发",
+            }
         run_dir = P.new_run_dir(self.project_root, topic)
         st = PipelineState(run_id=run_dir.name, topic=topic, profile=profile)
         if items_file:
             # OBS-64:自有素材注入入口(正式通道);None = 正常 aihot 检索
             st.items_file = str(Path(items_file).resolve())
         save_state(run_dir, st)
-        return self._drive(run_dir, st, disc, create_wechat_draft, stop_after=stop_after)
+        out = self._drive(run_dir, st, disc, create_wechat_draft, stop_after=stop_after)
+        if dup_warning:
+            out["duplicate_topic_warning"] = dup_warning
+        return out
 
     def resume(self, run_id: str | None = None,
                stop_after: str | None = None) -> dict:

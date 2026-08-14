@@ -85,12 +85,37 @@ def test_no_evidence_falls_back_original_proportional():
     assert by_title["第二节(轻)"]["planned"] == 2400
 
 
+def test_weight_percent_synced_with_planned():
+    """76W/OBS-300:写回时 planned_chars 与 weight_percent 原子一致。"""
+    new_text, info, errors = align_outline(OUTLINE_WEIGHTED, 6000)
+    assert not errors
+    # 4800/6000=80.0, 1200/6000=20.0
+    assert "- weight_percent: 80.0" in new_text
+    assert "- weight_percent: 20.0" in new_text
+    assert "- planned_chars: 4800" in new_text
+    assert "- planned_chars: 1200" in new_text
+
+
+def test_weight_percent_sync_fallback_path():
+    """76W/OBS-300:无 evidence 回退路径两字段仍一致。"""
+    outline = OUTLINE_WEIGHTED.replace("- evidence_ids: [e-1, e-2, e-3, e-4, e-5, e-6, e-7, e-8]", "- evidence_ids: []")
+    outline = outline.replace("- evidence_ids: [e-9, e-10]", "- evidence_ids: []")
+    new_text, info, errors = align_outline(outline, 6000)
+    assert not errors
+    # 原比例 60:40 → 3600/2400 → 权重 60.0/40.0
+    assert "- weight_percent: 60.0" in new_text
+    assert "- weight_percent: 40.0" in new_text
+    assert "- planned_chars: 3600" in new_text
+    assert "- planned_chars: 2400" in new_text
+
+
 def test_material_exhausted_semantics_preserved():
     """76R 语义回归:align 不触碰保护域(weight/evidence_ids/event_ids/目标),素材耗尽语义不变。"""
     new_text, info, errors = align_outline(OUTLINE_WEIGHTED, 3000)
     assert not errors
-    assert "- weight_percent: 60" in new_text
-    assert "- weight_percent: 40" in new_text
+    # 76W/OBS-300:weight_percent 与 planned_chars 原子同步(80.0/20.0,3000 目标)
+    assert "- weight_percent: 80.0" in new_text
+    assert "- weight_percent: 20.0" in new_text
     assert "- evidence_ids: [e-1, e-2, e-3, e-4, e-5, e-6, e-7, e-8]" in new_text
     assert "- event_ids: [ev-1]" in new_text
     assert "- unique_information_goal: 目标甲" in new_text

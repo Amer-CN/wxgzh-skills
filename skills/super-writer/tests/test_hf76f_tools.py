@@ -47,8 +47,9 @@ def test_align_outline_scales_to_target_and_preserves_protected():
     assert not errors
     assert info["total_new"] == 6000
     assert info["deviation"] == 0.0
-    # 保护域不动:weight / evidence_ids / event_ids / unique_information_goal
-    assert "- weight_percent: 60" in new_text
+    # 保护域:evidence_ids / event_ids / unique_information_goal 不动;
+    # 76W/OBS-300:weight_percent 与 planned_chars 原子同步(两节各 1 evidence → 50.0/50.0)
+    assert "- weight_percent: 50.0" in new_text
     assert "- evidence_ids: [e-1]" in new_text
     assert "- event_ids: [ev-1]" in new_text
     assert "- unique_information_goal: 目标甲" in new_text

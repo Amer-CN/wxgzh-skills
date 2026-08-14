@@ -1,6 +1,12 @@
 # Release notes
 
-## v0.1.4
+## v0.1.5
+
+76W(档76W):
+
+- OBS-298 修复:pattern_audit SC-007a/SC-007b/SC-011 三处 first_span=None 解包崩溃
+  (跨句正则段落命中、单句搜不到 span 时曾 TypeError);段落 span 兜底,永不许崩溃。
+- run_tests.py:新增 FS-009(跨句零崩溃)/FS-010(SC-007a span 在册)。测试基数 85 → 87。
 
 76Q(档76Q):
 
