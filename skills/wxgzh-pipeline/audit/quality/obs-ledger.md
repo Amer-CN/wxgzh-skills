@@ -207,6 +207,10 @@
 | 285 | 76F 自造缝:validate_single_product.py 查 handoff 顶层平铺字段,full-mode 校验器查 {handoff:{...}} 嵌套——契约冲突,agent 被迫手工嵌套 | 已修(76Q:check_handoff 与 full-mode 同构(顶层必须 {handoff:{...}} 双层,单层直接拒并报错指引);check_registry 改判生产真实形状 dict{claims,materials}(数组拒),新增 materials 必填(dedup_id/source_url)+claim.material_id 存在性+claim/material source_url 逐字一致(含锚点)机械校验;测试 +2(同一嵌套 handoff 两工具同判+registry dict 三规则)) | super-writer scripts/validate_single_product.py;tests/test_hf76f_tools.py+test_hf76q_docs.py | 76Q |
 | 286 | fidelity_guard 把含 ** 的正文贪婪误判为行内代码(ADM 轮「语法门拒加粗」与 Harness 轮「去粗体根治」共同根因;实测根因=渲染器不支持 ** 加粗,语法门 probe 如实报 unsupported 非误判) | 已修(76Q:fidelity_guard extract_bold_spans 显式粗体豁免——**text** 不进入行内代码比较(防御性),extract_inline_code 契约文档化(仅反引号);语法门零改动;pipeline sw 指令补「禁止 ** 加粗」明规;测试 +3(FS-006 含加粗零 fail/FS-007 真行内代码仍 fail/FS-008 粗体内行内代码仍 fail)) | zh-human-writing scripts/fidelity_guard.py+tests/run_tests.py;wxgzh-pipeline producers.py+validators/validate_syntax_gate.py(不动) | 76Q |
 | 287 | 文档税三连:registry 结构(数组 vs dict)、dedup-id 与 material_id 映射、claim/material source_url 逐字一致——三轮生产各踩一次返工 | 已修(76Q:material-ingestion.md 三节落档(registry dict 形状+示例/映射规则/逐字一致含锚点)+contracts/02_super_writer.yaml 契约注释+sw 指令引用;validate_single_product registry 机械层强制;测试 +4(文档断言×4)) | super-writer references/material-ingestion.md;wxgzh-pipeline contracts/02_super_writer.yaml+producers.py | 76Q |
+| 288 | 预检未强制+指令膨胀:super-writer 阶段 validate_single_product/align_outline_budget 为叙述式「建议」,agent 可跳过;76A~76Q 补丁式增补致编排器与阶段指令臃肿 | 已修(76R:sw 指令改硬步骤——ACK 前必须完成两步且全绿(align_outline_budget + validate_single_product 逐字命令行),否则禁止写 ACK;指令瘦身——76F/276、76F/279、76L/283 三条通用规则抽单一真源常量,三阶段共用,源码去重,产物指令拼接后与改写前逐字一致(语义零丢失硬门:规则清单一一对应,测试 test_hf76r 固化);测试 +5) | wxgzh-pipeline wxgzh_pipeline/producers.py+tests/test_hf76r.py | 76R |
+| 289 | 媒体审批无自动放行可选模式:单图证据链齐全也需人工批准,批量场景效率低 | 已修(76R:WXGZH_MEDIA_AUTO_APPROVE=1(默认关)开启且单图证据链齐全(observable_content 可读+page_position 已知+sha256+感知去重通过+非黑名单域名)即自动批准并完整入账(approved_by=auto_approve+auto_approved 标记入 manifest);任一要素缺失或命中红旗(restricted/no-repost、黑名单、证据断链)仍硬停;开关经 config 传入 media,pipeline 读 env 接线;测试 +3) | media-enrichment scripts/run_media_enrichment.py+src/manifest_builder.py;wxgzh-pipeline producers.py | 76R |
+| 290 | 长度门与素材量脱钩逼扩写:full-mode 字数下限硬 FAIL,素材耗尽仍被要求扩写 | 已修(76R:validate_article_length 新增 material_exhausted——注册 claim 全覆盖(claim_coverage==1.0)+材料门通过(allowed_output=full)时长度下限降 advisory(不足留痕 length_status=below_min_material_exhausted,不报错逼扩写);outline planned_total_chars/planned_chars 偏差同步降级;素材充分但文章单薄仍 FAIL(质量下限不退让);sw 指令明规「素材写干即停;禁止注水凑字数」;测试 +3) | super-writer scripts/validate_article_length.py+tests/test_hf76r_material_length.py | 76R |
+| 291 | pool-fetch 裸 iid 登记致审批断链:池抓资产登记为原始 iid(如 cmssmdkwd09c2roffx7lgv8ht)而非规范 M-XX,material 级审批覆盖不到、readiness「页面位置未知」不可 single_asset 批准→无批准依据候选→FAIL_CLOSED | 已修(76R:pool-fetch ID 规范化——iid↔canonical material_id 映射表(materials[].dedup_id ↔ pool_items[].id),凡归属已选素材的池内图(含池内重复图)一律映射回 M-XX 登记,禁止裸 iid;映射不到才独立登记并如实标注来源;continue 阶段不重抓 pool(只消费冻结清单);测试 +4) | media-enrichment scripts/run_media_enrichment.py+tests/test_hf76r_pool_id.py | 76R |
 
 ## 本台账口径
 
@@ -290,6 +294,9 @@
 
 　　【76Q-F 补记】档 76Q 验收 PASS(审核方 2026-08-14 远端点验双 commit 逐字一致:feat d2dfc9b(修理包 22 文件)+ docs 7c9ce5f(台账+relock #53/#54 备份+R93);relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH;pipeline 483+7 环境红态与 76N 基线逐项一致)。
 
+56. 76R(提速批+pool-fetch ID 缺陷修复,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;gzh 不动):①OBS-291 pool-fetch ID 规范化(media,置顶修)——iid↔M-XX 映射(iid→dedup_id→material_id),池内图归 M-XX 登记禁裸 iid,映射不到独立登记,continue 不重抓 pool;②OBS-288 预检强制化+指令瘦身(pipeline+sw)——sw 指令改硬步骤(ACK 前必须 align+validate 全绿),通用规则抽单一真源常量(276/279/283 三阶段共用,语义零丢失);③OBS-289 媒体审批自动放行(media+pipeline)——WXGZH_MEDIA_AUTO_APPROVE=1 且证据链齐全自动批(approved_by=auto_approve+auto_approved),红旗仍停,默认关;④OBS-290 素材定长度(sw)——material_exhausted(claim 全覆盖+材料门过)长度下限降 advisory,禁止逼扩写,outline 预算同步降级。升版:sw 0.4.0-rc1 / media 0.1.0-dev20 / pipeline 0.1.0-dev2-hotfix9R1;relock #55(sw,validator 变=validate_article_length 改)/#56(media,entrypoint 变=run_media_enrichment 改);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 489 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态);sw 254 passed/2 skipped/1 failed(dist 基线环境项);media 338 passed/7 skipped;zh 85/85。程序校验:唯一编号 173(119–291 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
+
+
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
 >
@@ -327,6 +334,7 @@
 > **归位(档76P-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 
 > **归位(档76Q-F,审核方 2026-08-14 验收通过):\RELOCK_ALLOWED\ 由 1 改回 0**。
 
