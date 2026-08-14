@@ -2,7 +2,13 @@
 
 ## 0.1.0-dev10 (2026-08-09)
 
-## 0.1.0-dev19 (2026-08-13)
+## 0.1.0-dev20 (2026-08-14) — 76R
+
+- **OBS-291 pool-fetch ID 规范化**:池内资产登记映射回 canonical material_id(M-XX),
+  禁止裸 iid 入库;映射不到才独立登记;continue 阶段不重抓 pool(只消费冻结清单)。
+- **OBS-289 媒体审批自动放行**:config.auto_approve(默认关)开启且单图证据链齐全
+  (可读描述+位置已知+sha256+去重通过+非黑名单)自动批准入账(approved_by=auto_approve
+  + auto_approved 标记);缺证据/黑名单/restricted 仍硬停。
 
 - OBS-275(76F):discover 快失败 + 有界并行——页面抓取 ThreadPoolExecutor(worker=4)
   并行、资产构建串行(asset_id 顺序稳定);x.com/twitter.com 原文页短超时(5s)

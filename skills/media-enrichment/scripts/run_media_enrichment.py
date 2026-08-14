@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from urllib.parse import urlsplit
 from pathlib import Path
 
@@ -319,10 +320,36 @@ def main():
                     if rec.asset_origin != "generated"
                     and rec.decision in ("review_required", "eligible")
                 }
+                # 76R/OBS-289:自动放行——auto_approve 开启且单图证据链齐全
+                # (observable_content 可读 + page_position 已知 + sha256 + 非黑名单
+                # + 非 restricted)时,资产视为已自动批准(approved_by=auto_approve),
+                # 计入批准依据,不再 FAIL_CLOSED。
+                auto_approved_ids = set()
+                if config.get("auto_approve") and network_mode != "live":
+                    _bl_aa = [d.lower() for d in (config.get("domain_blacklist") or [])]
+                    for _aid, _rec in discovered_asset_records.items():
+                        if _rec.asset_origin == "generated" or _rec.copyright_status == "restricted":
+                            continue
+                        _host_aa = (urlsplit(_rec.resolved_original_url or "").hostname or "").lower()
+                        if any(_host_aa == d or _host_aa.endswith("." + d) for d in _bl_aa):
+                            continue
+                        if not ((_rec.content_description or "").strip()
+                                and not (_rec.content_description or "").lstrip().startswith("<img")
+                                and (_rec.page_position or {}).get("known") is True
+                                and _rec.sha256
+                                and _rec.duplicate_of is None):
+                            continue
+                        _rec.copyright_status = "known_allowed"
+                        _rec.approved_by = "auto_approve"
+                        _rec.approved_scope = "auto"
+                        _rec.approved_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                        _rec.auto_approved = True
+                        _rec.reasons.append("auto_approved: evidence chain complete (76R/OBS-289)")
+                        auto_approved_ids.add(_aid)
                 unbacked = sorted(
                     aid for aid in frozen_candidates
                     if aid not in asset_approvals and aid not in material_approved_ids
-                    and aid not in user_granted_ids)
+                    and aid not in user_granted_ids and aid not in auto_approved_ids)
                 if unbacked:
                     builder.errors.append(
                         "upload candidates without approval basis (FAIL_CLOSED): "
@@ -330,7 +357,7 @@ def main():
                     upload_candidate_ids = set()
                 else:
                     upload_candidate_ids = (set(asset_approvals) | material_approved_ids
-                                           | user_granted_ids)
+                                           | user_granted_ids | auto_approved_ids)
 
                 for asset_id in sorted(upload_candidate_ids):
                     approval = asset_approvals.get(asset_id)
@@ -788,9 +815,22 @@ def main():
     # 站内页(渲染好的直出 HTML,可绕开 X 等平台动态渲染)。来源扩池的图仍按
     # 既有 OBS-86 规则做 claim 相关性绑定,只放行与文章相关者。
     pool_items = request.get("pool_items") or []
+    # 76R/OBS-291:continue 阶段不重抓 pool——discover 已抓取并冻结,
+    # 继续只消费冻结清单(asset_discovery_manifest.json),避免重复登记。
+    if args.phase == "continue":
+        pool_items = []
     pool_fetch_limit = int(config.get("pool_fetch_limit", 30))
     pool_fetched = 0
-    pool_selected_ids = {m.get("material_id") for m in materials}
+    # 76R/OBS-291:pool-fetch ID 规范化——iid(dedup id) ↔ canonical material_id(M-XX)
+    # 映射表。凡归属已选素材的池内图(含池内重复图)一律映射回 M-XX 登记,
+    # 禁止裸 iid 入库;映射不到的资产才独立登记并如实标注来源。
+    iid_to_material = {}
+    for _m in materials:
+        _did = _m.get("dedup_id") or _m.get("id")
+        if _did:
+            iid_to_material[_did] = _m.get("material_id", "")
+    # 76R/OBS-291:不再跳过「已选素材」——池内 iid 有映射即归属对应 M-XX(审批
+    # 覆盖到),无映射才独立登记;两条路径都需处理,故取消旧 skip。
     all_claim_texts = [c.get("claim_text", "") for c in claims]
     _bl = [d.lower() for d in (config.get("domain_blacklist") or [])]
     pool_image_count = 0
@@ -798,7 +838,7 @@ def main():
         if accepted_assets_added >= discovery_budget or pool_fetched >= pool_fetch_limit:
             break
         iid = item.get("id", "")
-        if not iid or iid in pool_selected_ids:
+        if not iid:
             continue
         permalink = item.get("aihot_permalink", "")
         source_url = item.get("source_url", "")
@@ -836,7 +876,7 @@ def main():
                 _host = (urlsplit(resolved_url).hostname or "").lower()
                 if not sec.safe or any(_host == d or _host.endswith("." + d) for d in _bl):
                     builder.add_asset(AssetRecord(
-                        asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                        asset_id=asset_id, asset_origin="source", material_ids=[iid_to_material.get(iid) or iid], claim_ids=[],
                         aihot_permalink=permalink, source_page_url=page_url,
                         discovered_url=candidate.url, resolved_original_url=resolved_url,
                         extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
@@ -848,7 +888,7 @@ def main():
                         and candidate.section_heading and all_claim_texts):
                     if not section_matches_claims(candidate.section_heading, all_claim_texts):
                         builder.add_asset(AssetRecord(
-                            asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                            asset_id=asset_id, asset_origin="source", material_ids=[iid_to_material.get(iid) or iid], claim_ids=[],
                             aihot_permalink=permalink, source_page_url=page_url,
                             discovered_url=candidate.url, resolved_original_url=resolved_url,
                             extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
@@ -861,7 +901,7 @@ def main():
                                     mode=network_mode, fixture_dir=fixture_images_dir)
                 if not dl.success:
                     builder.add_asset(AssetRecord(
-                        asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                        asset_id=asset_id, asset_origin="source", material_ids=[iid_to_material.get(iid) or iid], claim_ids=[],
                         aihot_permalink=permalink, source_page_url=page_url,
                         discovered_url=candidate.url, resolved_original_url=resolved_url,
                         extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
@@ -869,7 +909,7 @@ def main():
                         quality_status="fail", relevance_status="irrelevant",))
                     continue
                 inspection = inspect_image(dl.local_path, max_pixels=config.get("max_pixels", 40_000_000))
-                identity_sha256 = stable_asset_identity(iid, page_url, resolved_url, inspection.sha256)
+                identity_sha256 = stable_asset_identity(iid_to_material.get(iid) or iid, page_url, resolved_url, inspection.sha256)
                 classification = classify_image(
                     url=resolved_url, inspection=inspection,
                     min_width=config.get("min_width", 480), min_height=config.get("min_height", 200),
@@ -877,7 +917,7 @@ def main():
                     internal_page=(kind == "aihot_permalink"),
                     extraction_method=candidate.extraction_method,)
                 asset = AssetRecord(
-                    asset_id=asset_id, asset_origin="source", material_ids=[iid], claim_ids=[],
+                    asset_id=asset_id, asset_origin="source", material_ids=[iid_to_material.get(iid) or iid], claim_ids=[],
                     aihot_permalink=permalink, source_page_url=page_url,
                     discovered_url=candidate.url, resolved_original_url=resolved_url,
                     extraction_method=candidate.extraction_method, decode_method=decode_result.decode_method,
@@ -896,7 +936,7 @@ def main():
                 )
                 pending_uploads.append((asset, dl.local_path, inspection, candidate.extraction_method))
                 discovery_records.append({
-                    "asset_id": asset_id, "asset_origin": "source", "material_id": iid,
+                    "asset_id": asset_id, "asset_origin": "source", "material_id": iid_to_material.get(iid) or iid,
                     "source_page_url": page_url, "resolved_original_url": resolved_url,
                     "asset_sha256": inspection.sha256, "asset_identity_sha256": identity_sha256,
                 })
@@ -1088,6 +1128,30 @@ def main():
                     "high" if classification.decision == "rejected" else "medium")
                 asset.reasons = (
                     classification.rejection_reasons or classification.relevance_reasons)
+
+            # 76R/OBS-289:媒体审批自动放行模式(默认关)——WXGZH_MEDIA_AUTO_APPROVE=1
+            # 且单图证据链齐全(observable_content 可读 + page_position 已知 + sha256 在册
+            # + 感知去重通过 + 非黑名单域名)时自动批准并完整入账;任一要素缺失或命中
+            # 红旗(restricted/no-repost、黑名单、证据断链)仍硬停等人工。
+            auto_approve_enabled = bool(config.get(
+                "auto_approve", False)) and network_mode != "live"
+            if (auto_approve_enabled
+                    and asset.copyright_status not in ("known_allowed", "restricted")
+                    and asset.decision == "review_required"
+                    and asset.quality_status == "pass"
+                    and asset.duplicate_of is None
+                    and (asset.content_description or "").strip()
+                    and not (asset.content_description or "").lstrip().startswith("<img")
+                    and (asset.page_position or {}).get("known") is True
+                    and asset.sha256):
+                _host_aa = (urlsplit(asset.resolved_original_url or "").hostname or "").lower()
+                if not any(_host_aa == d or _host_aa.endswith("." + d) for d in _bl):
+                    asset.copyright_status = "known_allowed"
+                    asset.approved_by = "auto_approve"
+                    asset.approved_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                    asset.approved_scope = "auto"
+                    asset.auto_approved = True
+                    asset.reasons.append("auto_approved: evidence chain complete (76R/OBS-289)")
 
             # Material/source_url approval is represented by the material's
             # copyright_review.status=known_allowed and needs no per-asset approval.

@@ -1,5 +1,5 @@
-version: 0.1.0-dev19
-previous_version: 0.1.0-dev18
+version: 0.1.0-dev20
+previous_version: 0.1.0-dev19
 status: development
 engineering_tests: passed
 smoke_test: passed

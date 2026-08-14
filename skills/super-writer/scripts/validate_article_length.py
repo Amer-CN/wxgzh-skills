@@ -543,7 +543,7 @@ FULL_MODE_REQUIRED_FIELDS = {
 }
 
 
-def check_full_mode_completeness(paths, runtime_policy=None):
+def check_full_mode_completeness(paths, runtime_policy=None, material_exhausted=False):
     """Check full mode product completeness — deep validation using production validators.
     paths: dict mapping key -> Path or None.
     runtime_policy: dict with article_mode, target_visible_chars, acceptable_min, acceptable_max
@@ -1146,7 +1146,8 @@ def validate_article_length(article_path, target_visible_chars=None,
                             acceptable_min=None, acceptable_max=None,
                             article_mode=None, sections=None,
                             outline_path=None,
-                            full_mode=False, full_mode_paths=None):
+                            full_mode=False, full_mode_paths=None,
+                            material_exhausted=False):
     """Validate article length against policy."""
     errors = []
     warnings = []
@@ -1222,12 +1223,23 @@ def validate_article_length(article_path, target_visible_chars=None,
     info['sections'] = len(article_sections)
 
     # Length gate
+    # 76R/OBS-290:素材定长度——注册 claim 全覆盖 + 材料门通过(material_exhausted)
+    # 时,长度下限降为 advisory(不足留痕说明,不报错逼扩写);素材充分但文章
+    # 单薄(非 material_exhausted)仍 FAIL(质量下限不退让)。
     if visible_chars < acceptable_min:
-        errors.append(
-            f"ERROR: article length {visible_chars} chars is below "
-            f"acceptable_min {acceptable_min}"
-        )
-        info['length_status'] = 'below_min'
+        if material_exhausted:
+            warnings.append(
+                f"WARN: article length {visible_chars} chars below acceptable_min "
+                f"{acceptable_min} — material exhausted (76R/OBS-290), 素材写干即停,不逼扩写"
+            )
+            info['length_status'] = 'below_min_material_exhausted'
+            info['material_exhausted'] = True
+        else:
+            errors.append(
+                f"ERROR: article length {visible_chars} chars is below "
+                f"acceptable_min {acceptable_min}"
+            )
+            info['length_status'] = 'below_min'
     elif visible_chars > acceptable_max:
         warnings.append(
             f"WARN: article length {visible_chars} chars exceeds "
@@ -1270,7 +1282,7 @@ def validate_article_length(article_path, target_visible_chars=None,
             'target_visible_chars': target_visible_chars,
             'acceptable_min': acceptable_min,
             'acceptable_max': acceptable_max,
-        })
+        }, material_exhausted=material_exhausted)
         errors.extend(fm_errors)
         info['full_mode_details'] = fm_details
 
@@ -1336,6 +1348,21 @@ def main():
             'handoff': args.handoff,
         }
 
+    # 76R/OBS-290:素材定长度——full-mode 时读 material-readiness,注册 claim
+    # 全覆盖(claim_coverage==1.0)且材料门允许 full(allowed_output=full)视为
+    # 素材耗尽:长度下限降 advisory(不足留痕),不再逼扩写。
+    material_exhausted = False
+    if args.full_mode and args.material_readiness:
+        try:
+            _mr = yaml.safe_load(Path(args.material_readiness).read_text(encoding="utf-8")) or {}
+            _cov = _mr.get("claim_coverage")
+            _ao = _mr.get("allowed_output")
+            if (isinstance(_cov, (int, float)) and _cov >= 1.0
+                    and _ao == "full"):
+                material_exhausted = True
+        except (OSError, yaml.YAMLError):
+            material_exhausted = False
+
     errors, warnings, info = validate_article_length(
         args.article,
         target_visible_chars=args.target_visible_chars,
@@ -1346,6 +1373,7 @@ def main():
         outline_path=args.outline,
         full_mode=args.full_mode,
         full_mode_paths=full_mode_paths if args.full_mode else None,
+        material_exhausted=material_exhausted,
     )
 
     result = {

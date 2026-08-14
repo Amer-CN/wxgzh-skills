@@ -57,6 +57,7 @@ class AssetRecord:
     approved_at: str | None = None
     approval_evidence_sha256: str | None = None
     asset_approval_consumed: bool = False
+    auto_approved: bool = False  # 76R/OBS-289:自动放行标记(approved_by=auto_approve)
     approval_identity_mismatch: list[str] = field(default_factory=list)
     upload: dict[str, Any] = field(default_factory=lambda: {
         "mode": "dry_run",
@@ -114,6 +115,7 @@ class AssetRecord:
             "approved_at": self.approved_at,
             "approval_evidence_sha256": self.approval_evidence_sha256,
             "asset_approval_consumed": self.asset_approval_consumed,
+            "auto_approved": self.auto_approved,
             "approval_identity_mismatch": sorted(self.approval_identity_mismatch),
             "upload": self.upload,
             "page_region": self.page_region,
