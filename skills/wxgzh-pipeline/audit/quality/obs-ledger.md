@@ -214,6 +214,9 @@
 | 292 | upgrade-chain 查找被早期残缺 relock 记录短路误报 TAMPERED:skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,_find_upgrade_chain 遍历到即整体短路 return None,此后任何合法升级链都找不到 | 已修(76S:receipts.py _find_upgrade_chain 先按 skill 过滤、残缺非目标记录跳过不再短路(只对目标 skill 严格要求 old/new/entry_id);现场抢修于装机树,本档补正式落账归仓并同步装机树;测试 +4(残缺非目标跳过/非目标不干扰/目标残缺仍 FAIL/正常链回归);纪律注记:现场抢修须在 24h 内补档落账) | wxgzh-pipeline wxgzh_pipeline/receipts.py+tests/test_hf76s_receipts_chain.py | 76S |
 | 293 | 划线句语义与删除线样式冲突:锤子封面删除线本意=划掉旧认知,现行 strike=hook_line 把文章核心论点(最反直觉点)划掉,内容与样式打架(GLM 稿实证) | 已修(76T:handoff 契约新增 formatter.cover.strike_assumption(可选,≤40 字)=被本文证据否定的旧认知/流行看法,须素材可支撑禁稻草人;渲染端 render_article --strike-assumption 驱动划线句槽,缺失整行不渲染(不再用 hook_line/默认文案填充,消灭语义冲突);旧 strike 保留读取兼容但不驱动划线槽;hook_line 仅导读段副标题兜底;sw 契约/指令/校验(advisory)同步;锚 JSON 随 render_entry 重生成(HF-6R,45 行零差异);测试 +6(gzh 3+sw 3)+pipeline 指令/契约断言 2) | gzh-design scripts/render_article.py+generate_hammer_upgrade_samples.py+tests/test_hf76t_strike_assumption.py;super-writer references/handoff.md+validate_single_product.py+tests/test_hf76t_strike_assumption.py;wxgzh-pipeline producers.py+contracts/02_super_writer.yaml | 76T |
 | 294 | aihot 窗口内独立查询串行排队:hot-topics / selected / all×N 等多路互不依赖查询串行发出,冷启动实测 aihot 阶段 293s 大头在串行等待 | 已修(76U:01_aihot 指令取料段改并行化——窗口内常规取料的独立查询必须同一轮并行发出,禁止无依赖查询串行排队;fetch_log 每路查询增记耗时或并行批次标记;超窗取料五步递进顺序(日报→快照→回溯→直采→注入)条件递进设计保持串行不动,条文逐字未动;测试 +3(并行要求在场/超窗五步顺序未动/契约 fetch_log)) | wxgzh-pipeline wxgzh_pipeline/producers.py+tests/test_hf76r.py | 76U |
+| 295 | 无参「续发」遇历史积压报 MULTIPLE_INCOMPLETE:cli resume 分支 len(inc)>1 即拦截,已连续两轮生产踩到(每次白付一次往返) | 已修(76V:cli.py resume 分支删除 MULTIPLE 拦截——无参续发取 started_at 最新未完成 RUN 自动续跑(orch._find_resume_run 已按 newest first 取最新),输出首行明示所续 RUN_ID;零个未完成才报 NO_RESUMABLE_RUN;测试 +3(多积压取最新/单个直取/零个报错)) | wxgzh-pipeline wxgzh_pipeline/cli.py+tests/test_hf76v_resume.py | 76V |
+| 296 | 媒体审批 readiness_sha 引用过期/口径不一+重复图(镜像资产)无 readiness 路径:Gemini 轮媒体段为此多花 ~8 分钟 | 已修(76V 立规:contracts/04_media_enrichment.yaml+media SKILL.md 审批纪律——approval_readiness_sha256 一律从最新 approval_readiness_report.json 原样照抄,禁止自算/引用旧轮,readiness 重生成后旧 sha 一律作废;重复/镜像资产与其 canonical 孪生共享审批依据(指向孪生资产 ID+复用其 readiness),禁止裸批;测试 +2(契约+SKILL 断言)) | wxgzh-pipeline contracts/04_media_enrichment.yaml;media-enrichment SKILL.md | 76V |
+| 297 | 预算均分致首轮超差:align_outline_budget 按原 planned 比例缩放(实际均分),无素材密度加权——GLM 轮单节超 41.8% 起、Gemini 轮均衡 4 轮,返工集中写作段尾部 | 已修(76V:align_outline_budget 升级分节加权预算——按各节 evidence_ids 数量(素材密度)分配字数权重,不再均分;输出每节 ±5% 容差区间;无 evidence 回退原比例(76F 语义);76R material_exhausted 语义不变(素材耗尽写干即停);测试 +4(加权正确/容差区间/无 evidence 回退/76R 回归)) | super-writer scripts/align_outline_budget.py+tests/test_hf76v_weighted_budget.py | 76V |
 
 ## 本台账口径
 
@@ -310,6 +313,9 @@
 
 59. 76U(aihot 取料并行化,用户批准 2026-08-14,本档无授权变更——指令文本非锁钉字段,RELOCK/GZH 键维持 0):OBS-294——8-14 冷启动实测 aihot 阶段 293s,大头是 hot-topics+selected+all×N 多路独立查询串行发出;修复=01_aihot 指令取料段改并行化(窗口内常规取料独立查询同一轮并行发出,禁止无依赖串行排队;fetch_log 每路查询增记耗时或并行批次标记);超窗五步递进顺序条文一字未动(条件递进设计保持串行)。升版:pipeline 0.1.0-dev2-hotfix9R4;测试 +3;pipeline pytest 498 passed/22 skipped/7 failed(与 76N 基线一致的环境红态)。程序校验:唯一编号 176(119–294 连续)、R59 22=22 差集空。
 
+60. 76V(三项生产摩擦修理,用户批准 2026-08-15,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH 键维持 0):①OBS-295 续发默认值(pipeline)——无参续发取 started_at 最新未完成 RUN 自动续跑并明示 RUN_ID,MULTIPLE_INCOMPLETE 报错路径删除;②OBS-296 readiness_sha 口径+重复图路径(media 文档+pipeline 契约)——照抄最新报告禁止自算、孪生共享审批依据禁止裸批;③OBS-297 预算分节加权(sw)——align_outline_budget 按各节 evidence 密度分配权重+±5% 容差,无 evidence 回退原比例,76R 语义不变。升版:sw 0.4.2-rc1 / media 0.1.0-dev21 / pipeline 0.1.0-dev2-hotfix9R5;relock #59(sw,root/version 变,validator/entrypoint 不变)/#60(media,root 变=SKILL.md 文档,version 随升 dev21);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 503 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);sw 261 passed/2 skipped/1 failed(dist 基线);media 338/7(未动代码仅文档)。程序校验:唯一编号 179(119–297 连续)、R59 22=22 差集空。
+
+
 
 
 
@@ -353,6 +359,7 @@
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 76T 十八次临时由 0 改为 1(批准人=用户,范围=档 76T 封面划线句改义,涉及子树 super-writer+wxgzh-pipeline+gzh-design 渲染端接线),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> `RELOCK_ALLOWED` 于档 76V 十九次临时由 0 改为 1(批准人=用户,范围=档 76V 三项生产摩擦修理,涉及子树 wxgzh-pipeline+super-writer+media-enrichment 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 

@@ -1086,5 +1086,41 @@
     "new_skill_version": "v2026.08.14-hammer.15",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260814T180430Z-45a373b5",
+    "skill": "super-writer",
+    "reason": "76V:OBS-297 分节加权预算+0.4.2-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-14T18:04:30Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "caff7e90a8c07938c88ca435377f42fa79b4840174b8435128ca3f1927ac68bc",
+    "new_root_sha256": "7418a58f97589024da299641197fb597dfa46bd54c49a8a030857031ecab50c3",
+    "old_full_commit_sha": "23b6a7479ec925dce25fdc3717c1850c4158ca5a",
+    "new_full_commit_sha": "50b067d569acdbb11192917e1aae9ca5fbecbe37",
+    "old_source_tree_sha": "56aab92d370a2daf30ce51f16a592bf4ab495557",
+    "new_source_tree_sha": "71634b12ef8cd25893438ef53ff0ec4e0760462e",
+    "old_skill_version": "0.4.1-rc1",
+    "new_skill_version": "0.4.2-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260814T180922Z-99058ecf",
+    "skill": "media-enrichment",
+    "reason": "76V:OBS-296 审批纪律文档+0.1.0-dev21",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-14T18:09:22Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "19b04b983ec3416ec8a9799af4d3b7c222b6e85f2d2af39b42851a4006c8653d",
+    "new_root_sha256": "3a9daf67c34c35cfe3cb50bcc845c3efa0a79ffad3c475e202344af2b4982499",
+    "old_full_commit_sha": "afb25906d467f78cfe03caaf58c84002051841c4",
+    "new_full_commit_sha": "50b067d569acdbb11192917e1aae9ca5fbecbe37",
+    "old_source_tree_sha": "3ac445127f2d04faba85ddc8b567462aa8959712",
+    "new_source_tree_sha": "55bf0ea9b2f1d5f6ebfa26d5199fb0bbd72aa99a",
+    "old_skill_version": "0.1.0-dev20",
+    "new_skill_version": "0.1.0-dev21",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
