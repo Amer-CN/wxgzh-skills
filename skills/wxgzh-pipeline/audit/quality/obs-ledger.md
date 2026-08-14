@@ -212,6 +212,7 @@
 | 290 | 长度门与素材量脱钩逼扩写:full-mode 字数下限硬 FAIL,素材耗尽仍被要求扩写 | 已修(76R:validate_article_length 新增 material_exhausted——注册 claim 全覆盖(claim_coverage==1.0)+材料门通过(allowed_output=full)时长度下限降 advisory(不足留痕 length_status=below_min_material_exhausted,不报错逼扩写);outline planned_total_chars/planned_chars 偏差同步降级;素材充分但文章单薄仍 FAIL(质量下限不退让);sw 指令明规「素材写干即停;禁止注水凑字数」;测试 +3) | super-writer scripts/validate_article_length.py+tests/test_hf76r_material_length.py | 76R |
 | 291 | pool-fetch 裸 iid 登记致审批断链:池抓资产登记为原始 iid(如 cmssmdkwd09c2roffx7lgv8ht)而非规范 M-XX,material 级审批覆盖不到、readiness「页面位置未知」不可 single_asset 批准→无批准依据候选→FAIL_CLOSED | 已修(76R:pool-fetch ID 规范化——iid↔canonical material_id 映射表(materials[].dedup_id ↔ pool_items[].id),凡归属已选素材的池内图(含池内重复图)一律映射回 M-XX 登记,禁止裸 iid;映射不到才独立登记并如实标注来源;continue 阶段不重抓 pool(只消费冻结清单);测试 +4) | media-enrichment scripts/run_media_enrichment.py+tests/test_hf76r_pool_id.py | 76R |
 | 292 | upgrade-chain 查找被早期残缺 relock 记录短路误报 TAMPERED:skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,_find_upgrade_chain 遍历到即整体短路 return None,此后任何合法升级链都找不到 | 已修(76S:receipts.py _find_upgrade_chain 先按 skill 过滤、残缺非目标记录跳过不再短路(只对目标 skill 严格要求 old/new/entry_id);现场抢修于装机树,本档补正式落账归仓并同步装机树;测试 +4(残缺非目标跳过/非目标不干扰/目标残缺仍 FAIL/正常链回归);纪律注记:现场抢修须在 24h 内补档落账) | wxgzh-pipeline wxgzh_pipeline/receipts.py+tests/test_hf76s_receipts_chain.py | 76S |
+| 293 | 划线句语义与删除线样式冲突:锤子封面删除线本意=划掉旧认知,现行 strike=hook_line 把文章核心论点(最反直觉点)划掉,内容与样式打架(GLM 稿实证) | 已修(76T:handoff 契约新增 formatter.cover.strike_assumption(可选,≤40 字)=被本文证据否定的旧认知/流行看法,须素材可支撑禁稻草人;渲染端 render_article --strike-assumption 驱动划线句槽,缺失整行不渲染(不再用 hook_line/默认文案填充,消灭语义冲突);旧 strike 保留读取兼容但不驱动划线槽;hook_line 仅导读段副标题兜底;sw 契约/指令/校验(advisory)同步;锚 JSON 随 render_entry 重生成(HF-6R,45 行零差异);测试 +6(gzh 3+sw 3)+pipeline 指令/契约断言 2) | gzh-design scripts/render_article.py+generate_hammer_upgrade_samples.py+tests/test_hf76t_strike_assumption.py;super-writer references/handoff.md+validate_single_product.py+tests/test_hf76t_strike_assumption.py;wxgzh-pipeline producers.py+contracts/02_super_writer.yaml | 76T |
 
 ## 本台账口径
 
@@ -301,6 +302,9 @@
 
 57. 76S(续跑现场修复正式落账,用户批准 2026-08-14,本档无授权变更——receipts.py 非锁钉字段,RELOCK_ALLOWED 维持 0):OBS-292——现场 GLM 续跑实证 skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,receipts.py _find_upgrade_chain 遍历到即整体短路 return None 误报 TAMPERED;修复=先按 skill 过滤、残缺非目标记录跳过不再短路,只对目标 skill 严格要求字段完整;修复原在装机树,本档补正式落账归仓(合集仓为准)+装机树同步+doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;测试 +4;pipeline 升版 0.1.0-dev2-hotfix9R2;pipeline pytest 493 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态)。程序校验:唯一编号 174(119–292 连续)、R59 22=22 差集空。
 
+58. 76T(封面划线句改义,用户批准 2026-08-14,RELOCK_ALLOWED 与 GZH_DESIGN_WRITE_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0):OBS-293——用户裁决方向 A:划线句改放「被否定的旧认知」;handoff 新增 formatter.cover.strike_assumption(可选,≤40 字,被本文证据否定的旧认知/流行看法,须素材可支撑禁稻草人);渲染端 render_article --strike-assumption 驱动划线句槽,缺失整行不渲染(不再用 hook_line 填充划线位);旧 strike 保留读取兼容不渲染;hook_line 仅导读段副标题兜底;sw 契约/指令/校验(advisory)同步;锚 JSON 随 render_entry 重生成(HF-6R,45 行零差异,仅 renderer_sha/generated_at 变)。升版:sw 0.4.1-rc1 / gzh v2026.08.14-hammer.15 / pipeline 0.1.0-dev2-hotfix9R3;relock #57(sw,root/version 变,validator/entrypoint 不变)/#58(gzh,entrypoint/render_entry/component_source/root/version 变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 495 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);gzh 246 passed/21 skipped;sw 257 passed/2 skipped/1 failed(dist 基线)。程序校验:唯一编号 175(119–293 连续)、R59 22=22 差集空。
+
+
 
 
 
@@ -341,6 +345,7 @@
 
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 76T 十八次临时由 0 改为 1(批准人=用户,范围=档 76T 封面划线句改义,涉及子树 super-writer+wxgzh-pipeline+gzh-design 渲染端接线),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 > **归位(档76Q-F,审核方 2026-08-14 验收通过):\RELOCK_ALLOWED\ 由 1 改回 0**。
