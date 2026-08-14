@@ -171,14 +171,17 @@ def _find_upgrade_chain(skill_name: str, receipt_root: str,
     for rec in data:
         if not isinstance(rec, dict):
             return None
+        # 76S/OBS-292:残缺的「非目标 skill」记录(如历史上 media-enrichment 早期
+        # relock 未回填哈希)不得阻断其他 skill 的链验证——先按 skill 过滤,
+        # 只对目标 skill 的记录严格要求 old/new/entry_id 字段完整。
+        if rec.get("skill") != skill_name:
+            continue
         old = rec.get("old_root_sha256")
         new = rec.get("new_root_sha256")
         if not isinstance(old, str) or not isinstance(new, str) or not old or not new:
             return None
         if not isinstance(rec.get("entry_id"), str) or not rec.get("entry_id"):
             return None
-        if rec.get("skill") != skill_name:
-            continue
         by_old.setdefault(old, []).append(rec)
 
     def dfs(cur: str, path: list[dict], seen: set[str]):

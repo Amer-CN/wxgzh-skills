@@ -211,6 +211,7 @@
 | 289 | 媒体审批无自动放行可选模式:单图证据链齐全也需人工批准,批量场景效率低 | 已修(76R:WXGZH_MEDIA_AUTO_APPROVE=1(默认关)开启且单图证据链齐全(observable_content 可读+page_position 已知+sha256+感知去重通过+非黑名单域名)即自动批准并完整入账(approved_by=auto_approve+auto_approved 标记入 manifest);任一要素缺失或命中红旗(restricted/no-repost、黑名单、证据断链)仍硬停;开关经 config 传入 media,pipeline 读 env 接线;测试 +3) | media-enrichment scripts/run_media_enrichment.py+src/manifest_builder.py;wxgzh-pipeline producers.py | 76R |
 | 290 | 长度门与素材量脱钩逼扩写:full-mode 字数下限硬 FAIL,素材耗尽仍被要求扩写 | 已修(76R:validate_article_length 新增 material_exhausted——注册 claim 全覆盖(claim_coverage==1.0)+材料门通过(allowed_output=full)时长度下限降 advisory(不足留痕 length_status=below_min_material_exhausted,不报错逼扩写);outline planned_total_chars/planned_chars 偏差同步降级;素材充分但文章单薄仍 FAIL(质量下限不退让);sw 指令明规「素材写干即停;禁止注水凑字数」;测试 +3) | super-writer scripts/validate_article_length.py+tests/test_hf76r_material_length.py | 76R |
 | 291 | pool-fetch 裸 iid 登记致审批断链:池抓资产登记为原始 iid(如 cmssmdkwd09c2roffx7lgv8ht)而非规范 M-XX,material 级审批覆盖不到、readiness「页面位置未知」不可 single_asset 批准→无批准依据候选→FAIL_CLOSED | 已修(76R:pool-fetch ID 规范化——iid↔canonical material_id 映射表(materials[].dedup_id ↔ pool_items[].id),凡归属已选素材的池内图(含池内重复图)一律映射回 M-XX 登记,禁止裸 iid;映射不到才独立登记并如实标注来源;continue 阶段不重抓 pool(只消费冻结清单);测试 +4) | media-enrichment scripts/run_media_enrichment.py+tests/test_hf76r_pool_id.py | 76R |
+| 292 | upgrade-chain 查找被早期残缺 relock 记录短路误报 TAMPERED:skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,_find_upgrade_chain 遍历到即整体短路 return None,此后任何合法升级链都找不到 | 已修(76S:receipts.py _find_upgrade_chain 先按 skill 过滤、残缺非目标记录跳过不再短路(只对目标 skill 严格要求 old/new/entry_id);现场抢修于装机树,本档补正式落账归仓并同步装机树;测试 +4(残缺非目标跳过/非目标不干扰/目标残缺仍 FAIL/正常链回归);纪律注记:现场抢修须在 24h 内补档落账) | wxgzh-pipeline wxgzh_pipeline/receipts.py+tests/test_hf76s_receipts_chain.py | 76S |
 
 ## 本台账口径
 
@@ -297,6 +298,9 @@
 56. 76R(提速批+pool-fetch ID 缺陷修复,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;gzh 不动):①OBS-291 pool-fetch ID 规范化(media,置顶修)——iid↔M-XX 映射(iid→dedup_id→material_id),池内图归 M-XX 登记禁裸 iid,映射不到独立登记,continue 不重抓 pool;②OBS-288 预检强制化+指令瘦身(pipeline+sw)——sw 指令改硬步骤(ACK 前必须 align+validate 全绿),通用规则抽单一真源常量(276/279/283 三阶段共用,语义零丢失);③OBS-289 媒体审批自动放行(media+pipeline)——WXGZH_MEDIA_AUTO_APPROVE=1 且证据链齐全自动批(approved_by=auto_approve+auto_approved),红旗仍停,默认关;④OBS-290 素材定长度(sw)——material_exhausted(claim 全覆盖+材料门过)长度下限降 advisory,禁止逼扩写,outline 预算同步降级。升版:sw 0.4.0-rc1 / media 0.1.0-dev20 / pipeline 0.1.0-dev2-hotfix9R1;relock #55(sw,validator 变=validate_article_length 改)/#56(media,entrypoint 变=run_media_enrichment 改);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 489 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态);sw 254 passed/2 skipped/1 failed(dist 基线环境项);media 338 passed/7 skipped;zh 85/85。程序校验:唯一编号 173(119–291 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
 
 　　【76R-F 补记】档 76R 验收 PASS(审核方 2026-08-14 远端点验 commit 链在册:feat afb2590 + fix b6dd10e/d9bd02d + docs 1a1468a;relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH;冻结 RUN 实证以同构 fixture 完成,真实确认待 GLM 续跑)。
+
+57. 76S(续跑现场修复正式落账,用户批准 2026-08-14,本档无授权变更——receipts.py 非锁钉字段,RELOCK_ALLOWED 维持 0):OBS-292——现场 GLM 续跑实证 skills.lock.history.json 20260804T050125Z media relock 记录 old/new 哈希为空,receipts.py _find_upgrade_chain 遍历到即整体短路 return None 误报 TAMPERED;修复=先按 skill 过滤、残缺非目标记录跳过不再短路,只对目标 skill 严格要求字段完整;修复原在装机树,本档补正式落账归仓(合集仓为准)+装机树同步+doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;测试 +4;pipeline 升版 0.1.0-dev2-hotfix9R2;pipeline pytest 493 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态)。程序校验:唯一编号 174(119–292 连续)、R59 22=22 差集空。
+
 
 
 
