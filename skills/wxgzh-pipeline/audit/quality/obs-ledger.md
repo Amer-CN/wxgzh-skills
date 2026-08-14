@@ -288,6 +288,8 @@
 
 55. 76Q(生产暴露修理包,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH_DESIGN_WRITE_ALLOWED 维持 0):①OBS-284 zh 门禁豁免接线——zh_human_writing.py content_validate 改读 pattern_audit.stdout.json 分组(advisory 命中豁免留痕/strong 仍拒/缺失回退 fail-closed),测试 +3;②OBS-285 76F 工具契约对齐——validate_single_product handoff 双层包裹+registry dict{claims,materials}+dedup/source_url 逐字一致机械校验(与 full-mode 同判),测试 +2;③OBS-286 fidelity 粗体豁免——extract_bold_spans 显式保护(根因实证=渲染器不支持 **,语法门 probe 无误判),zh 测试 +3(82→85),pipeline sw 指令补禁止 ** 明规;④OBS-287 文档税打包——material-ingestion.md 三节落档+contracts/02_super_writer.yaml 契约注释+sw 指令引用,测试 +4。升版:sw 0.3.9-rc1 / zh 0.1.4 / pipeline 0.1.0-dev2-hotfix8R1;relock #53(sw,root/version 变,entrypoint/validator 不变)/#54(zh,entrypoint/validator 变=fidelity_guard);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 483 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态:test_hotfix1 portable×1、test_hotfix7_live_handshake×3、test_obs171×1、test_obs80_smoke_samples×2);sw 251 passed/2 skipped(1 failed=dist 基线环境项);zh 85/85(verify_release PASS)。程序校验:唯一编号 169(119–287 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
 
+　　【76Q-F 补记】档 76Q 验收 PASS(审核方 2026-08-14 远端点验双 commit 逐字一致:feat d2dfc9b(修理包 22 文件)+ docs 7c9ce5f(台账+relock #53/#54 备份+R93);relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH;pipeline 483+7 环境红态与 76N 基线逐项一致)。
+
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
 >
@@ -325,6 +327,8 @@
 > **归位(档76P-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+
+> **归位(档76Q-F,审核方 2026-08-14 验收通过):\RELOCK_ALLOWED\ 由 1 改回 0**。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
