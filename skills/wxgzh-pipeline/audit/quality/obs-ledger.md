@@ -203,6 +203,10 @@
 | 240 | PB-010/PB-014 同路径冗余(同一保险拉两次,非黑洞) | 已裁决未实施(Batch 3 测试整理合并) | 不阻塞(PB-013/PB-009 已补行为链路) |
 | 244 | media-enrichment 退出码不区分「候选待审批」与「真失败」 | 未修(契约债务,归其自身批次) | 不阻塞(HF-1 已在 pipeline 侧做可恢复降级,发文不再被卡) |
 | 256 | offline/fixture 续跑可写真实 RUN 目录(20260811T005013 冻结产物被覆盖,文章 sha f3bf475b 不可恢复) | 未修(修复方向=fixture 模式拒写非 fixture RUN 目录+冻结 RUN 写保护) | 不阻塞(执行端操作过失场景;发文主线不受阻) |
+| 284 | zh 验收门不认 FT-001 advisory 豁免:pattern_audit 检测层(76D)与指令(76J)已修,但 pipeline 的 zh 门禁仍以 text.count 对冻结文章一刀切,FT-001 专名降级命中(如 Luma Agents 的 Agent)照样拒——ADM/DeepSeek Harness 两轮被逼改写 21 处 Agent,词表 saga 第六次 | 已修(76Q:zh_human_writing.py content_validate 改读 pattern_audit.stdout.json 分组——strong 段命中=普通命中仍拒,advisory 段命中=疑似专名降级豁免不阻断,仅留痕 forbidden_term_advisory;文件缺失/解析失败回退旧 text.count(fail-closed);测试 +3(advisory 过门留痕/strong 仍拒/缺失回退)+非 FT 词仍拒) | wxgzh-pipeline wxgzh_pipeline/stages/zh_human_writing.py;tests/test_hf76q.py | 76Q |
+| 285 | 76F 自造缝:validate_single_product.py 查 handoff 顶层平铺字段,full-mode 校验器查 {handoff:{...}} 嵌套——契约冲突,agent 被迫手工嵌套 | 已修(76Q:check_handoff 与 full-mode 同构(顶层必须 {handoff:{...}} 双层,单层直接拒并报错指引);check_registry 改判生产真实形状 dict{claims,materials}(数组拒),新增 materials 必填(dedup_id/source_url)+claim.material_id 存在性+claim/material source_url 逐字一致(含锚点)机械校验;测试 +2(同一嵌套 handoff 两工具同判+registry dict 三规则)) | super-writer scripts/validate_single_product.py;tests/test_hf76f_tools.py+test_hf76q_docs.py | 76Q |
+| 286 | fidelity_guard 把含 ** 的正文贪婪误判为行内代码(ADM 轮「语法门拒加粗」与 Harness 轮「去粗体根治」共同根因;实测根因=渲染器不支持 ** 加粗,语法门 probe 如实报 unsupported 非误判) | 已修(76Q:fidelity_guard extract_bold_spans 显式粗体豁免——**text** 不进入行内代码比较(防御性),extract_inline_code 契约文档化(仅反引号);语法门零改动;pipeline sw 指令补「禁止 ** 加粗」明规;测试 +3(FS-006 含加粗零 fail/FS-007 真行内代码仍 fail/FS-008 粗体内行内代码仍 fail)) | zh-human-writing scripts/fidelity_guard.py+tests/run_tests.py;wxgzh-pipeline producers.py+validators/validate_syntax_gate.py(不动) | 76Q |
+| 287 | 文档税三连:registry 结构(数组 vs dict)、dedup-id 与 material_id 映射、claim/material source_url 逐字一致——三轮生产各踩一次返工 | 已修(76Q:material-ingestion.md 三节落档(registry dict 形状+示例/映射规则/逐字一致含锚点)+contracts/02_super_writer.yaml 契约注释+sw 指令引用;validate_single_product registry 机械层强制;测试 +4(文档断言×4)) | super-writer references/material-ingestion.md;wxgzh-pipeline contracts/02_super_writer.yaml+producers.py | 76Q |
 
 ## 本台账口径
 
@@ -282,6 +286,9 @@
 　　【76P-F 补记】档 76P 验收 PASS(审核方 2026-08-13 远端点验三路逐字一致:feat 86fa509(README v4 小白先行 + 锁 URL 回改 + observability 同步)、docs 28a7fca(台账)、旧名 gzh-forge 经跳转解析到同一 tip;relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH)。RELOCK_ALLOWED 归位 1→0(见授权登记节)。程序校验不变:唯一编号 165(119–283 连续)/ R59 22=22 差集空。
 ### ★授权变更登记(72A,不可省)
 
+55. 76Q(生产暴露修理包,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH_DESIGN_WRITE_ALLOWED 维持 0):①OBS-284 zh 门禁豁免接线——zh_human_writing.py content_validate 改读 pattern_audit.stdout.json 分组(advisory 命中豁免留痕/strong 仍拒/缺失回退 fail-closed),测试 +3;②OBS-285 76F 工具契约对齐——validate_single_product handoff 双层包裹+registry dict{claims,materials}+dedup/source_url 逐字一致机械校验(与 full-mode 同判),测试 +2;③OBS-286 fidelity 粗体豁免——extract_bold_spans 显式保护(根因实证=渲染器不支持 **,语法门 probe 无误判),zh 测试 +3(82→85),pipeline sw 指令补禁止 ** 明规;④OBS-287 文档税打包——material-ingestion.md 三节落档+contracts/02_super_writer.yaml 契约注释+sw 指令引用,测试 +4。升版:sw 0.3.9-rc1 / zh 0.1.4 / pipeline 0.1.0-dev2-hotfix8R1;relock #53(sw,root/version 变,entrypoint/validator 不变)/#54(zh,entrypoint/validator 变=fidelity_guard);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 483 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态:test_hotfix1 portable×1、test_hotfix7_live_handshake×3、test_obs171×1、test_obs80_smoke_samples×2);sw 251 passed/2 skipped(1 failed=dist 基线环境项);zh 85/85(verify_release PASS)。程序校验:唯一编号 169(119–287 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
+
+
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
 >
 > **归位(档72E-2,用户批准 2026-08-10)**:恢复条件已达成——Batch 1/72C、Batch 2/72D、Batch 3/72E 全部验收 PASS,`RELOCK_ALLOWED` 由 1 改回 0,升级期闭合,本条恢复条件不再复述。
@@ -316,6 +323,8 @@
 > **归位(档76N-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > `RELOCK_ALLOWED` 于档 76P 十五次临时由 0 改为 1(批准人=用户,范围=档 76P 仓名改回 wxgzh-skills+README v4,仅用于锁文件 repository_url 随改名回改),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76P-F,审核方 2026-08-13 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
+
+> \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
