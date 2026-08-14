@@ -296,6 +296,8 @@
 
 56. 76R(提速批+pool-fetch ID 缺陷修复,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;gzh 不动):①OBS-291 pool-fetch ID 规范化(media,置顶修)——iid↔M-XX 映射(iid→dedup_id→material_id),池内图归 M-XX 登记禁裸 iid,映射不到独立登记,continue 不重抓 pool;②OBS-288 预检强制化+指令瘦身(pipeline+sw)——sw 指令改硬步骤(ACK 前必须 align+validate 全绿),通用规则抽单一真源常量(276/279/283 三阶段共用,语义零丢失);③OBS-289 媒体审批自动放行(media+pipeline)——WXGZH_MEDIA_AUTO_APPROVE=1 且证据链齐全自动批(approved_by=auto_approve+auto_approved),红旗仍停,默认关;④OBS-290 素材定长度(sw)——material_exhausted(claim 全覆盖+材料门过)长度下限降 advisory,禁止逼扩写,outline 预算同步降级。升版:sw 0.4.0-rc1 / media 0.1.0-dev20 / pipeline 0.1.0-dev2-hotfix9R1;relock #55(sw,validator 变=validate_article_length 改)/#56(media,entrypoint 变=run_media_enrichment 改);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 489 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态);sw 254 passed/2 skipped/1 failed(dist 基线环境项);media 338 passed/7 skipped;zh 85/85。程序校验:唯一编号 173(119–291 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
 
+　　【76R-F 补记】档 76R 验收 PASS(审核方 2026-08-14 远端点验 commit 链在册:feat afb2590 + fix b6dd10e/d9bd02d + docs 1a1468a;relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH;冻结 RUN 实证以同构 fixture 完成,真实确认待 GLM 续跑)。
+
 
 
 > `RELOCK_ALLOWED` 于档 72A 由 0 改为 1,批准人=用户,范围=整个升级期(72A/72B/72C),恢复条件=super-writer 与 zh-human-writing 两个 skill 升级全部完成后立即改回 0。在恢复之前,每一档的 a 段必须显式复述本条恢复条件。
@@ -335,6 +337,7 @@
 
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 > **归位(档76Q-F,审核方 2026-08-14 验收通过):\RELOCK_ALLOWED\ 由 1 改回 0**。
 
