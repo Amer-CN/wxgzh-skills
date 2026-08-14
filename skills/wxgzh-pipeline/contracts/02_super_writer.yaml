@@ -24,6 +24,9 @@ outputs:
     - editor-report.md
     - full_mode_validator_report.json
     - handoff.yaml             # 档76A/OBS-252:full-mode 必检产物(封面供料/契约留痕)
+    # 76T/OBS-293:formatter.cover.strike_assumption(可选)——被本文证据否定的旧认知/流行看法,≤40 字,
+    # 须素材可支撑禁稻草人;缺失时渲染端划线句整行不渲染(不再用 hook_line 填充划线位);
+    # 旧字段 strike 保留读取兼容(渲染端不再读取)。
 gates:
   full_mode_validator_exit: 0
 forbidden: [fixed_medium_3000]

@@ -74,11 +74,12 @@ def test_obs288_semantic_zero_loss_rule_inventory():
     for k in ("aihot", "super_writer", "zh_human_writing"):
         old_rules = ["76R/OBS-288" if r == "76F/OBS-278" else r for r in _rules(old_instr[k])]
         new_rules = _rules(PR.AGENT_INSTRUCTIONS[k])
-        # 旧规则全部保留(278→288 升级);新规则仅允许 76R/OBS-290(素材定长度,76R 新增)
+        # 旧规则全部保留(278→288 升级);新规则仅允许 76R/OBS-290(素材定长度)与
+        # 76T/OBS-293(封面划线句改义)
         for r in old_rules:
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
-        assert extra <= {"76R/OBS-290"}, f"{k}: 意外新增规则 {extra}"
+        assert extra <= {"76R/OBS-290", "76T/OBS-293"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -87,6 +88,23 @@ def test_obs290_material_exhausted_instruction():
     assert "76R/OBS-290" in instr
     assert "素材写干即停" in instr and "禁止注水凑字数" in instr
     assert "不逼扩写" in instr or "不报错逼扩写" in instr
+
+def test_obs293_strike_assumption_instruction():
+    """76T/OBS-293:sw 指令含 strike_assumption 明规(被否定旧认知,禁稻草人)。"""
+    instr = PR.AGENT_INSTRUCTIONS["super_writer"]
+    assert "76T/OBS-293" in instr
+    assert "strike_assumption" in instr
+    assert "被本文证据否定" in instr and "禁止捏造极端稻草人" in instr
+    assert "不再用 hook_line 填充划线位" in instr
+
+
+def test_obs293_contract_declares_strike_assumption():
+    """76T/OBS-293:02_super_writer.yaml 契约声明 strike_assumption 字段。"""
+    text = (SKILL_ROOT / "contracts" / "02_super_writer.yaml").read_text(
+        encoding="utf-8")
+    assert "76T/OBS-293" in text
+    assert "strike_assumption" in text
+    assert "≤40 字" in text and "禁稻草人" in text
 
 
 def test_obs288_instruction_text_unchanged_except_278():

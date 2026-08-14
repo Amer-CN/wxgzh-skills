@@ -22,7 +22,7 @@ handoff:
   material_stats: {}                      # Batch 3 新增：材料/事件/claim 计数与三层覆盖率（材料门判定依据留痕）
   scope: ""                              # Batch 3 新增：文章范围声明；scope_reduction 发生时记录收窄结果与理由
   title_candidates: []                   # 档76A 新增：3–5 个候选标题（Phase 3 攻核后产出，不同角度；Phase 6 选定后保留备查）
-  hook_line: ""                          # 档76A 新增：一句钩子（本文最反直觉/最值钱的点）；formatter.cover.strike 未单独指定时默认取此值
+  hook_line: ""                          # 档76A 新增：一句钩子（本文最反直觉/最值钱的点）；76T 起仅供导读段（副标题兜底），不再进划线位
   selected_title: ""                    # 档76B 新增：Reviewer 按评分尺从 title_candidates 选定的最终 H1（article.md H1 与此一致）
   title_selection_reason: ""            # 档76B 新增：选定理由一行（评分尺依据）
 
@@ -47,9 +47,11 @@ handoff:
       unsupported_roles: []
     cover:                                 # Batch 3 新增：封面文案（缺省则下游用渲染默认）
       kicker: null                         # 文章类型标签（如 "深度观察"）
-      strike: null                         # 被本文推翻的旧认知疑问句
+      strike: null                         # 旧字段，读取兼容保留（76T 起划线句不再读取它，见 strike_assumption）
+      strike_assumption: null              # 76T 新增：一句「被本文证据否定的旧认知/流行看法」，≤40 字
+                                           # 硬约束：须为素材可支撑的真实流行看法，禁止捏造极端稻草人
+                                           # 缺失时渲染端划线句整行不渲染（不再用 hook_line 填充划线位）
       tags: null                           # 2 个内容标签（如 ["深度", "观察"]）
-                                           # 档76A 联动：strike 未单独指定时默认取 hook_line
 
   next:
     - skill: humanizer

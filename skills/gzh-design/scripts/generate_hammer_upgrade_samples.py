@@ -650,6 +650,14 @@ def hammer_container(theme_key, inner):
 def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
                  date="2026.07", brand="给自己造把锤子", tags=("深度", "观察")):
     t = PALETTES[theme_key]; p = t["primary"]
+    # 76T/OBS-293:划线句槽——strike(即 strike_assumption)为空时整行不渲染,
+    # 不再用 hook_line/默认文案填充(消灭语义冲突)。
+    strike_html = (
+        f'<p style="font-size:15px;color:{t["label_text"]};margin:0 0 6px;text-decoration:line-through;'
+        f'text-decoration-color:{t["label_text"]};text-decoration-thickness:1px;letter-spacing:0.5px;">'
+        f'<span leaf="">{strike}</span></p>'
+        if strike else ''
+    )
     tag_html = "".join(
         f'<span style="background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:3px;'
         f'font-size:8px;color:#fff;font-weight:600;"><span leaf="">{tg}</span></span>' for tg in tags)
@@ -662,9 +670,7 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
       <span style="font-size:10px;color:{t['divider']};font-weight:600;"><span leaf="">{date}</span></span>
     </section>
     <section>
-      <p style="font-size:15px;color:{t['label_text']};margin:0 0 6px;text-decoration:line-through;text-decoration-color:{t['label_text']};text-decoration-thickness:1px;letter-spacing:0.5px;">
-        <span leaf="">{strike}</span>
-      </p>
+      {strike_html}
       <p style="font-size:24px;font-weight:900;color:{t['title_color']};margin:0;line-height:1.05;letter-spacing:-2px;">
         <span leaf="">{title_line1}</span>
       </p>

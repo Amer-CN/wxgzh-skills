@@ -1,6 +1,10 @@
-# gzh-design v2026.08.13-hammer.14
+# gzh-design v2026.08.14-hammer.15
 
-## v2026.08.13-hammer.14(档76L)
+## v2026.08.14-hammer.15(档76T)
+
+- OBS-293 封面划线句改义:render_article 新增 --strike-assumption
+  (划线句槽改读新字段);缺失时划线句整行不渲染(不再用 hook_line/默认文案填充,
+  消灭语义冲突);旧 --strike 保留读取兼容但不再驱动划线槽。测试 +3。
 
 - OBS-282 交付凭证门:publish_wechat_draft.py 新增强制参数 --evidence(本 RUN 的
   gzh_design/stage_receipt.json)——receipt 校验通过 + html sha 与待推 HTML 一致 +
@@ -8,9 +12,9 @@
   wechat_draft 阶段);无后门参数;独立手工发布=公众号后台手动。测试 +6。
 - 渲染器/设计系统零改动(render_entry 不变)。
 
-## v2026.08.13-hammer.13(档76J)
+## v2026.08.14-hammer.13(档76J)
 
-## v2026.08.13-hammer.14(档76J)
+## v2026.08.14-hammer.15(档76J)
 
 - OBS-271 表格/列表支持:render_article.py 解析标准 Markdown 表格(首行 header +
   分隔行跳过)与 `- `/`* `/`1. ` 列表块;渲染走既有 hammer 组件样式——表格

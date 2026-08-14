@@ -166,11 +166,11 @@ class TestStrikeContrast:
         assert ratio >= 4.5, f"对比度 {ratio:.2f}:1 < 4.5:1"
 
     def test_strike_in_real_render(self):
+        # 76T/OBS-293:默认(无 strike_assumption)划线句整行不渲染
         proc, html = _render_cli(CODE_MD, theme="hammer")
         assert proc.returncode == 0
-        assert "别急着划走" in html
-        assert "text-decoration-color:#737373" in html
-        assert "text-decoration-thickness:1px" in html
+        assert "line-through" not in html
+        assert "别急着划走" not in html
 
 
 class TestOBS77FixedSignatureRegression:

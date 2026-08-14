@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## v0.4.0-rc1 (2026-08-14) — 档76R：素材定长度 + 预检强制化
+## v0.4.1-rc1 (2026-08-14) — 档76T：封面划线句改义 strike_assumption
+
+### 76T(档76T)
+
+- **OBS-293 封面划线句改义**:handoff 契约新增 formatter.cover.strike_assumption
+  (可选,≤40 字)——「被本文证据否定的旧认知/流行看法」,须素材可支撑、禁稻草人;
+  旧 strike 字段保留读取兼容(渲染端不再读取);hook_line 不再进划线位(仅导读段
+  副标题兜底);validate_single_product 对 strike_assumption 做 advisory 校验
+  (缺失/超长不 FAIL)。
 
 ### 修复
 

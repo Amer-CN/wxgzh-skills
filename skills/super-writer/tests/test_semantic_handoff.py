@@ -1968,9 +1968,10 @@ class TestHandoffProseCraftFields:
         # 字段表登记
         assert "| title_candidates |" in text
         assert "| hook_line |" in text
-        # 联动默认:strike 未单独指定时默认取 hook_line
-        assert "strike" in text and "hook_line" in text
-        assert "默认取 hook_line" in text or "取 hook_line" in text
+        # 76T/OBS-293:strike_assumption 新字段(划线句改义),hook_line 不再进划线位
+        assert "strike_assumption" in text
+        assert "被本文证据否定" in text or "被本文推翻" in text
+        assert "不再用 hook_line 填充划线位" in text or "不再进划线位" in text
 
     def test_v22_selection_fields_present_and_typed(self):
         import re

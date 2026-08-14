@@ -166,16 +166,16 @@ class TestHf6CoverParams:
         assert m.group(0) == f'<span leaf="">{dt.now():%Y.%m}</span>'
 
     def test_cover_params_override(self, tmp_path):
+        # 76T/OBS-293:划线句改由 --strike-assumption 驱动;--strike 旧字段不再渲染
         code, html = self._cli(tmp_path, [
-            "--date", "2026.07", "--strike", "先别划走",
+            "--date", "2026.07", "--strike-assumption", "先别划走",
             "--brand", "测试品牌", "--tags", "甲,乙"])
         assert code == 0
         assert "2026.07" in html
-        assert "先别划走" in html
+        assert "先别划走" in html and "line-through" in html
         assert "测试品牌" in html
         assert '<span leaf="">甲</span>' in html
         assert '<span leaf="">乙</span>' in html
-        assert "别急着划走" not in html
 
     def test_cover_defaults_byte_identical_except_date(self):
         from datetime import datetime as dt

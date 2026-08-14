@@ -126,7 +126,20 @@ def check_handoff(path: Path) -> tuple[list, dict]:
             out_errors.append(f"handoff: 缺标题字段 `handoff.{field}`(76A/76B)")
         elif not isinstance(h.get(field), ftype):
             out_errors.append(f"handoff: `handoff.{field}` 类型应为 {ftype.__name__}")
-    return out_errors, {"schema_version": h.get("schema_version")}
+    # 76T/OBS-293:strike_assumption(可选,advisory)——存在时校验类型与长度(≤40 字),
+    # 缺失不 FAIL;超长/非字符串仅记 checks 提示(不阻断交付,渲染端缺失整行不渲染)。
+    checks = {"schema_version": h.get("schema_version")}
+    cover = h.get("formatter", {}).get("cover") if isinstance(h.get("formatter"), dict) else None
+    sa = cover.get("strike_assumption") if isinstance(cover, dict) else None
+    checks["strike_assumption"] = sa
+    if sa is not None and sa != "":
+        # advisory:仅记入 checks,不阻断交付(缺失/超长都不 FAIL,渲染端自行降级)
+        if not isinstance(sa, str):
+            checks["strike_assumption_warnings"] = "类型应为 str(76T/OBS-293,advisory)"
+        elif len(sa) > 40:
+            checks["strike_assumption_warnings"] = (
+                f"长度 {len(sa)} > 40 字(76T/OBS-293,advisory)")
+    return out_errors, checks
 
 
 def check_registry(path: Path) -> tuple[list, dict]:

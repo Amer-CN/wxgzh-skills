@@ -250,7 +250,8 @@ def parse_article(md: str) -> dict:
     return {"title": title or "未命名", "intro": intro, "intro_paras": intro_paras,
             "chapters": chapters}
 def render(theme_key: str, parsed: dict, body_images: list[dict],
-           date: str | None = None, strike: str = "别急着划走",
+           date: str | None = None, strike: str | None = None,
+           strike_assumption: str | None = None,
            brand: str = "给自己造把锤子",
            tags: tuple[str, ...] = ("深度", "观察"),
            kicker: str | None = None, title: str | None = None,
@@ -274,7 +275,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
     # 76D/OBS-257:显式 --subtitle 优先;否则文章导语(intro);再否则默认文案。
     subtitle = (subtitle or parsed.get("intro") or "结构化拆解与要点梳理")[:48]
     cover_date = date or datetime.now().strftime("%Y.%m")
-    parts.append(H.hammer_cover(theme_key, kicker=kicker, strike=strike,
+    parts.append(H.hammer_cover(theme_key, kicker=kicker, strike=strike_assumption,
                                 title_line1=l1, title_line2=l2, subtitle=subtitle,
                                 date=cover_date, brand=brand, tags=tags))
     usage["cover_breaking"] += 1
@@ -350,7 +351,10 @@ def main(argv=None) -> int:
     ap.add_argument("--theme", default="smartisan")
     ap.add_argument("--date", default=None,
                     help="cover date (YYYY.MM); default = current render month")
-    ap.add_argument("--strike", default="别急着划走")
+    ap.add_argument("--strike", default=None,
+                    help="旧字段,读取兼容保留(76T 起划线句改读 --strike-assumption)")
+    ap.add_argument("--strike-assumption", default=None,
+                    help="被本文证据否定的旧认知/流行看法(≤40 字);缺失时划线句整行不渲染(76T/OBS-293)")
     ap.add_argument("--brand", default="给自己造把锤子")
     ap.add_argument("--tags", default="深度,观察",
                     help="comma-separated cover tags")
@@ -382,7 +386,8 @@ def main(argv=None) -> int:
 
     tags = tuple(t.strip() for t in a.tags.split(",") if t.strip())
     html, usage = render(theme_key, parsed, body_images,
-                         date=a.date, strike=a.strike, brand=a.brand, tags=tags,
+                         date=a.date, strike=a.strike, strike_assumption=a.strike_assumption,
+                         brand=a.brand, tags=tags,
                          kicker=a.kicker, title=a.title, subtitle=a.subtitle)
 
     out = Path(a.output_dir)
