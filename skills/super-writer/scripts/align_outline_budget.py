@@ -59,10 +59,16 @@ def parse_sections(text: str) -> list[dict]:
                 max_c = val
         if planned is None:
             continue
+        # 76V/OBS-297:提取各节 evidence_ids(素材密度代理)——用于分节加权预算。
+        ev_m = re.search(r"-\s*evidence_ids[\uff1a:]\s*\[([^\]]*)\]", body)
+        ev_count = 0
+        if ev_m:
+            ev_count = len([x for x in re.split(r"[,\s]+", ev_m.group(1).strip()) if x])
         sections.append({"title": title,
                          "start": text[:start].count("\n"),
                          "end": text[:end].count("\n"),
-                         "planned": planned, "min_c": min_c, "max_c": max_c})
+                         "planned": planned, "min_c": min_c, "max_c": max_c,
+                         "evidence_count": ev_count})
     return sections
 
 
@@ -74,16 +80,29 @@ def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
     total_old = sum(s["planned"] for s in sections)
     if total_old <= 0:
         return text, {}, ["outline: 各节 planned_chars 合计为 0,无法对齐"]
-    scale = target / total_old
+    # 76V/OBS-297:分节加权预算——按各节 evidence_ids 数量(素材密度)分配权重,
+    # 不再均分/原比例;无任何 evidence 时回退原 planned 比例(与 76F 行为一致)。
+    total_ev = sum(s["evidence_count"] for s in sections)
+    if total_ev > 0:
+        weights = {s["title"]: s["evidence_count"] / total_ev for s in sections}
+    else:
+        weights = {s["title"]: s["planned"] / total_old for s in sections}
+    # 整数分配(target 按权重切分,最大余数法保证合计=target)
+    alloc = {s["title"]: int(target * weights[s["title"]]) for s in sections}
+    rem = target - sum(alloc.values())
+    for s in sorted(sections, key=lambda x: target * weights[x["title"]] - alloc[x["title"]], reverse=True)[:rem]:
+        alloc[s["title"]] += 1
     new_sections = []
     for s in sections:
-        planned = max(1, round(s["planned"] * scale))
-        min_c = max(1, round(s["min_c"] * scale)) if s["min_c"] is not None else None
-        max_c = round(s["max_c"] * scale) if s["max_c"] is not None else None
+        planned = max(1, alloc[s["title"]])
+        # ±5% 容差区间
+        min_c = max(1, round(planned * 0.95)) if s["min_c"] is not None else None
+        max_c = round(planned * 1.05) if s["max_c"] is not None else None
         new_sections.append({"title": s["title"], "old": s["planned"],
                              "new": planned, "old_min": s["min_c"],
                              "new_min": min_c, "old_max": s["max_c"],
-                             "new_max": max_c})
+                             "new_max": max_c, "evidence_count": s["evidence_count"],
+                             "weight": round(weights[s["title"]], 4)})
     # 按行精确重写预算字段(只动数值,保留行结构与冒号宽度)
     lines = text.split("\n")
     section_ranges = [(s["start"], s["end"]) for s in sections]
@@ -102,7 +121,10 @@ def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
     deviation = abs(total_new - target) / target if target else 0.0
     return "\n".join(lines), {
         "target": target, "total_old": total_old, "total_new": total_new,
-        "deviation": round(deviation, 4), "sections": new_sections,
+        "deviation": round(deviation, 4),
+        "allocation_mode": "evidence_weighted" if total_ev > 0 else "original_proportional",
+        "tolerance": "±5%",
+        "sections": new_sections,
     }, errors
 
 

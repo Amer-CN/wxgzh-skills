@@ -1,5 +1,5 @@
-version: 0.4.1-rc1
-previous_version: 0.4.1-rc1
+version: 0.4.2-rc1
+previous_version: 0.4.2-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -14,4 +14,4 @@ handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-14
 hotfix_name: 76r
-release_notes: "v0.4.1-rc1: 档76R — 素材定长度(OBS-290:claim 全覆盖+材料门过=长度下限降 advisory,禁止逼扩写;outline 预算同步降级) + 预检强制化指令(OBS-288);254 tests passed."
+release_notes: "v0.4.2-rc1: 档76R — 素材定长度(OBS-290:claim 全覆盖+材料门过=长度下限降 advisory,禁止逼扩写;outline 预算同步降级) + 预检强制化指令(OBS-288);254 tests passed."

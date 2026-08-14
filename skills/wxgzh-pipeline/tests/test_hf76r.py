@@ -122,6 +122,26 @@ def test_obs294_superwindow_sequence_untouched():
     assert i1 < i2 < i3 < i4 < i5, "超窗五步顺序被破坏"
 
 
+def test_obs296_readiness_sha_contract():
+    """76V/OBS-296:contracts/04 含 readiness_sha 照抄规则 + 孪生共享规则。"""
+    text = (SKILL_ROOT / "contracts" / "04_media_enrichment.yaml").read_text(
+        encoding="utf-8")
+    assert "76V/OBS-296" in text
+    assert "approval_readiness_sha256" in text
+    assert "原样照抄" in text and "禁止自算" in text and "旧 sha 一律作废" in text
+    assert "canonical 孪生" in text and "共享审批依据" in text and "禁止裸批" in text
+
+
+def test_obs296_readiness_sha_media_skill():
+    """76V/OBS-296:media SKILL.md 含审批纪律节(照抄 + 孪生共享)。"""
+    text = (SKILL_ROOT.parent / "media-enrichment" / "SKILL.md").read_text(
+        encoding="utf-8")
+    assert "审批纪律（76V/OBS-296）" in text
+    assert "approval_readiness_report.json" in text
+    assert "禁止自算" in text and "禁止引用旧轮报告" in text
+    assert "孪生资产 ID" in text and "禁止裸批" in text
+
+
 def test_obs294_fetch_log_contract():
     """76U/OBS-294:contracts/01_aihot.yaml 无 fetch_log 耗时字段,由指令语义覆盖。"""
     text = (SKILL_ROOT / "contracts" / "01_aihot.yaml").read_text(encoding="utf-8")

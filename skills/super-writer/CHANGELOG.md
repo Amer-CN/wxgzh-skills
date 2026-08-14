@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## v0.4.1-rc1 (2026-08-14) — 档76T：封面划线句改义 strike_assumption
+## v0.4.2-rc1 (2026-08-15) — 档76V：预算分节加权
+
+### 76V(档76V)
+
+- **OBS-297 分节加权预算**:align_outline_budget 升级——按各节 evidence_ids 数量
+  (素材密度)分配字数权重,不再均分/原比例;输出每节 ±5% 容差区间;无 evidence
+  时回退原比例(76F 语义);76R material_exhausted 语义不变(素材耗尽写干即停)。
 
 ### 76T(档76T)
 

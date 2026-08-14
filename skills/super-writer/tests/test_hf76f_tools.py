@@ -53,19 +53,22 @@ def test_align_outline_scales_to_target_and_preserves_protected():
     assert "- event_ids: [ev-1]" in new_text
     assert "- unique_information_goal: 目标甲" in new_text
     assert "target_visible_chars: 3000" in new_text  # 配置节不动
-    # 各节按比例 2x
+    # 76V/OBS-297:分节加权预算——两节各 1 evidence(等密度)→ 均分 3000/3000
     sections = parse_sections(new_text)
-    assert sections[0]["planned"] == 3600
-    assert sections[1]["planned"] == 2400
+    assert sections[0]["planned"] == 3000
+    assert sections[1]["planned"] == 3000
+    assert info["allocation_mode"] == "evidence_weighted"
+    assert info["tolerance"] == "±5%"
 
 
 def test_align_outline_reaches_target_minus_five():
     new_text, info, errors = align_outline(OUTLINE_OK, 2850)
     assert not errors
-    # 2850 对齐后偏差 = |2850-2850|/2850 = 0;按比例缩放 0.95
+    # 2850 对齐后偏差 = 0;两节等 evidence → 各 1425
     assert info["total_new"] == 2850
     sections = parse_sections(new_text)
-    assert sections[0]["planned"] == 1710
+    assert sections[0]["planned"] == 1425
+    assert sections[1]["planned"] == 1425
 
 
 def test_validate_single_product_outline(tmp_path):

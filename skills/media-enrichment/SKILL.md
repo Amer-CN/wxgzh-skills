@@ -174,3 +174,12 @@ python scripts/run_media_enrichment.py --request <request.json> --output-dir <di
 ## Validator
 
 `scripts/validate_media_manifest.py` 检查所有 P0 条件，退出码 0=PASS，非0=FAIL。
+
+
+## 审批纪律（76V/OBS-296）
+
+- **readiness_sha 口径**：`approval_readiness_sha256` 一律从最新的
+  `approval_readiness_report.json` 原样照抄，禁止自算、禁止引用旧轮报告；
+  readiness 报告重生成后旧 sha 一律作废（旧批准合同自动失效，不得复用）。
+- **重复/镜像资产**：与其 canonical 孪生（同图，感知去重判定）共享审批依据——
+  批准记录指向孪生资产 ID 并复用其 readiness，禁止裸批（无孪生依据不得独立批准）。

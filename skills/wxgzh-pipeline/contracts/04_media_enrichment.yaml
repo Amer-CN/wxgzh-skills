@@ -28,6 +28,11 @@ upload:
   serial: true
   manifest_single_writer: true
   no_orchestrator_bypass: true
+# 76V/OBS-296(审批口径纪律):
+# a) approval_readiness_sha256 一律从最新的 approval_readiness_report.json 原样照抄,
+#    禁止自算、禁止引用旧轮报告;readiness 报告重生成后旧 sha 一律作废(旧批准合同自动失效)。
+# b) 重复/镜像资产:与其 canonical 孪生(同图)共享审批依据——批准记录指向孪生资产 ID
+#    + 复用其 readiness,禁止裸批(无孪生依据不得独立批准)。
 per_bound_image:
   decision: eligible
   upload_status: success

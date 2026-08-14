@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Package super-writer-v0.4.1-rc1.zip with MANIFEST.sha256."""
+"""Package super-writer-v0.4.2-rc1.zip with MANIFEST.sha256."""
 import os, hashlib, zipfile, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ZIP_NAME = "super-writer-v0.4.1-rc1.zip"
+ZIP_NAME = "super-writer-v0.4.2-rc1.zip"
 OUTPUT_DIR = os.path.dirname(ROOT)  # parent of super-writer/
 ZIP_PATH = os.path.join(OUTPUT_DIR, ZIP_NAME)
 

@@ -84,12 +84,17 @@ def main(argv=None) -> int:
     elif cmd["command"] == "resume":
         rid = cmd.get("run_id")
         if rid is None:
+            # 76V/OBS-295:无参续发 = 取 started_at 最新的未完成 RUN 自动续跑
+            # (orchestrator._find_resume_run 已按 newest first 取最新),零个未完成才报错;
+            # MULTIPLE_INCOMPLETE 报错路径删除。
             inc = orch.list_incomplete()
-            if len(inc) > 1:
-                print(json.dumps({"status": "MULTIPLE_INCOMPLETE", "choose_one": inc,
-                                  "hint": "用 续发：<RUN_ID> 指定"}, ensure_ascii=False))
+            if not inc:
+                print(json.dumps({"status": "NO_RESUMABLE_RUN"}, ensure_ascii=False))
                 return 0
-        out = orch.resume(rid)
+            out = orch.resume(None)
+            out["resumed_run_id"] = out.get("run_id") or (inc[0] if inc else None)
+        else:
+            out = orch.resume(rid)
     elif cmd["command"] == "progress":
         out = orch.progress()
     elif cmd["command"] == "release_audit":
@@ -97,10 +102,13 @@ def main(argv=None) -> int:
     else:
         out = {"status": "UNKNOWN_COMMAND"}
 
+    if cmd["command"] == "resume" and cmd.get("run_id") is None:
+        # 76V/OBS-295:输出首行明示所续 RUN_ID
+        print(f"[76V] 续发所选 RUN_ID: {out.get('resumed_run_id') or out.get('run_id')}")
     print(json.dumps(out, ensure_ascii=False, indent=2))
     status = str(out.get("status", out.get("RELEASE_AUDIT", "")))
     return 0 if status in (
-        "COMPLETE", "ALREADY_COMPLETE", "PASS", "MULTIPLE_INCOMPLETE",
+        "COMPLETE", "ALREADY_COMPLETE", "PASS", "NO_RESUMABLE_RUN",
         "AWAITING_AGENT", "AWAITING_MEDIA_ASSET_APPROVAL", "",
     ) or out.get("RELEASE_AUDIT") == "PASS" else 1
 
