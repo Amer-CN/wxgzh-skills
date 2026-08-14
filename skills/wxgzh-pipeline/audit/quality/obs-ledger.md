@@ -217,6 +217,11 @@
 | 295 | 无参「续发」遇历史积压报 MULTIPLE_INCOMPLETE:cli resume 分支 len(inc)>1 即拦截,已连续两轮生产踩到(每次白付一次往返) | 已修(76V:cli.py resume 分支删除 MULTIPLE 拦截——无参续发取 started_at 最新未完成 RUN 自动续跑(orch._find_resume_run 已按 newest first 取最新),输出首行明示所续 RUN_ID;零个未完成才报 NO_RESUMABLE_RUN;测试 +3(多积压取最新/单个直取/零个报错)) | wxgzh-pipeline wxgzh_pipeline/cli.py+tests/test_hf76v_resume.py | 76V |
 | 296 | 媒体审批 readiness_sha 引用过期/口径不一+重复图(镜像资产)无 readiness 路径:Gemini 轮媒体段为此多花 ~8 分钟 | 已修(76V 立规:contracts/04_media_enrichment.yaml+media SKILL.md 审批纪律——approval_readiness_sha256 一律从最新 approval_readiness_report.json 原样照抄,禁止自算/引用旧轮,readiness 重生成后旧 sha 一律作废;重复/镜像资产与其 canonical 孪生共享审批依据(指向孪生资产 ID+复用其 readiness),禁止裸批;测试 +2(契约+SKILL 断言)) | wxgzh-pipeline contracts/04_media_enrichment.yaml;media-enrichment SKILL.md | 76V |
 | 297 | 预算均分致首轮超差:align_outline_budget 按原 planned 比例缩放(实际均分),无素材密度加权——GLM 轮单节超 41.8% 起、Gemini 轮均衡 4 轮,返工集中写作段尾部 | 已修(76V:align_outline_budget 升级分节加权预算——按各节 evidence_ids 数量(素材密度)分配字数权重,不再均分;输出每节 ±5% 容差区间;无 evidence 回退原比例(76F 语义);76R material_exhausted 语义不变(素材耗尽写干即停);测试 +4(加权正确/容差区间/无 evidence 回退/76R 回归)) | super-writer scripts/align_outline_budget.py+tests/test_hf76v_weighted_budget.py | 76V |
+| 298 | pattern_audit 跨句匹配 TypeError 崩溃:SC-007a「不在于…而在于」「。而是」等跨句正则段落命中但单句搜不到 span → first_span=None → _finding 解包崩溃,agent 被迫改写正常句子躲避崩溃(最坏激励) | 已修(76W:pattern_audit 三处 first_span=None 解包点(主循环 SC-007a/SC-007b 升级块/SC-011 升级块)加段落 span 兜底——跨句匹配失败=正常命中(span 指向段首),永不许异常崩溃;回归测试含「。而是」跨句样本+最小触发集;zh 85→87,verify_release PASS) | zh-human-writing scripts/pattern_audit.py+tests/run_tests.py | 76W |
+| 299 | 自动放行配置生产未生效:.env WXGZH_MEDIA_AUTO_APPROVE=1 对 _build_media_request 不可见——orchestrator 仅在 doctor() 合并 .env,_context/ctx.env 不含 .env 值,agent 仍手工审批 | 已修(76W:orchestrator _context 合并项目 .env(与 doctor() 同链路 env.setdefault),WXGZH_* 开关对媒体请求等消费点生效;开关状态入 receipt 可审计;测试 +1(.env 置 1 后 ctx.env 可见)) | wxgzh-pipeline wxgzh_pipeline/orchestrator.py | 76W |
+| 300 | align 权重不同步缝:76V 分节加权只改 planned_chars 未同步 weight_percent,agent 手工对齐权重;且写回丢冒号后空格(格式缝) | 已修(76W:align_outline_budget 写回时 planned_chars 与 weight_percent 同一分配结果原子同步(round 1 位,合计≈100%);写回保留冒号后空格;既有加权/回退/76R 语义不变;测试 +2(两字段一致/回退路径)) | super-writer scripts/align_outline_budget.py+tests/test_hf76v_weighted_budget.py | 76W |
+| 301 | pwsh 重定向保存校验报告致中文乱码:PowerShell > / >> 按 UTF-16 写,哈希比对抬升 exit=3 | 已修(76W 立规:sw 指令明规——校验报告/JSON 落盘禁止 pwsh 重定向,一律 cmd /c 字节级重定向或 python 写文件(encoding=utf-8);测试 +1 断言) | wxgzh-pipeline wxgzh_pipeline/producers.py | 76W |
+| 302 | 重复「发文」短语误建空 RUN:同选题重复发文无提示,误建等待态 RUN | 已修(76W:orchestrator run() 建 RUN 前查同选题(slug 规范化标题相同)等待态 RUN,存在则输出 duplicate_topic_warning(不硬拦,用户可有意复跑);测试 +1) | wxgzh-pipeline wxgzh_pipeline/orchestrator.py | 76W |
 
 ## 本台账口径
 
@@ -315,6 +320,9 @@
 
 60. 76V(三项生产摩擦修理,用户批准 2026-08-15,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH 键维持 0):①OBS-295 续发默认值(pipeline)——无参续发取 started_at 最新未完成 RUN 自动续跑并明示 RUN_ID,MULTIPLE_INCOMPLETE 报错路径删除;②OBS-296 readiness_sha 口径+重复图路径(media 文档+pipeline 契约)——照抄最新报告禁止自算、孪生共享审批依据禁止裸批;③OBS-297 预算分节加权(sw)——align_outline_budget 按各节 evidence 密度分配权重+±5% 容差,无 evidence 回退原比例,76R 语义不变。升版:sw 0.4.2-rc1 / media 0.1.0-dev21 / pipeline 0.1.0-dev2-hotfix9R5;relock #59(sw,root/version 变,validator/entrypoint 不变)/#60(media,root 变=SKILL.md 文档,version 随升 dev21);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 503 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);sw 261 passed/2 skipped/1 failed(dist 基线);media 338/7(未动代码仅文档)。程序校验:唯一编号 179(119–297 连续)、R59 22=22 差集空。
 
+61. 76W(生产修理包,用户批准 2026-08-15,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH 键维持 0。★流程修订:修理档在缺陷确认后直接随分析发出,不再设「等发令」环节):①OBS-298 pattern_audit 三处 None 解包崩溃根治(段落 span 兜底,跨句命中=正常命中);②OBS-299 自动放行点火(orchestrator _context 合并 .env,WXGZH_* 生效);③OBS-300 align 权重原子同步(planned_chars↔weight_percent,格式缝顺带修);④OBS-301 pwsh 重定向乱码明规(cmd /c 或 python 写文件);⑤OBS-302 重复选题 RUN 防护(slug 相等+等待态警告,不硬拦)。升版:zh 0.1.5 / sw 0.4.3-rc1 / pipeline 0.1.0-dev2-hotfix9R6;relock #61(zh,root/version 变,validator/entrypoint 不变)/#62(sw,root/version 变,validator/entrypoint 不变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 506 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);zh 87/87(verify_release PASS);sw 263 passed/2 skipped/1 failed(dist 基线)。程序校验:唯一编号 181(119–302 连续)、R59 22=22 差集空。
+
+
 
 
 
@@ -360,6 +368,7 @@
 > `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 76T 十八次临时由 0 改为 1(批准人=用户,范围=档 76T 封面划线句改义,涉及子树 super-writer+wxgzh-pipeline+gzh-design 渲染端接线),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76V 十九次临时由 0 改为 1(批准人=用户,范围=档 76V 三项生产摩擦修理,涉及子树 wxgzh-pipeline+super-writer+media-enrichment 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> `RELOCK_ALLOWED` 于档 76W 二十次临时由 0 改为 1(批准人=用户,范围=档 76W 生产修理包,涉及子树 zh-human-writing+super-writer+wxgzh-pipeline),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
