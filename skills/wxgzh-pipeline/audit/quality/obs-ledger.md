@@ -304,6 +304,9 @@
 
 58. 76T(封面划线句改义,用户批准 2026-08-14,RELOCK_ALLOWED 与 GZH_DESIGN_WRITE_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0):OBS-293——用户裁决方向 A:划线句改放「被否定的旧认知」;handoff 新增 formatter.cover.strike_assumption(可选,≤40 字,被本文证据否定的旧认知/流行看法,须素材可支撑禁稻草人);渲染端 render_article --strike-assumption 驱动划线句槽,缺失整行不渲染(不再用 hook_line 填充划线位);旧 strike 保留读取兼容不渲染;hook_line 仅导读段副标题兜底;sw 契约/指令/校验(advisory)同步;锚 JSON 随 render_entry 重生成(HF-6R,45 行零差异,仅 renderer_sha/generated_at 变)。升版:sw 0.4.1-rc1 / gzh v2026.08.14-hammer.15 / pipeline 0.1.0-dev2-hotfix9R3;relock #57(sw,root/version 变,validator/entrypoint 不变)/#58(gzh,entrypoint/render_entry/component_source/root/version 变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 495 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);gzh 246 passed/21 skipped;sw 257 passed/2 skipped/1 failed(dist 基线)。程序校验:唯一编号 175(119–293 连续)、R59 22=22 差集空。
 
+　　【76T-F 补记】档 76T 验收 PASS——76T-R 复核确认锁产物在册(中间 commit a036dfb:锁 22 改 + history +42 + backups ×2 + 锚 4 + observability 同步);doctor / OBS_69 / OBS_68 双侧 MATCH、relock dry-run ×4 全「无变化」。
+　　【审核方缺陷 #100】76T 初验仅点验首尾两颗 commit(feat 23b6a74 + docs eac2b77)、漏查中间 commit a036dfb,误报「锁产物未归仓」——审核方缺陷(验收方法论)。修正规则两条:①审核侧:批次末端点验必须枚举上一 tip 至新 tip 的完整 commit 区间、逐颗核 stat,不得只验首尾;②执行侧:回报的 commit 链列表必须列全区间内所有 commit(76T 原报告把 a036dfb 内容归到 docs commit 名下,为本次误报诱因,一并记入)。
+
 
 
 
@@ -346,6 +349,7 @@
 > \RELOCK_ALLOWED\ 于档 76Q 十六次临时由 0 改为 1(批准人=用户,范围=档 76Q 生产暴露修理包,涉及子树 wxgzh-pipeline+zh-human-writing+super-writer 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76R 十七次临时由 0 改为 1(批准人=用户,范围=档 76R 提速批+pool-fetch ID 缺陷修复,涉及子树 wxgzh-pipeline+super-writer+media-enrichment),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 76T 十八次临时由 0 改为 1(批准人=用户,范围=档 76T 封面划线句改义,涉及子树 super-writer+wxgzh-pipeline+gzh-design 渲染端接线),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
 > **归位(档76Q-F,审核方 2026-08-14 验收通过):\RELOCK_ALLOWED\ 由 1 改回 0**。
