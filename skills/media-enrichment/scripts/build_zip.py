@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build script for media-enrichment v0.1.0-dev20.
+"""Build script for media-enrichment v0.1.0-dev21.
 
 Sequence:
   a. Generate all fixtures
@@ -28,7 +28,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = SKILL_ROOT.parent.parent
-BUILD_VERSION = "0.1.0-dev20"
+BUILD_VERSION = "0.1.0-dev21"
 
 OUTPUT_ZIP = PROJECT_ROOT / f"media-enrichment-v{BUILD_VERSION}.zip"
 EVIDENCE_DIR = SKILL_ROOT / "evidence"
