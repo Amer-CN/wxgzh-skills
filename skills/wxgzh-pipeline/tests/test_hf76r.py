@@ -47,8 +47,9 @@ def test_obs288_common_rule_not_copied_in_source():
 
 def _extract_old_instructions():
     """从 HEAD(改写前)提取 AGENT_INSTRUCTIONS 字典。"""
+    # 基线 = 76Q-F 终态(8f6a775),即 76R 指令瘦身前
     old_src = subprocess.run(
-        ["git", "show", "HEAD:skills/wxgzh-pipeline/wxgzh_pipeline/producers.py"],
+        ["git", "show", "8f6a775:skills/wxgzh-pipeline/wxgzh_pipeline/producers.py"],
         capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
     start = old_src.find("AGENT_INSTRUCTIONS = {")
     end_marker = old_src.index("}", old_src.index('"zh_human_writing"'))
