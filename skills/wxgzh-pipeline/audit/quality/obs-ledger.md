@@ -322,6 +322,8 @@
 
 61. 76W(生产修理包,用户批准 2026-08-15,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH 键维持 0。★流程修订:修理档在缺陷确认后直接随分析发出,不再设「等发令」环节):①OBS-298 pattern_audit 三处 None 解包崩溃根治(段落 span 兜底,跨句命中=正常命中);②OBS-299 自动放行点火(orchestrator _context 合并 .env,WXGZH_* 生效);③OBS-300 align 权重原子同步(planned_chars↔weight_percent,格式缝顺带修);④OBS-301 pwsh 重定向乱码明规(cmd /c 或 python 写文件);⑤OBS-302 重复选题 RUN 防护(slug 相等+等待态警告,不硬拦)。升版:zh 0.1.5 / sw 0.4.3-rc1 / pipeline 0.1.0-dev2-hotfix9R6;relock #61(zh,root/version 变,validator/entrypoint 不变)/#62(sw,root/version 变,validator/entrypoint 不变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 506 passed/22 skipped/7 failed(与 76N 基线一致的环境红态);zh 87/87(verify_release PASS);sw 263 passed/2 skipped/1 failed(dist 基线)。程序校验:唯一编号 181(119–302 连续)、R59 22=22 差集空。
 
+　　【76W-F 补记】档 76W 验收 PASS(审核方按 #100 规则枚举全区间两颗 commit 逐颗点验一致:feat 06064cc + docs fa76e7b;relock dry-run ×4 全「无变化」、doctor / OBS_69 / OBS_68 双侧 MATCH)。
+
 
 
 
@@ -369,6 +371,7 @@
 > `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 76T 十八次临时由 0 改为 1(批准人=用户,范围=档 76T 封面划线句改义,涉及子树 super-writer+wxgzh-pipeline+gzh-design 渲染端接线),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76V 十九次临时由 0 改为 1(批准人=用户,范围=档 76V 三项生产摩擦修理,涉及子树 wxgzh-pipeline+super-writer+media-enrichment 文档),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
 > `RELOCK_ALLOWED` 于档 76W 二十次临时由 0 改为 1(批准人=用户,范围=档 76W 生产修理包,涉及子树 zh-human-writing+super-writer+wxgzh-pipeline),恢复条件=验收通过后立即改回 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76W-F,审核方 2026-08-15 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 
