@@ -23,6 +23,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from . import __version__ as SKILL_VERSION
+from .image_deduplicator import hamming_distance, PHASH_THRESHOLD
 
 WECHAT_IMAGE_HOSTS = ("mmbiz.qpic.cn", "mmbiz.qlogo.cn")
 
@@ -66,6 +67,7 @@ def build_bindings(manifest: dict[str, Any], max_images: int | None = None) -> d
             "asset_id": asset.get("asset_id"),
             "asset_origin": asset.get("asset_origin"),
             "sha256": asset.get("sha256"),
+            "perceptual_hash": asset.get("perceptual_hash"),
             "remote_url": remote_url,
             "upload_mode": upload.get("mode"),
             "response_sha256": upload.get("response_sha256"),
@@ -80,6 +82,45 @@ def build_bindings(manifest: dict[str, Any], max_images: int | None = None) -> d
             },
         })
 
+    # 76X-R/OBS-303:绑定前画面级去重——同一画面(sha256 逐字节相同或感知哈希
+    # Hamming ≤ PHASH_THRESHOLD)只保留 readiness/质量更高者,落选资产本轮不绑定
+    # 并留痕(记录被谁挤掉、依据什么哈希)。修复 pool-fetch 绕过 discover dedup
+    # 导致的同画面双资产(20260815 dxghp1: A-005/A-011 同 sha256 各绑一次)。
+    dedup_notes: list[dict] = []
+    kept: list[dict] = []
+    for b in body_images:
+        dup_of = None
+        for k in kept:
+            if b.get("sha256") and b["sha256"] == k.get("sha256"):
+                dup_of = k
+                break
+            b_ph = (b.get("perceptual_hash") or "").strip()
+            k_ph = (k.get("perceptual_hash") or "").strip()
+            if b_ph and k_ph and hamming_distance(b_ph, k_ph) <= PHASH_THRESHOLD:
+                dup_of = k
+                break
+        if dup_of is None:
+            kept.append(b)
+            continue
+        # 质量比较:优先有 claim/可读描述者;平局保留先到者(asset_id 排序稳定)
+        b_score = (len(b.get("claim_ids") or []), bool((b.get("alt_text") or "").strip()))
+        k_score = (len(dup_of.get("claim_ids") or []), bool((dup_of.get("alt_text") or "").strip()))
+        if b_score > k_score:
+            kept.remove(dup_of)
+            kept.append(b)
+            loser = dup_of
+        else:
+            loser = b
+        dedup_notes.append({
+            "kept_asset_id": dup_of.get("asset_id") if b_score <= k_score else b.get("asset_id"),
+            "dropped_asset_id": loser.get("asset_id"),
+            "basis": "sha256" if (b.get("sha256") and b["sha256"] == dup_of.get("sha256")) else "phash",
+            "kept_sha256": (dup_of if b_score <= k_score else b).get("sha256"),
+            "dropped_sha256": loser.get("sha256"),
+            "note": "same frame deduped at binding (76X-R/OBS-303)",
+        })
+    body_images = kept
+
     # 76G-R:max_images 截断最终入文图数(76C 语义:max_total_images 只约束
     # 最终入文;上传可能多于上限,绑定截断到上限)
     if max_images is not None and max_images > 0:
@@ -92,6 +133,7 @@ def build_bindings(manifest: dict[str, Any], max_images: int | None = None) -> d
         "article_sha256": manifest.get("input", {}).get("article_sha256", ""),
         "body_image_count": len(body_images),
         "body_images": body_images,
+        "binding_dedup_notes": dedup_notes,
         # bindings never grant publish rights; downstream still gates on its own.
         "publish_allowed": False,
     }

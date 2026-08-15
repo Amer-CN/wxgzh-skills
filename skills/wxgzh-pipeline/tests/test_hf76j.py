@@ -124,13 +124,3 @@ def test_obs271_real_renderer_probe_table_and_lists_supported(tmp_path):
         assert "SENTINEL_A1" in body and "SENTINEL_A2" in body, f"{key}: 哨兵缺失"
 
 
-def test_obs269_caption_title_cleaning():
-    clean = PR._clean_caption_title
-    assert clean("GitHub - MiniMax H3 发布公告") == "MiniMax H3 发布公告"
-    assert clean("MiniMax H3 | 官方博客") == "MiniMax H3"
-    assert clean("MiniMax H3 - 官方博客") == "MiniMax H3"
-    assert clean("标题：：多余冒号") == "标题：多余冒号"
-    assert clean("：开头冒号") == "开头冒号"
-    assert clean("普通标题") == "普通标题"
-    assert clean("") == ""
-

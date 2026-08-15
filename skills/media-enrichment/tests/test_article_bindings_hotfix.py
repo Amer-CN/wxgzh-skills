@@ -30,7 +30,11 @@ def _load_validator():
 
 
 def _asset(asset_id, decision="eligible", status="success",
-           remote="https://mmbiz.qpic.cn/mmbiz_png/abc/640?wx_fmt=png", sha="a" * 64):
+           remote="https://mmbiz.qpic.cn/mmbiz_png/abc/640?wx_fmt=png", sha=None):
+    # 76X-R/OBS-303:默认 sha 按 asset_id 派生(唯一画面),避免绑定画面级去重
+    # 误伤既有 max_images 截断测试(占位 sha 相同曾全被去重到 1)。
+    if sha is None:
+        sha = hashlib.sha256(asset_id.encode("utf-8")).hexdigest()
     return {
         "asset_id": asset_id, "asset_origin": "source",
         "material_ids": ["M-001"], "claim_ids": ["C-01"],
@@ -51,7 +55,7 @@ def _manifest(assets):
 
 class TestBuildBindings:
     def test_eligible_uploaded_wechat_asset_is_bound(self):
-        m = _manifest([_asset("A-001")])
+        m = _manifest([_asset("A-001", sha="a" * 64)])
         b = build_bindings(m)
         assert b["body_image_count"] == 1
         item = b["body_images"][0]

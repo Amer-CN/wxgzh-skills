@@ -893,7 +893,11 @@ def _entry_args(
             args.extend(["--discovery-manifest", str(discovery_manifest)])
         return args
     if stage == "gzh_design":
-        bindings_path = _captioned_bindings_path(ctx)
+        # 76X-R/用户裁决:图注功能整体下线——gzh 直传媒体冻结 bindings(恢复 76I 前行为),
+        # 不再生成 captioned 副本;渲染产物正文图一律无 caption。
+        # 冻结 bindings 可能含旧 caption 字段(76I 时代产物),直传前剥离,渲染器零改动。
+        frozen_bnd = Path(ctx.run_dir) / "media_enrichment" / "article_image_bindings.json"
+        bindings_path = _strip_captions(frozen_bnd)
         args = ["--article", str(_frozen_article(ctx)),
                 "--bindings", str(bindings_path),
                 "--output-dir", str(sd), "--theme", "smartisan"]
@@ -929,94 +933,29 @@ _OFFICIAL_HINTS = ("official", "官方", "announcement", "公告", "发布",
                    "github.com/minimax", "minimax.io", "releases")
 
 
-def _caption_type(asset: dict, title: str) -> str:
-    """76I/OBS-269:图注来源类型——官方资料图 / 社区演示 / 视频封面 / 本文数据图表。"""
-    if asset.get("asset_origin") == "generated":
-        return "本文数据图表"
-    if asset.get("video_poster"):
-        return "视频封面"
-    low = f"{title} {asset.get('source_page_url') or ''}".lower()
-    if any(h in low for h in _OFFICIAL_HINTS):
-        return "官方资料图"
-    return "社区演示"
-
-
-def _clean_caption_title(t: str) -> str:
-    """76I 遗留打磨(记入 OBS-269):图注标题清理——剥离站点前缀(「GitHub - 」等)、
-    「 | 」「 - 」后缀段与多余冒号。"""
-    s = (t or "").strip()
-    # 76J/OBS-269 打磨:前缀剥离仅限 ASCII 站点名(GitHub - 等),避免把
-    # 「MiniMax H3 - 官方博客」这类真实标题当站点前缀吃掉(后缀段由下方 - 规则剥)。
-    m = re.match(r"^[A-Za-z0-9.]{1,24} - ", s)
-    if m:
-        s = s[m.end():]
-    for sep in (" | ", " - "):
-        idx = s.find(sep)
-        if idx > 0:
-            s = s[:idx]
-    s = re.sub(r"[：:]{2,}", lambda m: m.group(0)[0], s)  # 多余冒号合并为第一个冒号的宽度
-    s = re.sub(r"^[:：]\s*", "", s)
-    return s.strip()
-
-
-def _readable_desc(desc: str) -> str:
-    """76I/OBS-269:content_description 可读性判定——<img 开头的裸 HTML 判不可读。"""
-    d = (desc or "").strip()
-    if not d or d.startswith("<img"):
-        return ""
-    return d
-
-
-def _captioned_bindings_path(ctx) -> Path:
-    """76I/OBS-269:图注合成——为 gzh 渲染生成 captioned bindings 副本
-    (媒体冻结 bindings 不动,media receipt 不受影响);图注=来源类型+素材标题
-    [+可读摘要],≤40 字,任何情况不含 HTML 片段。"""
-    rd = Path(ctx.run_dir)
-    src_bnd = rd / "media_enrichment" / "article_image_bindings.json"
-    if not src_bnd.is_file():
-        return src_bnd
+def _strip_captions(src: Path) -> Path:
+    """76X-R/用户裁决:图注下线——剥离冻结 bindings 中 body_images 的 caption 字段,
+    返回无 caption 副本路径(渲染器零改动;无 caption 的 bindings 原样直传)。"""
+    if not src.is_file():
+        return src
     try:
-        bnd = read_json(src_bnd)
+        bnd = read_json(src)
     except (OSError, ValueError):
-        return src_bnd
-    titles = {}
-    reg_p = rd / "super_writer" / "canonical_claim_registry.json"
-    if reg_p.is_file():
-        try:
-            reg = read_json(reg_p)
-            for m in reg.get("materials") or []:
-                if m.get("material_id"):
-                    titles[str(m["material_id"])] = str(m.get("title") or "")
-        except (OSError, ValueError):
-            pass
-    man_p = rd / "media_enrichment" / "media_manifest.json"
-    man = {}
-    if man_p.is_file():
-        try:
-            man = read_json(man_p)
-        except (OSError, ValueError):
-            man = {}
-    by_id = {a.get("asset_id"): a for a in man.get("assets", [])}
-    out_dir = rd / "gzh_design" / "inputs"
-    out_dir.mkdir(parents=True, exist_ok=True)
+        return src
     out = dict(bnd)
+    changed = False
     for b in out.get("body_images", []):
-        aid = b.get("asset_id")
-        a = by_id.get(aid) or {}
-        mids = b.get("material_ids") or a.get("material_ids") or []
-        title = next((titles.get(str(m)) for m in mids if titles.get(str(m))), "") or ""
-        ctype = _caption_type(a, title)
-        desc = _readable_desc(a.get("content_description") or "")
-        title_clean = _clean_caption_title(title)
-        if desc:
-            title_part = title_clean[:14] if title_clean else "素材"
-            caption = f"{ctype}·{title_part}:{desc[:20]}"
-        else:
-            caption = f"{ctype}·{title_clean[:24]}" if title_clean else ctype
-        b["caption"] = caption[:40]
-        b["alt_text"] = b.get("alt_text") or caption[:40]
-    p = out_dir / "article_image_bindings.captioned.json"
-    p.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+        if b.get("caption"):
+            b["caption"] = None
+            changed = True
+        if b.get("alt_text") and (b["alt_text"] or "").startswith("图："):
+            b["alt_text"] = None
+            changed = True
+    if not changed:
+        return src
+    out_dir = Path(src).parent
+    p = out_dir / "article_image_bindings.no_caption.json"
+    p.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
     return p
 
 
