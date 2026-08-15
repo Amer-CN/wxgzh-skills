@@ -1158,5 +1158,23 @@
     "new_skill_version": "0.4.3-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260815T165424Z-439bacb4",
+    "skill": "media-enrichment",
+    "reason": "76X-R:OBS-303 绑定画面级去重+0.1.0-dev22",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-15T16:54:24Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "3a9daf67c34c35cfe3cb50bcc845c3efa0a79ffad3c475e202344af2b4982499",
+    "new_root_sha256": "ebe20721bdef84af36f7c4652f41a429e56f941089e0e831c20eb49438290f6c",
+    "old_full_commit_sha": "50b067d569acdbb11192917e1aae9ca5fbecbe37",
+    "new_full_commit_sha": "63b43a2a36e66aeb6f078ffa6923cc992cc769f4",
+    "old_source_tree_sha": "55bf0ea9b2f1d5f6ebfa26d5199fb0bbd72aa99a",
+    "new_source_tree_sha": "1e006a24803b4dd1887cdc8cdd3a8fc6be1ae1ef",
+    "old_skill_version": "0.1.0-dev21",
+    "new_skill_version": "0.1.0-dev22",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
