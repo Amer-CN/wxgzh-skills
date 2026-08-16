@@ -1176,5 +1176,23 @@
     "new_skill_version": "0.1.0-dev22",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260816T070933Z-e5dd9dbb",
+    "skill": "super-writer",
+    "reason": "76Y-R:OBS-305 锁钉守卫+0.4.4-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-16T07:09:33Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "b4ebd27b0363e24f367f52f671b173160ba2611bccb4562c57c8c2db3bc8ef7f",
+    "new_root_sha256": "f7621b453f18b5d7ef91b30c6e8359570dc8959bb2da6d6a3ae9be612f1fa850",
+    "old_full_commit_sha": "06064ccd44e55be96eb8fb50ede9841e77b3e236",
+    "new_full_commit_sha": "1061d2c6018c92e6e4b6a0ff181b8b57f860b449",
+    "old_source_tree_sha": "c7674b6c3e54c0cf7fb887498ee7c838c0915868",
+    "new_source_tree_sha": "f7a9a8a9107093512badf0d2f75d119ad2a3e9d5",
+    "old_skill_version": "0.4.3-rc1",
+    "new_skill_version": "0.4.4-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
