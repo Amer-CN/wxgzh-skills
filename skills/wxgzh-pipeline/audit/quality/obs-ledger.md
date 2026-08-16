@@ -329,6 +329,9 @@
 
 63. 76Y-R(纪律事件处置包:未授权 relock 侦察+锁基线恢复+根因分流+台账计数更正,用户批准 2026-08-16,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即归 0;GZH 键维持 0):①侦察四问——工作树 clean/HEAD=8591770;jsffln 越权 relock 无正式留痕(未走 relock 工具,无 history/备份件;当前锁 sw 条目与 76X-R 备份件逐字节一致干净无污染);formatter-registry.yaml 在锁钉 runtime_manifest 范围内,触发=validate_semantic_map --regenerate-registry(RUN 中误执行);.env WXGZH_MEDIA_AUTO_APPROVE=1 链路通(jsffln 请求 auto_approve=True),无 auto_approved 因候选证据链不齐。②根因分流=案 A(RUN 写穿锁钉文件=defect)——regenerate_registry 加显式授权守卫 env WXGZH_REGENERATE_REGISTRY_ALLOWED=1,无授权拒绝写并提示停机报告;pipeline 指令补锁纪律明规(RUN 中遇 FAIL_CLOSED 停机报告等档,禁止自行 relock/扩权/写 skill 树);测试 +2。③台账计数更正——口径 61 注「76Y-R 更正:实测 184(119–302)」、口径 62 注「实测 185(119–303)」;OBS-304(唯一编号计数名实不符,#98/#99 同族)与 OBS-305(写穿锁钉文件)落账;审核方缺陷 #101(接手核验照抄台账计数未实测);口径节补防再发规则(唯一编号以主表五列行去重实测为准,写档/验收前必跑实测命令)。升版:sw 0.4.3-rc1→0.4.4-rc1(validate_semantic_map 守卫);relock #64(sw);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧。程序校验:唯一编号实测 186(119–304 连续,OBS-305 登记后区间至 305 应 186;以实测命令为准)。
 
+　　【76Y-R-F 补记】档 76Y-R 验收 PASS(审核方按 #100 规则枚举全区间两颗 commit 逐颗点验一致:feat 1061d2c6 + docs 348df3a5;锁文件仅 sw 条目变动,entrypoint/validator 哈希原值不动;备份件在册,R93 同步)。附记:案 A 实现路径与档字面有偏差(档写「改写入 RUN 目录或移出锁钉范围」,实现为「维护命令加显式授权守卫」)——根因系 RUN 中误执行维护命令,守卫直接封死误执行路径且保留开发期合法用途,意图达成,偏差接受。auto_approved 两轮未触发之谜随侦察结案:.env 链路通(jsffln 请求 auto_approve=True),零触发均因候选证据链不齐,非链路缺陷。
+
+
 　　【审核方缺陷 #101】接手核验照抄台账计数未实测(2026-08-15 接手窗口)——76X-R 验收实测发现口径 61 报 181 实测 184、口径 62 报 183 实测 185;OBS-201/#98/#99 同族。修正规则:唯一编号一律以主表五列行去重实测为准,写档/验收前必跑实测命令。
 
 
@@ -389,6 +392,7 @@
 > `RELOCK_ALLOWED` 于档 76X-R 二十一次临时由 0 改为 1(批准人=用户,范围=档 76X-R 同画面双绑修复+图注下线,涉及子树 media-enrichment+wxgzh-pipeline),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76X-F,审核方 2026-08-16 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
 > `RELOCK_ALLOWED` 于档 76Y-R 二十二次临时由 0 改为 1(批准人=用户,范围=档 76Y-R 纪律事件处置包,涉及子树 super-writer+wxgzh-pipeline),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76Y-F,审核方 2026-08-16 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
 > **归位(档76W-F,审核方 2026-08-15 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
