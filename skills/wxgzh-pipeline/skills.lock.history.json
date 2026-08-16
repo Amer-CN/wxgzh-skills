@@ -1194,5 +1194,27 @@
     "new_skill_version": "0.4.4-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260816T132527Z-1f046e12",
+    "skill": "zh-human-writing",
+    "reason": "76Z:开发期报告清理+0.1.6",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-16T13:25:27Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "96460675663c17424718523a18f6ec4b386ae69e91640ccfd1f3b5ba25223f72",
+    "new_root_sha256": "80da119461163b284e7c00192feae741117489a511cd3087d1e3617c94adbc8c",
+    "old_manifest_sha256": "e4868e4f4f0f313930f12c568c106a820b89ece90d56f66cda5a608ca7e6943e",
+    "new_manifest_sha256": "3584cb13953ed19085ce48cd1cd6f3ef1e5d397f728dd1320b7f01943cacd850",
+    "old_file_count": 58,
+    "new_file_count": 50,
+    "old_full_commit_sha": "06064ccd44e55be96eb8fb50ede9841e77b3e236",
+    "new_full_commit_sha": "01f9fd502e6cd6d4cfce81bbb61ec6209bf23458",
+    "old_source_tree_sha": "f8306efe86334f0451c7bccdab28bd5f4dd43fad",
+    "new_source_tree_sha": "ba3486cbd036a5cdc872da1f3825036606463b67",
+    "old_skill_version": "0.1.5",
+    "new_skill_version": "0.1.6",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
