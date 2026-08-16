@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import wxgzh_pipeline.producers as PR
@@ -80,7 +81,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         for r in old_rules:
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
-        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301"}, f"{k}: 意外新增规则 {extra}"
+        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301", "76Y-R/OBS-305"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -167,6 +168,28 @@ def test_obs302_duplicate_run_warning():
         if _slugify(str(_st.get("topic", "") or "")) == _slugify("GLM 5.3 发布"):
             dup.append(_r.name)
     assert dup, "同选题等待态 RUN 应被识别"
+
+
+def test_obs305_lock_discipline_rule():
+    """76Y-R/OBS-305:sw 指令含锁纪律明规(遇 FAIL_CLOSED 停机报告禁自行 relock)。"""
+    instr = PR.AGENT_INSTRUCTIONS["super_writer"]
+    assert "76Y-R/OBS-305" in instr
+    assert "禁止自行 relock" in instr
+    assert "停机报告等档" in instr
+    assert "--regenerate-registry" in instr
+
+
+def test_obs304_ledger_count_command():
+    """76Y-R/OBS-304:唯一编号实测命令(主表五列行去重)输出=区间全长。"""
+    import re
+    text = (SKILL_ROOT / "audit" / "quality" / "obs-ledger.md").read_text(
+        encoding="utf-8")
+    nums = {int(x) for x in re.findall(r"^\|\s*(\d{3})\s*\|", text, re.M)}
+    n = len(nums)
+    # OBS-304/305 登记后区间 119..305 = 187 个编号;去重实测为准
+    assert n == 187, f"唯一编号实测 {n} != 187"
+    # 区间连续无缺号
+    assert set(range(119, 306)) <= nums, "119..305 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():

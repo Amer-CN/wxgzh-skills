@@ -46,6 +46,7 @@ Output: JSON + human-readable summary.
 # 72A-F: runtime_manifest 响应性验证，语义中性。
 import argparse
 import hashlib
+import os
 import json
 import re
 import sys
@@ -1158,7 +1159,18 @@ REGISTERED_COMPONENTS = _get_static_components()
 
 
 def regenerate_registry(formatter_root):
-    """Regenerate SHA256 hashes in formatter-registry.yaml."""
+    """Regenerate SHA256 hashes in formatter-registry.yaml.
+
+    76Y-R/OBS-305:formatter-registry.yaml 是锁钉 runtime_manifest 覆盖文件,RUN 中
+    agent 误执行本命令会写穿 skill 树致哈希漂移(jsffln 越权 relock 事件根因)。
+    现加守卫:须显式 env WXGZH_REGENERATE_REGISTRY_ALLOWED=1(仅开发期维护用)
+    才写回;否则拒绝并提示停机报告,禁止 RUN 中自行重锁。
+    """
+    if os.environ.get("WXGZH_REGENERATE_REGISTRY_ALLOWED", "0").strip().lower() not in ("1", "true", "yes"):
+        print("ERROR: --regenerate-registry 写 references/formatter-registry.yaml(锁钉文件)需显式授权"
+              " env WXGZH_REGENERATE_REGISTRY_ALLOWED=1;RUN 中遇锁 FAIL_CLOSED 应停机报告等档,"
+              "禁止自行 relock/重生成(76Y-R/OBS-305)", file=sys.stderr)
+        sys.exit(3)
     formatter_root = Path(formatter_root)
     registry_path = Path(__file__).parent.parent / 'references' / 'formatter-registry.yaml'
     if not registry_path.exists():

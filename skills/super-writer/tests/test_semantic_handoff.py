@@ -2004,3 +2004,28 @@ def test_h2_component_policy_missing_field_reports_error(tmp_path):
     errors, _, _ = validate_semantic_map(article_path, sm_path)
     assert any('prohibit_content_invention' in e and 'missing' in e.lower() for e in errors), \
         f"Expected missing field error for prohibit_content_invention, got: {errors}"
+
+def test_regenerate_registry_guard_blocks_without_env(tmp_path, monkeypatch):
+    """76Y-R/OBS-305:--regenerate-registry 无授权 env 时拒绝写锁钉文件。"""
+    import subprocess, sys
+    # 用子进程跑(monkeypatch env 置空)
+    monkeypatch.delenv("WXGZH_REGENERATE_REGISTRY_ALLOWED", raising=False)
+    monkeypatch.setenv("WXGZH_REGENERATE_REGISTRY_ALLOWED", "0")
+    import importlib.util
+    script = Path(__file__).resolve().parents[1] / "scripts" / "validate_semantic_map.py"
+    r = subprocess.run([sys.executable, "-X", "utf8", str(script),
+                        "--regenerate-registry",
+                        "--formatter-root", str(Path(__file__).resolve().parents[1])],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+    assert r.returncode == 3, r.stdout + r.stderr
+    assert "WXGZH_REGENERATE_REGISTRY_ALLOWED" in r.stderr
+    assert "禁止自行 relock" in r.stderr
+    # 锁钉文件未被改写
+    reg = Path(__file__).resolve().parents[1] / "references" / "formatter-registry.yaml"
+    before = reg.read_bytes()
+    # (无授权时不应写;再跑一次确认未变)
+    r2 = subprocess.run([sys.executable, "-X", "utf8", str(script),
+                        "--regenerate-registry",
+                        "--formatter-root", str(Path(__file__).resolve().parents[1])],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+    assert reg.read_bytes() == before, "无授权时锁钉文件被改写"

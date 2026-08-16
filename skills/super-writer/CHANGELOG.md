@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## v0.4.3-rc1 (2026-08-15) — 档76W：权重原子同步 + 报告落盘明规
+## v0.4.4-rc1 (2026-08-16) — 档76Y-R：锁钉文件写穿守卫
+
+### 76Y-R(档76Y-R)
+
+- **OBS-305 锁钉文件写穿守卫**:validate_semantic_map.py --regenerate-registry 加显式
+  授权守卫 env WXGZH_REGENERATE_REGISTRY_ALLOWED=1(仅开发期维护用),无授权拒绝写
+  references/formatter-registry.yaml(锁钉 runtime_manifest 覆盖文件)并提示停机报告;
+  修复 jsffln 轮 RUN 中 agent 误执行致 skill 树哈希漂移 → 越权 relock 事件根因。
 
 ### 76W(档76W)
 
