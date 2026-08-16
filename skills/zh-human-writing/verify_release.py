@@ -3,7 +3,7 @@
 verify_release.py — zh-human-writing canonical release verification.
 
 Checks:
-1. VERSION file exists and contains exactly "0.1.5"
+1. VERSION file exists and contains exactly "0.1.6"
 2. SHA256SUMS exists
 3. Every file in SHA256SUMS exists
 4. Every file SHA256 matches
@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-VERSION_EXPECTED = "0.1.5"
+VERSION_EXPECTED = "0.1.6"
 
 EXCLUDED_PATTERNS = [
     "SHA256SUMS",

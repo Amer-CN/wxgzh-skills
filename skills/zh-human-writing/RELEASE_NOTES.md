@@ -1,6 +1,12 @@
 # Release notes
 
-## v0.1.5
+## v0.1.6
+
+76Z(档76Z):
+
+- 根目录开发期报告清理(体脂 A 刀):删除 8 个运行时无人读的报告文件
+  (step-10 系列×4 + implementation-deviations/report + structural-validation + unit-test-report),
+  git 历史即档案;HANDOFF.md 因 FREEZE.md 引用保留。SHA256SUMS 重生成(69→61 条目)。
 
 76W(档76W):
 
