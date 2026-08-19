@@ -331,6 +331,9 @@
 
 64. 76Z(体脂 A 刀:zh-human-writing 根目录开发期报告清理,用户裁决 2026-08-16,RELOCK_ALLOWED 临时 0→1 范围本档(仅 zh-human-writing 子树),恢复条件=验收通过后立即归 0;GZH 键维持 0):删除 zh 根目录 8 个运行时无人读开发期报告(step-10-adversarial/architecture/defect-fix/test-report ×4 + implementation-deviations/report + structural-validation + unit-test-report,共 63,512 字节)——grep 实证仅被删文件互链,运行时零引用;HANDOFF.md 因 FREEZE.md 引用保留(条件项);SHA256SUMS 重生成(69→61 条目);无新 OBS(用户裁决 hygiene 项)。升版:zh 0.1.5→0.1.6;relock #65(zh,root/manifest 变、runtime_file_count 58→50、entrypoint/validator 不变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;zh 87/87+verify_release PASS。程序校验:唯一编号实测 187(119–305 连续无缺号)、R59 22=22 差集空。
 
+　　【76Z-F 补记】档 76Z 验收 PASS(审核方按 #100 规则枚举全区间三颗 commit 逐颗点验一致:feat 01f9fd5 + docs fc3e979 + docs ebcbed8;锁文件仅 zh 条目变动(root/version/manifest/文件数 58→50),entrypoint/validator 哈希原值不动;HANDOFF.md 按任务书条件项保留(FREEZE.md 有引用);备份件在册,R93 同步;zh 87/87 + verify_release PASS)。
+
+
 
 　　【76Y-R-F 补记】档 76Y-R 验收 PASS(审核方按 #100 规则枚举全区间两颗 commit 逐颗点验一致:feat 1061d2c6 + docs 348df3a5;锁文件仅 sw 条目变动,entrypoint/validator 哈希原值不动;备份件在册,R93 同步)。附记:案 A 实现路径与档字面有偏差(档写「改写入 RUN 目录或移出锁钉范围」,实现为「维护命令加显式授权守卫」)——根因系 RUN 中误执行维护命令,守卫直接封死误执行路径且保留开发期合法用途,意图达成,偏差接受。auto_approved 两轮未触发之谜随侦察结案:.env 链路通(jsffln 请求 auto_approve=True),零触发均因候选证据链不齐,非链路缺陷。
 
@@ -397,6 +400,7 @@
 > `RELOCK_ALLOWED` 于档 76Y-R 二十二次临时由 0 改为 1(批准人=用户,范围=档 76Y-R 纪律事件处置包,涉及子树 super-writer+wxgzh-pipeline),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76Y-F,审核方 2026-08-16 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
 > `RELOCK_ALLOWED` 于档 76Z 二十三次临时由 0 改为 1(批准人=用户,范围=档 76Z 体脂 A 刀(zh 根目录开发期报告清理),仅 zh-human-writing 子树),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
+> **归位(档76Z-F,审核方 2026-08-16 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
 > **归位(档76W-F,审核方 2026-08-15 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
 > **归位(档76R-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
