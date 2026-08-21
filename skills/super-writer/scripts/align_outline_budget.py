@@ -72,7 +72,8 @@ def parse_sections(text: str) -> list[dict]:
     return sections
 
 
-def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
+def align_outline(text: str, target: int,
+                  actual: dict[str, int] | None = None) -> tuple[str, dict, list[str]]:
     sections = parse_sections(text)
     errors = []
     if not sections:
@@ -82,11 +83,18 @@ def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
         return text, {}, ["outline: 各节 planned_chars 合计为 0,无法对齐"]
     # 76V/OBS-297:分节加权预算——按各节 evidence_ids 数量(素材密度)分配权重,
     # 不再均分/原比例;无任何 evidence 时回退原 planned 比例(与 76F 行为一致)。
+    # 77A/OBS-306:actual 映射存在时按各节实测可见字数重排,不再只按 planned 估计。
     total_ev = sum(s["evidence_count"] for s in sections)
-    if total_ev > 0:
+    if actual is not None and any(actual.get(s["title"], 0) > 0 for s in sections):
+        total_act = sum(max(actual.get(x["title"], 0), 1) for x in sections)
+        weights = {s["title"]: max(actual.get(s["title"], 0), 1) / total_act for s in sections}
+        alloc_mode = "actual_weighted"
+    elif total_ev > 0:
         weights = {s["title"]: s["evidence_count"] / total_ev for s in sections}
+        alloc_mode = "evidence_weighted"
     else:
         weights = {s["title"]: s["planned"] / total_old for s in sections}
+        alloc_mode = "original_proportional"
     # 整数分配(target 按权重切分,最大余数法保证合计=target)
     alloc = {s["title"]: int(target * weights[s["title"]]) for s in sections}
     rem = target - sum(alloc.values())
@@ -128,7 +136,7 @@ def align_outline(text: str, target: int) -> tuple[str, dict, list[str]]:
     return "\n".join(lines), {
         "target": target, "total_old": total_old, "total_new": total_new,
         "deviation": round(deviation, 4),
-        "allocation_mode": "evidence_weighted" if total_ev > 0 else "original_proportional",
+        "allocation_mode": alloc_mode,
         "tolerance": "±5%",
         "sections": new_sections,
     }, errors
@@ -139,6 +147,8 @@ def main(argv=None) -> int:
     ap.add_argument("--outline", required=True)
     ap.add_argument("--target-visible-chars", type=int, default=None,
                     help="目标总字数;缺省读 outline 文章配置节 target_visible_chars")
+    ap.add_argument("--article", default=None,
+                    help="正文 markdown 路径(77A/OBS-306):按各节实际可见字数重排,不再只按 planned 估计")
     ap.add_argument("--dry-run", action="store_true",
                     help="只输出对齐结果,不写文件")
     a = ap.parse_args(argv)
@@ -158,7 +168,21 @@ def main(argv=None) -> int:
                              ensure_ascii=False, indent=2))
             return 1
         target = int(m.group(1))
-    new_text, info, errors = align_outline(text, target)
+    actual = None
+    if a.article:
+        art = Path(a.article)
+        if not art.is_file():
+            print(json.dumps({"ok": False, "errors": [f"正文文件不存在: {art}"]},
+                             ensure_ascii=False, indent=2))
+            return 1
+        atext = _read_text(art)
+        heads = list(re.finditer(r"^##\s+(.+)$", atext, re.MULTILINE))
+        actual = {}
+        for idx, hm in enumerate(heads):
+            title = hm.group(1).strip()
+            body = atext[hm.end(): heads[idx + 1].start() if idx + 1 < len(heads) else len(atext)]
+            actual[title] = len(re.sub(r"\s+", "", body))
+    new_text, info, errors = align_outline(text, target, actual=actual)
     info["ok"] = not errors
     info["errors"] = errors
     if not errors and not a.dry_run:

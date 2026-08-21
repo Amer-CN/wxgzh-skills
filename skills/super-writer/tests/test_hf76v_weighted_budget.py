@@ -85,6 +85,55 @@ def test_no_evidence_falls_back_original_proportional():
     assert by_title["第二节(轻)"]["planned"] == 2400
 
 
+def test_actual_visible_chars_reweight():
+    """77A/OBS-306:actual 映射存在时按实测可见字数重排(不再只按 planned 估计)。
+
+    两节 planned 280/120,但正文实际 120/280(实测相反)→ 预算应跟着实际走。
+    """
+    # 直接构造简单样本:两节 planned 反着填
+    o = """# Outline
+
+## 文章配置
+- article_mode: medium
+- target_visible_chars: 400
+
+## A
+- weight_percent: 70
+- planned_chars: 280
+- minimum_chars: 266
+- maximum_chars: 294
+- evidence_ids: [e-1]
+- event_ids: [ev-1]
+- unique_information_goal: 目标甲
+
+## B
+- weight_percent: 30
+- planned_chars: 120
+- minimum_chars: 114
+- maximum_chars: 126
+- evidence_ids: [e-2]
+- event_ids: [ev-2]
+- unique_information_goal: 目标乙
+"""
+    # actual: A 只有 30%,B 有 70%(正文实测与 planned 相反)
+    actual = {"A": 120, "B": 280}
+    new_text, info, errors = align_outline(o, 400, actual=actual)
+    assert not errors, errors
+    assert info["allocation_mode"] == "actual_weighted"
+    sec = parse_sections(new_text)
+    by = {s["title"]: s for s in sec}
+    # 400 按实际 120/280 分配 → 120/280(非 planned 的 70/30)
+    assert abs(by["A"]["planned"] - 120) <= 1, by["A"]
+    assert abs(by["B"]["planned"] - 280) <= 1, by["B"]
+
+
+def test_actual_falls_back_without_article():
+    """77A/OBS-306:未提供 actual 时保持既有 evidence 加权(回归)。"""
+    new_text, info, errors = align_outline(OUTLINE_WEIGHTED, 6000)
+    assert not errors
+    assert info["allocation_mode"] == "evidence_weighted"
+
+
 def test_weight_percent_synced_with_planned():
     """76W/OBS-300:写回时 planned_chars 与 weight_percent 原子一致。"""
     new_text, info, errors = align_outline(OUTLINE_WEIGHTED, 6000)

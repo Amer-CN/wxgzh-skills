@@ -39,6 +39,11 @@ def content_validate(ctx, sd: Path, state):
         items = json.loads(dedup.read_text(encoding="utf-8"))
     except Exception as e:
         return 1, {"reason": f"dedup unreadable: {e}"}, vpath, vsha
+    # 77A/OBS-307:顶层必须是数组;dict/包装对象直接拒并指路。
+    if not isinstance(items, list):
+        return 1, {"reason": "deduplicated_items.json 顶层应为数组(list),收到 "
+                              f"{type(items).__name__};禁止用 {{'items': [...]}} 包装,"
+                              "对照 contracts/01_aihot.yaml 重写", "AIHOT": "FAIL"}, vpath, vsha
     n = len(items) if isinstance(items, list) else 0
     ok = n >= 1
     report = {"deduplicated_count": n, "AIHOT": "PASS" if ok else "FAIL"}

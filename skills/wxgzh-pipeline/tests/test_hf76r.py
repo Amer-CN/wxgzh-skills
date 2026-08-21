@@ -81,7 +81,8 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         for r in old_rules:
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
-        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301", "76Y-R/OBS-305"}, f"{k}: 意外新增规则 {extra}"
+        assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301",
+                            "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -250,7 +251,12 @@ def test_obs288_instruction_text_unchanged_except_278():
     for keep in ("76J/OBS-273", "76F/OBS-276", "76F/OBS-279", "76L/OBS-283"):
         assert keep in new_a, f"aihot 旧条文丢失 {keep}"
     # zh 逐字一致(未变)
-    assert old_instr["zh_human_writing"] == PR.AGENT_INSTRUCTIONS["zh_human_writing"], "zh 指令发生非预期变化"
+    # zh:77A/OBS-309 半角引号条款新增(仅此段),其余旧条文逐字保留
+    old_z = old_instr["zh_human_writing"]
+    new_z = PR.AGENT_INSTRUCTIONS["zh_human_writing"]
+    assert "77A/OBS-309" in new_z and "77A/OBS-309" not in old_z
+    assert new_z.startswith(old_z[:old_z.find("76F/OBS-276")]), "zh 指令 77A 段之前发生非预期变化"
+    assert old_z[old_z.find("76F/OBS-276"):] in new_z, "zh 旧条文丢失"
     old_sw = old_instr["super_writer"]
     new_sw = PR.AGENT_INSTRUCTIONS["super_writer"]
     # 变更点:278→288(硬步骤)+ 290 新增(明规);其余内容逐字保留

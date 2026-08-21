@@ -1,5 +1,13 @@
 # Release notes
 
+## v0.1.7
+
+77A(档77A):
+
+- 半角引号机械归一(OBS-309):新增 scripts/normalize_quotes.py——中文语境 ASCII 双引号
+  成对转全角（全局配对、单边落单不猜仅留 WARNING），跳过 fenced code block 与行内代码；
+  管线 zh 阶段链首强制前置执行。SHA256SUMS 重生成(61→62 条目)。
+
 ## v0.1.6
 
 76Z(档76Z):

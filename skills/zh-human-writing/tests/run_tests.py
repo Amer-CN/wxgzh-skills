@@ -24,6 +24,7 @@ SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'sc
 FIDELITY_GUARD = os.path.join(SCRIPTS_DIR, 'fidelity_guard.py')
 CHANGE_REPORT = os.path.join(SCRIPTS_DIR, 'change_report.py')
 PATTERN_AUDIT = os.path.join(SCRIPTS_DIR, 'pattern_audit.py')
+NORMALIZE_QUOTES = os.path.join(SCRIPTS_DIR, 'normalize_quotes.py')
 
 def _sc_items(data):
     """档72C-4/§3-2:strong_contextual.items 拆为 high_confidence + low_confidence。"""
@@ -765,6 +766,37 @@ def test_argparse_exit3():
     return results
 
 
+# 77A/OBS-309:半角引号机械归一测试（2 条,77A-01/77A-02）
+def test_quote_pair_normalize():
+    results = []
+    src = '他说"你好,世界",然后离开了。\n```\ncmd "keep" here\n```\n他说`"inline"`是代码。\n'
+    p = write_temp(src)
+    rc, out, err = run_script(NORMALIZE_QUOTES, ['--text', p])
+    text = open(p, encoding='utf-8').read()
+    ok = (rc == 0
+          and '他说“你好,世界”,然后离开了。' in text
+          and 'cmd "keep" here' in text
+          and '`"inline"`' in text
+          and 'WARNING' not in out)
+    results.append(TestResult('77A-01', 'quote-pair-normalize', ok,
+                              f'rc={rc} out={out[:60]!r}'))
+    return results
+
+
+def test_quote_unmatched_warning():
+    results = []
+    src = '他说"你好。\n'
+    p = write_temp(src)
+    rc, out, err = run_script(NORMALIZE_QUOTES, ['--text', p])
+    text = open(p, encoding='utf-8').read()
+    ok = (rc == 0
+          and text == src
+          and 'WARNING' in out and '未配对' in out)
+    results.append(TestResult('77A-02', 'quote-unmatched-warning', ok,
+                              f'rc={rc} out={out[:80]!r}'))
+    return results
+
+
 
 
 # ============================================================
@@ -1251,6 +1283,8 @@ def main():
     all_results.extend(test_protected_span_review_only())
     all_results.extend(test_mask_liveness())
     all_results.extend(test_argparse_exit3())
+    all_results.extend(test_quote_pair_normalize())
+    all_results.extend(test_quote_unmatched_warning())
     all_results.extend(test_sc009_single_hit())
     all_results.extend(test_ao013_never_upgrades())
     all_results.extend(test_ao014_single_and_sc011())
