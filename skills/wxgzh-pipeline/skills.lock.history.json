@@ -1292,5 +1292,27 @@
     "new_skill_version": "0.1.0-dev23",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260821T165732Z-68ee0826",
+    "skill": "super-writer",
+    "reason": "77D:标题双轨 playbook+0.4.7-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-21T16:57:32Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "583f09a82a92673eba84369203acd36fd2cb41c928800ee923c4cde371ad7ead",
+    "new_root_sha256": "3a2e0bce1b8136496ef7429328c82a5dafba8d3ae9ecbda739532773fd0e02b9",
+    "old_manifest_sha256": "f2fee83628e6d2a97883c787aec27fd86d8c90a9bab4f706cbfbfd0aeea1ff67",
+    "new_manifest_sha256": "84c27d91552a9e29d3cedefa4abed6757a5f62caf078804a4a02fda60068985b",
+    "old_file_count": 54,
+    "new_file_count": 55,
+    "old_full_commit_sha": "05a4c2fbf9364134b147b6069d6e079b882c4c24",
+    "new_full_commit_sha": "d233f003be5ff6848e664caaf73e887a2af482bf",
+    "old_source_tree_sha": "9c1b4f54b60f7a1fb0aac44544646d6f0d56aed7",
+    "new_source_tree_sha": "c0feb8697774096dd1060a2fdf96a99f1bfad0fa",
+    "old_skill_version": "0.4.6-rc1",
+    "new_skill_version": "0.4.7-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
