@@ -4,7 +4,7 @@
 
 明确不负责：去 AI 味、美化排版、配图和发布。最终稿通过 `handoff` 交给下游 Skill。
 
-> **v0.4.5-rc1** — `release_candidate` | 264 tests passed | MIT License
+> **v0.4.6-rc1** — `release_candidate` | 271 tests passed | MIT License
 
 ## 目录结构
 

@@ -17,6 +17,9 @@ outputs:
     # 禁止数组;materials[].dedup_id 与 deduplicated_items.json 的 id 逐字一致;
     # claim 与 material 的 source_url 逐字相等(含锚点)。完整规则与示例见
     # super-writer/references/material-ingestion.md;机械层由 validate_single_product.py 强制。
+    # 77B/OBS-310(numbers schema 税):claims[].chart_group/metric_name/series_label/time_value
+    # 归属 claim 级、与 numbers 数组并列,禁止进 numbers 数组;numbers 元素仅 string 或
+    # {value: number, unit};numbers.value 仅 number,日期/时间一律走 claim.time_value(ISO 字符串)。
     - core-card.md
     - outline.md
     - semantic-map.yaml

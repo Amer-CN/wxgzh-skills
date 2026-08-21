@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import re
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -34,7 +35,8 @@ HANDOFF_REQUIRED_FIELDS = ["schema_version", "prose_craft_applied",
 HANDOFF_TITLE_FIELDS = {"title_candidates": list, "hook_line": str,
                         "selected_title": str, "title_selection_reason": str}
 
-CORE_CARD_FIELDS = ["Core Statement", "Reader Change", "Core Tension", "Value Carrier"]
+CORE_CARD_FIELDS = ["Core Statement", "Reader Change", "Core Tension", "Value Carrier",
+                   "Scope", "Result"]
 
 
 def _read_text(path: Path) -> str:
@@ -69,11 +71,13 @@ def check_outline(path: Path, target_visible_chars: int | None = None) -> tuple[
 def check_core_card(path: Path) -> tuple[list, dict]:
     text = _read_text(path)
     out_errors = []
-    if "## Core Card" not in text:
-        out_errors.append("core-card: 缺 `## Core Card` 节")
+    # 77B/OBS-311(core-card 双格式):canonical = `字段: 内容` 同行一行式(与 full-mode
+    # validate_article_length 同判);不再接受 `**字段**` 独占形态或只含标题。
     for field in CORE_CARD_FIELDS:
-        if f"**{field}**" not in text:
-            out_errors.append(f"core-card: 缺 `**{field}**` 字段")
+        m = re.search(rf'{re.escape(field)}[:：]\s*(.+)', text)
+        if not m or not m.group(1).strip():
+            out_errors.append(
+                f"core-card: 缺 `{field}: 内容` 一行式字段(77B/OBS-311,对照 templates/core-card.md)")
     return out_errors, {"fields": CORE_CARD_FIELDS}
 
 
@@ -171,6 +175,49 @@ def check_registry(path: Path) -> tuple[list, dict]:
                       "source_excerpt"):
             if not row.get(field):
                 out_errors.append(f"registry.claims[{i}]: 缺必填字段 `{field}`(76G-R)")
+    # 77B/OBS-310(numbers schema 税):chart 字段归属 claim 级,禁止进 numbers 数组;
+    # numbers.value 仅 number,日期/时间一律走 claim.time_value(ISO 字符串)。
+    _CHART_KEYS = ("chart_group", "metric_name", "series_label")
+    for i, row in enumerate(claims):
+        if not isinstance(row, dict):
+            continue
+        nums = row.get("numbers")
+        if nums is not None:
+            if not isinstance(nums, list):
+                out_errors.append(f"registry.claims[{i}]: `numbers` 必须是数组(77B/OBS-310)")
+            else:
+                for j, it in enumerate(nums):
+                    if isinstance(it, str):
+                        continue
+                    if not isinstance(it, dict):
+                        out_errors.append(
+                            f"registry.claims[{i}].numbers[{j}]: 元素只能是 string 或 "
+                            f"{{value, unit}}(77B/OBS-310)")
+                        continue
+                    bad = [k for k in _CHART_KEYS + ("time_value",) if k in it]
+                    if bad:
+                        out_errors.append(
+                            f"registry.claims[{i}].numbers[{j}]: 含 chart 字段 {bad}——"
+                            f"chart_group/metric_name/series_label/time_value 归属 claim 级,"
+                            f"禁止进 numbers 数组(77B/OBS-310,对照 media schema)")
+                    unknown = set(it) - {"value", "unit"}
+                    if unknown:
+                        out_errors.append(
+                            f"registry.claims[{i}].numbers[{j}]: 未知键 {sorted(unknown)}——"
+                            f"numbers 元素仅 value/unit(77B/OBS-310)")
+                    v = it.get("value")
+                    if isinstance(v, bool) or not isinstance(v, (int, float)):
+                        out_errors.append(
+                            f"registry.claims[{i}].numbers[{j}]: `value` 仅接受 number;"
+                            f"日期/时间走 claim.time_value,禁止进 value(77B/OBS-310)")
+                    if "unit" in it and not isinstance(it["unit"], str):
+                        out_errors.append(
+                            f"registry.claims[{i}].numbers[{j}]: `unit` 必须是 string(77B/OBS-310)")
+        for k in _CHART_KEYS:
+            if k in row and not isinstance(row.get(k), str):
+                out_errors.append(f"registry.claims[{i}].{k}: 必须是 string(77B/OBS-310)")
+        if "time_value" in row and not isinstance(row.get("time_value"), str):
+            out_errors.append(f"registry.claims[{i}].time_value: 必须是 ISO 字符串(77B/OBS-310)")
     material_ids = {}
     for i, row in enumerate(materials):
         if not isinstance(row, dict):

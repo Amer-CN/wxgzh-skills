@@ -137,6 +137,22 @@ claims:
 
 ### 必填字段
 
+### claims 数字与图表字段（77B/OBS-310，唯一真源形状）
+
+- `claims[].numbers`：数字点阵数组，元素只能是 **string**（如原始摘录）或
+  **`{"value": <number>, "unit": "..."}`** 对象；`value` 仅接受 number（整数/浮点），
+  禁止放日期、年份、时间字符串。
+- 图表字段 **`chart_group` / `metric_name` / `series_label` / `time_value` 归属 claim 级**，
+  与 `numbers` 数组并列，**禁止进 numbers 数组**（media schema additionalProperties=false，
+  误放即被拒，i2z69i/Qwen/GLM 多轮付费实证）。
+- `time_value`：真实时间（如 `2026-08-19` ISO 日期）；时间轴图表只在每个点都有
+  time_value 时生成（media schema 语义）。
+
+```json
+{"claim_id": "C-01", "claim_text": "...", "numbers": [{"value": 150.8, "unit": "元/股"}],
+ "chart_group": "ipo-pricing", "metric_name": "发行价", "series_label": "宇树 IPO", "time_value": "2026-08-19"}
+```
+
 - `claims[].claim_id / claim_text / material_id / source_url / source_excerpt` 必填（76G-R）；
 - `materials[].material_id / dedup_id / source_url` 必填（76Q/OBS-287）。
 

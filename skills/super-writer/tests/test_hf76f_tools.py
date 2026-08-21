@@ -93,11 +93,14 @@ def test_validate_single_product_outline(tmp_path):
 
 def test_validate_single_product_core_card(tmp_path):
     p = tmp_path / "core-card.md"
-    p.write_text("## Core Card\n\n- **Core Statement**：x\n", encoding="utf-8")
+    p.write_text("## Core Card\n\nCore Statement: 只有一句\n", encoding="utf-8")
     errors, _ = VSP.check_core_card(p)
     assert any("Reader Change" in e for e in errors)
+    # 77B/OBS-311:canonical = 一行式 `字段: 内容`(不再接受 **字段** 独占形态)
+    p.write_text("## Core Card\n\nCore Statement: 缺其余字段\n", encoding="utf-8")
+    errors, _ = VSP.check_core_card(p)
     p.write_text("## Core Card\n\n" + "".join(
-        f"- **{f}**：x\n" for f in VSP.CORE_CARD_FIELDS), encoding="utf-8")
+        f"{f}: 内容\n" for f in VSP.CORE_CARD_FIELDS), encoding="utf-8")
     errors, _ = VSP.check_core_card(p)
     assert not errors
 

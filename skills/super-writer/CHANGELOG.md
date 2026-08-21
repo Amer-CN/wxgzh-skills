@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.4.6-rc1 (2026-08-21) — 档77B：双税绝版(numbers schema 统一 + core-card 单格式)
+
+### 77B(档77B)
+
+- **OBS-310 numbers schema 税**:registry 文档/契约/预检统一钉死 chart 字段归属
+  ——chart_group/metric_name/series_label/time_value 归属 claim 级,numbers 数组
+  元素仅 string 或 {value: number, unit},value 仅 number、日期时间走 claim.time_value;
+  validate_single_product --product registry 加机械校验(误放 numbers 内/值非 number
+  直接拒且报错指路);media 请求 schema 注释对齐;测试 +3。
+- **OBS-311 core-card 双格式**:canonical = `字段: 内容` 同行一行式;
+  validate_single_product 与 full-mode 同判(6 字段含 Scope/Result),`**字段**`
+  独占形态不再被任一校验器接受;templates/core-card.md 改 canonical;
+  测试 +4(两校验器同判正反例)。
+
 ## v0.4.5-rc1 (2026-08-21) — 档77A：预算按正文实际可见字数重排
 
 ### 77A(档77A)

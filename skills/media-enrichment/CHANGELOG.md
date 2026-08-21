@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-dev23 (2026-08-21) — 77B
+
+- **OBS-310 numbers schema 税(注释对齐)**:media_enrichment_request.schema.json 的 numbers 增加 description——元素仅 string 或 {value: number, unit},chart_group/metric_name/series_label/time_value 一律在 claim 级、禁止进 numbers 数组;形状语义与既有 oneOf/additionalProperties 一致,仅注释对齐。
+
 ## 0.1.0-dev10 (2026-08-09)
 
 ## 0.1.0-dev20 (2026-08-14) — 76R

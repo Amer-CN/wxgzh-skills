@@ -222,6 +222,7 @@
      "numbers": {
       "type": "array",
       "items": {
+      "description": "77B/OBS-310:数字点阵,元素仅 string 或 {value: number, unit};chart_group/metric_name/series_label/time_value 一律在 claim 级,禁止进 numbers 数组。",
        "oneOf": [
         {
          "type": "string"
