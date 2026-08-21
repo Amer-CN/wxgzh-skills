@@ -158,9 +158,13 @@ def test_read_json_tolerates_bom(tmp_path):
 def test_instructions_contain_recovery_sop():
     for key in ("aihot", "super_writer", "zh_human_writing"):
         instr = PR.AGENT_INSTRUCTIONS[key]
-        assert "以当前最新 agent_handshake_request.json 为准重新 ACK" in instr, key
+        # 77C 压缩后 sw 措辞有别(合并 276+279),aihot/zh 未动
+        ack_anchor = ("按最新 agent_handshake_request.json 重新 ACK" if key == "super_writer"
+                     else "以当前最新 agent_handshake_request.json 为准重新 ACK")
+        del_anchor = "禁删文件重来" if key == "super_writer" else "禁止删除文件重来"
+        assert ack_anchor in instr, key
         assert "POSIX 正斜杠" in instr, key
-        assert "禁止删除文件重来" in instr, key
+        assert del_anchor in instr, key
 
 
 def test_sw_instruction_contains_tool_guidance():

@@ -116,10 +116,10 @@ def test_obs287_super_writer_instruction_cites_registry_contract():
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76Q/OBS-287" in instr
     assert "claims,materials" in instr
-    assert "dedup_id" in instr and "逐字一致" in instr
-    assert "含锚点原样一致" in instr
-    assert "76Q/OBS-285" in instr and "双层包裹" in instr
-    assert "76Q/OBS-286" in instr and "** 加粗标记" in instr
+    assert "dedup_id" in instr and "逐字" in instr  # 77C 压缩后措辞(dedup_id 逐字=...)
+    assert "含锚点" in instr  # 77C 压缩后措辞
+    assert "76Q/OBS-287+285" in instr and "双层" in instr  # 77C 合并 ID
+    assert "76Q/OBS-286" in instr and "** 加粗" in instr  # 77C 压缩后措辞
 
 
 def test_obs287_contract_file_declares_registry_shape():

@@ -20,8 +20,8 @@ def test_obs288_preflight_mandatory_hard_step():
     """sw 预检强制化——ACK 前必须完成两步且全绿,禁止写 ACK。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76R/OBS-288" in instr and "硬步骤" in instr
-    assert "ACK 前必须完成以下两步且全绿" in instr
-    assert "否则禁止写 ACK" in instr
+    assert "ACK 前两步必须全绿" in instr  # 77C 压缩后措辞
+    assert "否则禁写 ACK" in instr
     assert "align_outline_budget.py" in instr and "validate_single_product.py" in instr
     assert "valid=true" in instr
 
@@ -29,10 +29,13 @@ def test_obs288_preflight_mandatory_hard_step():
 def test_obs288_common_rules_single_source():
     """通用规则(276/279/283)单一真源,三阶段产物指令均含。"""
     assert hasattr(PR, "_COMMON_RULES")
-    for k in ("aihot", "super_writer", "zh_human_writing"):
+    for k in ("aihot", "zh_human_writing"):
         assert "76F/OBS-276" in PR.AGENT_INSTRUCTIONS[k]
         assert "76F/OBS-279" in PR.AGENT_INSTRUCTIONS[k]
         assert "76L/OBS-283" in PR.AGENT_INSTRUCTIONS[k]
+    # 77C 压缩:sw 内联合并 ID(276+279 合一),义务锚点断言见 test_77c_sw_instruction_compressed_anchors
+    sw = PR.AGENT_INSTRUCTIONS["super_writer"]
+    assert "76F/OBS-276+279" in sw and "76L/OBS-283" in sw
 
 
 def test_obs288_common_rule_not_copied_in_source():
@@ -73,8 +76,12 @@ def _rules(v):
 def test_obs288_semantic_zero_loss_rule_inventory():
     """语义零丢失:改写前后规则清单一一对应(278→288 为预检强制化升级,1:1)。"""
     old_instr = _extract_old_instructions()
+    # 77C 压缩合并映射:279 并入 276(恢复SOP+编码)、285 并入 287(文档税)
+    MERGE = {"76F/OBS-279": "76F/OBS-276", "76Q/OBS-285": "76Q/OBS-287"}
     for k in ("aihot", "super_writer", "zh_human_writing"):
         old_rules = ["76R/OBS-288" if r == "76F/OBS-278" else r for r in _rules(old_instr[k])]
+        if k == "super_writer":
+            old_rules = [MERGE.get(r, r) for r in old_rules]
         new_rules = _rules(PR.AGENT_INSTRUCTIONS[k])
         # 旧规则全部保留(278→288 升级);新规则仅允许 76R/OBS-290(素材定长度)与
         # 76T/OBS-293(封面划线句改义)
@@ -89,7 +96,7 @@ def test_obs290_material_exhausted_instruction():
     """76R/OBS-290:sw 指令含「素材写干即停;禁止注水凑字数」明规。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76R/OBS-290" in instr
-    assert "素材写干即停" in instr and "禁止注水凑字数" in instr
+    assert "素材写干即停" in instr and "禁注水" in instr  # 77C 压缩后措辞
     assert "不逼扩写" in instr or "不报错逼扩写" in instr
 
 def test_obs293_strike_assumption_instruction():
@@ -97,8 +104,8 @@ def test_obs293_strike_assumption_instruction():
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76T/OBS-293" in instr
     assert "strike_assumption" in instr
-    assert "被本文证据否定" in instr and "禁止捏造极端稻草人" in instr
-    assert "不再用 hook_line 填充划线位" in instr
+    assert "被本文证据否定" in instr and "禁捏造稻草人" in instr  # 77C 压缩后措辞
+    assert "不用 hook_line 填划线位" in instr  # 77C 压缩后措辞
 
 
 def test_obs294_parallel_fetch_instruction():
@@ -175,7 +182,7 @@ def test_obs305_lock_discipline_rule():
     """76Y-R/OBS-305:sw 指令含锁纪律明规(遇 FAIL_CLOSED 停机报告禁自行 relock)。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76Y-R/OBS-305" in instr
-    assert "禁止自行 relock" in instr
+    assert "禁自行 relock" in instr  # 77C 压缩后措辞
     assert "停机报告等档" in instr
     assert "--regenerate-registry" in instr
 
@@ -197,8 +204,8 @@ def test_obs301_pwsh_redirect_rule():
     """76W/OBS-301:sw 指令含 pwsh 重定向禁止明规。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     assert "76W/OBS-301" in instr
-    assert "禁止 pwsh 重定向" in instr
-    assert "cmd /c 字节级重定向" in instr
+    assert "禁 pwsh 重定向" in instr  # 77C 压缩后措辞
+    assert "cmd /c 重定向" in instr  # 77C 压缩后措辞
 
 
 def test_obs296_readiness_sha_contract():
@@ -260,13 +267,44 @@ def test_obs288_instruction_text_unchanged_except_278():
     old_sw = old_instr["super_writer"]
     new_sw = PR.AGENT_INSTRUCTIONS["super_writer"]
     # 变更点:278→288(硬步骤)+ 290 新增(明规);其余内容逐字保留
-    assert "76F/OBS-278" not in new_sw and "76R/OBS-288" in new_sw
-    assert "76R/OBS-290" in new_sw and "76Q/OBS-287" in new_sw
-    # 旧 sw 中 76F/OBS-278 段之前的内容与新 sw 中 76R/OBS-288 段之前逐字一致
-    old_head = old_sw[:old_sw.find("76F/OBS-278")]
-    new_head = new_sw[:new_sw.find("76R/OBS-288")]
-    assert new_head == old_head, "sw 指令 288 段之前发生非预期变化"
-    # 旧 sw 中 76Q/OBS-287 之后的内容与新 sw 中 76Q/OBS-287 之后逐字一致
-    old_tail = old_sw[old_sw.find("76Q/OBS-287"):]
-    new_tail = new_sw[new_sw.find("76Q/OBS-287"):]
-    assert new_tail == old_tail, "sw 指令 287 段之后发生非预期变化"
+    # 77C 压缩重写:不再逐字对比(义务锚点全量断言见 test_77c_sw_instruction_compressed_anchors);
+    # 此处保底:base 英文段不变 + 长度上限
+    assert len(new_sw) <= 2000 and len(old_sw) > len(new_sw)
+    assert new_sw.startswith(
+        "Run Super Writer Material-Heavy Full Mode. Generate every requested product, "
+        "then run the locked official validate_article_length.py"), "sw base 文本被改动"
+
+SW_ANCHOR_GROUPS = [
+    ("OBS-88/66", ["numbers(unit/value)", "chart_group", "metric_name", "series_label",
+                    "中文数字转阿拉伯", "fenced code block", ":::alert 块", "数字对比", "导语不出现"]),
+    ("76F/OBS-276+279", ["agent_handshake_request.json", "重新 ACK", "ack_cli", "POSIX 正斜杠",
+                          "utf-8 无 BOM", "容忍不重写"]),
+    ("76G-R/OBS-265", ["prose_craft_applied/version", "R1–R9", "未执行必须 false",
+                        "评分尺", "具体>有判断", "长度≤30字", "无标题党空壳",
+                        "title_selection_reason 必填非空", "article.md H1 必须与 selected_title 一致"]),
+    ("76R/OBS-288", ["ACK 前两步必须全绿", "禁写 ACK",
+                      "align_outline_budget.py --outline <outline.md> --target-visible-chars <目标字数>",
+                      "validate_single_product.py --product <名> --file <路径>",
+                      "outline/core-card/semantic-map/handoff/registry", "valid=true", "保护域/数字/产品名不动"]),
+    ("76R/OBS-290", ["素材写干即停", "advisory", "不逼扩写", "禁注水", "素材足而薄仍 FAIL"]),
+    ("76T/OBS-293", ["strike_assumption", "被本文证据否定", "≤40 字", "禁捏造稻草人",
+                      "缺失不 FAIL", "不用 hook_line 填划线位"]),
+    ("76Y-R/OBS-305", ["FAIL_CLOSED", "停机报告等档", "禁自行 relock", "禁扩权",
+                        "--regenerate-registry", "重写 skill 树"]),
+    ("76W/OBS-301", ["pwsh 重定向", "> / >>", "cmd /c", "encoding=utf-8"]),
+    ("76Q/OBS-287+285", ["dict{claims,materials}", "禁数组", "dedup_id 逐字",
+                          "deduplicated_items.json", "source_url 逐字相等", "含锚点",
+                          "{handoff:{...}} 双层", "单层拒"]),
+    ("76Q/OBS-286", ["** 加粗", "渲染器不支持", ":::alert", "禁手写"]),
+    ("76L/OBS-283", ["顶包", "publish_wechat_draft.py", "--evidence 凭证门",
+                      "六阶段 receipt 不齐", "停下报告", "禁绕过"]),
+]
+
+
+def test_77c_sw_instruction_compressed_anchors():
+    """77C 压缩零丢失硬门:每条规则至少一个可断言语义锚点,全部在场。"""
+    instr = PR.AGENT_INSTRUCTIONS["super_writer"]
+    assert len(instr) <= 2000
+    for tag, anchors in SW_ANCHOR_GROUPS:
+        for a in anchors:
+            assert a in instr, f"{tag}: 义务锚点丢失 {a!r}"

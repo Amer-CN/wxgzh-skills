@@ -9,17 +9,26 @@ from conftest import SKILL_ROOT
 def test_instructions_contain_anti_supplantation_rule():
     for key in ("aihot", "super_writer", "zh_human_writing"):
         instr = PR.AGENT_INSTRUCTIONS[key]
-        assert "76L/OBS-283(反顶包明规" in instr, key
-        assert "禁止手写 HTML 或其他脚本顶包 gzh_design 渲染产物" in instr, key
-        assert "禁止绕过阶段直接调用 publish_wechat_draft.py" in instr, key
-        assert "遇阻的正确动作=停下并报告" in instr, key
+        # 77C 压缩后 sw 措辞有别,aihot/zh 未动
+        if key == "super_writer":
+            assert "76L/OBS-283:" in instr
+            assert "禁手写 HTML/脚本顶包 gzh_design 渲染产物" in instr
+            assert "禁绕过阶段直调 publish_wechat_draft.py" in instr
+            assert "遇阻=停下报告" in instr
+        else:
+            assert "76L/OBS-283(反顶包明规" in instr
+            assert "禁止手写 HTML 或其他脚本顶包 gzh_design 渲染产物" in instr
+            assert "禁止绕过阶段直接调用 publish_wechat_draft.py" in instr
+            assert "遇阻的正确动作=停下并报告" in instr
 
 
 def test_instructions_mention_evidence_gate():
     for key in ("aihot", "super_writer", "zh_human_writing"):
         instr = PR.AGENT_INSTRUCTIONS[key]
         assert "--evidence" in instr, key
-        assert "只认管线 wechat_draft 阶段" in instr, key
+        gate_anchor = ("六阶段 receipt 不齐" if key == "super_writer"
+                      else "只认管线 wechat_draft 阶段")  # 77C 压缩后 sw 措辞
+        assert gate_anchor in instr, key
 
 
 def test_readme_contains_red_flag_rule():

@@ -114,9 +114,9 @@ def test_super_writer_instructions_guide_behavior():
     (selected_title/title_selection_reason 必填)。"""
     src = (SKILL_ROOT / "wxgzh_pipeline" / "producers.py").read_text(encoding="utf-8")
     assert "prose_craft_applied" in src and "R1–R9" in src
-    assert "执行了 R1–R9 自检才许填" in src
+    assert "执行 R1–R9 自检才许 true" in src  # 77C 压缩后措辞
     assert "Phase 6" in src and "标题选定" in src
-    assert "selected_title 与 title_selection_reason 必填" in src
+    assert "selected_title/title_selection_reason 必填非空" in src  # 77C 压缩后措辞
 
 
 def test_webp_cover_transcoded_to_jpeg(tmp_path):
