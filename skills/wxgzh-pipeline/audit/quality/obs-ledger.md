@@ -335,6 +335,7 @@
 
 64. 76Z(体脂 A 刀:zh-human-writing 根目录开发期报告清理,用户裁决 2026-08-16,RELOCK_ALLOWED 临时 0→1 范围本档(仅 zh-human-writing 子树),恢复条件=验收通过后立即归 0;GZH 键维持 0):删除 zh 根目录 8 个运行时无人读开发期报告(step-10-adversarial/architecture/defect-fix/test-report ×4 + implementation-deviations/report + structural-validation + unit-test-report,共 63,512 字节)——grep 实证仅被删文件互链,运行时零引用;HANDOFF.md 因 FREEZE.md 引用保留(条件项);SHA256SUMS 重生成(69→61 条目);无新 OBS(用户裁决 hygiene 项)。升版:zh 0.1.5→0.1.6;relock #65(zh,root/manifest 变、runtime_file_count 58→50、entrypoint/validator 不变);R93;upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;zh 87/87+verify_release PASS。程序校验:唯一编号实测 187(119–305 连续无缺号)、R59 22=22 差集空。
 65. 77A(生产格式税修理包,用户批准 2026-08-20,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即归 0;GZH 键维持 0):①OBS-306 预算对齐工具化——align_outline_budget --article 按正文实际可见字数重排(actual_weighted,缺失回退),i2z69i 冻结数据重跑咬合 279/693/621/352/399/206 无需手工重排;②OBS-307 dedup 顶层数组硬措辞——契约显式条款+aihot 指令硬措辞+content_validate dict FAIL_CLOSED 指路;③OBS-308 readiness_sha 硬步骤化——契约硬条款+producers APPROVAL_CONTRACT_RULE 挂媒体审批点 meta;④OBS-309 半角引号机械归一前移——zh 新增 normalize_quotes.py(成对转全角/跳过代码/单边留 WARNING/字节级幂等),pipeline zh 链首强制前置+fake_live shim。升版:sw 0.4.4-rc1→0.4.5-rc1 / zh 0.1.6→0.1.7 / pipeline 0.1.0-dev2-hotfix9R8→hotfix9R9;relock #66(sw,root/version/source 变,validator/entrypoint/manifest 不变)/#67(zh,root/manifest/文件数 50→51 变,entrypoint/validator 不变);R93(锁 sha 2e0e1d2d…);upgrade_regression ALL PASS(含 pytest/relock dry-run ×4 无变化/doctor);doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 515 passed/22 skipped/7 failed(7=HEAD 既存环境红,零新增;77A +8 全绿);sw 264 passed/2 skipped/3 failed(3=HEAD 既存 dist 红);zh 89/89+verify_release PASS。验收实证:①i2z69i 冻结数据 --article 重跑 actual_weighted 咬合;②dedup dict 形态被拒且报错指路(测试);③readiness 硬步骤在册(契约+指令+meta 断言);④半角引号成对归一/单边留 WARNING(zh 测试)。程序校验:唯一编号实测 191(119–309 连续无缺号)、R59 22=22 差集空。
+　　【77A-F 补记】档 77A 验收 PASS(审核方按 #100 规则枚举全区间三颗 commit 逐颗点验一致:docs 05aa777(76Z-F 归位补验)+ feat 7cab0b1 + docs 060e835;锁文件仅 sw/zh 两条目变动(sw root/version/source 变、validator/entrypoint/manifest 不变;zh root/manifest/文件数 50→51 变、entrypoint/validator 不变);备份件两件在册、history +2;R93 同步锁 sha 2e0e1d2d…)。附记:normalize_quotes 字节级幂等(newline="")系执行端开发期经 fake_live 全链测试暴露并随档交付,非交付后抢修,不触发 76S 补档条款。
 
 　　【76Z-F 补记】档 76Z 验收 PASS(审核方按 #100 规则枚举全区间三颗 commit 逐颗点验一致:feat 01f9fd5 + docs fc3e979 + docs ebcbed8;锁文件仅 zh 条目变动(root/version/manifest/文件数 58→50),entrypoint/validator 哈希原值不动;HANDOFF.md 按任务书条件项保留(FREEZE.md 有引用);备份件在册,R93 同步;zh 87/87 + verify_release PASS)。
 
@@ -407,6 +408,8 @@
 > `RELOCK_ALLOWED` 于档 76Z 二十三次临时由 0 改为 1(批准人=用户,范围=档 76Z 体脂 A 刀(zh 根目录开发期报告清理),仅 zh-human-writing 子树),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
 > **归位(档76Z-F,审核方 2026-08-16 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
 > `RELOCK_ALLOWED` 于档 77A 二十四次临时由 0 改为 1(批准人=用户,范围=档 77A 生产格式税修理包,涉及子树 super-writer+zh-human-writing+wxgzh-pipeline),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
+> **归位(档77A-F,审核方 2026-08-21 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动(GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发)。
+
 
 > **归位(档76W-F,审核方 2026-08-15 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。
 > **归位(档76T-F,审核方 2026-08-14 验收通过):`RELOCK_ALLOWED` 由 1 改回 0、`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0——两键一并归位**。
