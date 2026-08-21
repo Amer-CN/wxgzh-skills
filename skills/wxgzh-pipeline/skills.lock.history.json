@@ -1256,5 +1256,41 @@
     "new_skill_version": "0.1.7",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260821T135828Z-756b9ef2",
+    "skill": "super-writer",
+    "reason": "77B:numbers/core-card 双税+0.4.6-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-21T13:58:28Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "da82a2087cbaf6be15d11a39c7b171fdbfe7ad5cfb0c2ee3fb02eff557e5ab39",
+    "new_root_sha256": "583f09a82a92673eba84369203acd36fd2cb41c928800ee923c4cde371ad7ead",
+    "old_full_commit_sha": "7cab0b117565959a5686fe682a879cc9180f07d6",
+    "new_full_commit_sha": "05a4c2fbf9364134b147b6069d6e079b882c4c24",
+    "old_source_tree_sha": "870352dae5ba87a4fa455c245aa655f53acee35b",
+    "new_source_tree_sha": "9c1b4f54b60f7a1fb0aac44544646d6f0d56aed7",
+    "old_skill_version": "0.4.5-rc1",
+    "new_skill_version": "0.4.6-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260821T135939Z-dca72151",
+    "skill": "media-enrichment",
+    "reason": "77B:schema 注释对齐+0.1.0-dev23",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-21T13:59:39Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "ebe20721bdef84af36f7c4652f41a429e56f941089e0e831c20eb49438290f6c",
+    "new_root_sha256": "8f803ead0a02d64304ec6146b7385f630bffd0f85e84e52c0c89ea7e9e9d33bf",
+    "old_full_commit_sha": "63b43a2a36e66aeb6f078ffa6923cc992cc769f4",
+    "new_full_commit_sha": "05a4c2fbf9364134b147b6069d6e079b882c4c24",
+    "old_source_tree_sha": "1e006a24803b4dd1887cdc8cdd3a8fc6be1ae1ef",
+    "new_source_tree_sha": "5d8b246d3010ba8131c8db19ac8841e5beb30502",
+    "old_skill_version": "0.1.0-dev22",
+    "new_skill_version": "0.1.0-dev23",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
