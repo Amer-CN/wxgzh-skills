@@ -1,5 +1,5 @@
-version: 0.4.6-rc1
-previous_version: 0.4.6-rc1
+version: 0.4.7-rc1
+previous_version: 0.4.7-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -13,5 +13,5 @@ release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-21
-hotfix_name: 77b
+hotfix_name: 77d
 release_notes: "v0.4.5-rc1: 档77A — align_outline_budget --article 按正文实际可见字数重排(OBS-306);测试 +2。"

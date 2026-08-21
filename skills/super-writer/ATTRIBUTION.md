@@ -10,5 +10,6 @@
 - AgriciDaniel/claude-blog — 阻塞式质量门、问题分级、认知负荷
 - xiaomoBoy/claude-writing-skills — 评分器与评分器校准分离
 - OneSpiral/ghost-writer — 多维文风画像
+- liucongg/liucong-skills（gzh-title-strategist，Apache-2.0）— 标题方法论气质参考（无据不加/不吹推荐池/一个主承诺/保留作者语气）；档 77D 自写措辞，仅致谢不搬运原文
 
 项目链接见此前研究记录或对应 GitHub 仓库。

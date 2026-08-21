@@ -82,6 +82,13 @@ README 装全家桶。没有公众号也不影响——前三个 skill 照常用
 | 🖼️ [media-enrichment](./skills/media-enrichment) | 配图管线：抓取/视频封面/数据图表 + 版权证据链 | 流水线配套 | 0.1.0-dev19 |
 | 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 | 需装齐四个依赖 | dev2 |
 
+## 📦 独立工具（不在流水线内）
+
+| 名字 | 一句话 | 边界 |
+|---|---|---|
+| 📊 [gzh-title-review](./skills/gzh-title-review) | 标题复盘独立工具：发布后按四分类归因（标题因素/选题时机/账号分发/无法判断），给一个下一次动作 | 流水线外、不入锁、不接编排器，单装单用 |
+
+
 ## ✨ 每个 Skill 的故事
 
 <table><tr><td>

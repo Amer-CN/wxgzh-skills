@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v0.4.7-rc1 (2026-08-22) — 档77D：标题能力双轨（Phase 6 方法论升级 + 流水线外独立工具）
+
+### 77D(档77D)
+
+- **Phase 6 标题方法论升级**:新增 references/title-playbook.md——文章诊断 → 四组生成
+  （稳健准确 4/网感点击 4/专业权威 3/长期价值 2，有数据依据才出数据关键词）→ 五维 1–5 评分
+  （点击欲望/事实匹配/人群匹配/差异化/长期价值）→ 风险标记（标题党/堆砌/无据/时效）→
+  推荐 1 主 2 备 + 理由；SKILL.md Phase 6 标题选定引用 playbook；
+  handoff schema 零变动（渲染/草稿链不动）。方法气质致谢 liucong-skills 的
+  gzh-title-strategist（Apache-2.0），自写措辞不搬运。
+
 ## v0.4.6-rc1 (2026-08-21) — 档77B：双税绝版(numbers schema 统一 + core-card 单格式)
 
 ### 77B(档77B)

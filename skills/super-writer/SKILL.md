@@ -340,7 +340,7 @@ issues_and_uncertainties.md
 
 切换 Reviewer 角色，不沿用 Writer 的自我辩护。按 P0-P3 分级并评分；写作 Skill 只修复 P0-P2，P3 表达层问题留给下游去 AI 味 Skill。
 
-**标题选定（档76B 新增，子步骤）：** 由 Reviewer 角色（非 Writer）按固定评分尺从 `title_candidates` 中选定一个作为最终 H1：具体（有数字/对象/动作）> 有判断（立场明确）> 贴核心张力 > 长度 ≤30 字 > 无标题党空壳；写一行选定理由（`title_selection_reason`）。article.md 的 H1 = 选定标题（封面拆行随 H1 自动生效）；`title_candidates` 保留备查。禁止 Reviewer 另造候选之外的新标题。
+**标题选定（档76B 新增，子步骤；77D 升级方法论）：** 由 Reviewer 角色（非 Writer）从 `title_candidates` 中选定一个作为最终 H1。77D 起按 `references/title-playbook.md` 执行：候选按四组生成（稳健准确/网感点击/专业权威/长期价值，有数据依据才出数据关键词）；`title_selection_reason` 写入选定理由 = 五维评分（点击欲望/事实匹配/人群匹配/差异化/长期价值，各 1–5）+ 风险标记（标题党/堆砌/无据/时效）+ 推荐 1 主 2 备理由。评定仍服从既有评分尺（具体 > 有判断 > 贴核心张力 > 长度 ≤30 字 > 无标题党空壳）。article.md 的 H1 = 选定标题（封面拆行随 H1 自动生效）；`title_candidates` 保留备查。禁止 Reviewer 另造候选之外的新标题。
 
 **门禁：** 零 P0；P1 已解决或明确告知；内容分建议达到 82/100。
 

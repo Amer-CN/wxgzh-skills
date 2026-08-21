@@ -269,7 +269,8 @@ def test_obs288_instruction_text_unchanged_except_278():
     # 变更点:278→288(硬步骤)+ 290 新增(明规);其余内容逐字保留
     # 77C 压缩重写:不再逐字对比(义务锚点全量断言见 test_77c_sw_instruction_compressed_anchors);
     # 此处保底:base 英文段不变 + 长度上限
-    assert len(new_sw) <= 2000 and len(old_sw) > len(new_sw)
+    # 77C 压至 2000;77D 合法追加方法论条款后 2232;上限 2300(77D 起)
+    assert len(new_sw) <= 2300
     assert new_sw.startswith(
         "Run Super Writer Material-Heavy Full Mode. Generate every requested product, "
         "then run the locked official validate_article_length.py"), "sw base 文本被改动"
@@ -298,13 +299,18 @@ SW_ANCHOR_GROUPS = [
     ("76Q/OBS-286", ["** 加粗", "渲染器不支持", ":::alert", "禁手写"]),
     ("76L/OBS-283", ["顶包", "publish_wechat_draft.py", "--evidence 凭证门",
                       "六阶段 receipt 不齐", "停下报告", "禁绕过"]),
+    ("77D/标题双轨", ["title-playbook.md", "稳健准确4", "网感点击4", "专业权威3", "长期价值2",
+                      "有数据依据才出数据关键词", "五维评分", "点击欲望", "事实匹配", "人群匹配",
+                      "差异化", "长期价值", "风险标记", "堆砌", "无据", "时效",
+                      "1 主 2 备", "handoff 字段零变动"]),
 ]
 
 
 def test_77c_sw_instruction_compressed_anchors():
     """77C 压缩零丢失硬门:每条规则至少一个可断言语义锚点,全部在场。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
-    assert len(instr) <= 2000
+    # 77C 压至 2000;77D 追加 232 字符方法论条款(合法升级),上限放宽至 2300
+    assert len(instr) <= 2300
     for tag, anchors in SW_ANCHOR_GROUPS:
         for a in anchors:
             assert a in instr, f"{tag}: 义务锚点丢失 {a!r}"
