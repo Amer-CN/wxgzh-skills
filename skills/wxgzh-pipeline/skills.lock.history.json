@@ -1314,5 +1314,23 @@
     "new_skill_version": "0.4.7-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260822T032034Z-6843d7d7",
+    "skill": "super-writer",
+    "reason": "77E:consistency预检+0.4.8-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-22T03:20:34Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "3a2e0bce1b8136496ef7429328c82a5dafba8d3ae9ecbda739532773fd0e02b9",
+    "new_root_sha256": "ea8df9ccf698d171390d7c36a2c65c8032f14e63655e0348f817955bcdbffa7e",
+    "old_full_commit_sha": "d233f003be5ff6848e664caaf73e887a2af482bf",
+    "new_full_commit_sha": "48bb7a74e3d00a247c97f0d59b148be92ec84075",
+    "old_source_tree_sha": "c0feb8697774096dd1060a2fdf96a99f1bfad0fa",
+    "new_source_tree_sha": "5ad24d34aeba5b33e85c19dac2622bd43882f9cb",
+    "old_skill_version": "0.4.7-rc1",
+    "new_skill_version": "0.4.8-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
