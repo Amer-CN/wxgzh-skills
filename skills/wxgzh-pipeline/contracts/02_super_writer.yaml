@@ -20,6 +20,10 @@ outputs:
     # 77B/OBS-310(numbers schema 税):claims[].chart_group/metric_name/series_label/time_value
     # 归属 claim 级、与 numbers 数组并列,禁止进 numbers 数组;numbers 元素仅 string 或
     # {value: number, unit};numbers.value 仅 number,日期/时间一律走 claim.time_value(ISO 字符串)。
+    # 77E/OBS-313(media 一致性税):registry 机械预检扩展——materials 内同 URL 双 ID 直接拒;
+    # dedup 侧 links.original 空直接拒;registry↔dedup 同 URL 的 id 必须一一对应(dedup_id 对齐);
+    # ledger↔registry 双通道 source_url 集合必须一一对齐(mat-xxx/M-xx 双 ID 双通道重复禁止);
+    # 由 validate_single_product --product registry [--dedup ...] [--ledger ...] 机械层强制。
     - core-card.md
     - outline.md
     - semantic-map.yaml

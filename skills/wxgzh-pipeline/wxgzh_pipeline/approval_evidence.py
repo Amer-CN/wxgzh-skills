@@ -363,6 +363,35 @@ def build_approval_readiness(
                     if isinstance(a, dict) and a.get("asset_id")}
     records = dedup_same_data_charts(records, assets_by_id, registry_path)
 
+    # 77E/OBS-314:池道孪生位置继承——同 sha256/感知哈希且同 material 的孪生,
+    # 当 canonical(位置已知且可批准)存在时继承其 page_position(OBS-296 孪生共享
+    # 审批依据从文档纪律落到机械层);不同 material 不猜;留痕 inherited_from。
+    twin_anchor: dict[str, dict] = {}
+    for rec in records:
+        a = assets_by_id.get(rec["asset_id"]) or {}
+        sha = a.get("asset_sha256") or a.get("perceptual_hash")
+        if not sha:
+            continue
+        if rec["approvable"] and rec["page_position"].get("known"):
+            twin_anchor.setdefault(str(sha), rec)
+    for rec in records:
+        if rec["approvable"] or rec["page_position"].get("known"):
+            continue
+        a = assets_by_id.get(rec["asset_id"]) or {}
+        sha = a.get("asset_sha256") or a.get("perceptual_hash")
+        twin = twin_anchor.get(str(sha)) if sha else None
+        if twin is None:
+            continue
+        ta = assets_by_id.get(twin["asset_id"]) or {}
+        if a.get("material_id") != ta.get("material_id"):
+            continue
+        rec["page_position"] = dict(twin["page_position"])
+        rec["page_position"]["inherited_from"] = twin["asset_id"]
+        rec["approvable_blockers"] = [b for b in rec["approvable_blockers"]
+                                      if b != "页面位置未知"]
+        rec["approvable"] = not rec["approvable_blockers"]
+
+
     # 档67:视觉内容门槛分级(客观判据,写 readiness 供批准点呈现;实际门槛在
     # stages/media_enrichment.py content_validate 强制执行)。
     article_path = run_dir / "zh_human_writing" / "final_article.md"

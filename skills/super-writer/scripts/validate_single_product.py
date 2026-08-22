@@ -146,7 +146,8 @@ def check_handoff(path: Path) -> tuple[list, dict]:
     return out_errors, checks
 
 
-def check_registry(path: Path) -> tuple[list, dict]:
+def check_registry(path: Path, dedup: Path | None = None,
+                  ledger: Path | None = None) -> tuple[list, dict]:
     raw = _read_text(path)
     try:
         data = json.loads(raw)
@@ -241,6 +242,90 @@ def check_registry(path: Path) -> tuple[list, dict]:
                 out_errors.append(
                     f"registry.claims[{i}]: source_url 与 materials[{mid}].source_url "
                     f"逐字不一致(含锚点原样一致,76Q/OBS-287)")
+    # 77E/OBS-313(media 一致性税):同 URL 双 ID / links.original / 双通道唯一性机械校验。
+    # R1: registry materials 内同 source_url 双 ID 直接拒。
+    urls = {}
+    for i, row in enumerate(materials):
+        if not isinstance(row, dict):
+            continue
+        u = row.get("source_url")
+        if not u:
+            continue
+        if u in urls:
+            out_errors.append(
+                f"registry.materials: source_url 重复({u})——{urls[u]} 与 {row.get('material_id')} "
+                f"同 URL 双 ID,禁止;同一素材只允许一个 material 登记(77E/OBS-313)")
+        else:
+            urls[u] = row.get("material_id")
+    # R2/R3/R4: dedup 侧(optional --dedup)。
+    dedup_items = []
+    if dedup is not None:
+        if not dedup.is_file():
+            out_errors.append(f"registry: --dedup 文件不存在: {dedup}(77E/OBS-313)")
+        else:
+            try:
+                ddata = json.loads(dedup.read_text(encoding="utf-8"))
+            except ValueError as exc:
+                out_errors.append(f"registry: dedup 解析失败: {exc}(77E/OBS-313)")
+                ddata = None
+            if isinstance(ddata, list):
+                dedup_items = ddata
+            else:
+                out_errors.append("registry: deduplicated_items.json 顶层必须是数组(77E/OBS-313)")
+    d_urls = {}
+    for i, it in enumerate(dedup_items):
+        if not isinstance(it, dict):
+            continue
+        u = it.get("source_url")
+        if u:
+            if u in d_urls:
+                out_errors.append(
+                    f"dedup[{i}]: source_url 重复({u})——{d_urls[u]} 与 {it.get('id')} "
+                    f"同 URL 双 ID,禁止(77E/OBS-313)")
+            else:
+                d_urls[u] = it.get("id")
+        links = it.get("links")
+        orig = links.get("original") if isinstance(links, dict) else None
+        if not orig:
+            out_errors.append(
+                f"dedup[{i}]({it.get('id')}): links.original 为空/缺失——必须有原始链接,"
+                f"禁止 null(77E/OBS-313)")
+    # R3: registry↔dedup 同 URL 的 id 必须一一对应(dedup_id 对齐)。
+    if dedup_items:
+        for mrow in materials:
+            if not isinstance(mrow, dict):
+                continue
+            u = mrow.get("source_url")
+            did = mrow.get("dedup_id")
+            if u and did and u in d_urls and d_urls[u] != did:
+                out_errors.append(
+                    f"registry.materials({mrow.get('material_id')}): source_url {u} 在 dedup 中"
+                    f"对应 id={d_urls[u]},与 dedup_id={did} 不一致——同 URL 双 ID 冲突(77E/OBS-313)")
+    # R5: ledger 双通道(optional --ledger):双方 source_url 集合必须一一对齐。
+    if ledger is not None:
+        if not ledger.is_file():
+            out_errors.append(f"registry: --ledger 文件不存在: {ledger}(77E/OBS-313)")
+        else:
+            try:
+                ldata = yaml.safe_load(ledger.read_text(encoding="utf-8"))
+            except yaml.YAMLError as exc:
+                out_errors.append(f"registry: ledger 解析失败: {exc}(77E/OBS-313)")
+                ldata = None
+            if isinstance(ldata, dict):
+                lmats = (ldata.get("material_ledger") or {}).get("materials") or []
+                ledger_urls = {str(m.get("source_url")): m.get("id")
+                               for m in lmats if isinstance(m, dict) and m.get("source_url")}
+                if ledger_urls:
+                    reg_urls = {u: (m.get("material_id"), m.get("dedup_id"))
+                                for m in materials if isinstance(m, dict) and m.get("source_url")
+                                for u in [m["source_url"]]}
+                    only_ledger = set(ledger_urls) - set(reg_urls)
+                    only_reg = set(reg_urls) - set(ledger_urls)
+                    if only_ledger or only_reg:
+                        out_errors.append(
+                            f"registry: ledger↔registry 双通道 URL 不齐——仅 ledger:{sorted(only_ledger)[:3]}"
+                            f" 仅 registry:{sorted(only_reg)[:3]};同一素材两个登记通道必须一一对齐,"
+                            f"禁止 mat-xxx/M-xx 双 ID 双通道重复(77E/OBS-313)")
     return out_errors, {"claims": len(claims), "materials": len(materials)}
 
 
@@ -260,6 +345,8 @@ def main(argv=None) -> int:
     ap.add_argument("--file", required=True)
     ap.add_argument("--target-visible-chars", type=int, default=None,
                     help="outline 专用:目标字数,偏差 >5% 即报错")
+    ap.add_argument("--dedup", default=None, help="registry 专用(77E/OBS-313):deduplicated_items.json 路径,做同 URL 双 ID/links.original 校验")
+    ap.add_argument("--ledger", default=None, help="registry 专用(77E/OBS-313):material-ledger.yaml 路径,做双通道 URL 一一对齐校验")
     a = ap.parse_args(argv)
     path = Path(a.file)
     if not path.is_file():
@@ -270,6 +357,9 @@ def main(argv=None) -> int:
     checker = CHECKERS[a.product]
     if a.product == "outline":
         errors, checks = checker(path, a.target_visible_chars)
+    elif a.product == "registry":
+        errors, checks = checker(path, dedup=Path(a.dedup) if a.dedup else None,
+                                  ledger=Path(a.ledger) if a.ledger else None)
     else:
         errors, checks = checker(path)
     result = {"product": a.product, "file": str(path),

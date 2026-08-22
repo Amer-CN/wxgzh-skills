@@ -279,6 +279,46 @@ class Orchestrator:
         except Exception:
             return 0.0
 
+    @staticmethod
+    def wall_self_check(run_dir, st) -> dict:
+        """77E/OBS-312:墙钟自证行——分段 receipt wall 合计 vs run_wall 并列。
+
+        分段 wall 是各阶段 wall_mark(首次进入)到完成的独立累计,含握手/返工等待
+        (76F/OBS-274),彼此可重叠,合计无上界——恒大于等于 run_wall 属正常;仅当
+        差值超限时标 WARNING,供效率战役计量判别,不阻断。
+        """
+        import json as _json
+        from .receipts import receipt_path
+        total = 0.0
+        stages = []
+        for stage_name in ("aihot", "super_writer", "zh_human_writing",
+                           "media_enrichment", "gzh_design", "wechat_draft"):
+            rp = receipt_path(Path(run_dir), stage_name)
+            if not rp.is_file():
+                continue
+            try:
+                w = _json.loads(rp.read_text(encoding="utf-8")).get("wall_seconds")
+            except Exception:
+                w = None
+            if isinstance(w, (int, float)):
+                total += float(w)
+                stages.append((stage_name, round(float(w), 3)))
+        run_wall = Orchestrator._wall_seconds(st)
+        delta = round(total - run_wall, 3)
+        warning = None
+        if total > run_wall + max(600.0, run_wall * 0.5):
+            warning = (
+                f"分段 wall 合计 {total:.0f}s 超过 run_wall {run_wall:.0f}s "
+                f"达 {delta:.0f}s——系各阶段 wall_mark 独立累计(含握手/返工等待)重叠所致,"
+                "非计时错误;效率计量以 run_wall 为准")
+        return {"stage_wall_total_seconds": round(total, 3),
+                "run_wall_seconds": run_wall,
+                "delta_seconds": delta,
+                "stages": stages,
+                "warning": warning,
+                "semantics": ("run_wall=now-start,started_at 跨 CLI 不重置;"
+                              "stage_wall=各阶段 wall_mark(首次进入)至完成的独立累计,可重叠")}
+
     def _drive(self, run_dir, st, disc, create_wechat_draft, resumed=False,
               stop_after: str | None = None) -> dict:
         ctx = self._context(run_dir, disc, create_wechat_draft)
@@ -345,11 +385,15 @@ class Orchestrator:
                         "note": "受控停止,不执行后续阶段(不发布、不调微信)",
                         "run_wall_seconds": self._wall_seconds(st)}
         write_delivery(run_dir)
+        wall_check = self.wall_self_check(run_dir, st)
+        (Path(run_dir) / "wall_self_check.json").write_text(
+            json.dumps(wall_check, ensure_ascii=False, indent=2), encoding="utf-8")
         return {"status": "COMPLETE", "run_id": st.run_id, "topic": st.topic,
                 "completed_stages": st.completed_stages, "draft_created": st.draft_created,
                 "formally_published": False, "resumed": resumed,
                 "uploaded_image_count": st.uploaded_image_count, "run_dir": str(run_dir),
-                "run_wall_seconds": self._wall_seconds(st)}
+                "run_wall_seconds": self._wall_seconds(st),
+                "wall_self_check": wall_check}
 
     # ---------- progress ----------
     def progress(self, run_id: str | None = None) -> dict:

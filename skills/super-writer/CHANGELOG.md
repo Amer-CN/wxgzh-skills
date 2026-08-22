@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.4.8-rc1 (2026-08-22) — 档77E：media 一致性税修理包（registry 机械预检扩展）
+
+### 77E(档77E)
+
+- **OBS-313 registry 一致性机械预检**:validate_single_product --product registry 扩展
+  --dedup/--ledger——registry 内同 URL 双 ID 直接拒;dedup links.original 空直接拒;
+  registry↔dedup 同 URL id 必须一一对应(dedup_id 对齐);dedup 内同 URL 双 ID 拒;
+  ledger↔registry 双通道 source_url 集合一一对齐(mat-xxx/M-xx 双 ID 双通道禁止);测试 +4。
+
 ## v0.4.7-rc1 (2026-08-22) — 档77D：标题能力双轨（Phase 6 方法论升级 + 流水线外独立工具）
 
 ### 77D(档77D)
