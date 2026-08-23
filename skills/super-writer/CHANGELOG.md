@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.4.9-rc1 (2026-08-22) — 档77F：图表锚点直出（OBS-181 收口）+ semantic-map 清单（OBS-315）
+
+### 77F(档77F)
+
+- **OBS-181 图表锚点直出**: media-enrichment 生成图表资产由 `chart_generator.ChartSpec` 直出 `placement.anchor = spec.title` + `page_position known:true heading=spec.title`，不再依赖 `placement_planner.find_anchors` 的 `claim_text[:30]` 文本匹配（半角冒号 vs 全角逗号致落空，jsffln 同案）；后续文本回填不再覆盖已直出锚点（i2z69i A-087 即该路径过闸）；测试 `test_77f_chart_anchor` 验证直出与无锚拒。
+- **OBS-315 semantic-map 清单缺口**: 新增 `references/component-catalog.md`（41 角色单一真源 `validate_semantic_map.py:ALLOWED_ROLES / ROLE_REQUIRED_FIELDS`）；`validate_single_product --product semantic-map` 新增未注册 role/缺必填 payload 拒并指路清单；`validate_semantic_map.py` 注释补 77F；同步守卫测试。
+
+
 ## v0.4.8-rc1 (2026-08-22) — 档77E：media 一致性税修理包（registry 机械预检扩展）
 
 ### 77E(档77E)

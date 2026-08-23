@@ -987,6 +987,7 @@ def validate_semantic_map(article_path, semantic_map_path, formatter_root=None, 
             errors.append(f"ERROR: {location} has no role")
             continue
         if role not in ALLOWED_ROLES:
+            # 77F/OBS-315:未注册组件名直接拒并附合法清单指路（单一真源）
             errors.append(f"ERROR: {location} has unknown role '{role}'. Allowed roles: {', '.join(sorted(ALLOWED_ROLES))}")
             continue
 

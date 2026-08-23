@@ -52,13 +52,32 @@ def test_obs288_common_rule_not_copied_in_source():
 
 def _extract_old_instructions():
     """从 HEAD(改写前)提取 AGENT_INSTRUCTIONS 字典。"""
-    # 基线 = 76Q-F 终态(8f6a775),即 76R 指令瘦身前
+    import pathlib as _pl77
+    _git_dir = str(_pl77.Path(__file__).resolve().parents[2])
     old_src = subprocess.run(
-        ["git", "show", "8f6a775:skills/wxgzh-pipeline/wxgzh_pipeline/producers.py"],
+        ["git", "-C", _git_dir, "show", "8f6a775:skills/wxgzh-pipeline/wxgzh_pipeline/producers.py"],
         capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
     start = old_src.find("AGENT_INSTRUCTIONS = {")
-    end_marker = old_src.index("}", old_src.index('"zh_human_writing"'))
-    end = old_src.index("\n", end_marker)
+    assert start != -1, f"AGENT_INSTRUCTIONS not found in old_src (len={len(old_src)})"
+    depth = 0
+    in_str = False
+    q = ""
+    end = None
+    for i, c in enumerate(old_src[start:]):
+        if not in_str and c in ("'", '"'):
+            in_str = True
+            q = c
+        elif in_str and c == q and old_src[start+i-1] != "\\":
+            in_str = False
+        elif not in_str:
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    end = start + i + 1
+                    break
+    assert end is not None
     ns = {}
     exec(old_src[start:end], ns)
     return ns["AGENT_INSTRUCTIONS"]
@@ -195,9 +214,9 @@ def test_obs304_ledger_count_command():
     nums = {int(x) for x in re.findall(r"^\|\s*(\d{3})\s*\|", text, re.M)}
     n = len(nums)
     # OBS-304/305 登记后区间 119..305 = 187 个编号;去重实测为准
-    assert n == 193, f"唯一编号实测 {n} != 193"
+    assert n == 196, f"唯一编号实测 {n} != 196"
     # 区间连续无缺号
-    assert set(range(119, 312)) <= nums, "119..311 区间有缺号"
+    assert set(range(119, 315)) <= nums, "119..314 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():

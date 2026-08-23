@@ -95,6 +95,30 @@ def check_semantic_map(path: Path) -> tuple[list, dict]:
             out_errors.append(f"semantic-map: 缺顶层键 `{key}`")
     if isinstance(data.get("article"), dict) and not data["article"].get("title"):
         out_errors.append("semantic-map: article.title 为空")
+    # 77F/OBS-315: semantic-map 清单缺口 — 未注册 role/payload 缺口直接拒并附合法清单指路
+    # 单一真源：validate_semantic_map.py:ALLOWED_ROLES / ROLE_REQUIRED_FIELDS
+    try:
+        import importlib.util
+        sm_path = Path(__file__).resolve().parent / "validate_semantic_map.py"
+        spec = importlib.util.spec_from_file_location("vsm", str(sm_path.resolve()))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        allowed = set(mod.ALLOWED_ROLES)
+        required = dict(mod.ROLE_REQUIRED_FIELDS)
+        for idx, blk in enumerate(data.get("blocks") or []):
+            if not isinstance(blk, dict):
+                continue
+            role = blk.get("role") or blk.get("type")
+            if role and role not in allowed:
+                out_errors.append(f"semantic-map: blocks[{idx}].role '{role}' 未注册；合法清单见 references/component-catalog.md（单一真源 validate_semantic_map.py:ALLOWED_ROLES，77F/OBS-315）")
+                continue
+            if role in required:
+                payload = blk.get("payload") or {}
+                for fld in (required.get(role) or []):
+                    if not payload.get(fld):
+                        out_errors.append(f"semantic-map: blocks[{idx}] role={role} 缺必填 payload 字段 '{fld}'（清单见 references/component-catalog.md，77F/OBS-315）")
+    except Exception as exc:
+        out_errors.append(f"semantic-map: 清单校验异常: {exc}（77F/OBS-315）")
     return out_errors, {"top_keys": sorted(data.keys())}
 
 

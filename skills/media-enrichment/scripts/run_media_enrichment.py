@@ -1000,7 +1000,8 @@ def main():
                         caption=spec.caption or spec.title, alt_text=spec.caption or spec.title,
                         content_description=desc, content_description_source="generated",
                         page_region="generated",
-                        page_position={"known": False, "heading": None, "level": None},
+                        placement={"anchor": spec.title.strip() or (spec.chart_group + chr(183) + spec.metric_name), "position": "after", "confidence": 0.9},
+                        page_position={"known": True, "heading": spec.title.strip() or (spec.chart_group + chr(183) + spec.metric_name), "level": "article-anchor"},
                         upload={"mode": upload_mode, "status": "not_uploaded",
                                 "remote_url": None, "response_sha256": None},
                     )
@@ -1232,6 +1233,10 @@ def main():
                     if claim:
                         placement = placements.get(claim.get("claim_text", ""))
                         if placement and placement.anchor:
+                            # 77F/OBS-181: generated 图表已由 spec 直出 placement.anchor+page_position,
+                            # 不再被 find_anchors 文本匹配(claim_text[:30])覆盖;直出锚点即过闸(e.g. i2z69i A-087)
+                            if asset.asset_origin == "generated":
+                                continue
                             asset.placement = {"anchor": placement.anchor, "position": placement.position, "confidence": placement.confidence}
                             # OBS-71:图表位置=拟绑定章节锚点(文章内位置,非页面位置)
                             if asset.asset_origin == "generated" and placement.anchor:
