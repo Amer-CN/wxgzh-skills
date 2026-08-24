@@ -47,7 +47,8 @@ CLAIM_CAPTION_WINDOW = 40  # caption = "图：" + claim_text[:40]
 # media-enrichment 自生成图表(描述来自图表 spec/数据来源,OBS-71)。
 # 该枚举是白名单:未知来源一律视为不可验证,不构成自动放行。
 ALLOWED_DESCRIPTION_SOURCES = frozenset(
-    {"page_alt", "page_context", "human", "visual_analysis", "generated"})
+      {"page_alt", "page_context", "human", "visual_analysis", "generated",
+                   "user_provided"})
 
 # 页面位置解析允许的标题层级
 _SECTION_HEADING_LEVELS = ("h1", "h2", "h3")

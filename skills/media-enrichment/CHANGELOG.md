@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-dev25 (2026-08-24) — 77G
+
+- **OBS-317 user_provided 供图通道开通**:`content_description_source=user_provided` 进入 OBS-87 可信描述白名单；用户供图以 caption/来源登记作为位置证据（`page_position.known=true`、`level=user-evidence`）；manifest schema 补 `asset_origin/page_region=user_provided` 与 `copyright_status=user_granted` 枚举；非供图车道语义不变。
+- **OBS-316 配套**：零来源图时 chart 车道保持 discover 首选兜底；仍无可批准资产时由 pipeline 记录零图 shortfall，黑名单/restricted/证据断链不放宽。
+
 ## 0.1.0-dev24 (2026-08-22) — 77F
 
 - **OBS-181 生成图表直出锚点**: `run_media_enrichment.py` 生成图表资产由 `ChartSpec.title` 直出 `placement.anchor` + `page_position known:true level:article-anchor`，规避 `find_anchors` 文本匹配落空导致的 `页面位置未知` OBS-87 闸门 FAIL_CLOSED（kmlb7t A-041 死锁；i2z69i A-087 对照过闸）；后续 `find_anchors` 回填不再覆盖已直出锚点。

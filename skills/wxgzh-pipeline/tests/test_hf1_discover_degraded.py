@@ -81,7 +81,7 @@ def _base_manifest(run_id="20260808T220417-x", claims_total=20, errors=None,
 def _run_discover(tmp_path, monkeypatch, *, exit_code, manifest,
                   frozen=None, events=None):
     run_dir, sd = _build_run(tmp_path)
-    frozen = {"assets": []} if frozen is None else frozen
+    frozen = {"assets": [], "discovery_manifest_sha256": "a" * 64} if frozen is None else frozen
     events = [] if events is None else events
     monkeypatch.setattr(PR, "run_script",
                         _fake_run_factory(sd, exit_code, manifest, frozen, events))
@@ -133,14 +133,20 @@ def test_hf1_discover_non_fetch_error_stays_failed(tmp_path, monkeypatch):
     assert meta.get("await_media_approval") is None
 
 
-def test_hf1_discover_no_candidates_stays_failed(tmp_path, monkeypatch):
     """errors 全为 fetch 前缀但可批准候选为 0 → 降级无意义,维持 STAGE_FAILED。"""
+def test_hf1_discover_no_candidates_arms_zero_image_fallback(tmp_path, monkeypatch):
+    """77G:fetch-only + 零可批准候选 → 空合同降级，不再硬停。"""
     errors = [FETCH + "M-005: HTTP 404"]
     manifest = _base_manifest(errors=errors, eligible=0, review_required=0)
     out, meta = _run_discover(tmp_path, monkeypatch, exit_code=1, manifest=manifest)
     assert out == []
-    assert "discover_degraded" not in meta
-    assert meta["entry_run"]["exit_code"] == 1
+    assert meta.get("discover_degraded") is True
+    assert meta.get("zero_image_fallback") is True
+    assert meta.get("await_media_approval") is True
+    contract = json.loads((tmp_path / "a" / "b" / "c" / "media_enrichment" /
+                          "copyright_approval.json").read_text(encoding="utf-8"))
+    assert contract["mode"] == "zero_image_shortfall"
+    assert contract["approvals"] == []
 
 
 def test_hf1_discover_validation_failed_stays_failed(tmp_path, monkeypatch):

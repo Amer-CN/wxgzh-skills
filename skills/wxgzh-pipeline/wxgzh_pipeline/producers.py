@@ -1195,9 +1195,33 @@ def _discover_degraded_recoverable(discover_dir):
         return None
     candidates = ((summary.get("eligible_assets") or 0)
                   + (summary.get("review_required_assets") or 0))
-    if not candidates > 0:
-        return None
+    if candidates == 0:
+        # 77G/OBS-316: zero eligible/reviewable source images is a delivery
+        # shortfall, provided the only runner errors are bounded page-fetch misses.
+        # Any validator/secret/upload error still remains fail-closed.
+        return {"errors": errors, "zero_image_fallback": True}
     return {"errors": errors}
+
+
+def _write_zero_image_fallback_approval(readiness: dict, approval_file: Path,
+                                       discovery_manifest_sha256: str) -> bool:
+    """Arm an empty approval contract only when OBS-87 approves zero assets."""
+    summary = readiness.get("summary") if isinstance(readiness, dict) else None
+    if not isinstance(summary, dict) or int(summary.get("approvable") or 0) != 0:
+        return False
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    contract = {
+        "schema_version": "1.0",
+        "approval_id": f"AP-ZERO-IMAGE-{discovery_manifest_sha256[:12]}",
+        "mode": "zero_image_shortfall",
+        "created_at": now,
+        "discovery_manifest_sha256": discovery_manifest_sha256,
+        "reason": "no approvable media asset; 77G/OBS-316 shortfall fallback",
+        "approvals": [],
+    }
+    approval_file.write_text(json.dumps(contract, ensure_ascii=False, indent=2),
+                             encoding="utf-8", newline="\n")
+    return True
 
 
 def _media_two_phase(ctx, sd, expected, state, entry, validator):
@@ -1295,8 +1319,16 @@ def _media_two_phase(ctx, sd, expected, state, entry, validator):
                               / "approval_readiness.json")
             readiness_path.write_text(json.dumps(readiness, ensure_ascii=False, indent=2),
                                      encoding="utf-8")
+            frozen_discovery = read_json(frozen)
+            discovery_sha = frozen_discovery.get("discovery_manifest_sha256")
+            zero_image_fallback = (
+                isinstance(discovery_sha, str) and len(discovery_sha) == 64
+                and _write_zero_image_fallback_approval(
+                    readiness, approval_file, discovery_sha)
+            )
             meta["approval_readiness"] = str(readiness_path)
             meta["await_media_approval"] = True
+            meta["zero_image_fallback"] = zero_image_fallback
             meta["approval_contract_rule"] = APPROVAL_CONTRACT_RULE
             meta["discovery_manifest"] = str(frozen)
             meta["approval_file"] = str(approval_file)
@@ -1439,6 +1471,11 @@ def _select_live_cover(ctx):
     rd = Path(ctx.run_dir)
     media_root = rd / "media_enrichment"
     media_root_resolved = media_root.resolve()
+    bindings_path = media_root / "article_image_bindings.json"
+    if bindings_path.is_file():
+        # 77G/OBS-316: check the zero-image delivery shape before requiring a cover.
+        if not read_json(bindings_path).get("body_images"):
+            return None, None
     approvals = _load_copyright_approvals(rd)
     if not approvals["single_asset"]:
         raise MediaRequestError(
@@ -1462,10 +1499,6 @@ def _select_live_cover(ctx):
     if not success_ids:
         raise MediaRequestError(
             "cover: no successful upload in continue/upload_events.json")
-    bindings_path = media_root / "article_image_bindings.json"
-    if not bindings_path.is_file():
-        raise MediaRequestError(
-            "cover: article_image_bindings.json missing")
     bindings = read_json(bindings_path)
     candidates = []
     for img in bindings.get("body_images", []):
@@ -1651,7 +1684,8 @@ def _wechat(ctx, stage, sd, expected, state):
                     "elapsed_seconds": 0.0,
                 },
             }
-        args.extend(["--cover", str(cover)])
+        if cover is not None:
+            args.extend(["--cover", str(cover)])
         # 档54R:显式放行开关——仅当环境变量显式开启时向被锁脚本传 --allow-warnings
         # OBS-197(档71H,5b/R82):WXGZH_ALLOW_WARNINGS 刻意只读 ctx.env(命令行时点),
         # 不读 .env——放行开关不得被持久化文件静默开启。

@@ -123,6 +123,19 @@ def test_h76c_user_images_injected(tmp_path):
     assert ups[0]["decision"] == "eligible"
     assert ups[0]["copyright_status"] == "user_granted"
     assert ups[0]["content_description_source"] == "user_provided"
+    # 77G/OBS-317:user description/source URL is accepted position evidence.
+    assert ups[0]["page_position"]["known"] is True
+    assert ups[0]["page_position"]["level"] == "user-evidence"
+
+
+def test_h77g_user_image_manifest_schema_enums():
+    """77G/OBS-317:manifest schema accepts the user-provided asset lane."""
+    schema = json.loads((SKILL_ROOT / "schemas" / "media_manifest.schema.json").read_text(
+        encoding="utf-8"))
+    asset = schema["properties"]["assets"]["items"]["properties"]
+    assert "user_provided" in asset["asset_origin"]["enum"]
+    assert "user_provided" in asset["page_region"]["enum"]
+    assert "user_granted" in asset["copyright_status"]["enum"]
 
 
 def test_h76c_pool_items_expands_discovery(tmp_path):

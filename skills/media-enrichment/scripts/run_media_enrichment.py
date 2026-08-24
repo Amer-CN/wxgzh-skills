@@ -517,7 +517,10 @@ def main():
             reasons=["user provided image — 免版权审批,用户供图责任自负 (76C/OBS-255)"],
             caption=caption, alt_text=caption,
             content_description=caption or "用户供图", content_description_source="user_provided",
-            page_region="user_provided", page_position={"known": False, "heading": None, "level": None},
+            page_region="user_provided",
+            # 77G/OBS-317: user description/source URL is the lane's position evidence.
+            page_position={"known": True, "heading": caption or "用户供图",
+                           "level": "user-evidence"},
             asset_identity_sha256=identity_sha256,
             upload={"mode": upload_mode, "status": "not_uploaded", "remote_url": None, "response_sha256": None},
         )
