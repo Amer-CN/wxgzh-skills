@@ -37,7 +37,9 @@ from . import zipping
 # OBS-69 baseline: sha256 of the REPO-side skills.lock.json
 # (dev/0.1.0-dev2, 76I relock #42(d3e20fb). Update together with any lock change.
 # 上一处基线对应 77E relock #70(cf5caa5)。R93:relock 后同次操作同步。
-REPO_LOCK_SHA256 = "e7ab0f94300522fdaffb9eb42c4f56879b6c33eecba859d1a5824ada6b7b9db6"
+# 上一处基线对应 77F relock #72/#73(2735887)。R93:relock 后同次操作同步。
+# 上一处基线对应 77G relock #74/#75。R93:relock 后同次操作同步。
+REPO_LOCK_SHA256 = "1113e817d4c4c10a8965b5c39eeda4a222fc77e15879cbebf9193c5c01c427b5"
 
 _HEX64 = frozenset("0123456789abcdef")
 
