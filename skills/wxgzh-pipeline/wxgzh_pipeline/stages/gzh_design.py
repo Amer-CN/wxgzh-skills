@@ -115,12 +115,18 @@ def content_validate(ctx, sd: Path, state):
     from . import SKILL_ROOT
     lock_entry = load_lock(SKILL_ROOT).get("skills", {}).get("gzh-design", {})
     mod = load_validator("validate_theme_identity")
+    media_bindings = Path(ctx.run_dir) / "media_enrichment" / "article_image_bindings.json"
+    media_image_count = 0
+    if media_bindings.is_file():
+        media_image_count = len((json.loads(media_bindings.read_text(encoding="utf-8"))
+                                .get("body_images") or []))
     code, report = mod.validate(final_html, expected_chapters,
                                 usage_out=sd / "component_usage_report.json",
                                 exec_evidence=exec_evidence, lock_entry=lock_entry,
                                 network_mode=ctx.network_mode,
                                 # 76C:少图交付时主题校验的图片类型门槛随 image_shortfall 降级
-                                image_shortfall=getattr(state, "image_shortfall", 0))
+                                image_shortfall=getattr(state, "image_shortfall", 0),
+                                image_count=media_image_count)
     report["chapters_source"] = "frozen final_article.md (## headings)"
     report["INTRO_GUARD"] = "PASS"
     # 4c/5c(OBS-164/173):锚 JSON 状态注入(惰性计算,只可见,不阻断)。

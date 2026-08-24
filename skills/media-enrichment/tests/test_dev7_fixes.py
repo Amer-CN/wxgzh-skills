@@ -27,13 +27,13 @@ class TestPickExtension:
         assert pick_extension("image/png", "", "https://x/img") == ".png"
 
     def test_content_type_jpeg_normalized(self):
-        assert pick_extension("", "image/jpeg", "https://x/img") == ".jpg"
-
-    def test_url_suffix_fallback(self):
-        assert pick_extension("", "", "https://x/a/photo.webp?v=1") == ".webp"
+        assert pick_extension("", "image/jpeg", "https://x/a.jpg") == ".jpg"
 
     def test_jpeg_url_suffix_maps_to_jpg(self):
         assert pick_extension("", "", "https://x/a/photo.jpeg") == ".jpg"
+
+    def test_url_suffix_fallback(self):
+        assert pick_extension("", "", "https://x/a/photo.webp?v=1") == ".webp"
 
     def test_unknown_stays_empty(self):
         assert pick_extension("application/octet-stream", "", "https://x/blob") == ""
@@ -133,3 +133,23 @@ class TestValidateBindings:
         from validate_media_manifest import validate_bindings
         mp, bp = self._mk(tmp_path, bind_sha="d" * 64)
         assert validate_bindings(mp, bp)["pass"] is False
+
+    def test_h77g_zero_image_shortfall_passes(self, tmp_path):
+        from validate_media_manifest import validate_bindings
+        mp = tmp_path / "m.json"
+        bp = tmp_path / "b.json"
+        manifest = {"assets": [], "errors": [], "summary": {
+            "eligible_assets": 0, "review_required_assets": 0}}
+        mp.write_text(json.dumps(manifest), encoding="utf-8")
+        bp.write_text(json.dumps({"body_images": []}), encoding="utf-8")
+        assert validate_bindings(str(mp), str(bp))["pass"] is True
+
+    def test_h77g_unbound_candidate_still_fails(self, tmp_path):
+        from validate_media_manifest import validate_bindings
+        mp = tmp_path / "m.json"
+        bp = tmp_path / "b.json"
+        mp.write_text(json.dumps({"assets": [], "errors": [],
+                                  "summary": {"eligible_assets": 1}}),
+                      encoding="utf-8")
+        bp.write_text(json.dumps({"body_images": []}), encoding="utf-8")
+        assert validate_bindings(str(mp), str(bp))["pass"] is False

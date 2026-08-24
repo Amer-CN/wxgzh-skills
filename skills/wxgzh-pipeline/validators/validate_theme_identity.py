@@ -219,7 +219,8 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
              exec_evidence: dict | None = None,
              lock_entry: dict | None = None,
              network_mode: str | None = None,
-             image_shortfall: int = 0) -> tuple[int, dict]:  # 76C:少图交付时图片类型门槛降级
+             image_shortfall: int = 0,
+             image_count: int | None = None) -> tuple[int, dict]:
     html = Path(final_html).read_text(encoding="utf-8")
     ev = {}
     for cid, fp in FINGERPRINTS.items():
@@ -299,12 +300,14 @@ def validate(final_html: str | Path, expected_chapters: int | None = None,
                    and root_ok and manifest_ok and commit_ok
                    and network_mode in ("live", "integration"))
 
-    structure_ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
-                    and footer == 1 and len(img_types) >= 2 and not fallback_used
-                    and not strike_bad and strike_props_ok)
-    # 76C(用户裁决 2026-08-11):图片数量不再是发文限制条件——少图交付
-    # (image_shortfall>0)时图片组件类型门槛 2→1 降级,默认(无短少)行为不变。
-    img_type_min = 1 if image_shortfall > 0 else 2
+    # 76C:partial shortfall lowers two component types to one; 77G: an audited
+    # zero-image delivery has zero image components and remains publishable.
+    if image_count == 0 and image_shortfall > 0:
+        img_type_min = 0
+    elif image_shortfall > 0:
+        img_type_min = 1
+    else:
+        img_type_min = 2
     structure_ok = (cover == 1 and toc == 1 and toc_dynamic_ok and chapters_ok and sig == 1
                     and footer == 1 and len(img_types) >= img_type_min and not fallback_used
                     and not strike_bad and strike_props_ok)

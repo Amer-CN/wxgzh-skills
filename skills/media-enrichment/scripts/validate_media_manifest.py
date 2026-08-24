@@ -388,7 +388,15 @@ def validate_bindings(manifest_path: str, bindings_path: str) -> dict:
             all_pass = False
 
     body = bindings.get("body_images", [])
-    check("BINDINGS_NON_EMPTY", len(body) > 0, "no body_images in bindings")
+    summary = manifest.get("summary") or {}
+    candidate_count = (int(summary.get("eligible_assets") or 0)
+                       + int(summary.get("review_required_assets") or 0))
+    zero_image_shortfall = (not body and candidate_count == 0
+                            and not manifest.get("errors"))
+    # 77G/OBS-316: zero approvable assets is an audited shortfall, not a hidden
+    # binding omission. Any candidate without a binding remains a failure.
+    check("BINDINGS_NON_EMPTY", bool(body) or zero_image_shortfall,
+          "no body_images in bindings")
     for b in body:
         aid = b.get("asset_id")
         a = assets.get(aid)

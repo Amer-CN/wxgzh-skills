@@ -94,3 +94,14 @@ def test_gzh_renderer_accepts_zero_body_images(tmp_path):
     html = (tmp_path / "final.html").read_text(encoding="utf-8")
     assert (tmp_path / "component_usage_report.json").is_file()
     assert "<img" not in html.lower()
+
+    import importlib.util
+    validator_path = (repo_root / "skills" / "wxgzh-pipeline" / "validators"
+                      / "validate_theme_identity.py")
+    spec = importlib.util.spec_from_file_location("vti", validator_path)
+    vti = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(vti)
+    _, theme = vti.validate(tmp_path / "final.html", 1,
+                            image_shortfall=6, image_count=0)
+    assert theme["IMAGE_TYPE_MIN"] == 0
+    assert theme["structure_ok"] is True
