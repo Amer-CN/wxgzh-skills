@@ -1718,7 +1718,9 @@ def _wechat(ctx, stage, sd, expected, state):
     cover_effect = {"stage": "wechat_draft", "cover_source": cover_source}
     if placeholder_cover:
         cover_effect["detail"] = "publish placeholder cover (77H/OBS-318)"
-    state.side_effects.append(cover_effect)
+    side_effects = getattr(state, "side_effects", None)
+    if isinstance(side_effects, list):
+        side_effects.append(cover_effect)
     outputs = [sd / o for o in expected if (sd / o).is_file()]
     # 档54R:放行产物(allowance_record.json)作为正式 stage 产物纳入 receipt,可追溯
     allowance = sd / "allowance_record.json"
