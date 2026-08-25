@@ -22,11 +22,13 @@ def _reg(materials):
 
 
 def _mat(mid, url, did="d-1"):
-    return {"material_id": mid, "dedup_id": did, "source_url": url}
+    return {"material_id": mid, "dedup_id": did, "source_url": url,
+            "title": "title", "aihot_permalink": url}
 
 
 def _dedup(items):
     return [{"id": it["id"], "source_url": it["source_url"],
+             "aihot_permalink": it.get("aihot_permalink", it["source_url"]),
              "links": {"original": it.get("original", "https://o.example/x")}}
             for it in items]
 

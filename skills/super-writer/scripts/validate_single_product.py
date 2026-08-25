@@ -167,6 +167,26 @@ def check_handoff(path: Path) -> tuple[list, dict]:
         elif len(sa) > 40:
             checks["strike_assumption_warnings"] = (
                 f"长度 {len(sa)} > 40 字(76T/OBS-293,advisory)")
+    # 77I/OBS-322:title playbook adoption is advisory only; handoff schema unchanged.
+    candidates = h.get("title_candidates")
+    reason = h.get("title_selection_reason")
+    title_warnings = []
+    if not isinstance(candidates, list) or not (3 <= len(candidates) <= 5):
+        title_warnings.append(f"title_candidates 数量 {len(candidates) if isinstance(candidates, list) else '非数组'} 不在 3–5")
+    groups = ("稳健准确", "网感点击", "专业权威", "长期价值")
+    present_groups = [group for group in groups if group in str(reason)]
+    if len(present_groups) < 3:
+        title_warnings.append("分组覆盖不足 3 组(稳健准确/网感点击/专业权威/长期价值)")
+    dimensions = ("点击欲望", "事实匹配", "人群匹配", "差异化", "长期价值")
+    missing_dimensions = [dimension for dimension in dimensions if dimension not in str(reason)]
+    if missing_dimensions:
+        title_warnings.append("缺五维评分:" + "/".join(missing_dimensions))
+    risk_markers = ("标题党", "堆砌", "无据", "时效", "风险标记")
+    if not any(marker in str(reason) for marker in risk_markers):
+        title_warnings.append("缺风险标记(标题党/堆砌/无据/时效)")
+    if title_warnings:
+        checks["title_playbook_warnings"] = (
+            "对照 references/title-playbook.md: " + "; ".join(title_warnings))
     return out_errors, checks
 
 
@@ -251,6 +271,10 @@ def check_registry(path: Path, dedup: Path | None = None,
         for field in ("material_id", "dedup_id", "source_url"):
             if not row.get(field):
                 out_errors.append(f"registry.materials[{i}]: 缺必填字段 `{field}`(76Q/OBS-287)")
+        # 77I/OBS-320: align with media request required fields before media stage.
+        for field in ("title", "aihot_permalink"):
+            if not row.get(field):
+                out_errors.append(f"registry.materials[{i}]: 缺必填字段 `{field}`(77I/OBS-320,对照 media schema)")
         mid = row.get("material_id")
         if mid:
             material_ids[mid] = row
@@ -297,6 +321,7 @@ def check_registry(path: Path, dedup: Path | None = None,
             else:
                 out_errors.append("registry: deduplicated_items.json 顶层必须是数组(77E/OBS-313)")
     d_urls = {}
+    d_meta = {}
     for i, it in enumerate(dedup_items):
         if not isinstance(it, dict):
             continue
@@ -309,6 +334,10 @@ def check_registry(path: Path, dedup: Path | None = None,
             else:
                 d_urls[u] = it.get("id")
         links = it.get("links")
+        did = it.get("id")
+        if did is not None:
+            d_meta[str(did)] = {"source_url": u,
+                                "aihot_permalink": it.get("aihot_permalink") or it.get("permalink") or u}
         orig = links.get("original") if isinstance(links, dict) else None
         if not orig:
             out_errors.append(
@@ -325,6 +354,11 @@ def check_registry(path: Path, dedup: Path | None = None,
                 out_errors.append(
                     f"registry.materials({mrow.get('material_id')}): source_url {u} 在 dedup 中"
                     f"对应 id={d_urls[u]},与 dedup_id={did} 不一致——同 URL 双 ID 冲突(77E/OBS-313)")
+            ditem = d_meta.get(str(did)) if did is not None else None
+            registry_permalink = mrow.get("aihot_permalink")
+            if ditem and registry_permalink and ditem["aihot_permalink"] != registry_permalink:
+                out_errors.append(
+                    f"registry.materials({mrow.get('material_id')}): aihot_permalink 与 dedup 不一致——先回填 registry 再进 media(77I/OBS-320)")
     # R5: ledger 双通道(optional --ledger):双方 source_url 集合必须一一对齐。
     if ledger is not None:
         if not ledger.is_file():

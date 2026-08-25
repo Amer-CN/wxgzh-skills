@@ -1,5 +1,12 @@
 # Release notes
 
+## v0.1.8
+
+77I(档77I):
+
+- fidelity_guard 官方 JSON 模板补齐六个零值 gate 字段（OBS-319），NUMBER_CHANGES 可由 number 类 fail 计数。
+- pipeline 读取侧缺省字段按 0 处理并留痕 `zero_gate_defaults`；显式违规仍 FAIL。
+
 ## v0.1.7
 
 77A(档77A):

@@ -46,6 +46,9 @@ _COMMON_RULES = "76F/OBS-276(恢复SOP,通用规则):若卡在 ACK/request 循�
 _COMMON_RULES_283 = "76L/OBS-283(反顶包明规,通用规则):禁止手写 HTML 或其他脚本顶包 gzh_design 渲染产物;禁止绕过阶段直接调用 publish_wechat_draft.py(该脚本强制 --evidence 凭证门,只认管线 wechat_draft 阶段传入的本 RUN receipt);遇阻的正确动作=停下并报告(对照 Z Code 诚实停机先例),不得自行绕过或另走侧门;草稿存在但六阶段 receipt 不齐=顶包红旗,该草稿不可发、全程复查。"
 
 
+_COMMON_RULES += "77I/receipt 纪律:receipt/stage_result 任何字段禁止手工编辑；hash 漂移一律走重 ACK 正路(76F/OBS-276 规程)，违反按顶包红旗处理。"
+
+
 AGENT_INSTRUCTIONS = {
     "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。76U/OBS-294(取料并行化,通用规则):窗口内常规取料的独立查询(hot-topics / selected / all 各关键词等多路互不依赖的查询)必须在同一轮并行发出,禁止无依赖查询串行排队;fetch_log 每路查询增记耗时(或并行批次标记);超窗取料五步顺序(日报→快照→回溯→直采→注入)是条件递进设计,保持串行不动。77A/OBS-307(dedup 顶层形状,硬措辞):deduplicated_items.json 顶层必须是数组(list);写成 dict 或包装对象(如 items 键包裹)直接拒,先回读 01_aihot.yaml 再重写。76J/OBS-273(dedup 模板):deduplicated_items.json 严格按 contracts/01_aihot.yaml 的字段模板书写(id/title/source_url 必填,links/content/published_at/category/score/selected/aihot_permalink/provenance 可选),不得自造字段名或改动既有键(aihot_permalink 类字段名税绝版)。" + _COMMON_RULES,
     "super_writer": 'Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK. 注入路径强制(OBS-88/66):1)数字对比事实登记为结构化 numbers(unit/value)+chart_group+metric_name+series_label,中文数字转阿拉伯;2)命令/脚本/输出以 fenced code block 原文呈现(并列短句除外);3)并列短句按语义分组拆 :::alert 块,每组一块逐字不改、全文仅一次,阻断/提醒 type 异,title 自拟;4)数字对比首次出现章节展开,不多章重复,导语不出现。76F/OBS-276+279(合一):卡 ACK/request 循环:按最新 agent_handshake_request.json 重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁删文件重来;路径 POSIX 正斜杠;JSON utf-8 无 BOM,读侧容忍不重写。76G-R/OBS-265:a)prose_craft_applied/version 如实:执行 R1–R9 自检才许 true,未执行必须 false,禁默认/留空;b)Phase 6 标题选定必做:按评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定,selected_title/title_selection_reason 必填非空,article.md H1 必须与 selected_title 一致。76R/OBS-288(硬步骤):ACK 前两步必须全绿,否则禁写 ACK——①outline 后运行:python super-writer 仓 scripts/align_outline_budget.py --outline <outline.md> --target-visible-chars <目标字数>(±5% 对齐,只调预算,保护域/数字/产品名不动);②每个关键产物(outline/core-card/semantic-map/handoff/registry)后立即运行:python scripts/validate_single_product.py --product <名> --file <路径>,失败补字段重跑,全部 valid=true 才许写 ACK。76R/OBS-290:素材写干即停:claim 全覆盖且材料门过,长度下限降 advisory(不足留痕,不逼扩写);禁注水(填充语/重复/无信息段);素材足而薄仍 FAIL。76T/OBS-293:handoff formatter.cover.strike_assumption 填「被本文证据否定的旧认知/流行看法」(≤40 字,须素材可支撑,禁捏造稻草人);缺失不 FAIL 但划线句整行不渲染;旧 strike 兼容,不用 hook_line 填划线位。76Y-R/OBS-305:RUN 中遇 doctor/锁 FAIL_CLOSED:停机报告等档;禁自行 relock(含正门)、禁扩权、禁维护命令(如 --regenerate-registry)重写 skill 树。76W/OBS-301:校验报告/JSON 落盘禁 pwsh 重定向(> / >>),一律 cmd /c 重定向或 python 写文件(encoding=utf-8)。76Q/OBS-287+285:registry 顶层 dict{claims,materials}(禁数组);materials[].dedup_id 逐字=deduplicated_items.json 的 id;claim/material source_url 逐字相等(含锚点);handoff.yaml 顶层 {handoff:{...}} 双层,单层拒。76Q/OBS-286:正文禁 ** 加粗(渲染器不支持,语法门会拒);强调用 :::alert 等,禁手写。76L/OBS-283:禁手写 HTML/脚本顶包 gzh_design 渲染产物;禁绕过阶段直调 publish_wechat_draft.py(--evidence 凭证门);六阶段 receipt 不齐=顶包红旗,不可发;遇阻=停下报告,禁绕过/侧门。77D/标题双轨:Phase 6 按 references/title-playbook.md 升标题——title_candidates 按四组生成(稳健准确4/网感点击4/专业权威3/长期价值2,有数据依据才出数据关键词);title_selection_reason 含五维评分(点击欲望/事实匹配/人群匹配/差异化/长期价值,各1–5)与风险标记(标题党/堆砌/无据/时效);推荐 1 主 2 备+各自理由;handoff 字段零变动(渲染/草稿链不动)。',
@@ -259,12 +262,27 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
     return []
 
 
+def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs) -> bool:
+    """77I/OBS-321: resume reuses the frozen handshake request when its intent matches."""
+    path = sd / AH.REQUEST_FILE
+    if not path.is_file():
+        return False
+    try:
+        req = read_json(path)
+    except (OSError, ValueError):
+        return False
+    return (req.get("run_id") == run_id and req.get("stage") == stage
+            and list(req.get("expected_outputs") or []) == list(expected_outputs))
+
+
 def _agent(ctx, stage, sd, expected, agent_expected, state):
     upstream = _upstream_hashes(ctx, stage)
     identity = _skill_identity(ctx, stage)
     instructions = AGENT_INSTRUCTIONS.get(stage, "")
     inputs = {"topic": state.topic, "frozen_article_sha256": state.final_article_sha256}
     injection_meta = None
+    # 77I/OBS-321: resume must not rewrite a frozen request; token drift is a root bug.
+    request_frozen = _reusable_agent_request(sd, state.run_id, stage, agent_expected)
     # OBS-64(档64):自有素材注入正门——aihot 阶段若指定 --items-file,
     # 由 Pipeline 代码(而非 agent)写三文件:同构 schema 校验 + 来源留痕 +
     # 注入标记;agent 只核验后 ACK,不得再调用 AI HOT API。
@@ -294,10 +312,11 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
         instructions = AIHOT_INJECTION_INSTRUCTIONS
         inputs["items_file"] = state.items_file
         inputs["material_injection"] = injection_meta
-    AH.write_request(sd, stage, identity["skill_name"], instructions,
-                     agent_expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
-                     stage_request_sha256=sha256_file(sd / "stage_request.json"),
-                     skill_identity=identity, contract_sha256=_contract_sha(stage))
+    if not request_frozen:
+        AH.write_request(sd, stage, identity["skill_name"], instructions,
+                         agent_expected, inputs, run_id=state.run_id, upstream_hashes=upstream,
+                         stage_request_sha256=sha256_file(sd / "stage_request.json"),
+                         skill_identity=identity, contract_sha256=_contract_sha(stage))
     if ctx.network_mode in ("fake_live", "integration"):
         agent = ctx.fake_agent or AH.FakeAgent(ctx.fixture_dir)
         try:

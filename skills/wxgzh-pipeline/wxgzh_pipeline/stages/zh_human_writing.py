@@ -75,6 +75,15 @@ def content_validate(ctx, sd: Path, state):
     data = json.loads(rep.read_text(encoding="utf-8"))
     gate_vals = {g: data.get(g, 1) for g in _ZERO_GATES}
     gates_ok = all(v == 0 for v in gate_vals.values())
+    # 77I/OBS-319: absent zero-gates are defaults, not fabricated violations.
+    missing_zero_gates = [g for g in _ZERO_GATES if g not in data]
+    gate_vals = {}
+    for gate in _ZERO_GATES:
+        value = data.get(gate, 0)
+        if value is None or isinstance(value, bool) or not isinstance(value, int):
+            value = 1
+        gate_vals[gate] = value
+    gates_ok = all(value == 0 for value in gate_vals.values())
     text = fa.read_text(encoding="utf-8")
     # 76Q/OBS-284:FT-001 advisory 豁免——读 pattern_audit 分组输出。
     # 文件缺失/解析失败 → 回退旧 text.count(fail-closed,不因本改动放行)。
@@ -100,6 +109,8 @@ def content_validate(ctx, sd: Path, state):
     report = {"gates": gate_vals, "forbidden_term_hits": term_hits,
               "pattern_audit_report": pa_status,
               "ZH_HUMAN": "PASS" if ok else "FAIL"}
+    if missing_zero_gates:
+        report["zero_gate_defaults"] = missing_zero_gates
     if pa_status == "ok":
         # 留痕不阻断:疑似专名降级命中(76Q/OBS-284)。
         report["forbidden_term_advisory"] = _count_hits(advisory_ft)

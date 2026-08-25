@@ -36,6 +36,11 @@ class _P(argparse.ArgumentParser):
         sys.exit(3)
 
 
+ZERO_GATE_KEYS = (
+    "NEW_UNREGISTERED_FACTS", "NUMBER_CHANGES", "ATTRIBUTION_LOSS",
+    "QUALIFIER_LOSS", "CLAIM_SEMANTIC_CHANGE", "HARD_RESIDUE")
+
+
 # ============================================================
 # 提取器
 # ============================================================
@@ -700,6 +705,14 @@ def main():
         'rolled_back': rolled_back,
         'pending_confirmation': pending
     }
+
+    # 77I/OBS-319: always emit the pipeline's six zero-gate fields so copying
+    # this official JSON to fidelity_report.json cannot produce a missing-key FAIL.
+    gates = {key: 0 for key in ZERO_GATE_KEYS}
+    gates["NUMBER_CHANGES"] = len([
+        item for item in fails if item.get("category") == "number"])
+    summary.update(gates)
+    summary["gates"] = gates
 
     # 输出
     if args.output == 'json':

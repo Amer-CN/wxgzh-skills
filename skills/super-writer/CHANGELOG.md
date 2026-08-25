@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.10-rc1 (2026-08-26) — 档77I：registry 必填字段 + 标题 advisory 门禁
+
+- **OBS-320 registry material 字段预检**：`title` / `aihot_permalink` 纳入必填；registry↔dedup 的 `aihot_permalink` 不一致直接拒并指路，提前拦截 media 段 FAIL_CLOSED。
+- **OBS-322 title playbook advisory**：`check_handoff` 检查分组覆盖、五维评分与风险标记；缺失仅 WARNING 指路 `references/title-playbook.md`，handoff schema 与阻断语义零变化。
+
 ## v0.4.9-rc1 (2026-08-22) — 档77F：图表锚点直出（OBS-181 收口）+ semantic-map 清单（OBS-315）
 
 ### 77F(档77F)

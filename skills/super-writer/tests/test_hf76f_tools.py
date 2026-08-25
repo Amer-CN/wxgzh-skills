@@ -154,6 +154,9 @@ def test_validate_single_product_registry(tmp_path):
                     "source_url": "https://x.ai/a", "source_excerpt": "s"}],
         "materials": [{"material_id": "m1", "dedup_id": "d1",
                        "source_url": "https://x.ai/a"}],
+        "materials": [{"material_id": "m1", "dedup_id": "d1",
+                       "source_url": "https://x.ai/a", "title": "title",
+                       "aihot_permalink": "https://x.ai/a"}],
     }), encoding="utf-8")
     errors, _ = VSP.check_registry(p)
     assert not errors

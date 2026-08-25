@@ -23,7 +23,8 @@ VALID_ARTICLE_LENGTH = SCRIPT_DIR / "scripts" / "validate_article_length.py"
 def _registry(claims):
     return {"claims": claims,
             "materials": [{"material_id": "M-01", "dedup_id": "d-1",
-                           "source_url": "https://src.example/x"}]}
+                           "source_url": "https://src.example/x", "title": "title",
+                           "aihot_permalink": "https://src.example/x"}]}
 
 
 def _claim(numbers, extra=None):
