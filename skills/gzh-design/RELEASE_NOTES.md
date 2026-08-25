@@ -1,4 +1,11 @@
-# gzh-design v2026.08.14-hammer.15
+# gzh-design v2026.08.25-hammer.16
+
+## v2026.08.25-hammer.16(档77H)
+
+- OBS-318 草稿零图封面兜底:publish_wechat_draft.py 无 --cover/--thumb-media-id 时
+  按锤子主题同源颜色生成占位封面(900x383,标题+品牌行),上传后作为 thumb_media_id;
+  audit 与直传两分支都覆盖;draft_creation_result 记 cover_source=placeholder_zero_image;
+  有图/显式封面行为零变化。测试 +2。
 
 ## v2026.08.14-hammer.15(档76T)
 

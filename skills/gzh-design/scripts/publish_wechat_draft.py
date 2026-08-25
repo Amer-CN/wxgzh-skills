@@ -186,6 +186,68 @@ def upload_cover(access_token, cover_path):
     return data["media_id"]
 
 
+def _find_cjk_font(bold: bool = False):
+    """Pick a CJK-capable font for placeholder covers."""
+    candidates = (
+        [r"C:\Windows\Fonts\msyhbd.ttc", r"C:\Windows\Fonts\msyh.ttc",
+         r"C:\Windows\Fonts\simhei.ttf"] if bold else
+        [r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\msyhbd.ttc",
+         r"C:\Windows\Fonts\simhei.ttf"]
+    )
+    if os.name != "nt":
+        candidates = [
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+        ]
+    for path in candidates:
+        if os.path.isfile(path):
+            try:
+                from PIL import ImageFont
+                return ImageFont.truetype(path, 44)
+            except Exception:
+                continue
+    try:
+        from PIL import ImageFont
+        return ImageFont.load_default()
+    except Exception:
+        return None
+
+
+def generate_placeholder_cover(title, out_dir, brand=None, size=(900, 383)):
+    """77H/OBS-318: zero-image placeholder cover in hammer visual language."""
+    try:
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return None
+    width, height = size
+    bg = (250, 249, 245)
+    brick = (179, 89, 59)
+    title_color = (85, 85, 85)
+    sub_color = (115, 115, 115)
+    img = Image.new("RGB", (width, height), bg)
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([0, 0, max(8, width // 64), height], fill=brick)
+    big_font = _find_cjk_font(bold=True)
+    small_font = _find_cjk_font(bold=False)
+    if big_font is None or small_font is None:
+        return None
+    text = (title or "未命名文章").strip()[:52]
+    line1, line2 = text[:26], text[26:] or ""
+    draw.text((max(32, width // 24), int(height * 0.34)), line1,
+              fill=title_color, font=big_font)
+    if line2:
+        draw.text((max(32, width // 24), int(height * 0.54)), line2,
+                  fill=brick, font=big_font)
+    footer = (brand or "给自己造把锤子").strip()[:40]
+    draw.text((max(32, width // 24), int(height * 0.84)), footer,
+              fill=sub_color, font=small_font)
+    out = Path(out_dir) / "placeholder_cover.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out, "PNG")
+    return out
+
+
 def upload_content_image(access_token, image_path):
     """上传正文图片到 media/uploadimg，返回微信 CDN HTTPS URL。
 
@@ -504,6 +566,14 @@ def run_audit_mode(args, html_content, raw_file_sha256, sha256):
     app_id = os.environ.get("WECHAT_APP_ID", "")
     app_secret = os.environ.get("WECHAT_APP_SECRET", "")
     simulated = bool(args.dry_run) or not (app_id and app_secret)
+    provided_cover = bool(args.cover or args.thumb_media_id)
+    placeholder_path = None
+    cover_source = "approved_body_image" if provided_cover else "placeholder_zero_image"
+    if not provided_cover:
+        placeholder_path = generate_placeholder_cover(
+            args.title, audit_dir, brand=getattr(args, "brand", None))
+        if placeholder_path is None:
+            api_error("零图交付且无法生成占位封面（PIL/字体不可用）", {"errcode": -1})
 
     if simulated:
         seed = [{"media_id": f"seed{i:04d}"} for i in range(1, 4)]
@@ -520,8 +590,10 @@ def run_audit_mode(args, html_content, raw_file_sha256, sha256):
         before = _snapshot(before_raw, simulated=False, real_api_call=True)
         if args.cover:
             thumb = upload_cover(token, args.cover)
-        else:
+        elif args.thumb_media_id:
             thumb = args.thumb_media_id
+        else:
+            thumb = upload_cover(token, str(placeholder_path))
         media_id = create_draft(token, args.title, html_content, thumb)
         after_raw = batchget_drafts(token)
         after = _snapshot(after_raw, simulated=False, real_api_call=True)
@@ -535,6 +607,7 @@ def run_audit_mode(args, html_content, raw_file_sha256, sha256):
         "mass_send": False, "scheduled": False, "deleted_any": False,
         "real_api_call": not simulated, "simulated": simulated,
         "content_sha256": sha256, "raw_file_sha256": raw_file_sha256,
+        "cover_source": cover_source,
     }
 
     for name, obj in (("draft_before.json", before), ("draft_after.json", after),
@@ -590,6 +663,8 @@ def main():
                     help="本 RUN 的 gzh_design/stage_receipt.json 路径(76L/OBS-282 凭证门,"
                          "必填;无凭证直接调用一律 FAIL_CLOSED,走管线 wechat_draft 阶段)")
     ap.add_argument("--title", required=True, help="文章标题")
+    ap.add_argument("--brand", default=None,
+                    help="占位封面品牌行（默认给自己造把锤子）")
     ap.add_argument("--expect-sha256", help="期望的 HTML 文件 SHA-256（raw bytes），不一致则停止")
     group = ap.add_mutually_exclusive_group(required=False)
     group.add_argument("--thumb-media-id", help="已上传的封面素材 ID")
@@ -662,10 +737,6 @@ def main():
         run_audit_mode(args, html_content, raw_file_sha256, sha256)
         return
 
-    # 非审计模式必须提供封面
-    if not args.thumb_media_id and not args.cover:
-        print("错误: 需要 --thumb-media-id 或 --cover（或使用 --audit-dir 审计模式）")
-        sys.exit(1)
 
     # ---- 预检通过后才读取环境变量并获取 token ----
     app_id = os.environ.get("WECHAT_APP_ID", "")
@@ -681,8 +752,16 @@ def main():
     if args.cover:
         print(f"上传封面: {args.cover}")
         thumb_media_id = upload_cover(access_token, args.cover)
-    else:
+    elif args.thumb_media_id:
         thumb_media_id = args.thumb_media_id
+    else:
+        placeholder_path = generate_placeholder_cover(
+            args.title, Path(args.audit_dir) if args.audit_dir else Path.cwd(),
+            brand=args.brand)
+        if placeholder_path is None:
+            api_error("零图交付且无法生成占位封面（PIL/字体不可用）", {"errcode": -1})
+        print(f"  零图交付：使用占位封面 {placeholder_path}")
+        thumb_media_id = upload_cover(access_token, str(placeholder_path))
 
     # 创建草稿
     print(f"创建草稿: title={args.title}")

@@ -1668,6 +1668,9 @@ def _wechat(ctx, stage, sd, expected, state):
             "--audit-dir", str(sd),
             # 76L/OBS-282:交付凭证门——publish 脚本必须绑定本 RUN 的 gzh receipt
             "--evidence", str(Path(ctx.run_dir) / "gzh_design" / "stage_receipt.json")]
+    cover_meta = _handoff_cover(ctx) or {}
+    if cover_meta.get("brand"):
+        args += ["--brand", str(cover_meta["brand"])]
     if ctx.network_mode == "live":
         try:
             cover, cover_asset_id = _select_live_cover(ctx)
@@ -1707,6 +1710,15 @@ def _wechat(ctx, stage, sd, expected, state):
                           "stderr": run["stderr"][-2000:] if run["exit_code"] else ""}}
     if ctx.network_mode == "live":
         meta["cover_asset_id"] = cover_asset_id
+    placeholder_cover = (getattr(state, "uploaded_image_count", 0) == 0
+                        and getattr(state, "image_shortfall", 0) > 0)
+    cover_source = "placeholder_zero_image" if placeholder_cover else "approved_body_image"
+    meta["cover_source"] = cover_source
+    setattr(state, "cover_source", cover_source)
+    cover_effect = {"stage": "wechat_draft", "cover_source": cover_source}
+    if placeholder_cover:
+        cover_effect["detail"] = "publish placeholder cover (77H/OBS-318)"
+    state.side_effects.append(cover_effect)
     outputs = [sd / o for o in expected if (sd / o).is_file()]
     # 档54R:放行产物(allowance_record.json)作为正式 stage 产物纳入 receipt,可追溯
     allowance = sd / "allowance_record.json"

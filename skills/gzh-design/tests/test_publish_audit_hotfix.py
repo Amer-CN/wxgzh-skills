@@ -22,7 +22,7 @@ CLEAN_HTML = ('<section style="color:#555555;font-size:14px;">'
               '<span leaf="" style="color:#B3593B;">主题签名占位</span></section>')
 
 
-def _run_audit(dry_run=True):
+def _run_audit(dry_run=True, with_cover=False):
     td = Path(tempfile.mkdtemp())
     html = td / "final.html"
     html.write_text(CLEAN_HTML, encoding="utf-8")
@@ -33,10 +33,17 @@ def _run_audit(dry_run=True):
         "validator_exit_code": 0,
         "output_hashes": {"final.html": hashlib.sha256(html.read_bytes()).hexdigest()},
     }), encoding="utf-8")
+    cover = None
+    if with_cover:
+        cover = td / "cover.png"
+        from PIL import Image
+        Image.new("RGB", (900, 383), (179, 89, 59)).save(cover, "PNG")
     argv = [sys.executable, "-X", "utf8", str(PUBLISH),
             "--html", str(html), "--title", "草稿审计测试",
             "--evidence", str(evidence),
             "--audit-dir", str(audit)]
+    if cover is not None:
+        argv += ["--cover", str(cover)]
     if dry_run:
         argv.append("--dry-run")
     # scrub any real creds so a non-dry-run test can never hit the network either
@@ -61,6 +68,9 @@ class TestAuditMode:
         assert result["real_api_call"] is False
         assert result["formally_published"] is False
         assert result["draft_only"] is True
+        # 77H/OBS-318: zero-image audit produces placeholder and labels source.
+        assert (audit / "placeholder_cover.png").is_file()
+        assert result["cover_source"] == "placeholder_zero_image"
 
     def test_dry_run_no_network_no_token(self):
         audit, proc = _run_audit(dry_run=True)
@@ -73,6 +83,12 @@ class TestAuditMode:
         audit, _ = _run_audit(dry_run=True)
         result = json.loads((audit / "draft_creation_result.json").read_text(encoding="utf-8"))
         assert "[REDACTED]" in result["media_id"]
+
+    def test_provided_cover_keeps_approved_body_image_source(self):
+        audit, _ = _run_audit(dry_run=True, with_cover=True)
+        result = json.loads((audit / "draft_creation_result.json").read_text(encoding="utf-8"))
+        assert result["cover_source"] == "approved_body_image"
+        assert not (audit / "placeholder_cover.png").exists()
 
 
 class TestNoFormalPublishCapability:

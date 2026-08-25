@@ -7,6 +7,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from wxgzh_pipeline import producers as PR
+from wxgzh_pipeline.state import PipelineState, save_state
+from wxgzh_pipeline.evidence import build_delivery
 
 
 def _write_discover(run_dir: Path, manifest: dict) -> Path:
@@ -105,3 +107,13 @@ def test_gzh_renderer_accepts_zero_body_images(tmp_path):
                             image_shortfall=6, image_count=0)
     assert theme["IMAGE_TYPE_MIN"] == 0
     assert theme["structure_ok"] is True
+
+
+def test_final_delivery_records_placeholder_cover_source(tmp_path):
+    state = PipelineState(run_id="77h", topic="零图占位" )
+    state.uploaded_image_count = 0
+    state.image_shortfall = 6
+    state.cover_source = "placeholder_zero_image"
+    save_state(tmp_path, state)
+    delivery = build_delivery(tmp_path)
+    assert delivery["cover_source"] == "placeholder_zero_image"
