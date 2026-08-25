@@ -214,9 +214,9 @@ def test_obs304_ledger_count_command():
     nums = {int(x) for x in re.findall(r"^\|\s*(\d{3})\s*\|", text, re.M)}
     n = len(nums)
     # OBS-304/305 登记后区间 119..305 = 187 个编号;去重实测为准
-    assert n == 200, f"唯一编号实测 {n} != 200"
+    assert n == 204, f"唯一编号实测 {n} != 204"
     # 区间连续无缺号
-    assert set(range(119, 319)) <= nums, "119..318 区间有缺号"
+    assert set(range(119, 323)) <= nums, "119..322 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():
