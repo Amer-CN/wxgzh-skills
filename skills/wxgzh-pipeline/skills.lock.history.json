@@ -1414,5 +1414,33 @@
     "new_skill_version": "0.1.0-dev26",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260825T074732Z-af9af563",
+    "skill": "gzh-design",
+    "reason": "77G/OBS-316 零图交付兜底：publish_wechat_draft.py 无封面时生成占位封面，修复空 thumb_media_id 导致的微信 40007（用户授权修复）",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-25T07:47:32Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "9273f7a281738184f75ed8fd39936f38d09e4a4f61e0a55c78b080afdfc5afac",
+    "new_root_sha256": "9babb64b71bf9e55c8ebf405b141b42c60ded207172e0899d372cb8e71e379b4"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260825T100822Z-611412b4",
+    "skill": "gzh-design",
+    "reason": "77H placeholder zero-image cover",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-25T10:08:22Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "9babb64b71bf9e55c8ebf405b141b42c60ded207172e0899d372cb8e71e379b4",
+    "new_root_sha256": "29593167aa907dc118a9171028d34d0c57fca99e2d8411fbe3b7f68568fd77b8",
+    "old_full_commit_sha": "23b6a7479ec925dce25fdc3717c1850c4158ca5a",
+    "new_full_commit_sha": "eb256e824c09d2456a388b06d707055400221cb2",
+    "old_source_tree_sha": "c99be6daa25b3d29967f31a10155b1b4dc9f9cb9",
+    "new_source_tree_sha": "517cf11d8414e6d3baded91bb54cf278c5591abb",
+    "old_skill_version": "v2026.08.14-hammer.15",
+    "new_skill_version": "v2026.08.25-hammer.16",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
