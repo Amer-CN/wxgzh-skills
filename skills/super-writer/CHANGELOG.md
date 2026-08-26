@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.11-rc1 (2026-08-26) — 档77J：article-mode 单一真源 + registry ACK 强制预检
+
+- **OBS-323 article-mode 漂移**：`--full-mode` 未显式传 policy 参数时，由 generation-profile 自动填充；显式参数仍优先，消除 agent 手工传参漂移。
+- **OBS-324 registry 预检强制化**：pipeline ACK 官方链新增 `validate_single_product --product registry --dedup ... --ledger ...`；material 标量字段类型不符（如 list material_id/chart 字段）直接拒。
+
 ## v0.4.10-rc1 (2026-08-26) — 档77I：registry 必填字段 + 标题 advisory 门禁
 
 - **OBS-320 registry material 字段预检**：`title` / `aihot_permalink` 纳入必填；registry↔dedup 的 `aihot_permalink` 不一致直接拒并指路，提前拦截 media 段 FAIL_CLOSED。

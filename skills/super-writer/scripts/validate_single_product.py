@@ -275,15 +275,21 @@ def check_registry(path: Path, dedup: Path | None = None,
         for field in ("title", "aihot_permalink"):
             if not row.get(field):
                 out_errors.append(f"registry.materials[{i}]: 缺必填字段 `{field}`(77I/OBS-320,对照 media schema)")
+        # 77J/OBS-324: scalar shape matters; lists/dicts pass truthiness but fail media schema.
+        for field in ("material_id", "dedup_id", "source_url", "title", "aihot_permalink"):
+            value = row.get(field)
+            if value is not None and not isinstance(value, str):
+                out_errors.append(f"registry.materials[{i}].{field}: 必须是 string(77J/OBS-324,对照 media schema)")
         mid = row.get("material_id")
-        if mid:
+        if isinstance(mid, str) and mid:
             material_ids[mid] = row
     for i, row in enumerate(claims):
         mid = row.get("material_id")
-        if mid and mid not in material_ids:
-            out_errors.append(f"registry.claims[{i}]: material_id `{mid}` 在 materials 中不存在"
-                              f"(dedup-id ↔ material_id 映射,76Q/OBS-287)")
-        mat = material_ids.get(mid)
+        if isinstance(mid, str) and mid and mid not in material_ids:
+            out_errors.append(
+                f"registry.claims[{i}]: material_id `{mid}` 在 materials 中不存在"
+                f"(dedup-id ↔ material_id 映射,76Q/OBS-287)")
+        mat = material_ids.get(mid) if isinstance(mid, str) else None
         if mat and row.get("source_url") and mat.get("source_url"):
             # 逐字一致含锚点:两边必须原样相等,不得一边带 #anchor 一边不带。
             if row["source_url"] != mat["source_url"]:

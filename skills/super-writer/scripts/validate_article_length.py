@@ -1300,6 +1300,47 @@ def validate_article_length(article_path, target_visible_chars=None,
 # CLI
 # ════════════════════════════════════════════════════════════════
 
+
+
+def _runtime_policy_from_profile(path: str | Path | None) -> dict | None:
+    """77J/OBS-323: generation-profile is the single source for runtime policy."""
+    if not path:
+        return None
+    try:
+        data = yaml.safe_load(Path(path).read_text(encoding='utf-8')) or {}
+    except (OSError, UnicodeError, yaml.YAMLError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    fields = ('article_mode', 'target_visible_chars', 'acceptable_min', 'acceptable_max')
+    if any(data.get(field) in (None, '') for field in fields):
+        return None
+    values = {}
+    for field in fields[1:]:
+        value = data[field]
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            return None
+        values[field] = value
+    mode = data['article_mode']
+    if mode not in ALLOWED_MODES:
+        return None
+    if not values['acceptable_min'] <= values['target_visible_chars'] <= values['acceptable_max']:
+        return None
+    return {'article_mode': mode, **values}
+
+
+def _apply_runtime_policy_defaults(args):
+    """Fill unset policy flags from the same profile used by full-mode checks."""
+    if not getattr(args, 'full_mode', False):
+        return None
+    policy = _runtime_policy_from_profile(getattr(args, 'generation_profile', None))
+    if policy:
+        for field, value in policy.items():
+            if getattr(args, field, None) is None:
+                setattr(args, field, value)
+    return policy
+
+
 def main():
     parser = argparse.ArgumentParser(description='Validate article length against length-policy')
     parser.add_argument('--article', required=True, help='Path to article.md')
@@ -1322,6 +1363,8 @@ def main():
     parser.add_argument('--json', action='store_true', help='Output JSON only')
     parser.add_argument('--handoff', default=None, help='Path to handoff.yaml (档76A full-mode 必检)')
     args = parser.parse_args()
+    # 77J/OBS-323: one policy source; explicit flags remain authoritative when set.
+    _apply_runtime_policy_defaults(args)
 
     sections = None
     if args.sections:

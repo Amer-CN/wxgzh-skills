@@ -31,6 +31,7 @@ skill、lock、台账与既有 RUN 文件。
 from __future__ import annotations
 
 import json
+import re
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,6 +55,11 @@ ALLOWED_DESCRIPTION_SOURCES = frozenset(
 _SECTION_HEADING_LEVELS = ("h1", "h2", "h3")
 _IMAGE_ATTRS = ("src", "srcset", "data-src", "data-original", "data-lazy-src")
 _FETCH_MAX_BYTES = 5 * 1024 * 1024
+_META_IMAGE_TAG_RE = re.compile(r"<meta\b[^>]*>", re.I)
+_PAGE_TITLE_RE = re.compile(r"<title\b[^>]*>(.*?)</title>", re.I | re.S)
+# 77J/OBS-325: page-declared art has no DOM section anchor; its declaration in
+# the source page is the location evidence.
+_SOURCE_PAGE_LEVEL_METHODS = {"og:image", "twitter:image", "background-image"}
 
 
 class ApprovalEvidenceError(Exception):
@@ -169,6 +175,32 @@ def fetch_html(url: str, timeout: int = 20) -> str | None:
         return None
 
 
+def _source_page_declares_image(html: str, url: str, extraction_method: str) -> bool:
+    """77J/OBS-325: page-declared media evidence for og/twitter/background art."""
+    if not html or not url or extraction_method not in _SOURCE_PAGE_LEVEL_METHODS:
+        return False
+    if extraction_method == "background-image":
+        return url in html
+    for tag in _META_IMAGE_TAG_RE.findall(html):
+        lowered = tag.lower()
+        if url in tag and any(name in lowered for name in (
+                'property="og:image"', 'name="twitter:image"',
+                "property='og:image'", "name='twitter:image'")):
+            return True
+    return False
+
+
+def _page_title(html: str) -> str | None:
+    if not html:
+        return None
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    og = soup.find("meta", attrs={"property": "og:title"})
+    value = (og.get("content") if isinstance(og, dict) else None) or soup.title.string
+    value = (value or "").strip()
+    return value or None
+
+
 def _image_attrs_text(node) -> str:
     return " ".join(str(node.get(attr, "") or "") for attr in _IMAGE_ATTRS)
 
@@ -268,7 +300,10 @@ def build_approval_readiness(
         # rejected 资产不抓取页面位置(仍出现在 readiness 记录中,呈现为不可批准)
         if asset.get("decision") not in ("review_required", "eligible"):
             continue
-        if _manifest_position(asset) is not None and not _needs_content_fetch(asset):
+        page_level_candidate = (str(asset.get("extraction_method") or "")
+                                in _SOURCE_PAGE_LEVEL_METHODS)
+        if (_manifest_position(asset) is not None and not _needs_content_fetch(asset)
+                and not page_level_candidate):
             continue
         src = asset.get("source_page_url")
         if src:
@@ -291,6 +326,11 @@ def build_approval_readiness(
                 page_text = (alt or title or "").strip()
                 if page_text:
                     asset["_obs87_page_alt"] = page_text
+            if _source_page_declares_image(
+                    html, str(asset.get("resolved_original_url") or ""),
+                    str(asset.get("extraction_method") or "")):
+                asset["_obs87_page_meta"] = True
+                asset["_obs87_page_title"] = _page_title(html)
 
     records = []
     for asset in sorted(assets, key=lambda a: str(a.get("asset_id", ""))):
@@ -340,6 +380,14 @@ def build_approval_readiness(
                 position_known = isinstance(section, dict) and bool(section.get("heading"))
                 pos_heading = section["heading"] if position_known else None
                 pos_level = section["level"] if position_known else None
+
+        # 77J/OBS-325: a source-page declaration overrides an unknown DOM position;
+        # it never overrides a known section/anchor position.
+        if (not position_known and asset.get("_obs87_page_meta") is True):
+            position_known = True
+            pos_heading = (asset.get("_obs87_page_title")
+                           or asset.get("source_page_url") or "page-meta")
+            pos_level = "page-meta"
         blockers = []
         if decision not in ("review_required", "eligible"):
             blockers.append(f"decision={decision} — 非可批准状态,不得写入批准合同")

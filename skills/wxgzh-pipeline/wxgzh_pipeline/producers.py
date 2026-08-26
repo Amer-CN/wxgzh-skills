@@ -56,6 +56,8 @@ AGENT_INSTRUCTIONS = {
 }
 
 
+AGENT_INSTRUCTIONS["super_writer"] += "77J/OBS-324:registry 预检已接入 ACK 官方链——validate_single_product --product registry --file ... --dedup ... --ledger ... 任一 FAIL 即拒；禁等 media 段暴露，禁手改 registry 后只改 receipt。"
+
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
 # OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。
 # _wechat_api_blocked_meta 拼 "FAIL_CLOSED: " 前缀;_media_two_phase 的 raise
@@ -238,6 +240,13 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
              ["--article", str(sd / "article.md"),
               "--semantic-map", str(sd / "semantic-map.yaml"),
                "--evidence-map", str(sd / "evidence-map.md")]),
+            # 77J/OBS-324: registry precheck is part of the official post-ACK chain.
+            ("super-writer", "scripts/validate_single_product.py", [
+                "--product", "registry",
+                "--file", str(rd / "super_writer" / "canonical_claim_registry.json"),
+                "--dedup", str(rd / "aihot" / "deduplicated_items.json"),
+                "--ledger", str(rd / "super_writer" / "material-ledger.yaml"),
+            ]),
         ]
     if stage == "zh_human_writing":
         orig = rd / "super_writer" / "article.md"

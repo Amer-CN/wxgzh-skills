@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-dev27 (2026-08-26) — 77J
+
+- **OBS-325 源页声明图位置证据**：approval readiness 对 og:image/twitter:image/background-image 在源页 HTML 中可追溯的资产，将未知 DOM 位置提升为 `page-meta`；普通正文图语义不变。
+
 ## 0.1.0-dev26 (2026-08-24) — 77G
 
 - **OBS-317 user_provided 供图通道开通**:`content_description_source=user_provided` 进入 OBS-87 可信描述白名单；用户供图以 caption/来源登记作为位置证据（`page_position.known=true`、`level=user-evidence`）；manifest schema 补 `asset_origin/page_region=user_provided` 与 `copyright_status=user_granted` 枚举；非供图车道语义不变。
