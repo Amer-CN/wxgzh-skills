@@ -3,6 +3,7 @@
   "materials": [
     {
       "material_id": "M-001",
+      "dedup_id": "M-001",
       "source_url": "https://www.example-source.test/rx580-local-ai",
       "aihot_permalink": "https://aihot.virxact.com/items/rx580",
       "title": "旧显卡本地 AI 画图机",
@@ -10,6 +11,7 @@
     },
     {
       "material_id": "M-002",
+      "dedup_id": "M-002",
       "source_url": "https://www.example-source.test/sd-webui-amd",
       "aihot_permalink": "https://aihot.virxact.com/items/sd-amd",
       "title": "AMD 卡跑 Stable Diffusion",

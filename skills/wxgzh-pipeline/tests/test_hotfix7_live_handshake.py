@@ -21,7 +21,7 @@ from wxgzh_pipeline import producers as P
 from conftest import FAKE_FIXTURE, SKILL_ROOT
 
 LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
-    "87bbb6631a1bcd9d7a0fd30847ae4af865ad8bec16a126cc26148ef0ecf819c4"  # 76R/OBS-290:validate_article_length.py 素材定长度(material_exhausted)
+    "cf225e10e5deb59bb523692d78ea2f14a471f10fcdb000e907da840c0cd8bafd"  # 77J/OBS-323:generation-profile policy defaults
 )
 
 
