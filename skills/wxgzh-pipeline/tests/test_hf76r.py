@@ -108,7 +108,8 @@ def test_obs288_semantic_zero_loss_rule_inventory():
             assert r in new_rules, f"{k}: 旧规则丢失 {r}"
         extra = set(new_rules) - set(old_rules)
         assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301",
-                            "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309"}, f"{k}: 意外新增规则 {extra}"
+                            "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309",
+                            "77J/OBS-324"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -214,9 +215,9 @@ def test_obs304_ledger_count_command():
     nums = {int(x) for x in re.findall(r"^\|\s*(\d{3})\s*\|", text, re.M)}
     n = len(nums)
     # OBS-304/305 登记后区间 119..305 = 187 个编号;去重实测为准
-    assert n == 204, f"唯一编号实测 {n} != 204"
+    assert n == 207, f"唯一编号实测 {n} != 207"
     # 区间连续无缺号
-    assert set(range(119, 323)) <= nums, "119..322 区间有缺号"
+    assert set(range(119, 326)) <= nums, "119..325 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():
@@ -288,8 +289,8 @@ def test_obs288_instruction_text_unchanged_except_278():
     # 变更点:278→288(硬步骤)+ 290 新增(明规);其余内容逐字保留
     # 77C 压缩重写:不再逐字对比(义务锚点全量断言见 test_77c_sw_instruction_compressed_anchors);
     # 此处保底:base 英文段不变 + 长度上限
-    # 77C 压至 2000;77D 合法追加方法论条款后 2232;上限 2300(77D 起)
-    assert len(new_sw) <= 2300
+    # 77C 压缩后合法升级；77J registry 硬步骤追加，上限以实测整合文本为准。
+    assert len(new_sw) <= 2400
     assert new_sw.startswith(
         "Run Super Writer Material-Heavy Full Mode. Generate every requested product, "
         "then run the locked official validate_article_length.py"), "sw base 文本被改动"
@@ -328,8 +329,8 @@ SW_ANCHOR_GROUPS = [
 def test_77c_sw_instruction_compressed_anchors():
     """77C 压缩零丢失硬门:每条规则至少一个可断言语义锚点,全部在场。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
-    # 77C 压至 2000;77D 追加 232 字符方法论条款(合法升级),上限放宽至 2300
-    assert len(instr) <= 2300
+    # 77C 压至 2000；77D/77I 合法升级后上限以当前整合文本实测为准。
+    assert len(instr) <= 2400
     for tag, anchors in SW_ANCHOR_GROUPS:
         for a in anchors:
             assert a in instr, f"{tag}: 义务锚点丢失 {a!r}"

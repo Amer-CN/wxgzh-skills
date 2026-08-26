@@ -41,7 +41,8 @@ from . import zipping
 # 上一处基线对应 77G relock #74/#75。R93:relock 后同次操作同步。
 # 上一处基线对应 77H relock #76(887ae6b)。R93:relock 后同次操作同步。
 # 上一处基线对应 77I relock #77/#78(sw/zh)。R93:relock 后同次操作同步。
-REPO_LOCK_SHA256 = "58c3e245548de11f9b2346a2262446380869a2e8c6c341fe4f5af8018f39bafa"
+# 上一处基线对应 77J relock #79/#80(sw/media)。R93:relock 后同次操作同步。
+REPO_LOCK_SHA256 = "d2fc9bad32064f9c7d136434925be593c3897efbb9b6ef1bb998236ec98d5530"
 
 _HEX64 = frozenset("0123456789abcdef")
 
