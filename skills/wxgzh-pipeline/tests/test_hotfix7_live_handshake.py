@@ -21,7 +21,7 @@ from wxgzh_pipeline import producers as P
 from conftest import FAKE_FIXTURE, SKILL_ROOT
 
 LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
-    "cf225e10e5deb59bb523692d78ea2f14a471f10fcdb000e907da840c0cd8bafd"  # 77J/OBS-323:generation-profile policy defaults
+    "c9adc8990a6c97885391dd63e681ae471d27623a2eebf2eb55d371a9db5661df"  # 77K/OBS-327:handoff null semantics
 )
 
 
