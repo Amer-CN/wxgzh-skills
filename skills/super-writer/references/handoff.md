@@ -14,7 +14,7 @@ handoff:
   exit_status: ready_to_write
 
   prose_craft_applied: false              # Batch 2 新增：本文是否经过 prose-craft 层（R1–R9 自检）
-  prose_craft_version: null               # Batch 2 新增：prose-craft.md 的版本号（如 "1.0"）
+  prose_craft_version: null               # 77K/OBS-327：applied=false 时可用 null；applied=true 必须写实际版本号
 
   handoff_stage: super_writer             # Batch 3 新增：产出本 handoff 的阶段标识
   author_intent: "写给谁/为什么写"       # Batch 3 新增：作者意图一句话（来自 Phase 1 简报）
@@ -75,7 +75,7 @@ v1.0 字段（article_path、content_score、p0_count、exit_status、unresolved
 | semantic_map_path | 语义映射文件路径 |
 | formatter | formatter 交接子契约 |
 | prose_craft_applied | 本文是否经过 prose-craft 层（R1–R9 自检），true/false |
-| prose_craft_version | prose-craft.md 的版本号（如 "1.0"） |
+| prose_craft_version | prose-craft.md 的版本号；未应用时 `null`，已应用时必须为非空字符串（77K/OBS-327） |
 | formatter.target_skill | 目标排版 Skill（gzh-design） |
 | formatter.contract | 交接契约类型（semantic-component-handoff） |
 | formatter.contract_version | 契约版本（1.0） |

@@ -1,4 +1,8 @@
-# gzh-design v2026.08.25-hammer.16
+# gzh-design v2026.08.27-hammer.17
+
+## v2026.08.27-hammer.17(档77K)
+
+- render_article 解析 ::: 组件属性失败时留 WARNING（组件名+原文行），不再静默回落默认组件语义；合法正文、合法指令和有图路径零变化。
 
 ## v2026.08.25-hammer.16(档77H)
 

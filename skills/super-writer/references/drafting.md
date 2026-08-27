@@ -63,3 +63,4 @@
 - "请使用某某红色卡片"之类视觉指令
 
 article.md 保持干净可读。语义信息放到独立的 `semantic-map.yaml`（模板见 `templates/semantic-map.yaml`）。
+77K/OBS-328：交付版 `article.md` 禁止残留 `[编辑锚点]`、`{{...}}`、`TODO`、`待补` 或 `需要补充` 占位；预检 fail-closed，不等 gzh 发布端晚拦。

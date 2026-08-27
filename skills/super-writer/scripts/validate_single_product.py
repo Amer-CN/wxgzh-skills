@@ -38,6 +38,9 @@ HANDOFF_TITLE_FIELDS = {"title_candidates": list, "hook_line": str,
 CORE_CARD_FIELDS = ["Core Statement", "Reader Change", "Core Tension", "Value Carrier",
                    "Scope", "Result"]
 
+# 77K/OBS-328: same source-page editorial placeholders that gzh blocks late.
+FORBIDDEN_PLACEHOLDERS = ("{{", "[编辑锚点", "TODO", "待补", "需要补充")
+
 
 def _read_text(path: Path) -> str:
     raw = path.read_bytes()
@@ -122,6 +125,21 @@ def check_semantic_map(path: Path) -> tuple[list, dict]:
     return out_errors, {"top_keys": sorted(data.keys())}
 
 
+def _placeholder_errors(owner: str, text: str) -> list[str]:
+    hits = [(marker, text.count(marker)) for marker in FORBIDDEN_PLACEHOLDERS if marker in text]
+    if not hits:
+        return []
+    detail = "; ".join(f"{marker}×{count}" for marker, count in hits)
+    return [f"{owner}: 编辑/占位锚点残留({detail})——写阶段必须完成事实核对或删除,"
+            f"禁止留给渲染端晚拦(77K/OBS-328)"]
+
+
+def check_article(path: Path) -> tuple[list, dict]:
+    """77K/OBS-328: pre-render gate for forbidden editorial placeholders."""
+    text = _read_text(path)
+    return _placeholder_errors("article", text), {"chars": len(text)}
+
+
 def check_handoff(path: Path) -> tuple[list, dict]:
     try:
         data = yaml.safe_load(_read_text(path))
@@ -148,6 +166,9 @@ def check_handoff(path: Path) -> tuple[list, dict]:
                     or not cover[tail]:
                 out_errors.append(f"handoff: 缺必填字段 `handoff.{field}`(非空 dict)")
         elif h.get(field) in (None, ""):
+            # 77K/OBS-327:null means honest "not applied"; full-mode accepts the same shape.
+            if field == "prose_craft_version" and h.get("prose_craft_applied") is False:
+                continue
             out_errors.append(f"handoff: 缺必填字段 `handoff.{field}`")
     for field, ftype in HANDOFF_TITLE_FIELDS.items():
         if field not in h:
@@ -157,6 +178,8 @@ def check_handoff(path: Path) -> tuple[list, dict]:
     # 76T/OBS-293:strike_assumption(可选,advisory)——存在时校验类型与长度(≤40 字),
     # 缺失不 FAIL;超长/非字符串仅记 checks 提示(不阻断交付,渲染端缺失整行不渲染)。
     checks = {"schema_version": h.get("schema_version")}
+    checks["prose_craft_applied"] = h.get("prose_craft_applied")
+    checks["prose_craft_version"] = h.get("prose_craft_version")
     cover = h.get("formatter", {}).get("cover") if isinstance(h.get("formatter"), dict) else None
     sa = cover.get("strike_assumption") if isinstance(cover, dict) else None
     checks["strike_assumption"] = sa
@@ -397,6 +420,7 @@ CHECKERS = {
     "outline": check_outline,
     "core-card": check_core_card,
     "semantic-map": check_semantic_map,
+    "article": check_article,
     "handoff": check_handoff,
     "registry": check_registry,
 }

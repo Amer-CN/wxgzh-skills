@@ -4,7 +4,7 @@
 将 Markdown 中文正文中的 ASCII 双引号 " 成对转全角 “ ”：
 - 成对判定全局进行（跨行配对），偶数位转开引号、奇数位转闭引号；
 - 单边落单不猜：总数奇数时最后一个候选引号保持原样，仅留 WARNING（行号）；
-- 跳过 fenced code block 与行内代码 span，不触碰代码内容；
+- 跳过 fenced code block、行内代码 span、`:::` 指令头/收尾行与指令属性行，不触碰机器语法；
 - 退出码恒 0，WARNING 仅供留痕（76C WXGZH_ALLOW_WARNINGS 语义不变）。
 """
 from __future__ import annotations
@@ -17,6 +17,8 @@ from pathlib import Path
 OPEN, CLOSE = "\u201c", "\u201d"
 
 _FENCE_RE = re.compile(r"^\s*(```|~~~)")
+_DIRECTIVE_RE = re.compile(r"^\s*:::")
+_ATTRIBUTE_LINE_RE = re.compile(r'^\s*[\w-]+\s*=\s*(["\']).*\1\s*$')
 
 
 def _split_inline_code(line: str) -> list[tuple[str, bool]]:
@@ -35,13 +37,22 @@ def _split_inline_code(line: str) -> list[tuple[str, bool]]:
 
 
 def _walk(text: str):
-    """逐行产出 (行号, 围栏/代码行？, 行内代码分段列表)。
+    """逐行产出 (行号, 保护行？, 行内代码分段列表)。
 
-    围栏标记行与围栏内行整行原样保留；正文行按行内代码 span 分段。
+    围栏行、围栏内行、`:::` 指令头/收尾行与指令属性行整行原样保留；正文行分段处理。
     """
     lines = text.splitlines(keepends=True)
     in_fence = False
+    in_component = False
     for ln, line in enumerate(lines, 1):
+        if _DIRECTIVE_RE.match(line.lstrip()):
+            # 77K/OBS-326: opening/closing directive heads are machine syntax.
+            in_component = not in_component
+            yield ln, True, [(line, False)]
+            continue
+        if in_component and _ATTRIBUTE_LINE_RE.match(line):
+            yield ln, True, [(line, False)]
+            continue
         if _FENCE_RE.match(line.lstrip()):
             in_fence = not in_fence
             yield ln, True, [(line, False)]

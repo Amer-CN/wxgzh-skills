@@ -1,7 +1,10 @@
 # CHANGELOG
 
-## v0.4.11-rc1 (2026-08-26) — 档77J：article-mode 单一真源 + registry ACK 强制预检
+## v0.4.12-rc1 (2026-08-27) — 档77K：handoff null + article 占位门禁
 
+- **OBS-327 handoff null 语义**：`prose_craft_version: null` 仅在 `prose_craft_applied: false` 时为诚实未应用；applied=true 仍必须写非空版本。full-mode 与 validate_single_product 同判。
+- **OBS-328 article 占位门禁**：validate_single_product 新增 `--product article`，拒绝 `[编辑锚点]`、TODO 等残留；管线 super_writer ACK 官方链机械调用。
+- **OBS-326 渲染参数留痕**：gzh-design 组件属性解析失败记录 WARNING，不再静默回落默认组件语义。
 - **OBS-323 article-mode 漂移**：`--full-mode` 未显式传 policy 参数时，由 generation-profile 自动填充；显式参数仍优先，消除 agent 手工传参漂移。
 - **OBS-324 registry 预检强制化**：pipeline ACK 官方链新增 `validate_single_product --product registry --dedup ... --ledger ...`；material 标量字段类型不符（如 list material_id/chart 字段）直接拒。
 

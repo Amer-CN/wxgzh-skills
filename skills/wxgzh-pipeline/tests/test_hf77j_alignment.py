@@ -67,7 +67,7 @@ def test_obs324_registry_precheck_is_in_official_ack_chain(tmp_path):
     ctx = SimpleNamespace(run_dir=tmp_path, network_mode="live", skills_home=tmp_path)
     validators = PR._agent_validator_args("super_writer", ctx, sd)
     precheck = next(item for item in validators
-                    if item[1] == "scripts/validate_single_product.py")
+                    if item[1] == "scripts/validate_single_product.py" and "registry" in item[2])
     argv = precheck[2]
     assert "--product" in argv and "registry" in argv
     assert str(tmp_path / "aihot" / "deduplicated_items.json") in argv

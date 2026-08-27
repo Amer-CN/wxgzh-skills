@@ -4,7 +4,7 @@
 
 明确不负责：去 AI 味、美化排版、配图和发布。最终稿通过 `handoff` 交给下游 Skill。
 
-> **v0.4.11-rc1** — `release_candidate` | 275 tests passed | MIT License
+> **v0.4.12-rc1** — `release_candidate` | 275 tests passed | MIT License
 >
 > 标题方法论致谢：liucongg/liucong-skills 的 gzh-title-strategist（Apache-2.0）——档 77D 标题分组/评分/风险标记方法论的气质参考（自写措辞，详见 ATTRIBUTION.md）。
 

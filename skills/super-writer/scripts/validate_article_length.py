@@ -838,9 +838,12 @@ def check_full_mode_completeness(paths, runtime_policy=None, material_exhausted=
                     parse_ok = False
                     continue
                 h = data['handoff']
+                # 77K/OBS-327:null is valid only when applied=false is honestly reported.
                 # 嵌套路径检查:schema_version / prose_craft_applied / prose_craft_version 顶层,
                 # formatter.cover 嵌套(缺任一即 fail-closed)。
                 for field in ('schema_version', 'prose_craft_applied', 'prose_craft_version'):
+                    if field == 'prose_craft_version' and h.get('prose_craft_applied') is False:
+                        continue
                     if h.get(field) in (None, ''):
                         errors.append(f"ERROR: {filename} missing required field 'handoff.{field}'"); parse_ok = False
                 cover = (h.get('formatter') or {}).get('cover') if isinstance(h.get('formatter'), dict) else None

@@ -240,6 +240,11 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
              ["--article", str(sd / "article.md"),
               "--semantic-map", str(sd / "semantic-map.yaml"),
                "--evidence-map", str(sd / "evidence-map.md")]),
+            # 77K/OBS-328: editorial placeholders fail closed before zh normalization.
+            ("super-writer", "scripts/validate_single_product.py", [
+                "--product", "article",
+                "--file", str(sd / "article.md"),
+            ]),
             # 77J/OBS-324: registry precheck is part of the official post-ACK chain.
             ("super-writer", "scripts/validate_single_product.py", [
                 "--product", "registry",
@@ -361,7 +366,7 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                 ("super-writer", "scripts/material_ingestion.py",
                  ["--ledger", str(sd / "material-ledger.yaml"),
                   "--output", str(sd / "material_ingestion_verification.json")]),
-                ("super-writer", "scripts/validate_semantic_map.py",
+            ("super-writer", "scripts/validate_semantic_map.py",
                  ["--article", str(sd / "article.md"),
                   "--semantic-map", str(sd / "semantic-map.yaml"),
                "--evidence-map", str(sd / "evidence-map.md")]),

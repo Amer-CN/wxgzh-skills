@@ -263,7 +263,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
              "fixed_signature": 0, "footer_cta": 0,
              "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0,
              "code_block": 0, "components": {}, "unknown": [], "unknown_count": 0,
-             "unknown_component_args": []}
+             "unknown_component_args": [],
+             "component_argument_warnings": []}
 
     parts: list[str] = []
 
@@ -468,6 +469,8 @@ def _render_item(theme_key: str, item, usage: dict) -> str:
 
 
 def _render_component(builder, item, usage=None) -> str:
+    if usage is None:
+        usage = {"component_argument_warnings": []}
     """按 references/advanced-components.md 输入语法取参调用 builder。
 
     解析 :::name key="val" 头部参数 + 块内行;参数缺失用 builder 默认值。
@@ -479,6 +482,15 @@ def _render_component(builder, item, usage=None) -> str:
     args = {"tid": "hammer"}
     for m in _re.finditer(r'([\w-]+)="([^"]*)"', head):
         args[m.group(1)] = m.group(2)
+
+    # 77K/OBS-326: malformed quoted attributes must not silently fall back to defaults.
+    parsed_attrs = len(re.findall(r'(?<![\w-])([\w-]+)=', head))
+    if parsed_attrs > sum(1 for _m in re.finditer(r'(?<![\w-])[\w-]+="[^"]*"', head)):
+        usage["component_argument_warnings"].append({"component": item.get("name", ""), "head": head[:160]})
+    for attr_name in _re.findall(r'(?<![\w-])([\w-]+)=', head):
+        if not _re.search(rf'(?<![\w-]){attr_name}="[^"]*"', head):
+            usage["component_argument_warnings"].append({
+                "component": name, "attr": attr_name, "head": head[:160]})
     name = item.get("name", "")
     _unknown_args = []
     if name == "alert":
@@ -616,4 +628,3 @@ def _hammer_code_block(theme_key: str, text: str, language: str = "") -> str:
 
 if __name__ == "__main__":
     sys.exit(main())
-
