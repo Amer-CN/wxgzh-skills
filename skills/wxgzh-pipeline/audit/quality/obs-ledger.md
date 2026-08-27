@@ -483,4 +483,5 @@
 3. CI 绿不构成验收依据,CI 红也不构成停机依据;一切验收以本机 junit 为准。解除条件:四类全部清零且 CI 出现第一次 success 之后,本条作废。
 
 
-> `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 77K 三十三次临时由 0 改为 1(批准人=用户,范围=档 77K 引号归一×指令语法交互+prose_craft null+编辑锚点前置拦截修理包,涉及子树 zh-human-writing+super-writer+gzh-design+wxgzh-pipeline；GZH 键限 render_article.py 指令属性解析失败告警与校验器同步),恢复条件=验收通过后立即归 0。**归位:待审核方验收宣告后执行**。
+> `RELOCK_ALLOWED` 与 `GZH_DESIGN_WRITE_ALLOWED` 于档 77K 三十三次临时由 0 改为 1(批准人=用户,范围=档 77K 引号归一×指令语法交互+prose_craft null+编辑锚点前置拦截修理包,涉及子树 zh-human-writing+super-writer+gzh-design+wxgzh-pipeline；GZH 键限 render_article.py 指令属性解析失败告警与校验器同步),恢复条件=验收通过后立即归 0。**归位(档77K-F,审核方 2026-08-27 验收通过):`RELOCK_ALLOWED` 由 1 改回 0；`GZH_DESIGN_WRITE_ALLOWED` 由 1 改回 0**。
+　　【77K-F 补记】档 77K 验收 PASS（审核方按 #100 规则枚举全区间两颗 commit 逐颗点验一致：feat 2a3315c + docs d94ce01；relock #81/#82/#83——zh 条目 root/version/full_commit/source_tree 变、entrypoint/validator 原值不动；sw 条目 root/version/full_commit/source_tree/validator 变、entrypoint/manifest/文件数 56 原值不动；gzh 条目 root/version/full_commit/source_tree/entrypoint/render_entry 变、validator/component_source/manifest/文件数 76 原值不动；备份×3 在册、history+3；R93 锁 sha bd690a3b…；OBS-326/327/328 落账；component_anchors.json 渲染器哈希与测试哈希常量同步在册）。
