@@ -1624,5 +1624,23 @@
     "new_skill_version": "v2026.08.29-n18",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260828T163730Z-b13328eb",
+    "skill": "super-writer",
+    "reason": "77M: container vocab catalog + VSP article type precheck + preflight hardstep",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-28T16:37:30Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "b81a83db9a1d72d6978ca170b732082d901d6ec697bdfadf7b60ef68f92e8a4c",
+    "new_root_sha256": "3fd0d998e1498b58668bb83da4fa0381af112a32ce17415da8590600f50ef482",
+    "old_full_commit_sha": "2a3315cbbb31b3a060486979ca307286e3ae512a",
+    "new_full_commit_sha": "4b494486d02b7ac548cb22e099f310306d42caac",
+    "old_source_tree_sha": "adecff1071856e64c54f29017739f99e46ac3bf7",
+    "new_source_tree_sha": "171e3c846d6da6daec10353b72e8d6ae7e750de1",
+    "old_skill_version": "0.4.12-rc1",
+    "new_skill_version": "0.4.13-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
