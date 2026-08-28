@@ -1,3 +1,9 @@
+# gzh-design v2026.08.29-n18
+
+## v2026.08.29-n18(档77M)
+- 77M/OBS-330: 容器/type 枚举单一真源(ALERT_TYPES/QUOTE_TYPES/CONTAINER_TYPES/MARKDOWN_CONTAINERS)
+- 77M/OBS-331: UnboundLocalError 修复(name 提前赋值);畸形指令不 crash
+
 # gzh-design v2026.08.27-hammer.17
 
 ## v2026.08.27-hammer.17(档77K)

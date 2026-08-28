@@ -54,8 +54,12 @@ SUPER_WRITER_AGENT_OUTPUTS = [
     "material-ingestion-report.json", "material-ledger.yaml", "evidence-map.md",
     "canonical_claim_registry.json", "core-card.md", "outline.md",
     "semantic-map.yaml", "article.md", "editor-report.md",
-    "full_mode_validator_report.json", "handoff.yaml",  # 档76A/OBS-252:full-mode 必检产物
+    "handoff.yaml",  # 77M/OBS-332: full_mode_validator_report.json self-collected by producer
 ]
+
+# 77M/OBS-332: full_mode_validator_report.json produced by producer from official stdout,
+# not by agent. Stage-level outputs include it; agent-level do not.
+SUPER_WRITER_STAGE_OUTPUTS = SUPER_WRITER_AGENT_OUTPUTS + ["full_mode_validator_report.json"]
 
 AGENT_EXPECTED_OUTPUTS = {
     "aihot": ["raw_items.json", "deduplicated_items.json", "fetch_log.json"],
@@ -65,9 +69,8 @@ AGENT_EXPECTED_OUTPUTS = {
 
 EXPECTED_OUTPUTS = {
     "aihot": ["raw_items.json", "deduplicated_items.json", "fetch_log.json"],
-    # The report is agent-written from the official CLI and handshake-bound;
-    # Pipeline reruns that CLI and requires exact semantic agreement.
-    "super_writer": SUPER_WRITER_AGENT_OUTPUTS,
+    # 77M/OBS-332: full_mode_validator_report.json self-collected by producer from official stdout.
+    "super_writer": SUPER_WRITER_STAGE_OUTPUTS,
     "zh_human_writing": ["final_article.md", "fidelity_report.json"],
     "media_enrichment": ["media_manifest.json", "article_image_bindings.json",
                          "upload_events.json"],

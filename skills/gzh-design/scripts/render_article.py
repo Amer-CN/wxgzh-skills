@@ -44,6 +44,13 @@ from validate_gzh_html import validate as validate_html
 # smartisan is the pipeline alias for the registered gzh theme id "hammer".
 THEME_ALIAS = {"smartisan": "hammer", "hammer": "hammer", "锤子风格": "hammer"}
 
+# 77M/OBS-330: container/type enum single source of truth.
+# Writing side (sw VSP pre-check) and rendering side (render_article) share this.
+ALERT_TYPES = frozenset({"note", "tip", "important", "warning", "caution"})
+QUOTE_TYPES = frozenset({"normal", "highlight", "sourced"})
+CONTAINER_TYPES = {"alert": ALERT_TYPES, "quote": QUOTE_TYPES}
+MARKDOWN_CONTAINERS = frozenset(CONTAINER_TYPES.keys())
+
 # Chinese section-semantics -> English chapter label (else derived/PART).
 EN_LABEL_MAP = [
     (("缘起", "起源", "背景", "开始"), "ORIGIN"),
@@ -482,6 +489,7 @@ def _render_component(builder, item, usage=None) -> str:
     args = {"tid": "hammer"}
     for m in _re.finditer(r'([\w-]+)="([^"]*)"', head):
         args[m.group(1)] = m.group(2)
+    name = item.get("name", "")
 
     # 77K/OBS-326: malformed quoted attributes must not silently fall back to defaults.
     parsed_attrs = len(re.findall(r'(?<![\w-])([\w-]+)=', head))
@@ -491,12 +499,11 @@ def _render_component(builder, item, usage=None) -> str:
         if not _re.search(rf'(?<![\w-]){attr_name}="[^"]*"', head):
             usage["component_argument_warnings"].append({
                 "component": name, "attr": attr_name, "head": head[:160]})
-    name = item.get("name", "")
     _unknown_args = []
     if name == "alert":
         # 1f(OBS-127):文档 type= 优先,兼容 typ=。
         typ = args.get("type") or args.get("typ") or "warning"
-        if typ not in {"note", "tip", "important", "warning", "caution"}:
+        if typ not in ALERT_TYPES:
             _unknown_args.append({"component": name, "attr": "type", "value": typ})
         args.setdefault("title", "风险提示")
         args.setdefault("body", body.strip() or "提示内容")
@@ -506,7 +513,7 @@ def _render_component(builder, item, usage=None) -> str:
     if name == "quote":
         # 1f(OBS-127):文档 type= 优先,兼容 qt=。
         qt = args.get("type") or args.get("qt") or "highlight"
-        if qt not in {"normal", "highlight", "sourced"}:
+        if qt not in QUOTE_TYPES:
             _unknown_args.append({"component": name, "attr": "type", "value": qt})
         args.setdefault("text", body.strip() or "金句")
         # OBS-146(4c):source= 接线(references/advanced/quotes.md L19)。

@@ -385,17 +385,10 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
         stdout_file.write_text(run.get("stdout") or "", encoding="utf-8")
         validator_stdout_files.append(stdout_file)
         if stage == "super_writer" and rel == "scripts/validate_article_length.py":
-            try:
-                official_report = json.loads(run.get("stdout") or "{}")
-                agent_report = json.loads((sd / "full_mode_validator_report.json").read_text(encoding="utf-8"))
-                report_matches = agent_report == official_report
-            except (OSError, UnicodeError, json.JSONDecodeError):
-                report_matches = False
-            if not report_matches:
-                run["exit_code"] = run["exit_code"] or 3
-                run["stderr"] = (run.get("stderr") or "") + "\nagent report != official validator JSON"
-                run["stderr_sha256"] = hashlib.sha256(run["stderr"].encode("utf-8")).hexdigest()
-                officials[-1] = _vresult(run)
+            # 77M/OBS-332: self-collect full_mode_validator_report.json from official stdout.
+            # Agent no longer writes/maintains it; producer writes byte-level official stdout.
+            (sd / "full_mode_validator_report.json").write_text(
+                run.get("stdout") or "", encoding="utf-8")
     outputs = [sd / o for o in expected if (sd / o).is_file()] + validator_stdout_files
     meta["official_validators"] = officials
     if any(v["exit_code"] != 0 for v in officials):
@@ -1092,9 +1085,34 @@ def _ledger_used_materials(rd: Path) -> dict:
     except (OSError, ValueError, yaml.YAMLError):
         return {}
 
+def _normalize_title_quotes(title: str) -> str:
+    """77M/OBS-333: normalize half-width double quotes in title (paired to full-width).
+    Same rule as zh normalize_quotes: even count pairs up, odd skips the last."""
+    count = title.count(chr(34))
+    if count == 0:
+        return title
+    skip_last = count % 2 == 1
+    out = []
+    counter = 0
+    last_idx = count - 1 if skip_last else -1
+    for ch in title:
+        if ch != chr(34):
+            out.append(ch)
+            continue
+        if counter == last_idx:
+            out.append(ch)
+        elif counter % 2 == 0:
+            out.append("“")
+        else:
+            out.append("”")
+        counter += 1
+    return "".join(out)
+
 def _wechat_title(ctx, state) -> str:
     """76D/OBS-258:草稿标题 = handoff.selected_title → title_candidates[0] → topic。"""
-    return _handoff_title(ctx) or (state.topic or "wxgzh article")
+    # 77M/OBS-333: normalize half-width quotes at取用侧 (frozen handoff not modified).
+    raw = _handoff_title(ctx) or (state.topic or "wxgzh article")
+    return _normalize_title_quotes(raw)
 
 def _handoff_hook(ctx) -> str | None:
     """读 handoff.hook_line(封面副标题兜底,76D/OBS-257);缺失 → None。"""

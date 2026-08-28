@@ -1,5 +1,5 @@
-version: 0.4.12-rc1
-previous_version: 0.4.11-rc1
+version: 0.4.13-rc1
+previous_version: 0.4.12-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -13,5 +13,5 @@ release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-27
-hotfix_name: 77k
-release_notes: "v0.4.12-rc1: 档77K — handoff null 诚实语义、article 占位预检与渲染参数异常留痕;测试 +N。"
+hotfix_name: 77M
+release_notes: "v0.4.13-rc1: 档77K — handoff null 诚实语义、article 占位预检与渲染参数异常留痕;测试 +N。"

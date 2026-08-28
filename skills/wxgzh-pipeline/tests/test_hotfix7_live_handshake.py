@@ -109,12 +109,13 @@ def test_ack_cli_supports_all_agent_stages(tmp_path, stage):
 
 
 def test_super_writer_expected_outputs_are_complete_and_bound():
+    # 77M/OBS-332: full_mode_validator_report.json self-collected by producer, not agent.
     assert SUPER_WRITER_AGENT_OUTPUTS == [
         "generation-profile.yaml", "writing-brief.md", "material-readiness.yaml",
         "material-ingestion-report.json", "material-ledger.yaml", "evidence-map.md",
         "canonical_claim_registry.json", "core-card.md", "outline.md",
         "semantic-map.yaml", "article.md", "editor-report.md",
-        "full_mode_validator_report.json", "handoff.yaml",
+        "handoff.yaml",
     ]
 
 
@@ -240,28 +241,22 @@ def test_corrupt_policy_fails_closed_but_runs_material_and_semantic(tmp_path, sk
     assert any(str(path).endswith("validate_semantic_map.py") for path in paths)
 
 
-def test_pipeline_rejects_agent_report_different_from_official(tmp_path, skills_home, monkeypatch):
+def test_pipeline_self_collects_validator_report_from_official_stdout(tmp_path, skills_home):
+    """77M/OBS-332: producer self-collects full_mode_validator_report.json from official stdout.
+    Agent no longer writes it; producer writes byte-level official validator output."""
     from wxgzh_pipeline.orchestrator import Orchestrator
     fixture = tmp_path / "fixture"
     shutil.copytree(FAKE_FIXTURE, fixture)
-    real_run = P.run_script
-
-    def divergent_runner(script, args, **kwargs):
-        result = real_run(script, args, **kwargs)
-        if str(script).endswith("validate_article_length.py"):
-            body = json.loads(result["stdout"])
-            body["target_visible_chars"] = 9999
-            result["stdout"] = json.dumps(body, ensure_ascii=False)
-            import hashlib
-            result["stdout_sha256"] = hashlib.sha256(result["stdout"].encode("utf-8")).hexdigest()
-        return result
-
-    monkeypatch.setattr(P, "run_script", divergent_runner)
     orch = Orchestrator(project_root=tmp_path / "project", network_mode="fake_live",
                         skills_home=skills_home, fixture_dir=fixture)
-    out = orch.run("report mismatch")
-    assert out["status"] == "STAGE_FAILED"
-    assert out["failed_stage"] == "super_writer"
+    out = orch.run("self-collect test")
+    assert out["status"] in ("OK", "COMPLETE")
+    rd = Path(out["run_dir"])
+    fmvr = rd / "super_writer" / "full_mode_validator_report.json"
+    assert fmvr.is_file(), "full_mode_validator_report.json must be self-collected"
+    # The file must be valid JSON (official validator stdout)
+    data = json.loads(fmvr.read_text(encoding="utf-8"))
+    assert "errors" in data or "errors" in data.get("full_mode", {}), "must be real validator output"
 
 
 def test_integration_workflow_fails_closed_after_tee():
