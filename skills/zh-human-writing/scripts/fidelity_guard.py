@@ -92,8 +92,21 @@ def extract_bold_spans(text):
     return re.findall(r'\*\*(.+?)\*\*', text, re.DOTALL)
 
 def extract_commands(text):
-    """提取命令行（以 $ 或 > 开头，或常见命令前缀）。"""
-    commands = re.findall(r'(?:^|\n)[\$\>]\s*(.+)', text)
+    """提取命令行（行首 $ 或 > 提示符，或常见命令前缀）。
+
+    77L/OBS-329:命令行判定严格化——仅行首提示符且后接非空内容才算;
+    行首锚定 + MULTILINE + 非贪婪;行中 $ 价格/数学用途(如 $5、$9,
+    提示符后无空白)一律不命中;行首 > 引用块(含 CJK 散文)不误伤
+    (引用块由 extract_quotes 单独保护,不在此判定为命令)。"""
+    commands = []
+    # $ 提示符:行首锚定,后必须跟至少一个空白 + 非空内容(非贪婪)。
+    commands.extend(m.group(1)
+                    for m in re.finditer(r'^[ \t]*\$[ \t]+(\S.*?)$', text, re.MULTILINE))
+    # > 提示符:仅当后接内容为命令形态(无 CJK 散文)才算命令。
+    for m in re.finditer(r'^[ \t]*>[ \t]+(\S.*?)$', text, re.MULTILINE):
+        content = m.group(1)
+        if not re.search(r'[\u4e00-\u9fff]', content):
+            commands.append(content)
     # 也匹配常见命令模式
     cmd_patterns = [
         r'\bnpm\s+\S+',

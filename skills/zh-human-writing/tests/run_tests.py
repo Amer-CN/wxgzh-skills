@@ -1260,11 +1260,46 @@ def test_cross_sentence_span_no_crash():
     return results
 
 
+
+# 77L/OBS-329:extract_commands 假阳回归测试（3 条,77L-01/02/03）
+def test_command_extraction_77l():
+    """77L/OBS-329:命令行判定严格化——行首 $5/$9 价格零命中、真命令行仍命中、
+    行首 > 引用块不误伤。"""
+    results = []
+    # 77L-01:dfnsls 冻结 $5/$9 段零命中(原/编一致 → 零 fail)
+    orig = "$5 到 $9 每千分钟的定价，加上 85 种语言支持和 0.40 秒的流式延迟。\n$6 是另一个价格。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig),
+                              '--edited', write_temp(orig), '--output', 'json'])
+    data = json.loads(out)
+    cmd_fails = [r for r in data.get('fail_details', []) if r.get('category') == 'command']
+    results.append(TestResult('77L-01', 'command-false-positive', data['fails'] == 0 and rc == 0,
+                              f'$5/$9 段 fails={data["fails"]} rc={rc} cmd_fails={len(cmd_fails)}'))
+    # 77L-02:真命令行仍命中(原文有 $ npm install,终稿删除 → command fail)
+    orig = "安装依赖：\n$ npm install wxgzh\n然后运行。"
+    edited = "安装依赖：\n然后运行。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig),
+                              '--edited', write_temp(edited), '--output', 'json'])
+    data = json.loads(out)
+    cmd_fails = [r for r in data.get('fail_details', []) if r.get('category') == 'command']
+    results.append(TestResult('77L-02', 'command-real-hit', len(cmd_fails) > 0 and rc == 2,
+                              f'真命令行 fails={data["fails"]} rc={rc} cmd_fails={len(cmd_fails)}'))
+    # 77L-03:行首 > 引用块不误伤(原/编一致 → 零 fail)
+    orig = "结论如下：\n> 真正的问题不再是它够不够好，而是你的场景适合用哪种模式。\n以上。"
+    rc, out, err = run_script(FIDELITY_GUARD, ['--original', write_temp(orig),
+                              '--edited', write_temp(orig), '--output', 'json'])
+    data = json.loads(out)
+    cmd_fails = [r for r in data.get('fail_details', []) if r.get('category') == 'command']
+    results.append(TestResult('77L-03', 'command-blockquote-safe', data['fails'] == 0 and rc == 0,
+                              f'> 引用块 fails={data["fails"]} rc={rc} cmd_fails={len(cmd_fails)}'))
+    return results
+
+
 def main():
     verbose = '--verbose' in sys.argv
 
     all_results = []
     all_results.extend(test_fidelity_bold_span())
+    all_results.extend(test_command_extraction_77l())
     all_results.extend(test_cross_sentence_span_no_crash())
     all_results.extend(test_must_preserve())
     all_results.extend(test_must_edit())

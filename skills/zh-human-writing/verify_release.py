@@ -3,12 +3,12 @@
 verify_release.py — zh-human-writing canonical release verification.
 
 Checks:
-1. VERSION file exists and contains exactly "0.1.9"
+1. VERSION file exists and contains exactly "0.1.10"
 2. SHA256SUMS exists
 3. Every file in SHA256SUMS exists
 4. Every file SHA256 matches
 5. SHA256SUMS does not contain excluded paths
-6. Existing test suite passes (89/89)
+6. Existing test suite passes (92/92)
 7. Returns 0 on PASS, non-zero on FAIL
 
 Usage:
@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-VERSION_EXPECTED = "0.1.9"
+VERSION_EXPECTED = "0.1.10"
 
 EXCLUDED_PATTERNS = [
     "SHA256SUMS",
@@ -148,9 +148,9 @@ def run_tests(errors):
                     if "通过" in line or "失败" in line or "总计" in line:
                         errors.append(f"  {line.strip()}")
         else:
-            # Verify 89/89(77A:77A-01/02 新增,87 → 89)
-            if "89" not in result.stdout:
-                errors.append("Test suite passed but expected 89 tests")
+            # Verify 92/92(77L:77L-01/02/03 新增,89 → 92)
+            if "92" not in result.stdout:
+                errors.append("Test suite passed but expected 92 tests")
     except subprocess.TimeoutExpired:
         errors.append("Test suite timed out")
     except Exception as e:
@@ -346,7 +346,7 @@ def main():
         for e in test_fails:
             print(f"  FAIL: {e}")
     else:
-        print("  OK: 87/87 tests passed")
+        print("  OK: 92/92 tests passed")
 
     print("\n" + "=" * 60)
     if errors:
