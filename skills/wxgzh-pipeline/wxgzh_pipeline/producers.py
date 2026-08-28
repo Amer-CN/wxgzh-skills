@@ -57,6 +57,7 @@ AGENT_INSTRUCTIONS = {
 
 
 AGENT_INSTRUCTIONS["super_writer"] += "77J/OBS-324:registry 预检已接入 ACK 官方链——validate_single_product --product registry --file ... --dedup ... --ledger ... 任一 FAIL 即拒；禁等 media 段暴露，禁手改 registry 后只改 receipt。"
+AGENT_INSTRUCTIONS["super_writer"] += "77M/OBS-330:容器 type 枚举单一真源——:::alert type= 只能用 note/tip/important/warning/caution、:::quote type= 只能用 normal/highlight/sourced；枚举外直接 FAIL 并指路 references/component-catalog.md。77M preflight 硬步骤：ACK 前本地全套 VSP 预检（article/registry/semantic-map/handoff/outline）清零再 ACK，不清零不得 ACK。"
 
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
 # OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。

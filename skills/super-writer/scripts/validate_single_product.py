@@ -41,6 +41,12 @@ CORE_CARD_FIELDS = ["Core Statement", "Reader Change", "Core Tension", "Value Ca
 # 77K/OBS-328: same source-page editorial placeholders that gzh blocks late.
 FORBIDDEN_PLACEHOLDERS = ("{{", "[编辑锚点", "TODO", "待补", "需要补充")
 
+# 77M/OBS-330: container/type enum from render_article.py (single source of truth).
+# These must stay in sync with gzh-design/scripts/render_article.py:ALERT_TYPES/QUOTE_TYPES.
+ALERT_TYPES = frozenset({"note", "tip", "important", "warning", "caution"})
+QUOTE_TYPES = frozenset({"normal", "highlight", "sourced"})
+CONTAINER_TYPES = {"alert": ALERT_TYPES, "quote": QUOTE_TYPES}
+
 
 def _read_text(path: Path) -> str:
     raw = path.read_bytes()
@@ -134,10 +140,33 @@ def _placeholder_errors(owner: str, text: str) -> list[str]:
             f"禁止留给渲染端晚拦(77K/OBS-328)"]
 
 
+def _container_type_errors(text: str) -> list[str]:
+    """77M/OBS-330: check :::alert/:::quote type= values against the enum whitelist."""
+    errors = []
+    for m in re.finditer(r'^:::(\w+)', text, re.MULTILINE):
+        container = m.group(1)
+        if container not in CONTAINER_TYPES:
+            continue
+        allowed = CONTAINER_TYPES[container]
+        head_end = text.find('\n', m.end())
+        if head_end == -1:
+            head_end = len(text)
+        head = text[m.start():head_end]
+        tm = re.search(r'(?:type|typ)="([^"]*)"', head)
+        if tm:
+            val = tm.group(1)
+            if val not in allowed:
+                errors.append(
+                    f"article: :::{container} type=\"{val}\" not in allowed {sorted(allowed)}; "
+                    f"see references/component-catalog.md (77M/OBS-330)")
+    return errors
+
+
 def check_article(path: Path) -> tuple[list, dict]:
-    """77K/OBS-328: pre-render gate for forbidden editorial placeholders."""
+    """77K/OBS-328 + 77M/OBS-330: pre-render gate for placeholders + container type enum."""
     text = _read_text(path)
-    return _placeholder_errors("article", text), {"chars": len(text)}
+    errors = _placeholder_errors("article", text) + _container_type_errors(text)
+    return errors, {"chars": len(text)}
 
 
 def check_handoff(path: Path) -> tuple[list, dict]:

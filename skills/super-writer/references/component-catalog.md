@@ -49,6 +49,16 @@
 - `video` — 无必填 payload 字段
 - `warning` — 必填 payload 字段：`text`
 
+## Markdown 容器与 type 枚举（单一真源：gzh-design render_article.py）
+
+> 77M/OBS-330: `:::` 指令容器的合法 type 值从 render_article.py 常量同步。
+> 写作侧只能用下列枚举值，枚举外直接 FAIL 并指路本清单。
+
+| 容器 | 合法 type 值 | 来源常量 |
+|---|---|---|
+| `:::alert` | note, tip, important, warning, caution | ALERT_TYPES |
+| `:::quote` | normal, highlight, sourced | QUOTE_TYPES |
+
 ##  payload 形状总表
 
 | role | 必填字段 |

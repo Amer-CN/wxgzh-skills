@@ -14,4 +14,4 @@ handoff_contract_version: v2.0
 semantic_roles_count: 41
 hotfix_date: 2026-08-27
 hotfix_name: 77M
-release_notes: "v0.4.13-rc1: 档77K — handoff null 诚实语义、article 占位预检与渲染参数异常留痕;测试 +N。"
+release_notes: "v0.4.13-rc1: 档77M — 容器/type 枚举单一真源(ALERT_TYPES/QUOTE_TYPES)、component-catalog 同步、VSP article 预检容器 type 白名单、preflight 硬步骤;测试 +4。"
