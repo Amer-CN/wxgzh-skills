@@ -1580,5 +1580,27 @@
     "new_skill_version": "v2026.08.27-hammer.17",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260828T054221Z-8083a49f",
+    "skill": "zh-human-writing",
+    "reason": "77L OBS-329 指令抽取假阳修复(zh 0.1.10)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-28T05:42:21Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "54d57a1845c32c24672e1a680095b7ec626412ca10431ba2f17e8ff7d5a94bb0",
+    "new_root_sha256": "762120f85d43fa51cf0aec80fb7cc9b85b57023c4ea54e05189419775f4391c8",
+    "old_entrypoint_sha256": "a96892dece97be93591a9019d2a067e465cf3d4d170f9d56071f468b2003f25a",
+    "new_entrypoint_sha256": "b9b666e1b331cee01c9ca688447a608016883bc38623e59147ca2a10978f6974",
+    "old_validator_sha256": "a96892dece97be93591a9019d2a067e465cf3d4d170f9d56071f468b2003f25a",
+    "new_validator_sha256": "b9b666e1b331cee01c9ca688447a608016883bc38623e59147ca2a10978f6974",
+    "old_full_commit_sha": "2a3315cbbb31b3a060486979ca307286e3ae512a",
+    "new_full_commit_sha": "b815e6f58d41e50fe59cedbff86adae552ee976d",
+    "old_source_tree_sha": "fa7fb5f51d026b4a94296177cab7cdbac6e128fd",
+    "new_source_tree_sha": "bcc391b25214633f6a2ff3dbe956af59561a3bb3",
+    "old_skill_version": "0.1.9",
+    "new_skill_version": "0.1.10",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
