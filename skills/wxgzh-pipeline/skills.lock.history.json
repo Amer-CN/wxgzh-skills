@@ -1602,5 +1602,27 @@
     "new_skill_version": "0.1.10",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260828T161720Z-b6ba6de4",
+    "skill": "gzh-design",
+    "reason": "77M: container vocab + UnboundLocalError fix + constants",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-28T16:17:20Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "0f0c542eaef85806bfa1f0ee778dc0a2bc775b68269dff132a285e0bef8d1894",
+    "new_root_sha256": "8dce806aa947c3e2284aee113015a48fd8a4d5dc70fee7d050a2add0b83075f5",
+    "old_entrypoint_sha256": "b95084a1e69e8853951dca5f52d24584c94798e608d6eb44c4cf72a578737bb4",
+    "new_entrypoint_sha256": "4c1346e890093240c10f696ec4790bdf7891297231c6e06a9a0420595828fc8e",
+    "old_render_entry_sha256": "b95084a1e69e8853951dca5f52d24584c94798e608d6eb44c4cf72a578737bb4",
+    "new_render_entry_sha256": "4c1346e890093240c10f696ec4790bdf7891297231c6e06a9a0420595828fc8e",
+    "old_full_commit_sha": "2a3315cbbb31b3a060486979ca307286e3ae512a",
+    "new_full_commit_sha": "01331f96151c7704b49d3b6f5a2ca29a2f5fa799",
+    "old_source_tree_sha": "032ad11abda59c4ff89bd2ea3e2b389652e136a1",
+    "new_source_tree_sha": "e7f3d562febe13086cbec07b91738ce9c596211c",
+    "old_skill_version": "v2026.08.27-hammer.17",
+    "new_skill_version": "v2026.08.29-n18",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
