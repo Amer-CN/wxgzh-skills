@@ -162,10 +162,27 @@ def _container_type_errors(text: str) -> list[str]:
     return errors
 
 
+def _bold_marker_errors(text: str) -> list[str]:
+    """77N/OBS-335: 76Q/OBS-286 bold ban mechanical check (fenced-outside only)."""
+    in_fence = False
+    hits = 0
+    for line in text.split('\n'):
+        if line.strip().startswith('```'):
+            in_fence = not in_fence
+            continue
+        if not in_fence:
+            hits += line.count('**')
+    if not hits:
+        return []
+    return [f"article: 正文(fenced 外)含 ** 加粗标记 ×{hits}——渲染器不支持加粗(76Q/OBS-286),"
+            f"强调用 :::alert 等;禁手写"]
+
+
 def check_article(path: Path) -> tuple[list, dict]:
-    """77K/OBS-328 + 77M/OBS-330: pre-render gate for placeholders + container type enum."""
+    """77K/OBS-328 + 77M/OBS-330 + 77N/OBS-335: pre-render gate for placeholders + container enum + bold ban."""
     text = _read_text(path)
-    errors = _placeholder_errors("article", text) + _container_type_errors(text)
+    errors = (_placeholder_errors("article", text) + _container_type_errors(text)
+              + _bold_marker_errors(text))
     return errors, {"chars": len(text)}
 
 
@@ -456,6 +473,9 @@ CHECKERS = {
 
 
 def main(argv=None) -> int:
+    # 77N: JSON stdout must be deterministic UTF-8 regardless of console codepage (76W/OBS-301).
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="单产物最小预校验(76F/OBS-277)")
     ap.add_argument("--product", required=True,
                     choices=sorted(CHECKERS))

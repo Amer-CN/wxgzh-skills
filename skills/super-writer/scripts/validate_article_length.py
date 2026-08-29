@@ -173,13 +173,21 @@ def count_paragraphs(text):
 
 
 def split_sections(article_text):
-    """Split article into sections by markdown headings."""
+    """Split article into sections by markdown headings (fenced code blocks skipped)."""
     lines = article_text.split('\n')
     sections = []
     current_title = '(preamble)'
     current_lines = []
     heading_re = re.compile(r'^(#{1,6})\s+(.+)$')
+    in_fence = False
     for line in lines:
+        if line.strip().startswith('```'):
+            in_fence = not in_fence
+            current_lines.append(line)
+            continue
+        if in_fence:
+            current_lines.append(line)
+            continue
         m = heading_re.match(line)
         if m:
             if current_lines:
