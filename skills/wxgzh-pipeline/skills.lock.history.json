@@ -1642,5 +1642,25 @@
     "new_skill_version": "0.4.13-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260829T121820Z-21d73d47",
+    "skill": "super-writer",
+    "reason": "77N: split_sections fenced skip + VSP article bold ban (OBS-334/335), sw 0.4.14-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-29T12:18:20Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "3fd0d998e1498b58668bb83da4fa0381af112a32ce17415da8590600f50ef482",
+    "new_root_sha256": "9941acee0f717b48a747e32030d428b836d3de3cfd208fc556ca47b86dd8eb62",
+    "old_validator_sha256": "c9adc8990a6c97885391dd63e681ae471d27623a2eebf2eb55d371a9db5661df",
+    "new_validator_sha256": "952a38df003b3f8441b46a6f18dae1c68fbae129dea51836377f1686d3a55013",
+    "old_full_commit_sha": "4b494486d02b7ac548cb22e099f310306d42caac",
+    "new_full_commit_sha": "f6295dc1b2dc149323314d71fad903bc8bbd03e3",
+    "old_source_tree_sha": "171e3c846d6da6daec10353b72e8d6ae7e750de1",
+    "new_source_tree_sha": "169b34796f77bd222cdd46f64de7cc580c3619e6",
+    "old_skill_version": "0.4.13-rc1",
+    "new_skill_version": "0.4.14-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
