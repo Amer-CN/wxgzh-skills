@@ -1,4 +1,4 @@
-# OBS 台账（119 起持续追加，档71C-R7 重建版，71G 收口）
+﻿# OBS 台账（119 起持续追加，档71C-R7 重建版，71G 收口）
 
 > 五列:OBS 号 / 一句话问题 / 状态 / 承载文件与测试函数名 / 首次认领档号。
 > 状态取值:已修 | 未修 | 已裁决未实施 | 待查 | 空号(附证据)。
@@ -356,6 +356,7 @@
 　　【77N-F 补记】档 77N 验收 PASS（接力核验：审核方主会话 GitHub 通道遇平台级批准快照故障，由新会话按 #100 规则远端点验一致后回报——feat f6295dc + docs f8b904d 两颗逐颗点验一致；relock #87 仅 sw 条目（0.4.14-rc1，root/version/full_commit/source_tree/validator 变——validate_article_length.py 身兼钉住 validator、本档确改，manifest/文件数 56/entrypoint 原值不动）；备份在册、history+1；R93 锁 sha b1ccc70f…；OBS-334/335 落账）。
 　　【78A 事件 77O 补记】8-30 同模式再现（善意披露），已并入 OBS-338 立规。
 80. 77O(标题门禁硬化+LIVE 默认纪律+receipt 禁手写扩展，用户批准 2026-08-30（用户明示 skill 优化迭代是审核方工作，本档转发即执行），RELOCK_ALLOWED 临时 0→1 范围本档（子树 super-writer+wxgzh-pipeline），恢复条件=验收通过后立即归 0；GZH 键维持 0)：任务 0 实证——77I 标题规则位于 validate_single_product.py L239-258，原只写 title_playbook_warnings，不进 out_errors；77I receipt 条款位于 producers.py _COMMON_RULES，原文仅「任何字段禁止手工编辑；hash 漂移一律走重 ACK 正路」，未覆盖演练/补写/缺 receipt 正确动作；LIVE 现状为代码层 live+WXGZH_WECHAT_API_ALLOWED 才放行，fake_live/integration 加 --dry-run，指令层无「配置齐备即 LIVE」默认纪律。修复：①OBS-336 标题四组/五维/风险标记升 FAIL 并指路 references/title-playbook.md，handoff schema 零变动；②OBS-337 LIVE 默认三情形硬条款；③OBS-338 receipt 禁手写/补写/手改无例外+orchestrator 续发/重跑正路+体检报告不得向用户索要流程内决断。升版：sw 0.4.14-rc1→0.4.15-rc1 / pipeline hotfix9R20→hotfix9R21；relock #88（sw）；R93 双侧。测试：77O 新增/更新断言全绿；pipeline 同配置实测仅既有环境红差集。程序校验：唯一编号实测 220（119–338 连续无缺号）、R59 21=21 差集空。附记：78A 事件注记补「8-30 同模式再现（善意披露），已并入 OBS-338 立规」。
+　　【77O-F 补记】档 77O 验收 PASS（本地 git 证据包核验——feat 6a050b2 + docs 26f692a 逐颗点验一致；relock #88 仅 sw 条目（0.4.15-rc1，root/version/full_commit/source_tree 变，manifest/文件数 56/entrypoint/validator 原值不动）；备份在册、history+1；R93 锁 sha 096f8baf…；OBS-336/337/338 落账；口径 78 注记补笔在册）。两项名实更正：①77M-F/77N/77N-F 三次「接力核验」实为本地 Agent 以 git 证据包执行（ls-remote+git show 原始输出），非 Notion 新会话，前记「新会话接力」表述更正；②Notion 侧 GitHub MCP 工具自 8-29 起全窗口批准失效，核验规程降级为本地 git 证据包（独立性弱一档，平台恢复后审核方抽检复核）。附记：hotfix7 常量根修=测试改从锁文件单一真源读取，消灭硬编码失同步。
 ### ★授权变更登记(72A,不可省)
 
 55. 76Q(生产暴露修理包,用户批准 2026-08-14,RELOCK_ALLOWED 临时 0→1 范围本档,恢复条件=验收通过后立即改回 0;GZH_DESIGN_WRITE_ALLOWED 维持 0):①OBS-284 zh 门禁豁免接线——zh_human_writing.py content_validate 改读 pattern_audit.stdout.json 分组(advisory 命中豁免留痕/strong 仍拒/缺失回退 fail-closed),测试 +3;②OBS-285 76F 工具契约对齐——validate_single_product handoff 双层包裹+registry dict{claims,materials}+dedup/source_url 逐字一致机械校验(与 full-mode 同判),测试 +2;③OBS-286 fidelity 粗体豁免——extract_bold_spans 显式保护(根因实证=渲染器不支持 **,语法门 probe 无误判),zh 测试 +3(82→85),pipeline sw 指令补禁止 ** 明规;④OBS-287 文档税打包——material-ingestion.md 三节落档+contracts/02_super_writer.yaml 契约注释+sw 指令引用,测试 +4。升版:sw 0.3.9-rc1 / zh 0.1.4 / pipeline 0.1.0-dev2-hotfix8R1;relock #53(sw,root/version 变,entrypoint/validator 不变)/#54(zh,entrypoint/validator 变=fidelity_guard);R93(REPO_LOCK_SHA256 双侧同步);upgrade_regression ALL PASS;doctor PASS/OBS_69 MATCH/OBS_68 MATCH 双侧;pipeline pytest 483 passed/22 skipped/7 failed(7 failed 与 76N 基线逐项一致的环境红态:test_hotfix1 portable×1、test_hotfix7_live_handshake×3、test_obs171×1、test_obs80_smoke_samples×2);sw 251 passed/2 skipped(1 failed=dist 基线环境项);zh 85/85(verify_release PASS)。程序校验:唯一编号 169(119–287 连续)、R59 22=22 差集空(新增 4 条全已修不入分区)。
@@ -499,6 +500,7 @@
 > `RELOCK_ALLOWED` 于档 77N 三十六次临时由 0 改为 1(批准人=用户，范围=档 77N split_sections fenced 泄漏修复+76Q 加粗禁令机械牙，涉及子树 super-writer+wxgzh-pipeline)，恢复条件=验收通过后立即归 0。GZH_DESIGN_WRITE_ALLOWED 维持 0。**归位:待审核方验收宣告后执行**。
 > **归位(档77N-F,审核方 2026-08-29 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动（GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发）。
 > `RELOCK_ALLOWED` 于档 77O 三十七次临时由 0 改为 1(批准人=用户，范围=档 77O 标题门禁硬化+LIVE 默认纪律+receipt 禁手写扩展，涉及子树 super-writer+wxgzh-pipeline)，恢复条件=验收通过后立即归 0。GZH_DESIGN_WRITE_ALLOWED 维持 0。**归位:待审核方验收宣告后执行**。
+> **归位(档77O-F,审核方 2026-08-30 验收通过):`RELOCK_ALLOWED` 由 1 改回 0**。其余键不动（GZH_DESIGN_WRITE_ALLOWED 本档维持 0、未触发）。
 ## ★CI 口径正式化(OBS-193,71I 显著声明)
 
 1. CI 自有记录以来(≥100 次运行,最早 2026-08-06T07:01Z)零 success,长期红。

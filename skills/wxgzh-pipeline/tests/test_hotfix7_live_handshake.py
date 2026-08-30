@@ -20,9 +20,21 @@ from wxgzh_pipeline import producers as P
 
 from conftest import FAKE_FIXTURE, SKILL_ROOT
 
-LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = (
-    "c9adc8990a6c97885391dd63e681ae471d27623a2eebf2eb55d371a9db5661df"  # 77K/OBS-327:handoff null semantics
-)
+
+
+def _locked_super_writer_validator_sha256() -> str:
+    lock_path = SKILL_ROOT / "skills.lock.json"
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        validator_sha256 = lock["skills"]["super-writer"]["validator_sha256"]
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        pytest.fail(f"locked validator hash unavailable from {lock_path}: {exc}")
+    if not isinstance(validator_sha256, str) or not validator_sha256:
+        pytest.fail(f"locked validator hash empty in {lock_path}")
+    return validator_sha256
+
+
+LOCKED_SUPER_WRITER_VALIDATOR_SHA256 = _locked_super_writer_validator_sha256()
 
 
 def _real_super_writer_root() -> Path:
