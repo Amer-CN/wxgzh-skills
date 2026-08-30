@@ -681,3 +681,7 @@
 - 预检脚本（score_article.py）
 - 编辑学习脚本（learn_edits.py）
 - 结构测试（test_structure.py）
+## v0.4.16-rc1 (2026-08-30) — 档77P：封面单行预算
+
+- **OBS-339 划线句/副标题预算**：VSP handoff 对 `formatter.cover.strike_assumption` 与 `hook_line` 单行预算 FAIL；`--product article` 对导语首行副标题预算 FAIL。口径 CJK=1 / ASCII=0.5，划线句 ≤18、副标题 ≤20。
+- **测试同步**：原 strike 超长 advisory 样本改为 FAIL 断言；新增导语/hook 预算测试。

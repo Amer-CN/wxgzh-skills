@@ -48,9 +48,10 @@ handoff:
     cover:                                 # Batch 3 新增：封面文案（缺省则下游用渲染默认）
       kicker: null                         # 文章类型标签（如 "深度观察"）
       strike: null                         # 旧字段，读取兼容保留（76T 起划线句不再读取它，见 strike_assumption）
-      strike_assumption: null              # 76T 新增：一句「被本文证据否定的旧认知/流行看法」，≤40 字
+      strike_assumption: null              # 76T 新增：一句「被本文证据否定的旧认知/流行看法」，77P 单行预算 18（CJK=1/ASCII=0.5）
                                            # 硬约束：须为素材可支撑的真实流行看法，禁止捏造极端稻草人
                                            # 缺失时渲染端划线句整行不渲染（不再用 hook_line 填充划线位）
+                                           # 77P：超单行预算由 VSP FAIL；渲染端仅保留 nowrap/ellipsis 安全网
       tags: null                           # 2 个内容标签（如 ["深度", "观察"]）
 
   next:

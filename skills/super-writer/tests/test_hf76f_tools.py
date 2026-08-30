@@ -127,10 +127,10 @@ def test_validate_single_product_handoff(tmp_path):
   schema_version: "2.2"
   prose_craft_applied: true
   prose_craft_version: "1.0"
-  title_candidates: ["A", "B"]
+  title_candidates: ["A", "B", "C"]
   hook_line: "钩子"
   selected_title: "A"
-  title_selection_reason: "具体"
+  title_selection_reason: "稳健准确4/网感点击4/专业权威3/长期价值2；五维评分：点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4；风险标记：无标题党、无堆砌、无据风险已核对、时效风险低"
   formatter:
     cover:
       kicker: null

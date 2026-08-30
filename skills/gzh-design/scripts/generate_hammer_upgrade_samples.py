@@ -654,7 +654,8 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
     # 不再用 hook_line/默认文案填充(消灭语义冲突)。
     strike_html = (
         f'<p style="font-size:15px;color:{t["label_text"]};margin:0 0 6px;text-decoration:line-through;'
-        f'text-decoration-color:{t["label_text"]};text-decoration-thickness:1px;letter-spacing:0.5px;">'
+        f'text-decoration-color:{t["label_text"]};text-decoration-thickness:1px;letter-spacing:0.5px;'
+        f'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
         f'<span leaf="">{strike}</span></p>'
         if strike else ''
     )
@@ -680,7 +681,7 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
       <section style="width:48px;height:3px;background:linear-gradient(to right,{p},{t['light_decor']});border-radius:2px;margin-bottom:12px;">
         <span leaf=""><br></span>
       </section>
-      <p style="font-size:13px;color:{t['aux_text']};margin:0;line-height:1.7;letter-spacing:0.5px;">
+      <p style="font-size:13px;color:{t['aux_text']};margin:0;line-height:1.7;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         <span leaf="">{subtitle}</span>
       </p>
     </section>

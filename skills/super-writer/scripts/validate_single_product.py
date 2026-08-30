@@ -28,6 +28,12 @@ import yaml  # noqa: E402
 
 from validate_article_length import parse_outline_budgets  # noqa: E402
 
+# 77P/OBS-339: cover single-line budgets. WeChat mobile content width is the
+# binding constraint; strike is 15px and subtitle 13px. 18/20 weighted units
+# keep both slots below one line on mainstream phone widths.
+STRIKE_ASSUMPTION_MAX_WEIGHT = 18.0
+SUBTITLE_MAX_WEIGHT = 20.0
+
 # 76A/OBS-252:handoff full-mode 必填字段(与 validate_article_length 同源)
 HANDOFF_REQUIRED_FIELDS = ["schema_version", "prose_craft_applied",
                            "prose_craft_version", "formatter.cover"]
@@ -46,6 +52,45 @@ FORBIDDEN_PLACEHOLDERS = ("{{", "[编辑锚点", "TODO", "待补", "需要补充
 ALERT_TYPES = frozenset({"note", "tip", "important", "warning", "caution"})
 QUOTE_TYPES = frozenset({"normal", "highlight", "sourced"})
 CONTAINER_TYPES = {"alert": ALERT_TYPES, "quote": QUOTE_TYPES}
+
+
+def _single_line_weight(text: object) -> float:
+    """CJK/full-width count 1; ASCII/half-width count 0.5."""
+    if not isinstance(text, str):
+        return 0.0
+    visible = re.sub(r"\s+", "", text)
+    return sum(0.5 if ord(char) < 128 else 1.0 for char in visible)
+
+
+def _single_line_budget_errors(owner: str, value: object, limit: float) -> list[str]:
+    if value is None or value == "":
+        return []
+    if not isinstance(value, str):
+        return [f"{owner}: 类型应为 str，当前 {type(value).__name__}(77P/OBS-339)"]
+    weight = _single_line_weight(value)
+    if weight <= limit:
+        return []
+    return [f"{owner}: 单行预算 {weight:g} > {limit:g}(CJK=1/ASCII=0.5,77P/OBS-339);"
+            f"请压缩为不超过一行，禁止靠渲染端截断藏内容"]
+
+
+def _article_cover_subtitle(text: str) -> str | None:
+    """Mirror render_article's default cover subtitle source: first intro line."""
+    in_fence = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if stripped.startswith("## ") and not stripped.startswith("### "):
+            break
+        if stripped.startswith("# ") and not stripped.startswith("## "):
+            continue
+        if stripped:
+            return stripped
+    return None
 
 
 def _read_text(path: Path) -> str:
@@ -179,11 +224,17 @@ def _bold_marker_errors(text: str) -> list[str]:
 
 
 def check_article(path: Path) -> tuple[list, dict]:
-    """77K/OBS-328 + 77M/OBS-330 + 77N/OBS-335: pre-render gate for placeholders + container enum + bold ban."""
+    """Pre-render gate: placeholders, container enums, bold ban, cover subtitle budget."""
     text = _read_text(path)
     errors = (_placeholder_errors("article", text) + _container_type_errors(text)
               + _bold_marker_errors(text))
-    return errors, {"chars": len(text)}
+    intro = _article_cover_subtitle(text)
+    checks = {"chars": len(text), "cover_subtitle_source": "article.intro"}
+    if intro is not None:
+        checks["cover_subtitle_weight"] = _single_line_weight(intro)
+        errors.extend(_single_line_budget_errors(
+            "article: 封面副标题(导语首行)", intro, SUBTITLE_MAX_WEIGHT))
+    return errors, checks
 
 
 def check_handoff(path: Path) -> tuple[list, dict]:
@@ -221,21 +272,18 @@ def check_handoff(path: Path) -> tuple[list, dict]:
             out_errors.append(f"handoff: 缺标题字段 `handoff.{field}`(76A/76B)")
         elif not isinstance(h.get(field), ftype):
             out_errors.append(f"handoff: `handoff.{field}` 类型应为 {ftype.__name__}")
-    # 76T/OBS-293:strike_assumption(可选,advisory)——存在时校验类型与长度(≤40 字),
-    # 缺失不 FAIL;超长/非字符串仅记 checks 提示(不阻断交付,渲染端缺失整行不渲染)。
+    # 77P/OBS-339: strike is the only handoff cover strike source; hook_line is
+    # the only handoff-side subtitle fallback (article.intro is checked in check_article).
     checks = {"schema_version": h.get("schema_version")}
     checks["prose_craft_applied"] = h.get("prose_craft_applied")
     checks["prose_craft_version"] = h.get("prose_craft_version")
     cover = h.get("formatter", {}).get("cover") if isinstance(h.get("formatter"), dict) else None
     sa = cover.get("strike_assumption") if isinstance(cover, dict) else None
     checks["strike_assumption"] = sa
-    if sa is not None and sa != "":
-        # advisory:仅记入 checks,不阻断交付(缺失/超长都不 FAIL,渲染端自行降级)
-        if not isinstance(sa, str):
-            checks["strike_assumption_warnings"] = "类型应为 str(76T/OBS-293,advisory)"
-        elif len(sa) > 40:
-            checks["strike_assumption_warnings"] = (
-                f"长度 {len(sa)} > 40 字(76T/OBS-293,advisory)")
+    out_errors.extend(_single_line_budget_errors(
+        "handoff: strike_assumption", sa, STRIKE_ASSUMPTION_MAX_WEIGHT))
+    out_errors.extend(_single_line_budget_errors(
+        "handoff: hook_line(副标题兜底)", h.get("hook_line"), SUBTITLE_MAX_WEIGHT))
     # 77O/OBS-336:title playbook adoption is FAIL-level; handoff schema unchanged.
     candidates = h.get("title_candidates")
     reason = h.get("title_selection_reason")

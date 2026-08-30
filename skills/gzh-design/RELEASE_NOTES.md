@@ -1,4 +1,10 @@
-# gzh-design v2026.08.29-n18
+# gzh-design v2026.08.30-hammer.18
+
+## v2026.08.30-hammer.18(档77P)
+- OBS-340 封面渲染安全网: strike 与 subtitle 槽位增加 `white-space:nowrap; overflow:hidden; text-overflow:ellipsis`，超长漏网也不折行。
+- 测试 +1: 长划线句 + 长导语副标题渲染仍单行截断。
+
+## v2026.08.29-n18(档77M)
 
 ## v2026.08.29-n18(档77M)
 - 77M/OBS-330: 容器/type 枚举单一真源(ALERT_TYPES/QUOTE_TYPES/CONTAINER_TYPES/MARKDOWN_CONTAINERS)
