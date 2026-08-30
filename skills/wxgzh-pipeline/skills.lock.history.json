@@ -1680,5 +1680,43 @@
     "new_skill_version": "0.4.15-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260830T131826Z-f2472c94",
+    "skill": "gzh-design",
+    "reason": "77P cover single-line render safety net (OBS-340)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-30T13:18:26Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "8dce806aa947c3e2284aee113015a48fd8a4d5dc70fee7d050a2add0b83075f5",
+    "new_root_sha256": "8d65465f78df01212cd395fa58ecd0231d906cb025d222b3017ac721dd6accc4",
+    "old_component_source_sha256": "d70386299d313101899b1869124120a5ef56e087eaddcdc425acb11ccc0f4a76",
+    "new_component_source_sha256": "e3d051e488e3f47eb0be18d1fff20b6182a791e5381ed176cf6db24a81ef624d",
+    "old_full_commit_sha": "01331f96151c7704b49d3b6f5a2ca29a2f5fa799",
+    "new_full_commit_sha": "003e544a9d3731c46ae5a0bdc9b4125453037981",
+    "old_source_tree_sha": "e7f3d562febe13086cbec07b91738ce9c596211c",
+    "new_source_tree_sha": "9518e33f96357500e1ecc0df417f5d6e4fd4a64d",
+    "old_skill_version": "v2026.08.29-n18",
+    "new_skill_version": "v2026.08.30-hammer.18",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260830T131920Z-15b680d6",
+    "skill": "super-writer",
+    "reason": "77P cover single-line budgets (OBS-339)",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-30T13:19:20Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "76c83f2d83df462a8710b605b5a4f0b1de6bdd9b5d836ab921f6309d2c72d846",
+    "new_root_sha256": "7131318716bcb0da8adf29c027e9baa355ecc7ad64a3aa234de8f6fc2e3d4745",
+    "old_full_commit_sha": "6a050b2c8aac611fabcd33071573d019bf0463b4",
+    "new_full_commit_sha": "003e544a9d3731c46ae5a0bdc9b4125453037981",
+    "old_source_tree_sha": "65cfe63a83ee36704e7ebe2bfb8562801cd828df",
+    "new_source_tree_sha": "769fda2a461d2f5c1ae667ebf5220a5a85e0f80d",
+    "old_skill_version": "0.4.15-rc1",
+    "new_skill_version": "0.4.16-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
