@@ -1662,5 +1662,23 @@
     "new_skill_version": "0.4.14-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260830T054317Z-6a669e5c",
+    "skill": "super-writer",
+    "reason": "77O: title playbook FAIL gate (OBS-336/337/338), sw 0.4.15-rc1",
+    "removed_required_files": [],
+    "recorded_at": "2026-08-30T05:43:17Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "9941acee0f717b48a747e32030d428b836d3de3cfd208fc556ca47b86dd8eb62",
+    "new_root_sha256": "76c83f2d83df462a8710b605b5a4f0b1de6bdd9b5d836ab921f6309d2c72d846",
+    "old_full_commit_sha": "f6295dc1b2dc149323314d71fad903bc8bbd03e3",
+    "new_full_commit_sha": "6a050b2c8aac611fabcd33071573d019bf0463b4",
+    "old_source_tree_sha": "169b34796f77bd222cdd46f64de7cc580c3619e6",
+    "new_source_tree_sha": "65cfe63a83ee36704e7ebe2bfb8562801cd828df",
+    "old_skill_version": "0.4.14-rc1",
+    "new_skill_version": "0.4.15-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
