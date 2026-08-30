@@ -110,7 +110,7 @@ def test_obs320_complete_registry_fields_pass(tmp_path):
     assert errors == []
 
 
-def test_obs322_title_playbook_advisory_does_not_block(tmp_path):
+def test_obs322_title_playbook_fail_blocks_and_points_to_playbook(tmp_path):
     handoff = {"handoff": {
         "schema_version": "2.2",
         "prose_craft_applied": True,
@@ -140,12 +140,11 @@ def test_obs322_title_playbook_advisory_does_not_block(tmp_path):
     ])
     path.write_text(yaml_text, encoding="utf-8")
     errors, checks = VSP.check_handoff(path)
-    assert errors == []
-    warnings = checks["title_playbook_warnings"]
-    assert "references/title-playbook.md" in warnings
-    assert "分组覆盖不足" in warnings
-    assert "缺五维评分" in warnings
-    assert "缺风险标记" in warnings
+    assert errors and "references/title-playbook.md" in errors[0]
+    warnings = checks["title_playbook_errors"]
+    assert any("分组覆盖不足" in warning for warning in warnings)
+    assert any("缺五维评分" in warning for warning in warnings)
+    assert any("缺风险标记" in warning for warning in warnings)
 
 
 def test_obs321_resume_reuses_frozen_request(tmp_path, monkeypatch):

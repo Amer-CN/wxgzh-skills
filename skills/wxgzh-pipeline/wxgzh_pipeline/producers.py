@@ -46,7 +46,9 @@ _COMMON_RULES = "76F/OBS-276(恢复SOP,通用规则):若卡在 ACK/request 循�
 _COMMON_RULES_283 = "76L/OBS-283(反顶包明规,通用规则):禁止手写 HTML 或其他脚本顶包 gzh_design 渲染产物;禁止绕过阶段直接调用 publish_wechat_draft.py(该脚本强制 --evidence 凭证门,只认管线 wechat_draft 阶段传入的本 RUN receipt);遇阻的正确动作=停下并报告(对照 Z Code 诚实停机先例),不得自行绕过或另走侧门;草稿存在但六阶段 receipt 不齐=顶包红旗,该草稿不可发、全程复查。"
 
 
-_COMMON_RULES += "77I/receipt 纪律:receipt/stage_result 任何字段禁止手工编辑；hash 漂移一律走重 ACK 正路(76F/OBS-276 规程)，违反按顶包红旗处理。"
+_COMMON_RULES += "77I+77O/receipt 纪律:receipt/stage_result 任何字段禁止手工编辑/手写/补写,无例外(含演练、fake_live、dry-run、断档恢复);hash 漂移一律走重 ACK 正路(76F/OBS-276 规程),发现缺 receipt 的正确动作是 orchestrator 续发/重跑,不是补写;违反按顶包红旗处理。"
+_COMMON_RULES += "77O/OBS-337(LIVE 默认纪律):发文流程默认 LIVE 建草稿;.env 双字段齐备且 WXGZH_WECHAT_API_ALLOWED=1 即视为 LIVE 授权到位;dry-run 仅限用户明说预览/凭证缺失/ALLOWED=0 三种情形,且必须在体检第 1 项如实标注。"
+_COMMON_RULES += "77O/分工纪律:体检报告只报事实与风险,不得向用户索要流程内决断;流程内决断一律由审核方出档。"
 
 
 AGENT_INSTRUCTIONS = {

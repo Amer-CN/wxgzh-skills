@@ -109,7 +109,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         extra = set(new_rules) - set(old_rules)
         assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301",
                             "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309",
-                            "77J/OBS-324"}, f"{k}: 意外新增规则 {extra}"
+                            "77J/OBS-324", "77M/OBS-330", "77O/OBS-337"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -216,9 +216,9 @@ def test_obs304_ledger_count_command():
     n = len(nums)
     # OBS-304/305 登记后区间 119..305 = 187 个编号;去重实测为准
     # 77L 更新:OBS-329 登记后 119..333 = 215 个编号(76Y-R/77K 起计数实测为准)
-    assert n == 215, f"唯一编号实测 {n} != 211"
+    assert n == 220, f"唯一编号实测 {n} != 217"
     # 区间连续无缺号
-    assert set(range(119, 334)) <= nums, "119..333 区间有缺号"
+    assert set(range(119, 339)) <= nums, "119..338 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():
@@ -291,7 +291,7 @@ def test_obs288_instruction_text_unchanged_except_278():
     # 77C 压缩重写:不再逐字对比(义务锚点全量断言见 test_77c_sw_instruction_compressed_anchors);
     # 此处保底:base 英文段不变 + 长度上限
     # 77C 压缩后合法升级；77J registry 硬步骤追加，上限以实测整合文本为准。
-    assert len(new_sw) <= 2400
+    assert len(new_sw) <= 3000
     assert new_sw.startswith(
         "Run Super Writer Material-Heavy Full Mode. Generate every requested product, "
         "then run the locked official validate_article_length.py"), "sw base 文本被改动"
@@ -331,7 +331,7 @@ def test_77c_sw_instruction_compressed_anchors():
     """77C 压缩零丢失硬门:每条规则至少一个可断言语义锚点,全部在场。"""
     instr = PR.AGENT_INSTRUCTIONS["super_writer"]
     # 77C 压至 2000；77D/77I 合法升级后上限以当前整合文本实测为准。
-    assert len(instr) <= 2400
+    assert len(instr) <= 3000
     for tag, anchors in SW_ANCHOR_GROUPS:
         for a in anchors:
             assert a in instr, f"{tag}: 义务锚点丢失 {a!r}"

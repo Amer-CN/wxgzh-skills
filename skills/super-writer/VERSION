@@ -1,5 +1,5 @@
-version: 0.4.14-rc1
-previous_version: 0.4.13-rc1
+version: 0.4.15-rc1
+previous_version: 0.4.14-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -12,6 +12,6 @@ writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-08-29
-hotfix_name: 77N
-release_notes: "v0.4.14-rc1: 档77N — split_sections fenced 代码块跳过(OBS-334,代码块内 # 行不再误判为标题/分节)、VSP article 加粗禁令机械牙(OBS-335,fenced 外 ** 即 FAIL 指路 76Q/OBS-286)、VSP stdout 固定 UTF-8(76W/OBS-301 纪律);测试 +4,实测全量 288(283 过+3 dist 环境红基线+2 跳)。"
+hotfix_date: 2026-08-30
+hotfix_name: 77O
+release_notes: "v0.4.15-rc1: 档77O — 标题门禁硬化(OBS-336,title_candidates 分组/五维评分/风险标记由 WARNING 升 FAIL 并指路 title-playbook);测试同步由 advisory 断言升级为 FAIL 断言。"

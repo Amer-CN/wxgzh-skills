@@ -71,7 +71,8 @@ def test_obs327_handoff_null_is_honest_only_when_not_applied(tmp_path):
   title_candidates: ["A", "B", "C"]
   hook_line: "hook"
   selected_title: "A"
-  title_selection_reason: "具体"
+  # 77O/OBS-336: title playbook fields are FAIL-level; keep this fixture valid.
+  title_selection_reason: "分组:稳健准确/网感点击/专业权威;五维:点击欲望/事实匹配/人群匹配/差异化/长期价值;风险标记:无标题党/无堆砌/无无据/无时效"
   formatter:
     cover:
       kicker: "深度观察"
@@ -111,4 +112,3 @@ def test_obs328_article_precheck_is_in_official_ack_chain(tmp_path):
     precheck = next(item for item in PR._agent_validator_args("super_writer", ctx, sd)
                      if item[1].endswith("validate_single_product.py") and "article" in item[2])
     assert precheck[2][1] == "article" and str(sd / "article.md") == precheck[2][-1]
-

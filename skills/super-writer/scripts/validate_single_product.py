@@ -236,26 +236,26 @@ def check_handoff(path: Path) -> tuple[list, dict]:
         elif len(sa) > 40:
             checks["strike_assumption_warnings"] = (
                 f"长度 {len(sa)} > 40 字(76T/OBS-293,advisory)")
-    # 77I/OBS-322:title playbook adoption is advisory only; handoff schema unchanged.
+    # 77O/OBS-336:title playbook adoption is FAIL-level; handoff schema unchanged.
     candidates = h.get("title_candidates")
     reason = h.get("title_selection_reason")
-    title_warnings = []
+    title_errors = []
     if not isinstance(candidates, list) or not (3 <= len(candidates) <= 5):
-        title_warnings.append(f"title_candidates 数量 {len(candidates) if isinstance(candidates, list) else '非数组'} 不在 3–5")
+        title_errors.append(f"title_candidates 数量 {len(candidates) if isinstance(candidates, list) else '非数组'} 不在 3–5")
     groups = ("稳健准确", "网感点击", "专业权威", "长期价值")
     present_groups = [group for group in groups if group in str(reason)]
     if len(present_groups) < 3:
-        title_warnings.append("分组覆盖不足 3 组(稳健准确/网感点击/专业权威/长期价值)")
+        title_errors.append("分组覆盖不足 3 组(稳健准确/网感点击/专业权威/长期价值)")
     dimensions = ("点击欲望", "事实匹配", "人群匹配", "差异化", "长期价值")
     missing_dimensions = [dimension for dimension in dimensions if dimension not in str(reason)]
     if missing_dimensions:
-        title_warnings.append("缺五维评分:" + "/".join(missing_dimensions))
+        title_errors.append("缺五维评分:" + "/".join(missing_dimensions))
     risk_markers = ("标题党", "堆砌", "无据", "时效", "风险标记")
     if not any(marker in str(reason) for marker in risk_markers):
-        title_warnings.append("缺风险标记(标题党/堆砌/无据/时效)")
-    if title_warnings:
-        checks["title_playbook_warnings"] = (
-            "对照 references/title-playbook.md: " + "; ".join(title_warnings))
+        title_errors.append("缺风险标记(标题党/堆砌/无据/时效)")
+    if title_errors:
+        out_errors.append("对照 references/title-playbook.md: " + "; ".join(title_errors))
+        checks["title_playbook_errors"] = title_errors
     return out_errors, checks
 
 
