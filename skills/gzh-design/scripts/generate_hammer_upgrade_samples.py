@@ -49,6 +49,7 @@ PALETTES = {
         "body_color": "#374151",
         "secondary_text": "#4B5563",
         "label_text": "#6B7280",
+        "strike_text": "#4B5563",
         "aux_text": "#9CA3AF",
         "divider": "#D1D5DB",
         "border_gray": "#E5E7EB",
@@ -85,6 +86,7 @@ PALETTES = {
         "body_color": "#555555",
         "secondary_text": "#555555",
         "label_text": "#737373",
+        "strike_text": "#555555",
         "aux_text": "#737373",
         "divider": "rgba(202,202,199,0.35)",
         "border_gray": "rgba(202,202,199,0.18)",
@@ -135,7 +137,7 @@ def generate_article(theme_key):
       <span style="font-size:10px;color:{t['divider']};font-weight:600;"><span leaf="">2026.07</span></span>
     </section>
     <section>
-      <p style="font-size:15px;color:{t['divider']};margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
+      <p style="font-size:15px;color:{t['strike_text']};margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
         <span leaf="">排版只是换颜色？</span>
       </p>
       <p style="font-size:24px;font-weight:900;color:{t['title_color']};margin:0;line-height:1.05;letter-spacing:-2px;">
@@ -653,8 +655,8 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
     # 76T/OBS-293:划线句槽——strike(即 strike_assumption)为空时整行不渲染,
     # 不再用 hook_line/默认文案填充(消灭语义冲突)。
     strike_html = (
-        f'<p style="font-size:15px;color:{t["label_text"]};margin:0 0 6px;text-decoration:line-through;'
-        f'text-decoration-color:{t["label_text"]};text-decoration-thickness:1px;letter-spacing:0.5px;'
+        f'<p style="font-size:15px;color:{t["strike_text"]};margin:0 0 6px;text-decoration:line-through;'
+        f'text-decoration-color:{t["strike_text"]};text-decoration-thickness:1px;letter-spacing:0.5px;'
         f'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
         f'<span leaf="">{strike}</span></p>'
         if strike else ''

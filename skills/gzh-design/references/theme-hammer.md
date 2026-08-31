@@ -137,7 +137,7 @@
     </section>
     <section style="display:flex;align-items:center;gap:20px;">
       <section style="flex:1;min-width:0;">
-        <p style="font-size:15px;color:rgba(202,202,199,0.35);margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
+        <p style="font-size:15px;color:#555555;margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
           <span leaf="">{{划线旧认知}}</span>
         </p>
         <p style="font-size:24px;font-weight:900;color:#555555;margin:0;line-height:1.05;letter-spacing:-2px;">
@@ -183,7 +183,7 @@
       <span style="font-size:10px;color:rgba(202,202,199,0.35);font-weight:600;"><span leaf="">{{日期}}</span></span>
     </section>
     <section>
-      <p style="font-size:15px;color:rgba(202,202,199,0.35);margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
+      <p style="font-size:15px;color:#555555;margin:0 0 6px;text-decoration:line-through;letter-spacing:0.5px;">
         <span leaf="">{{划线旧认知}}</span>
       </p>
       <p style="font-size:24px;font-weight:900;color:#555555;margin:0;line-height:1.05;letter-spacing:-2px;">

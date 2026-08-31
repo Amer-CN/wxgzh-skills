@@ -141,15 +141,15 @@ class TestOBS90CodeblockWechat:
 
 
 class TestStrikeContrast:
-    def test_strike_text_contrast_label_text(self):
+    def test_strike_text_uses_single_source(self):
+        """77Q/OBS-341: strike color comes from PALETTES.strike_text, not label_text."""
         gh = _load_script("generate_hammer_upgrade_samples.py")
+        expected = gh.PALETTES["hammer"]["strike_text"]
         html = gh.hammer_cover("hammer", kicker="K", strike="别急着划走",
                                title_line1="A", title_line2="B", subtitle="S")
-        # 文字色 = label_text #737373
-        assert "color:#737373" in html or "color:var" not in html
-        assert re.search(r'color:#737373;margin:0 0 6px;text-decoration:line-through', html)
-        # 删除线同色、1px(不再 #B3593B 橙粗线)
-        assert "text-decoration-color:#737373" in html
+        assert f"color:{expected}" in html
+        assert re.search(rf'color:{re.escape(expected)};margin:0 0 6px;text-decoration:line-through', html)
+        assert f"text-decoration-color:{expected}" in html
         assert "text-decoration-thickness:1px" in html
         assert "text-decoration-color:#B3593B" not in html
         assert "text-decoration-thickness:1.5px" not in html

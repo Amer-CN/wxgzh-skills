@@ -1,4 +1,10 @@
-# gzh-design v2026.08.30-hammer.18
+# gzh-design v2026.08.30-hammer.19
+
+## v2026.08.30-hammer.19(档77Q)
+- OBS-341 封面划线句对比度回归根治: strike_text 进入 PALETTES 单一真源（moyu #4B5563 / hammer #555555），白底对比度 ≥4.5:1；收编旧样张与主题文档浅色定义。
+- 回归测试 +1: 真源颜色、对比度、渲染 HTML 与删除线颜色同步断言。
+
+## v2026.08.30-hammer.18(档77P)
 
 ## v2026.08.30-hammer.18(档77P)
 - OBS-340 封面渲染安全网: strike 与 subtitle 槽位增加 `white-space:nowrap; overflow:hidden; text-overflow:ellipsis`，超长漏网也不折行。
