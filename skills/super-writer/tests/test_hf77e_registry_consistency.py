@@ -50,8 +50,7 @@ def test_registry_duplicate_url_two_ids_rejected(tmp_path):
 def test_dedup_links_original_null_rejected(tmp_path):
     reg = _reg([_mat("M-01", "https://s.example/a")])
     reg_p = _write(tmp_path, "registry.json", reg)
-    dedup = _write(tmp_path, "dedup.json", _dedup([{"id": "d-1", "source_url": "https://s.example/a",
-                                                    "original": None}]))
+    dedup = _write(tmp_path, "dedup.json", _dedup([{"id": "d-1", "source_url": "https://s.example/a", "original": None}]))
     errs, _ = VSP.check_registry(reg_p, dedup=dedup)
     joined = "\n".join(errs)
     assert "links.original" in joined and "禁止 null" in joined, joined

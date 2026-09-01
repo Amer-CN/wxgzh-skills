@@ -153,9 +153,9 @@ blocks:
       - "安装命令"
     role: "command"
     source_anchor:
-      exact_text: "npx skills add gzh-design"
+      exact_text: "npx skills@1.5.23 add gzh-design"
     payload:
-      code_text: "npx skills add gzh-design"
+      code_text: "npx skills@1.5.23 add gzh-design"
     evidence_ids: []
     preserve_exactly: true
     formatter_candidates:

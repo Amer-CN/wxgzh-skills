@@ -1,6 +1,6 @@
-version: 0.1.0-dev27
-previous_version: 0.1.0-dev24
+version: 0.1.0-dev28
+previous_version: 0.1.0-dev27
 status: development
 engineering_tests: passed
 smoke_test: passed
-release_date: 2026-08-13
+release_date: 2026-09-01

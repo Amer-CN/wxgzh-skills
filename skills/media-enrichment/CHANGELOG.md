@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-dev28 (2026-09-01) — 77S
+
+- **LP3 权限声明**：SKILL.md 新增「权限与范围声明（最小权限）」节（文件读写/网络端点/凭据键名/子进程/明确不做）。
+
 ## 0.1.0-dev27 (2026-08-26) — 77J
 
 - **OBS-325 源页声明图位置证据**：approval readiness 对 og:image/twitter:image/background-image 在源页 HTML 中可追溯的资产，将未知 DOM 位置提升为 `page-meta`；普通正文图语义不变。

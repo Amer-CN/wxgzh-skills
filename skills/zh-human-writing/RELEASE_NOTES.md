@@ -1,6 +1,13 @@
 # Release notes
 # Release notes
 
+## v0.1.12
+
+77S(档77S):
+
+- SKILL.md 新增「权限与范围声明（最小权限）」节：文件读写/网络/凭据/子进程/明确不做。
+- VERSION 0.1.11 → 0.1.12；SHA256SUMS 重算。
+
 ## v0.1.11
 
 77R(档77R):

@@ -1,5 +1,5 @@
-version: 0.4.16-rc1
-previous_version: 0.4.15-rc1
+version: 0.4.17-rc1
+previous_version: 0.4.16-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -7,11 +7,11 @@ smoke_test: passed
 formal_phase4: skipped_for_personal_use
 evaluation_method: continuous_dogfooding
 iteration_strategy: integrate_proven_editorial_flow
-test_count: 290
+test_count: 292
 writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-08-30
-hotfix_name: 77P
-release_notes: "v0.4.16-rc1: 档77P — 封面划线句(18)与副标题(20)单行预算门禁(CJK=1/ASCII=0.5)，strike 超限由 advisory 升 FAIL；导语副标题与 hook_line 兜底均预算化。"
+hotfix_date: 2026-09-01
+hotfix_name: 77S
+release_notes: "v0.4.17-rc1: 档77S — 灵犀安检合规：AST7 显式分派/npx 锁 skills@1.5.23/MP2 续行重构/SKILL.md 权限声明。"

@@ -708,16 +708,11 @@ def check_full_mode_completeness(paths, runtime_policy=None, material_exhausted=
                     if ledger:
                         recomputed, _ = generate_ingestion_report(ledger)
                         if recomputed:
-                            compare_fields = ['total_materials', 'total_events', 'total_claims',
-                                              'source_coverage', 'event_coverage', 'claim_coverage',
-                                              'duplicates_removed', 'conflicts_detected']
+                            compare_fields = ['total_materials', 'total_events', 'total_claims', 'source_coverage', 'event_coverage', 'claim_coverage', 'duplicates_removed', 'conflicts_detected']
                             for cf in compare_fields:
                                 if cf in data and cf in recomputed:
                                     if data[cf] != recomputed[cf]:
-                                        errors.append(
-                                            f"ERROR: {filename} {cf}={data[cf]} "
-                                            f"does not match recomputed value {recomputed[cf]}"
-                                        )
+                                        errors.append(f"ERROR: {filename} {cf}={data[cf]} does not match recomputed value {recomputed[cf]}")
                                         parse_ok = False
             except json.JSONDecodeError as e:
                 errors.append(f"ERROR: {filename} has invalid JSON: {e}")
@@ -1346,9 +1341,15 @@ def _apply_runtime_policy_defaults(args):
         return None
     policy = _runtime_policy_from_profile(getattr(args, 'generation_profile', None))
     if policy:
-        for field, value in policy.items():
-            if getattr(args, field, None) is None:
-                setattr(args, field, value)
+        # 77S/OBS-345: explicit dispatch — literal attribute names only.
+        if getattr(args, 'target_visible_chars', None) is None and 'target_visible_chars' in policy:
+            args.target_visible_chars = policy['target_visible_chars']
+        if getattr(args, 'acceptable_min', None) is None and 'acceptable_min' in policy:
+            args.acceptable_min = policy['acceptable_min']
+        if getattr(args, 'acceptable_max', None) is None and 'acceptable_max' in policy:
+            args.acceptable_max = policy['acceptable_max']
+        if getattr(args, 'article_mode', None) is None and 'article_mode' in policy:
+            args.article_mode = policy['article_mode']
     return policy
 
 

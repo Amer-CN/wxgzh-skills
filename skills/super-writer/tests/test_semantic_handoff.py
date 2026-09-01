@@ -746,8 +746,7 @@ def test_h3_formatter_root_missing_directory_reports_error(tmp_path):
     sm = make_valid_semantic_map(blocks)
     sm_path = write_temp_semantic_map(sm, tmp_path)
 
-    errors, _, info = validate_semantic_map(article_path, sm_path,
-                                            formatter_root=str(tmp_path / 'nonexistent'))
+    errors, _, info = validate_semantic_map(article_path, sm_path, formatter_root=str(tmp_path / 'nonexistent'))
     assert any('does not exist' in e for e in errors), f"Expected formatter_root missing error, got: {errors}"
     assert info.get('formatter_root_used') is not None
 

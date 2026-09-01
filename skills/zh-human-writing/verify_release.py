@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-VERSION_EXPECTED = "0.1.11"
+VERSION_EXPECTED = "0.1.12"
 
 EXCLUDED_PATTERNS = [
     "SHA256SUMS",

@@ -17,6 +17,14 @@ description: >-
 然后停止。用户无需再写 `使用wxgzh-pipeline / fast_publish / 创建微信草稿 / 禁止正式发布 /
 使用锤子主题 / 顺序执行 / 不允许回退`——这些全部是本 Skill 的默认行为。
 
+## 权限与范围声明（最小权限）
+
+- **文件读写**：仅限项目 RUN 目录（.temp/wxgzh-pipeline）、各阶段 request/ack/output/receipt 与审计产物（audit/quality/）。
+- **网络访问**：自身无直接网络调用；网络行为均经正式子技能完成（AIHOT 取料、微信草稿 API）。
+- **凭据**：不持有凭据，仅透传项目 .env 的 WECHAT_APP_ID / WECHAT_APP_SECRET / WECHAT_API_ALLOWED；不硬编码、不回显。
+- **子进程**：编排器核心机制=以 subprocess 按固定六阶段链调用各子技能正式 CLI 入口（带锁校验与 receipt 复核）；命令为仓库内脚本路径，不拼接用户输入。
+- **明确不做**：跳阶段、手写/补写 receipt、手写 HTML 顶包、正式发布/群发/定时发布/删除草稿。
+
 ## 用户入口（自然语言触发）
 
 | 触发语 | 语义 |

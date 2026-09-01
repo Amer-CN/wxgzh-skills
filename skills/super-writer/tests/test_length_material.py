@@ -598,7 +598,7 @@ def test_h9_fenced_code_counted():
 
 
 def test_h9_mixed_chinese_and_code_counted():
-    text = '中文测试\n\n```bash\nnpx skills add gzh-design\n```\n\n更多中文。'
+    text = '中文测试\n\n```bash\nnpx skills@1.5.23 add gzh-design\n```\n\n更多中文。'
     count = count_visible_chars(text)
     assert count > 0
     # Should count Chinese chars AND code content
@@ -768,8 +768,7 @@ def test_l5_h8_explicit_min_max_preserved(tmp_path):
 
 def test_l6_h8_above_max_is_warning(tmp_path):
     article = write_temp_article(make_chinese_text(5000), tmp_path)
-    _, warnings, info = validate_article_length(article, target_visible_chars=3000,
-                                                acceptable_min=2500, acceptable_max=4000)
+    _, warnings, info = validate_article_length(article, target_visible_chars=3000, acceptable_min=2500, acceptable_max=4000)
     assert any('exceeds' in w for w in warnings)
     assert info['length_status'] == 'above_max'
 

@@ -9,6 +9,14 @@ description: 微信公众号文章排版引擎，将 Markdown 转换为可直接
 
 核心资产是 `references/` 下的**主题组件库**（每套一个主题：设计变量 + 各组件完整 HTML + 模板骨架 + 映射规则）外加 1 套**通用增量库**（代码块 / 图片·GIF / 小标签标题，所有主题共用）。主题清单以 `references/theme-index.md` 为单一来源。本 SKILL.md 只负责流程与决策，**具体 HTML 代码一律从组件库取，不要凭记忆手写**。
 
+## 权限与范围声明（最小权限）
+
+- **文件读写**：仅限 RUN 目录内文章 HTML/主题/封面产物与临时渲染文件。
+- **网络访问**：微信 API api.weixin.qq.com/cgi-bin/draft/add 与 draft/batchget（仅创建草稿与枚举草稿指纹）、素材/图床上传（mmbiz.qpic.cn）。无其他端点。
+- **凭据**：仅从项目 .env 读取 WECHAT_APP_ID / WECHAT_APP_SECRET / WECHAT_API_ALLOWED；不硬编码、不回显。
+- **子进程**：渲染与发布脚本以子进程调用本技能内 Python 脚本；无外部命令。
+- **明确不做**：正式发布、群发、定时发布、删除草稿——全部禁用；仅创建草稿且必须走凭证门。
+
 ## 工作流
 
 ### 0. 输入与格式归一化

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.4.17-rc1 (2026-09-01) — 档77S：灵犀安装安检合规（内容修复）
+
+- **OBS-345 AST7 显式分派**：`_apply_runtime_policy_defaults` 由 getattr/setattr 循环改为四字段全字面量分派；「仅对值为 None 的字段填默认」语义不变；新增 `tests/test_hf77s_runtime_policy_dispatch.py`（profile 默认填入 unset 字段 / 显式传参不被覆盖）。
+- **OBS-346 npx 锁版本（RP1×4）**：未锁版的 skills 安装命令（npx 形式）全部锁定 skills@1.5.23——fixture article.md:23 + semantic-map.yaml exact_text/code_text + test_length_material.py:601 共 4 处逐字一致。
+- **OBS-348 MP2 续行重构（×7）**：validate_article_length.py 2 处 + test_hf77e_registry_consistency.py / test_length_material.py / test_semantic_handoff.py 各 1 处，续行改单行完整语句，零语义变化。
+- **OBS-347 权限声明（LP3）**：SKILL.md 新增「权限与范围声明（最小权限）」节（文件读写/网络端点/凭据键名/子进程/明确不做）。
+
 ## v0.4.12-rc1 (2026-08-27) — 档77K：handoff null + article 占位门禁
 
 - **OBS-327 handoff null 语义**：`prose_craft_version: null` 仅在 `prose_craft_applied: false` 时为诚实未应用；applied=true 仍必须写非空版本。full-mode 与 validate_single_product 同判。

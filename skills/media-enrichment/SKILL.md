@@ -10,6 +10,14 @@ description: >-
 
 # Media Enrichment
 
+## 权限与范围声明（最小权限）
+
+- **文件读写**：仅限 RUN 目录内素材、图片缓存、审批与上传记录。
+- **网络访问**：①下载素材 claim.source_url 指定页面的图片；②上传合格图片至微信图床（api.weixin.qq.com 素材接口，返回 mmbiz.qpic.cn URL）。无其他端点。
+- **凭据**：仅从项目 .env 读取 WECHAT_APP_ID / WECHAT_APP_SECRET（及 WECHAT_API_ALLOWED / WECHAT_IMAGE_HOSTS 开关）；不硬编码、不回显。
+- **子进程**：scripts/build_zip.py、generate_evidence.py 调用本技能内脚本做打包/取证；无外部命令。
+- **明确不做**：不发布、不群发、不删除图床/草稿资源。
+
 ## 使命
 
 为已写好的文章提供可追溯、可审计的媒体资产（图片、原创数据图），不修改文章事实，不猜测版权授权状态。

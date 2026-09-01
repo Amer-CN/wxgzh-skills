@@ -20,7 +20,7 @@
 ## 安装命令
 
 ```bash
-npx skills add gzh-design
+npx skills@1.5.23 add gzh-design
 ```
 
 ## 发布前检查
