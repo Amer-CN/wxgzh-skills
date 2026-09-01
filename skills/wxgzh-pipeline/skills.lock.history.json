@@ -1738,5 +1738,27 @@
     "new_skill_version": "v2026.08.30-hammer.19",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20260901T131622Z-eee67758",
+    "skill": "zh-human-writing",
+    "reason": "77R AI-tone six families and guardrails (OBS-342/343)",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-01T13:16:22Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "762120f85d43fa51cf0aec80fb7cc9b85b57023c4ea54e05189419775f4391c8",
+    "new_root_sha256": "5d6365da3ae627e3a29139c125c987a189eee160898f0c3fd24456eb34ec2482",
+    "old_manifest_sha256": "050f6eb1d8e673a548bef7b9c2dcef378419767abd1bf8b1c10f0f6d134d3ea2",
+    "new_manifest_sha256": "558428625a9cfc7745cd072777ba13777a98ffe73cb1981ffb9c5ed81fdb206f",
+    "old_file_count": 51,
+    "new_file_count": 52,
+    "old_full_commit_sha": "b815e6f58d41e50fe59cedbff86adae552ee976d",
+    "new_full_commit_sha": "79baa71190e64a78ae3cd0a19d3de48329e89344",
+    "old_source_tree_sha": "bcc391b25214633f6a2ff3dbe956af59561a3bb3",
+    "new_source_tree_sha": "5cc408e22c183bc7469b28ae0cda5174c74d1271",
+    "old_skill_version": "0.1.10",
+    "new_skill_version": "0.1.11",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
