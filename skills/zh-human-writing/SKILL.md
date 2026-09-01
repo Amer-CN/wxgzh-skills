@@ -130,6 +130,15 @@ description: 简体中文写作编辑 Skill — 在不改变事实、意图、�
 advisory-only 在所有 strategy 下都不得单独触发自动修改。
 
 详细策略见 `references/patterns/` 下的模式包。
+advisory-only 在所有 strategy 下都不得单独触发自动修改。
+
+### AI-tone 六族（只读信号）
+
+- 段首零回指评论、拟人化喻体、起首语、序数词通篇编号小标题、相邻句同构/顿号过密、译文句式。
+- 输出到 `ai_tone`，只做 review；fidelity 和 hard-residue 优先级不变。
+- 改法、豁免与 DO-NOT 见 `references/patterns/ai-tone.md`。
+
+详细策略见 `references/patterns/` 下的模式包。
 
 ---
 
@@ -195,6 +204,8 @@ v1 不支持 fiction 编辑。
 - `references/patterns/hard-residue.md`（诊断发现 hard-residue 时）
 - `references/patterns/strong-contextual.md`（诊断发现 strong-contextual 时）
 - `references/patterns/advisory-only.md`（output=diff 或 audit 时）
+- `references/patterns/advisory-only.md`（output=diff 或 audit 时）
+- `references/patterns/ai-tone.md`（六族命中或需要去 AI 味时）
 
 ### 按需加载
 

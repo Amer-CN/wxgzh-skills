@@ -8,6 +8,17 @@
 输入 handoff 携带 `prose_craft_applied=true` 时：
 - strategy 一律 `preserve`（覆盖默认路由表任何来源行）；
 - 检测照跑、只报告不改写（audit 语义：pattern_audit / fidelity_guard / change_report 全量执行，但不产改写动作）。
+输入 handoff 携带 `prose_craft_applied=true` 时：
+- strategy 一律 `preserve`（覆盖默认路由表任何来源行）；
+- 检测照跑、只报告不改写（audit 语义：pattern_audit / fidelity_guard / change_report 全量执行，但不产改写动作）。
+- `handoff.prose_craft` 是蒸馏产物与作者真实风格；它和通用去味规则冲突时以它为准。
+- 该优先级不豁免 fidelity、hard-residue 或事实保护。
+
+## 77R AI-tone 与证伪护栏
+
+- `pattern_audit.ai_tone` 只做 review；禁按命中数自动循环改写。
+- `balance` 下，确认翻案腔动作后可改为直陈句；正常分类/澄清/真实自我修正保留。
+- 禁为“人味”调句长/段长节奏或做 CV 类统计检查；禁删设问、比喻、句内排比；禁补单字虚词。
 
 ## 默认路由表
 

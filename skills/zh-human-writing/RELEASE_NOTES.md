@@ -1,4 +1,13 @@
 # Release notes
+# Release notes
+
+## v0.1.11
+
+77R(档77R):
+
+- pattern_audit 新增 ai_tone 只读层六族（OBS-342）：LT-001 段首零回指、LT-002 拟人化喻体、LT-003 起首语、LT-004 序数词编号小标题、LT-005 相邻同构/顿号过密、LT-006 译文句式；列表/代码/引用/对话豁免。
+- 新增证伪护栏（OBS-343）：禁调节奏/CV 检查、禁删设问/比喻/句内排比、禁补单字虚词；翻案腔改动作级 balance；handoff.prose_craft 优先于通用去味规则。
+- references/patterns/ai-tone.md 落上游 pin 27d29232f10124db904ca9c0536d0b67cb3b2833 与 MIT 出处。
 
 ## v0.1.10
 

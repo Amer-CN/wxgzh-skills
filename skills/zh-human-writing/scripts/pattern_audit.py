@@ -221,6 +221,9 @@ _GROUP_META = {
     'advisory_only': {'severity': 'advisory', 'action': 'suggest',
                       'suggestion': '仅提示,不自动修改',
                       'reason': '真人写作中也常见,仅作建议'},
+    'ai_tone': {'severity': 'advisory', 'action': 'review_only',
+                'suggestion': '语料验证信号;仅人工复核,不单独触发自动修改',
+                'reason': '上游语料可定位特征;需结合上下文与 prose_craft 判断'},
 }
 
 
@@ -705,7 +708,201 @@ _SC_HIGH_IDS = {'SC-001', 'SC-002', 'SC-003', 'SC-004', 'SC-005', 'SC-006',
 _SC_LOW_IDS = {'SC-007b', 'SC-011'}
 
 
+# ============================================================
+# 77R/OBS-342:语料验证 AI-tone 六族（只读审计层）
+# 来源：larashero3-dotcom/lieflat-less-ai-tone @ 27d29232f10124db904ca9c0536d0b67cb3b2833 (MIT)。
+# 本层只报可定位信号；退出码/pass_fail/fidelity_guard 语义零变化。
+# ============================================================
+AI_TONE_FAMILIES = {
+    'LT-001': {'name': '段首零回指评论', 'language_origin': 'chinese_specific'},
+    'LT-002': {'name': '拟人化喻体', 'language_origin': 'chinese_specific'},
+    'LT-003': {'name': '起首语', 'language_origin': 'chinese_specific'},
+    'LT-004': {'name': '序数词通篇编号小标题', 'language_origin': 'chinese_specific'},
+    'LT-005': {'name': '相邻句同构+顿号过密', 'language_origin': 'chinese_specific'},
+    'LT-006': {'name': '译文句式', 'language_origin': 'chinese_specific'},
+}
+
+_AI_TONE_NON_PROSE_RE = re.compile(r"^(?:#{1,6}\s|\||```|~~~|>|:::|[-*+]\s|\d{1,3}[.、)]\s|!\[|\[)")
+_AI_TONE_DIALOGUE_RE = re.compile(r"^(?:「|『|“|\"|[^，。！？；：\s]{1,12}：)")
+_AI_TONE_COMMENT_RE = re.compile(r"^(?:听起来|看起来|看上去|听上去|说白了|说到底|换句话说|意味着|值得注意|不难看出|细看|再看|回过头看|问题在于|原因在于|结果是|有意思的是|更重要的是|关键在于|真正的)")
+_AI_TONE_ANAPHOR_RE = re.compile(r"^(?:这|那|其|此|上面|前面|刚才|以上|该|它|他|她|它们|他们|同样|类似|相比|反过来|但|不过|所以|因此|于是|而|另|除此|与此)")
+_AI_TONE_METAPHOR_RE = re.compile(r"(?:像|如同|好比|仿佛|相当于)[^。！？\n]{0,16}(?:一位|一个|一名)?[^。！？\n]{0,16}(?:专业|资深|老练|成熟|优秀|称职|可靠|理性|冷静|谨慎|热情|耐心|智慧|全能|永不疲倦)[^。！？\n]{0,16}(?:顾问|工程师|导师|编辑|军师|管家|翻译|裁判|老师|医生|助手|助理|代理|秘书|守门员|审查员|实习生|伙伴)")
+_AI_TONE_OPENING_RE = re.compile(r"^(?:说白了|说穿了|先说结论)")
+_AI_TONE_ORDINAL_HEADING_RE = re.compile(r"^(?:#{1,6}\s*)?(?:\*\*)?(?:第一|第二|第三|第四|第五|第六|第七|第八|第九|第十|一|二|三|四|五|六|七|八|九|十|[0-9]+)\s*[、.．]", re.M)
+_AI_TONE_DENSE_ENUM_RE = re.compile(r"[^，。！？；：、\n]{1,14}、[^，。！？；：、\n]{1,14}、[^，。！？；：、\n]{1,14}")
+_AI_TONE_TRANSLATIONESE_RE = re.compile("|".join([
+    r"(?:一个|一种|一套|这种|这个)[^，。、；：！？\n]{15,}的[一-鿿]{2,5}",
+    r"的[^，。]{1,8}的",
+    r"当[^，。\n]{2,20}(?:的时候|时)，",
+    r"(?:对于[^，。\n]{2,15}来说|对[^，。\n]{2,15}而言|就[^，。\n]{2,15}而言|在[^，。\n]{2,12}方面)",
+    r"^(?:然而|因此|此外|与此同时|换言之|总而言之)[，、]",
+    r"(?:这意味着|这表明|这说明|换句话说)",
+]))
+
+
 def detect_advisory_only(masked, original, profile, protected):
+    """检测 advisory-only 模式。只列出，不影响 pass/fail。
+    档72C-6/任务3:AO-007/AO-011 按段落聚合——每段产出一条 finding,
+    occurrence_count 记录该段内命中次数, span_text 取该段首次命中处;
+    其余 AO 规则逐次命中各产出一条。只改聚合方式,不改检测逻辑/级别/退出码。"""
+    findings = []
+    for para_idx, (para, pstart, pend) in enumerate(_para_spans(masked)):
+        for pattern_def in ADVISORY_ONLY_PATTERNS:
+            # 档72C-2:AO-001 用 patterns 列表(双正则),其余用单数 pattern 键。
+            pats = pattern_def.get('patterns') or [pattern_def['pattern']]
+
+            # 档72C-6/任务3:人称规则按段落聚合输出,避免单篇数十条同规则
+            # finding 把真信号埋掉(0C 的 AO-007=22 即此类)。
+            if pattern_def['id'] in _AO_PER_PARAGRAPH_IDS:
+                total = 0
+                first_si, first_span = 0, None
+                for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                    cnt = sum(len(re.findall(pat, sent)) for pat in pats)
+                    if cnt:
+                        total += cnt
+                        if first_span is None:
+                            first_si, first_span = sent_idx, (pstart + sstart, pstart + send)
+                if total:
+                    f = _finding(
+                        'advisory_only', profile, pattern_def,
+                        f'第{para_idx+1}段第{first_si+1}句',
+                        first_span, original, protected,
+                        confidence='medium')
+                    f['occurrence_count'] = total
+                    findings.append(f)
+                continue
+
+            for sent_idx, (sent, sstart, send) in enumerate(_sent_spans(para)):
+                matches = []
+                for pat in pats:
+                    matches.extend(re.finditer(pat, sent))
+                # 档72C-4/§1:长词优先——AO-013 命中若落在 SC-009 已命中区间内
+                # (如「闭环」被「商业闭环」覆盖)则跳过,不重复计数。
+                if pattern_def['id'] == 'AO-013':
+                    sc009 = _SC_BY_ID.get('SC-009')
+                    sc009_spans = []
+                    if sc009:
+                        for sp in sc009.get('patterns') or []:
+                            sc009_spans.extend(x.span() for x in re.finditer(sp, sent))
+                    matches = [m for m in matches
+                              if not any(s < m.end() and m.start() < e
+                                         for s, e in sc009_spans)]
+                for m in matches:
+                    findings.append(_finding(
+                        'advisory_only', profile, pattern_def,
+                        f'第{para_idx+1}段第{sent_idx+1}句',
+                        (pstart + sstart, pstart + send), original, protected,
+                        confidence='medium'))
+
+    return findings
+
+
+
+
+def _ai_tone_active_line_spans(masked):
+    """返回 AI-tone 层可审计的正文行；标题/表格/列表/代码/引用/对话豁免。"""
+    spans = []
+    fence = False
+    for match in re.finditer(r"^.*$", masked, re.M):
+        raw = match.group(0)
+        stripped = raw.strip()
+        if stripped.startswith(("```", "~~~")):
+            fence = not fence
+            continue
+        if fence or not stripped or len(stripped) < 8:
+            continue
+        if _AI_TONE_NON_PROSE_RE.match(stripped) or _AI_TONE_DIALOGUE_RE.match(stripped):
+            continue
+        spans.append((stripped, match.start() + raw.index(stripped), match.end()))
+    return spans
+
+
+def _ai_tone_prose_paragraph_spans(masked):
+    """返回非首段判定用的散文段落；首段、列表/表格/代码/引用/对话豁免。"""
+    spans = []
+    for para, start, end in _para_spans(masked):
+        stripped = para.strip()
+        if not stripped or len(stripped) < 8:
+            continue
+        if _AI_TONE_NON_PROSE_RE.match(stripped) or _AI_TONE_DIALOGUE_RE.match(stripped):
+            continue
+        spans.append((stripped, start, end))
+    return spans
+
+
+def _ai_tone_finding(rule_id, profile, original, protected, location, span,
+                     count=None, threshold=None, reason=None, suggestion=None):
+    pattern_def = {'id': rule_id, **AI_TONE_FAMILIES[rule_id]}
+    return _finding(
+        'ai_tone', profile, pattern_def, location, span, original,
+        protected, confidence='medium', cluster_count=count,
+        cluster_threshold=threshold, reason=reason, suggestion=suggestion
+    )
+
+
+def _ai_tone_isomorphic_signature(sentence: str):
+    """上游 check-structure.py 的相邻句指纹口径：逗号数/冒号/括号/长度档。"""
+    return (sentence.count("，"), "：" in sentence,
+            "（" in sentence or "(" in sentence, len(sentence) // 15)
+
+
+def detect_ai_tone_families(masked, original, profile, protected):
+    """77R/OBS-342:六族只读算子；不改变 pass_fail/退出码。"""
+    rows = []
+    prose_paras = _ai_tone_prose_paragraph_spans(masked)
+    for para_idx, (para, start, end) in enumerate(_para_spans(masked)):
+        stripped = para.strip()
+        if para_idx == 0 or not stripped or len(stripped) < 8:
+            continue
+        if _AI_TONE_NON_PROSE_RE.match(stripped) or _AI_TONE_DIALOGUE_RE.match(stripped):
+            continue
+        if _AI_TONE_COMMENT_RE.match(stripped) and not _AI_TONE_ANAPHOR_RE.match(stripped):
+            rows.append(('LT-001', (start, end), 1, 1, None))
+    for line, start, _ in _ai_tone_active_line_spans(masked):
+        for match in _AI_TONE_METAPHOR_RE.finditer(line):
+            rows.append(('LT-002', (start + match.start(), start + match.end()), 1, 1, None))
+        if _AI_TONE_OPENING_RE.match(line):
+            rows.append(('LT-003', (start, start + len(line)), 1, 1, None))
+        for match in _AI_TONE_DENSE_ENUM_RE.finditer(line):
+            rows.append(('LT-005', (start + match.start(), start + match.end()), 1, 1, None))
+        for match in _AI_TONE_TRANSLATIONESE_RE.finditer(line):
+            rows.append(('LT-006', (start + match.start(), start + match.end()), 1, 1, None))
+    heading_items = []
+    for match in re.finditer(r"^.*$", masked, re.M):
+        line = match.group(0).strip()
+        if not line.startswith(("#", "**")):
+            continue
+        heading_items.append((bool(_AI_TONE_ORDINAL_HEADING_RE.match(line)),
+                             (match.start(), match.end())))
+    heading_run = []
+    for matched, span in heading_items:
+        if matched:
+            heading_run.append(span)
+        else:
+            if len(heading_run) >= 3:
+                rows.append(('LT-004', (heading_run[0][0], heading_run[-1][1]), len(heading_run), 3, None))
+            heading_run = []
+    if len(heading_run) >= 3:
+        rows.append(('LT-004', (heading_run[0][0], heading_run[-1][1]), len(heading_run), 3, None))
+    for para, pstart, _ in prose_paras:
+        sentences = [(sent, sstart, send) for sent, sstart, send in _sent_spans(para)
+                     if len(sent) > 10]
+        for left, right in zip(sentences, sentences[1:]):
+            left_sig = _ai_tone_isomorphic_signature(left[0])
+            right_sig = _ai_tone_isomorphic_signature(right[0])
+            if left_sig == right_sig and left_sig[0] >= 1:
+                rows.append(('LT-005', (pstart + left[1], pstart + right[2]), 2, 2, None))
+    findings = []
+    for rule_id, span, count, threshold, note in rows:
+        finding = _ai_tone_finding(
+            rule_id, profile, original, protected,
+            f'偏移 {span[0]}-{span[1]}', span, count=count, threshold=threshold
+        )
+        if note:
+            finding['context_note'] = note
+        findings.append(finding)
+    findings.sort(key=lambda item: item['location'])
+    return findings
     """检测 advisory-only 模式。只列出，不影响 pass/fail。
     档72C-6/任务3:AO-007/AO-011 按段落聚合——每段产出一条 finding,
     occurrence_count 记录该段内命中次数, span_text 取该段首次命中处;
@@ -883,6 +1080,18 @@ def main():
         ft_findings = detect_forbidden_term(masked, text, args.profile, protected)
         sc_findings.extend(f for f in ft_findings if f['group'] == 'strong_contextual')
         ao_findings.extend(f for f in ft_findings if f['group'] == 'advisory_only')
+    sc_findings = []
+    ao_findings = []
+    ai_tone_findings = []
+
+    if args.check_level == 'full':
+        sc_findings = detect_strong_contextual(masked, text, args.profile, protected)
+        ao_findings = detect_advisory_only(masked, text, args.profile, protected)
+        ai_tone_findings = detect_ai_tone_families(masked, text, args.profile, protected)
+        # 76D/OBS-253:禁用词检测——疑似专名命中降级 advisory,普通命中进 strong。
+        ft_findings = detect_forbidden_term(masked, text, args.profile, protected)
+        sc_findings.extend(f for f in ft_findings if f['group'] == 'strong_contextual')
+        ao_findings.extend(f for f in ft_findings if f['group'] == 'advisory_only')
 
     # 档72C-6/任务4:统计检测层(full 与 hard_residue_only 均计算——统计层
     # 只读不判:命中只进 statistical 段,不参与 pass_fail/退出码;--config 覆盖时走同一 fail-closed 加载)。
@@ -917,6 +1126,11 @@ def main():
             'count': len(stat_findings),
             'items': stat_findings,
         },
+        'ai_tone': {
+            # 77R/OBS-342:上游语料六族只读信号;不参与 pass_fail/退出码。
+            'count': len(ai_tone_findings),
+            'items': ai_tone_findings,
+        },
         'overall': {
             'pass_fail': pass_fail,
             'description': 'pass: 无 hard-residue。fail: 有 hard-residue。strong-contextual 和 advisory-only 不影响 pass/fail。'
@@ -937,6 +1151,9 @@ def main():
                 print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]} (聚集 {f["cluster_count"]}/{f["cluster_threshold"]})')
                 print(f'    {f["span_text"][:60]}')
             print(f'advisory-only: {len(ao_findings)} 个')
+            print(f'statistical: {len(stat_findings)} 个')
+            print(f'advisory-only: {len(ao_findings)} 个')
+            print(f'AI-tone 六族: {len(ai_tone_findings)} 个')
             print(f'statistical: {len(stat_findings)} 个')
             for f in ao_findings:
                 print(f'  [{f["rule_id"]}] {f["reason"]} @ {f["location"]}')
