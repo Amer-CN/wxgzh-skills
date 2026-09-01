@@ -216,9 +216,10 @@ def test_obs304_ledger_count_command():
     n = len(nums)
     # 77Q 更新:OBS-341 登记后 119..341 = 223 个编号(76Y-R/77K 起计数实测为准)
     # 77R 更新:OBS-342/343/344 登记后 119..344 = 226 个编号(76Y-R/77K 起计数实测为准)
-    assert n == 226, f"唯一编号实测 {n} != 226"
+    # 77S 更新:OBS-345/346/347/348 登记后 119..348 = 230 个编号(76Y-R/77K 起计数实测为准)
+    assert n == 230, f"唯一编号实测 {n} != 230"
     # 区间连续无缺号
-    assert set(range(119, 345)) <= nums, "119..344 区间有缺号"
+    assert set(range(119, 349)) <= nums, "119..348 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():
