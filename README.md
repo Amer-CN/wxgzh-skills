@@ -76,11 +76,11 @@ README 装全家桶。没有公众号也不影响——前三个 skill 照常用
 
 | 名字 | 一句话 | 单装 | 版本 |
 |---|---|---|---|
-| ✍️ [super-writer](./skills/super-writer) | 材料重型中文长文写作：先堆素材证据，再写文章 | ✅ 零依赖 | 0.3.8-rc1 |
-| 🧼 [zh-human-writing](./skills/zh-human-writing) | 去 AI 味编辑：词表审计 + 逐句保真门禁 | ✅ 零依赖 | 0.1.3 |
-| 🔨 [gzh-design](./skills/gzh-design) | 排版引擎：Markdown → 公众号精致 HTML（**基于 isjiamu 版增强，见来源与致谢**） | ✅ 零依赖 | hammer.14 |
-| 🖼️ [media-enrichment](./skills/media-enrichment) | 配图管线：抓取/视频封面/数据图表 + 版权证据链 | 流水线配套 | 0.1.0-dev19 |
-| 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 | 需装齐四个依赖 | dev2 |
+| ✍️ [super-writer](./skills/super-writer) | 材料重型中文长文写作：先堆素材证据，再写文章 | ✅ 零依赖 | 0.4.18-rc1 |
+| 🧼 [zh-human-writing](./skills/zh-human-writing) | 去 AI 味编辑：词表审计 + 逐句保真门禁 + AI-tone 六族 | ✅ 零依赖 | 0.1.14 |
+| 🔨 [gzh-design](./skills/gzh-design) | 排版引擎：Markdown → 公众号精致 HTML（**基于 isjiamu 版增强，见来源与致谢**） | ✅ 零依赖 | hammer.22 |
+| 🖼️ [media-enrichment](./skills/media-enrichment) | 配图管线：抓取/视频封面/数据图表 + 版权证据链 + SSRF 守卫 | 流水线配套 | 0.1.0-dev30 |
+| 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 + 安全基线 | 需装齐四个依赖 | dev2-hotfix9R25 |
 
 ## 📦 独立工具（不在流水线内）
 
@@ -183,10 +183,15 @@ receipt 双时制入账（校验秒数 + 真实墙钟分开记）、锁链治理
 ## 🛡️ 质量体系（为什么这套东西可信）
 
 - **锁链治理**：每个 skill 锁定 commit + 树哈希 + 入口校验器哈希；
-  换版本走 relock 流程，52 次 relock 全部留痕可回放；
+  换版本走 relock 流程，103 次 relock 全部留痕可回放；
 - **证据链**：素材 → claim → 图片三级绑定，缺证据 fail-closed；
-- **观测台账**：生产问题逐条编号（OBS-001 起连续 165 条），修复与
+- **观测台账**：生产问题逐条编号（OBS-119 起连续 237 条），修复与
   验证证据全公开在 `skills/wxgzh-pipeline/audit/`；
+- **安全基线**：六份 SKILL.md 均带最小权限声明；安装扫描三轮攻防的
+  误报基线与设计使然项说明全公开在
+  [SECURITY.md](./skills/wxgzh-pipeline/audit/quality/SECURITY.md)
+  （§1–§9）——静态扫描器的已知噪声、测试夹具定性、凭据流向端点
+  白名单，任何 agent 的复扫可对照解释；
 - **安全边界**：只进草稿箱，永不自动发布/群发/定时/删除。
 
 ## 🙏 来源与致谢
