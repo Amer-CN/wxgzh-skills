@@ -49,6 +49,8 @@ def main(argv=None) -> int:
                     help="fake agent inputs + real fixed media/gzh-design; WeChat dry-run only")
     ap.add_argument("--skills-home", default=None)
     ap.add_argument("--fixture-dir", default=None)
+    ap.add_argument("--allow-stale", action="store_true",
+                    help="77V:版本新鲜度检查 behind 时留痕继续(默认 STALE_VERSION 停机)")
     a = ap.parse_args(argv)
 
     if not a.phrase:
@@ -80,7 +82,8 @@ def main(argv=None) -> int:
     )
 
     if cmd["command"] == "fabu":
-        out = orch.run(cmd["topic"], profile="fast_publish", create_wechat_draft=True)
+        out = orch.run(cmd["topic"], profile="fast_publish", create_wechat_draft=True,
+                       allow_stale=bool(getattr(a, "allow_stale", False)))  # 77V
     elif cmd["command"] == "resume":
         rid = cmd.get("run_id")
         if rid is None:

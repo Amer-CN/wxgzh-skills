@@ -72,6 +72,8 @@ README 装全家桶。没有公众号也不影响——前三个 skill 照常用
 </tr>
 </table>
 
+> 当前版本速览：sw 0.4.18-rc1 · zh 0.1.14 · gzh hammer.22 · media dev30 · pipeline 9R26（发版打 `vYYYY.MM.DD-<档号>` tag；编排器第 0 步自动检查更新）
+
 ## 📋 五个 Skill
 
 | 名字 | 一句话 | 单装 | 版本 |

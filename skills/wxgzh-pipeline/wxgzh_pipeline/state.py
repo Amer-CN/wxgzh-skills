@@ -86,6 +86,9 @@ class PipelineState:
     final_article_sha256: str | None = None
     # OBS-64(档64):自有素材注入入口(--items-file);None = 正常 aihot 检索
     items_file: str | None = None
+    # 77V:版本新鲜度检查留痕(unknown 或 behind+--allow-stale 时写入;
+    # None = 本地版本 current 或未触发)。旧 state 无此键反序列化不崩。
+    version_check: dict | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)

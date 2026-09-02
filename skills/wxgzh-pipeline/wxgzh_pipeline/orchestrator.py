@@ -183,14 +183,65 @@ class Orchestrator:
                             network_mode=self.network_mode, fixture_dir=self.fixture_dir,
                             env=env, create_wechat_draft=create_draft)
 
+    # ---------- 77V:第 0 步 版本新鲜度检查 ----------
+    def _version_check_step(self, allow_stale: bool = False) -> tuple[dict | None, dict | None]:
+        """77V:第 0 步版本新鲜度检查(建议性;scripts/version_check.py 恒 exit 0)。
+
+        在 doctor 通过后、RUN 目录创建前调用;resume() 不做本检查(续发优先把
+        断点跑完,不新增停机点)。
+        返回 (stale, trace):
+          current  -> (None, None)               静默继续,不留痕不打印额外行
+          behind   -> allow_stale=False: (STALE_VERSION 停机 dict, None)
+                      allow_stale=True : (None, vc+overridden) 留痕继续
+          unknown  -> (None, vc)                 留痕继续(不猜、不阻断)
+        调用失败/输出不可解析一律降级 unknown(建议性工具,不新增崩溃面)。
+        """
+        import subprocess as _sp
+        import sys as _sys
+        script = SKILL_ROOT / "scripts" / "version_check.py"
+        cmd = [_sys.executable, "-X", "utf8", str(script),
+               "--skills-home", str(self.skills_home)]
+        if self.repo_root:
+            cmd += ["--repo-root", str(self.repo_root)]
+        try:
+            proc = _sp.run(cmd, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=20)
+        except Exception as e:  # noqa: BLE001
+            vc = {"status": "unknown", "latest": None,
+                  "detail": f"version_check 调用失败: {e}"}
+        else:
+            try:
+                vc = json.loads((proc.stdout or "").strip().splitlines()[-1])
+            except Exception:  # noqa: BLE001
+                vc = {"status": "unknown", "latest": None,
+                      "detail": ("version_check 输出不可解析: "
+                                 + ((proc.stdout or proc.stderr or "")[-200:]))}
+        status = str(vc.get("status", "unknown"))
+        if status == "current":
+            return None, None
+        if status == "behind":
+            if allow_stale:
+                vc["overridden"] = True
+                return None, vc
+            return ({"status": "STALE_VERSION", "reason": "remote tag newer",
+                     "version_check": vc,
+                     "hint": (f"有新版本 {vc.get('latest')}：更新（拉取+installer+"
+                              "SECURITY.md §8/§9 基线对账）或 --allow-stale 继续")},
+                    None)
+        return None, vc
+
     # ---------- run ----------
     def run(self, topic: str, profile: str = "fast_publish",
             create_wechat_draft: bool = True, items_file: str | None = None,
-            stop_after: str | None = None) -> dict:
+            stop_after: str | None = None, allow_stale: bool = False) -> dict:
         ok, dreport = self.doctor()
         if not ok:
             return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport,
                         "run_wall_seconds": self._wall_seconds(st)}
+        # 77V:第 0 步版本新鲜度检查——doctor 之后、RUN 创建之前;resume() 不做。
+        stale, vc_trace = self._version_check_step(allow_stale=allow_stale)
+        if stale is not None:
+            return stale
         disc = dreport["skills"]
         # 76W/OBS-302:RUN 创建防护——已存在同选题(slug 规范化标题相同)等待态 RUN
         # (未完成且未出草稿)时警告并要求显式确认(不硬拦,用户可有意复跑)。
@@ -217,10 +268,16 @@ class Orchestrator:
         if items_file:
             # OBS-64:自有素材注入入口(正式通道);None = 正常 aihot 检索
             st.items_file = str(Path(items_file).resolve())
+        if vc_trace is not None:
+            # 77V:unknown / behind+--allow-stale 留痕,写进 pipeline_state.json
+            st.version_check = vc_trace
         save_state(run_dir, st)
         out = self._drive(run_dir, st, disc, create_wechat_draft, stop_after=stop_after)
         if dup_warning:
             out["duplicate_topic_warning"] = dup_warning
+        if vc_trace is not None:
+            # 77V:run 结果 dict 附 version_check 键(receipt 结构不改)
+            out["version_check"] = vc_trace
         return out
 
     def resume(self, run_id: str | None = None,

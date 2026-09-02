@@ -11,9 +11,9 @@ description: >-
   触发：用户说"发文：<选题>"/"续发"/"续发：<RUN_ID>"/"进度"/"验收编排Skill"。
 permissions:
   file-scope: 项目 RUN 目录与调用方显式传入路径
-  network: []            # 网络均经子技能
+  network: [git ls-remote 查询 origin tags（version_check，无凭据传输）]  # 77V 新增;其余网络均经子技能
   secrets: [WECHAT_APP_ID, WECHAT_APP_SECRET, WECHAT_API_ALLOWED]  # 透传 .env
-  subprocess: 六阶段链调用子技能 CLI（仓库内固定路径）
+  subprocess: 六阶段链调用子技能 CLI（仓库内固定路径）+ version_check.py 版本新鲜度检查（77V，git ls-remote 只读查询，恒 exit 0 建议性）
   prohibited: 安装依赖、正式发布、群发、删除文件
 ---
 
@@ -26,7 +26,7 @@ permissions:
 ## 权限与范围声明（最小权限）
 
 - **文件读写**：仅限项目 RUN 目录（.temp/wxgzh-pipeline）、各阶段 request/ack/output/receipt 与审计产物（audit/quality/）。
-- **网络访问**：自身无直接网络调用；网络行为均经正式子技能完成（AIHOT 取料、微信草稿 API）。
+- **网络访问**：自身无直接网络调用；网络行为均经正式子技能完成（AIHOT 取料、微信草稿 API）。唯一例外（77V 第 0 步）：版本新鲜度检查经 `git ls-remote` 只读查询 origin tags（version_check，无凭据传输）。
 - **凭据**：不持有凭据，仅透传项目 .env 的 WECHAT_APP_ID / WECHAT_APP_SECRET / WECHAT_API_ALLOWED；不硬编码、不回显。
 - **子进程**：编排器核心机制=以 subprocess 按固定六阶段链调用各子技能正式 CLI 入口（带锁校验与 receipt 复核）；命令为仓库内脚本路径，不拼接用户输入。
 - **明确不做**：跳阶段、手写/补写 receipt、手写 HTML 顶包、正式发布/群发/定时发布/删除草稿。
@@ -47,17 +47,21 @@ permissions:
 
 ## Agent 执行约定（收到"发文：<选题>"时）
 
-1. 运行 doctor（`scripts/doctor.py`）：子 Skill 是否存在、版本一致、根 Hash 一致、正式入口/Validator 是否存在、
+0. 版本新鲜度检查（77V）：编排器 `run()` 内建自动执行（doctor 通过后、RUN 创建前），agent 无需手动跑。
+   远端最新 tag 晚于本地构建基线时返回 `STALE_VERSION` 停机——按提示更新（拉取+installer+SECURITY.md §8/§9
+   基线对账）或用 `--allow-stale` 留痕继续；`unknown` 仅留痕不阻断。
+   **续发（resume）不做版本检查**（续发优先把断点跑完，不新增停机点）。
+2. 运行 doctor（`scripts/doctor.py`）：子 Skill 是否存在、版本一致、根 Hash 一致、正式入口/Validator 是否存在、
    微信配置是否完整、项目目录可写。任一失败 → `FAIL_CLOSED=true`，停止并报告，**禁止绕过**。
-2. `python -m wxgzh_pipeline.cli "发文：<选题>"`（或 `run --topic`）。编排器创建
+3. `python -m wxgzh_pipeline.cli "发文：<选题>"`（或 `run --topic`）。编排器创建
    `<PROJECT_ROOT>/.temp/wxgzh-pipeline/<RUN_ID>/`，按固定顺序逐阶段执行。
-3. 每个阶段通过磁盘交接（`stage_request.json` / `stage_result.json` / `stage_receipt.json`），
+4. 每个阶段通过磁盘交接（`stage_request.json` / `stage_result.json` / `stage_receipt.json`），
    每阶段只加载当前阶段所需内容，不复用整段聊天上下文。缺 receipt 视为该阶段未执行。
-4. 每阶段真实调用盘点出的子 Skill 正式入口，复算输入输出 Hash，运行该阶段 Validator，写 receipt。
+5. 每阶段真实调用盘点出的子 Skill 正式入口，复算输入输出 Hash，运行该阶段 Validator，写 receipt。
    **禁止跳阶段、禁止绕过子 Skill、禁止手写简化 HTML、禁止因子 Skill 失败自行降级。**
-5. 只有前五阶段全部有有效 receipt 且 Validator 全通过，才创建微信草稿；`发文：<选题>` 本身即创建草稿的授权，
+6. 只有前五阶段全部有有效 receipt 且 Validator 全通过，才创建微信草稿；`发文：<选题>` 本身即创建草稿的授权，
    不再二次询问。创建前后各做一次脱敏 `draft/batchget` 指纹，校验 `AFTER=BEFORE+1 / 旧草稿全保留 / 新草稿唯一`。
-6. 产出轻量证据包（`final_delivery`）。
+7. 产出轻量证据包（`final_delivery`）。
 
 ## 固定流水线与各阶段职责
 
