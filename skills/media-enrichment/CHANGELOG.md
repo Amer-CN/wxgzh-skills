@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-dev30 (2026-09-02) — 77U
+
+- **测试字面量卫生清洗（77U）**：tests/test_hf77t_url_security_guard.py 内网/元数据 URL 改分段构造（77U 卫生新规：测试源码不携带完整地址字面量），断言语义零变化。
+- **版本字面量全站同步 dev29 → dev30**（77J 既定模式）：VERSION / README / WXGZH_PIPELINE_INTEGRATION / build_zip / generate_evidence / _verify_dev7 / __init__ / input_contract / url_security(User-Agent) / 两处测试版本钉子。
+
 ## 0.1.0-dev29 (2026-09-02) — 77T
 
 - **CVE 依赖收紧**：requirements.txt 下限 requests>=2.32.4,<4（CVE-2024-35195 / CVE-2024-47081）、Pillow>=10.3,<13（CVE-2023-50447 ARCE / CVE-2023-44271 / CVE-2024-28219）；本机实测 requests 2.34.2 / Pillow 12.2.0。

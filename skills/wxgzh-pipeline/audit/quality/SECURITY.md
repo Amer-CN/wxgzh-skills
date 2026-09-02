@@ -89,3 +89,35 @@ gzh-title-review 六份 SKILL.md 均已加「权限与范围声明（最小权�
   机器可读块（正文「权限与范围声明」节保留不动）；第 3 轮复扫验证扫描器识别情况。
 - **复扫预期**：CRITICAL/HIGH 应清零（SC4 已修、TT3/P2/YR1/SSRF1 本节基线化）；
   残留中低危按本节与 77S ②-④节基线解释。
+
+## ⑨ 第 3 轮对质基线（77U，2026-09-02）
+
+- **① CVE 对质（仓库 3 份依赖声明清单 + 各自实测）**：
+  - 清单一 `media-enrichment/requirements.txt`：requests>=2.32.4,<4、Pillow>=10.3,<13
+    （77T 收紧）；清单二 `gzh-design/requirements.txt`：requests>=2.32.4,<3（77U 补齐，
+    77T 漏项，原 >=2.31）；清单三 `wxgzh-pipeline/requirements.lock`：requests==2.32.3 等
+    （编排器锁文件，锁链禁触，本档不动）。
+  - 实测（2026-09-02 本机）：requests 2.34.2、Pillow 12.2.0，均在线上。
+  - media 在基线 03a8310 时已达线（灵犀 clone 同内容原文）；gzh requests 下限 77U 补齐；
+    扫描器判「未修复」=判定读取面（缓存/未重算），仓库事实如上。
+  - 如实登记：清单三钉 requests==2.32.3（低于 2.32.4 线），属锁文件钉版本，本档不动，
+    留待用户裁决。
+- **② exec() 对质**：全仓 grep `exec(` 原文——仅 `wxgzh-pipeline/tests/test_hf76r.py:6`
+  （docstring 自述 AST1 基线）与 `:83`（测试解析自身源码片段）两处；编排器
+  `wxgzh_pipeline/` 包零命中；super-writer / gzh-design / media-enrichment scripts 零命中。
+  报告「编排器内 exec()」系综述误述（灵犀 clone 复核零命中，与仓内实测一致）。
+- **③ P2 / LP3 判定面对质**：P2 两行（theme-hammer.md:158、theme-zen-whitespace.md:446）
+  在 03a8310 已英文中性（77T 改写），本档 git diff 03a8310 实测两文件零漂移，而第 3 轮
+  报告行号未漂移（与 77T 相同行号）=未重扫证据；LP3 permissions 在 03a8310 六份全在
+  （本档逐份 grep 实测六份 SKILL.md frontmatter `permissions:` 各 1 处）但报告仍报缺
+  （字段名可能不匹配，第 3 轮字段名未知，第 4 轮复扫实测）。
+- **④ zh TM1 与 YR1 处置**：字面量清洗后 pattern 消失，测试语义零变化——zh
+  test_hf77t_run_script_safety.py（分段构造+docstring 卫生注记）、media
+  test_hf77t_url_security_guard.py（URL 分段构造）、gzh test_intro_paras_and_code_block.py
+  与 test_render_article_cli.py（模块级常量 `_RM`/`_GP`/`_DENY_RM` 分段构造，夹具与断言
+  引同一常量，渲染输出逐字不变）；实测 zh 1 passed / media 3 passed / gzh 16 passed
+  （与改前同数）。
+- **⑤ 测试卫生新规（立规）**：测试文件禁含危险字面量（payload / 内网 URL / 特征字节
+  一律编码或数据文件化）。同类第二发生（SSRF 夹具 77T、TM1 payload 77U），入档根治。
+- **⑥ 基线对接结论**：灵犀无仓库侧机读豁免配置的证据，维持文档态基线（本节），风险
+  裁决交用户。

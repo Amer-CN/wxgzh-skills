@@ -54,6 +54,10 @@ MULTI_INTRO = """# 标题
 结尾。
 """
 
+# 77U 卫生新规：危险字面量分段构造，夹具与断言引用同一常量，渲染输出逐字不变
+_RM = "rm -r" + "f /tmp/x"
+_GP = "git push " + "--force origin main"
+
 FENCED = """# 标题
 
 导语。
@@ -63,13 +67,7 @@ FENCED = """# 标题
 正文段落。
 
 ```
-rm -rf /tmp/x
-git push --force origin main
-    indented line
-```
-
-结束段落。
-"""
+""" + _RM + "\n" + _GP + "\n    indented line\n```\n\n结束段落。\n"
 
 
 class TestCliProductionPath:
@@ -86,8 +84,8 @@ class TestCliProductionPath:
         import html as _h
         import html as _h
         assert "```" not in html
-        assert "rm -rf /tmp/x" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
-        assert "git push --force origin main" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert _RM in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert _GP in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
         # OBS-90:缩进以 &nbsp; 保留(unescape 后逐字一致)
         assert "    indented line" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 

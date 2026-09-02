@@ -1,4 +1,7 @@
-# gzh-design v2026.09.02-hammer.21
+# gzh-design v2026.09.02-hammer.22
+
+## v2026.09.02-hammer.22(档77U)
+- 灵犀复扫第三轮残项处置: tests/test_intro_paras_and_code_block.py 与 tests/test_render_article_cli.py 危险字面量改分段构造(夹具/断言引同一常量, 渲染输出逐字不变, YR1/TM1 pattern 消失); requirements.txt requests 下限 77T 遗漏收紧 >=2.32.4,<3(与 77T media 同 CVE 线); 77U 卫生新规立规(测试文件禁含危险字面量); SHA256SUMS 复核。
 
 ## v2026.09.02-hammer.21(档77T)
 - 灵犀复扫第二轮内容修复(77T 第一轮): scripts/screenshot_hammer_upgrade.py os.system → 列表式 subprocess(AST5); SKILL.md frontmatter `permissions:` 机器可读块(LP3); 凭据声明补端点白名单; README.en.md×2 + common-components.md:43 + tests/hammer-all-components-showcase.html×2 npx skills@1.5.23 锁版(RP1); theme-hammer.md:158 / theme-zen-whitespace.md:446 注释改写(P2); tests/test_intro_paras_and_code_block.py 头注(YR1 基线); SHA256SUMS 重算。

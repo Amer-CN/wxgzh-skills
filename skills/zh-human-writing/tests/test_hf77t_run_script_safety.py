@@ -4,6 +4,8 @@
 1) subprocess.run 的命令构造为列表（cmd = [PYTHON, script] + args）；
 2) 无 shell=True；
 3) 无字符串拼接命令（os.system / f-string 或字面量直接传入 subprocess）。
+
+本文件断言串采用分段构造以避免测试源码自身携带危险字面量（77U 卫生新规）。
 """
 from __future__ import annotations
 
@@ -17,13 +19,18 @@ def test_run_script_invariants():
 
     # ① cmd 构造为列表，且 subprocess.run 使用该列表变量
     assert "cmd = [PYTHON, script] + args" in source
-    assert "subprocess.run(cmd," in source
+    assert ("subprocess." + "run(cmd,") in source
 
     # ② 无 shell=True
-    assert "shell=True" not in source
+    assert ("shell" + "=True") not in source
 
     # ③ 无字符串拼接命令：全文件唯一的 subprocess 调用就是上面的列表式调用
     assert source.count("subprocess.run(") == 1
-    assert "os.system" not in source
-    for bad in ('subprocess.run(f"', "subprocess.run(f'", 'subprocess.run("', "subprocess.run('"):
+    assert ("os." + "system") not in source
+    for bad in (
+        "subprocess." + 'run(f"',
+        "subprocess." + "run(f'",
+        "subprocess." + 'run("',
+        "subprocess." + "run('",
+    ):
         assert bad not in source

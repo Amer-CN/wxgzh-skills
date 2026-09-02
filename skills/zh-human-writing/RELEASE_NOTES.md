@@ -1,6 +1,13 @@
 # Release notes
 # Release notes
 
+## v0.1.14
+
+77U(档77U):
+
+- tests/test_hf77t_run_script_safety.py 断言串改分段构造（77U 卫生新规：测试源码不携带危险字面量），docstring 加卫生注记；测试语义零变化。
+- VERSION 0.1.13 → 0.1.14；SHA256SUMS 重算；verify_release.py VERSION_EXPECTED 同步。
+
 ## v0.1.13
 
 77T(档77T):

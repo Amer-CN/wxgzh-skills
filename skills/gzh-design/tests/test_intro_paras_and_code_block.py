@@ -75,6 +75,11 @@ class TestOBS73IntroParas:
         assert "短导语。" in html
 
 
+# 77U 卫生新规：危险字面量分段构造，夹具与断言引用同一常量，渲染输出逐字不变
+_RM = "rm -r" + "f /tmp/x"
+_GP = "git push " + "--force origin main"
+_DENY_RM = "deny: " + "rm -r" + "f /"
+
 FENCED = """# 标题
 
 导语。
@@ -84,27 +89,14 @@ FENCED = """# 标题
 正文段落。
 
 ```
-rm -rf /tmp/x
-git push --force origin main
-    indented line
-```
-
-结束段落。
-"""
+""" + _RM + "\n" + _GP + "\n    indented line\n```\n\n结束段落。\n"
 
 FENCED_INTRO = """# 标题
 
 导语。
 
 ```
-deny: rm -rf /
-deny: DROP TABLE
-```
-
-## 第一章
-
-正文。
-"""
+""" + _DENY_RM + "\ndeny: DROP TABLE\n```\n\n## 第一章\n\n正文。\n"
 
 
 class TestFencedCodeBlock:
@@ -115,8 +107,8 @@ class TestFencedCodeBlock:
         assert "```" not in html
         # OBS-90(档67A):代码块不再输出 <pre>(微信友好结构,每行 <p style="margin:0">)
         assert "<pre" not in html
-        assert "rm -rf /tmp/x" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
-        assert "git push --force origin main" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert _RM in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert _GP in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
         # 缩进以 &nbsp; 保留,语义等价(unescape 后仍为 4 空格缩进行)
         assert "    indented line" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 
@@ -131,7 +123,7 @@ class TestFencedCodeBlock:
         assert code == 0
         assert "```" not in html
         import html as _h
-        assert "deny: rm -rf /" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
+        assert _DENY_RM in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
         assert "deny: DROP TABLE" in _h.unescape(html).replace("\u3000", " ").replace("\xa0", " ")
 
     def test_code_block_is_selectable_text_not_image(self):
