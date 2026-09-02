@@ -100,7 +100,7 @@ def _approval(discovery: dict, asset_id="A-001", **overrides) -> dict:
     record.update({
         "discovery_manifest_sha256": discovery["discovery_manifest_sha256"],
         "approval_id": f"AP-{asset_id}", "approved_scope": "single_asset",
-        "approved_by": "real-user", "approved_at": "2026-07-29T00:00:00Z",
+        "approved_by": "user", "approved_at": "2026-07-29T00:00:00Z",
         "approval_evidence_sha256": EVIDENCE_SHA,
     })
     record.update(overrides)
@@ -348,7 +348,7 @@ class TestStableApprovalContract:
     def test_display_id_only_approval_is_rejected(self, tmp_path):
         approval = {
             "asset_id": "A-001", "approval_id": "AP-A-001",
-            "approved_scope": "single_asset", "approved_by": "real-user",
+            "approved_scope": "single_asset", "approved_by": "user",
             "approved_at": "2026-07-29T00:00:00Z",
             "approval_evidence_sha256": EVIDENCE_SHA,
         }

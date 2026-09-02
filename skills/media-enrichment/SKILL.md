@@ -209,3 +209,7 @@ python scripts/run_media_enrichment.py --request <request.json> --output-dir <di
   readiness 报告重生成后旧 sha 一律作废（旧批准合同自动失效，不得复用）。
 - **重复/镜像资产**：与其 canonical 孪生（同图，感知去重判定）共享审批依据——
   批准记录指向孪生资产 ID 并复用其 readiness，禁止裸批（无孪生依据不得独立批准）。
+- **审批车道（77W/OBS-357）**：`approved_by` 枚举=user/auto_rule/auto_approve——
+  user=真实用户动作（需 user_images.json 既有通道或审批留痕证据，无证据拒绝记账 user）；
+  auto_rule=规则车道（依据必填）；auto_approve=76R/OBS-289 遗留值（等同 auto_rule）；
+  auto_* 车道必填 `basis` 依据（合同/规则条号，如 76R/OBS-289、04 合同 copyright_policy 节）。

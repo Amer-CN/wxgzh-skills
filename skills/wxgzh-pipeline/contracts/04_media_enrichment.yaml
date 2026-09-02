@@ -5,12 +5,14 @@ responsibility: 针对冻结终稿选图；抓取原始来源；分类/去重/�
 must_run_after: zh_human_writing
 depends_on_freeze: final_article_sha256
 copyright_policy:
+  # 77W/OBS-358:单一真源=media-enrichment SKILL.md「自动决策边界」节,本节仅镜像不改义
   COPYRIGHT_POLICY: ALLOW_UNLESS_EXPLICITLY_PROHIBITED
-  USER_BLANKET_APPROVAL: true
-  PER_IMAGE_MANUAL_REVIEW_REQUIRED: false
+  USER_BLANKET_APPROVAL: false
+  PER_IMAGE_MANUAL_REVIEW_REQUIRED: true
   LICENSE_VERIFICATION_REQUIRED: false
   VISIBLE_SOURCE_CAPTION_REQUIRED: false
   UNKNOWN_COPYRIGHT_BLOCKING: false
+  SINGLE_SOURCE_REF: "skills/media-enrichment/SKILL.md#自动决策边界"
 image_discovery:
   - source_url_first
   - aihot_link_only_for_trace_and_fallback

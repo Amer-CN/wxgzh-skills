@@ -55,8 +55,9 @@
       "minLength": 1
      },
      "aihot_permalink": {
-      "type": "string",
-      "format": "uri"
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "77W/OBS-359:provenance=supplemental 时允许 null(无站内页);normal 时仍须 aihot 域 uri"
      },
      "source_url": {
       "type": "string",
@@ -176,7 +177,13 @@
      },
      "approved_by": {
       "type": "string",
-      "minLength": 1
+      "enum": ["user", "auto_rule", "auto_approve"],
+      "description": "77W/OBS-357:审批车道——user=真实用户动作(需 user_images.json 或审批留痕证据);auto_rule=规则车道(依据必填);auto_approve=76R/OBS-289 遗留值(等同 auto_rule)"
+     },
+     "basis": {
+      "type": "string",
+      "minLength": 1,
+      "description": "77W/OBS-357:auto_* 车道必填——依据=合同/规则条号(如 76R/OBS-289、04 合同 copyright_policy 节)"
      },
      "approved_at": {
       "type": "string",

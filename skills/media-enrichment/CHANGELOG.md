@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev31 (2026-09-03) — 77W
+
+- **OBS-357 审批车道名实修复**：request schema `approved_by` 改枚举 user/auto_rule/auto_approve（auto_approve=76R 遗留值，等同 auto_rule），新增同级 `basis` 依据字段（auto_* 车道必填）；`run_media_enrichment.py` 在 single_asset 批准搬运块前 fail-fast 校验车道——枚举外值拒、auto_* 缺 basis 拒、user 无用户动作证据拒（证据=user_images.json 既有通道含 material_id/source_url，或 approval 自带 approval_evidence_sha256 留痕）；SKILL.md 审批纪律节同步车道语义；既有测试夹具车道值 real-user/independent_reviewer 同步对齐枚举（16 测试语义不变）。
+- **OBS-359 supplemental permalink 通道**：request schema materials[].aihot_permalink 类型改 `["string","null"]`（provenance=supplemental 允许 null，无站内页不猜不填）；`validate_media_manifest.py` 新增 REQUEST_MATERIAL_PERMALINK_LANE 按 provenance 分流——supplemental 非 null 须 `https://aihot.virxact.com/` 前缀（外站构造填充拒），normal/缺省维持既有口径。
+- **测试 +5**：新增 tests/test_hf77w_approval_lane.py（车道 3 + permalink 2）。
+- **版本字面量全站同步 dev30 → dev31**（77J 既定模式）：VERSION / README / WXGZH_PIPELINE_INTEGRATION / build_zip / generate_evidence / _verify_dev7 / __init__ / input_contract / url_security(User-Agent) / 两处测试版本钉子。
+
 ## 0.1.0-dev30 (2026-09-02) — 77U
 
 - **测试字面量卫生清洗（77U）**：tests/test_hf77t_url_security_guard.py 内网/元数据 URL 改分段构造（77U 卫生新规：测试源码不携带完整地址字面量），断言语义零变化。

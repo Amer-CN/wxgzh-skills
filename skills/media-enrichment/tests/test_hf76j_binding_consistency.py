@@ -72,7 +72,7 @@ def _approval(discovery: dict, asset_id: str) -> dict:
     record.update({
         "discovery_manifest_sha256": discovery["discovery_manifest_sha256"],
         "approval_id": f"AP-{asset_id}", "approved_scope": "single_asset",
-        "approved_by": "real-user", "approved_at": "2026-08-13T00:00:00Z",
+        "approved_by": "user", "approved_at": "2026-08-13T00:00:00Z",
         "approval_evidence_sha256": EVIDENCE_SHA,
     })
     return record

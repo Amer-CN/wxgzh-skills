@@ -160,6 +160,25 @@ def validate_manifest(manifest_path: str, request_path: str | None = None) -> di
             check("REQUEST_SOURCE_URL_CONSISTENT", len(url_mismatches) == 0,
                   f"mismatches: {url_mismatches}" if url_mismatches else "")
 
+            # 77W/OBS-359:supplemental permalink 通道——按 provenance 分流。
+            # supplemental:aihot_permalink 允许 null(无站内页);非 null 时必须
+            # https://aihot.virxact.com/ 前缀(构造外站填充拒)。normal/缺省维持
+            # 既有口径(schema required + format uri),不新增域门槛。
+            lane_errors = []
+            for m in materials:
+                if not isinstance(m, dict):
+                    continue
+                if (m.get("provenance") or "normal") != "supplemental":
+                    continue
+                link = m.get("aihot_permalink")
+                if link is not None and not str(link).startswith(
+                        "https://aihot.virxact.com/"):
+                    lane_errors.append(
+                        f"{m.get('material_id', '?')}: supplemental 无站内页应填 null"
+                        f"(外站填充拒: {str(link)[:80]})")
+            check("REQUEST_MATERIAL_PERMALINK_LANE", len(lane_errors) == 0,
+                  "; ".join(lane_errors) if lane_errors else "")
+
         except Exception as exc:
             check("REQUEST_SHA256_MATCH", False, f"request load error: {exc}")
             check("CLAIMS_TOTAL_MATCH", False)

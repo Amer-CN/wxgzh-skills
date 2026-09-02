@@ -174,6 +174,42 @@ def _source_content_description(candidate, material_title: str | None = None):
     return None, None
 
 
+# 77W/OBS-357:审批车道(approved_by)合法枚举与依据要求。
+APPROVED_BY_LANES = ("user", "auto_rule", "auto_approve")
+
+
+def _user_action_evidence(approval: dict, request: dict) -> bool:
+    """77W/OBS-357:user 车道用户动作证据存在性检查(校验=证据存在性,
+    不改既有 user_images 注入行为)。证据=user_images.json 含该资产
+    material_id/source_url(:308/:470 既有通道),或 approval 记录自带
+    approval_evidence_sha256(审批留痕在案)。"""
+    material_id = approval.get("material_id") or ""
+    source_page_url = approval.get("source_page_url") or ""
+    for ui in (request.get("user_images") or []):
+        if not isinstance(ui, dict):
+            continue
+        if material_id and ui.get("material_id") == material_id:
+            return True
+        if source_page_url and ui.get("source_url") == source_page_url:
+            return True
+    return bool((approval.get("approval_evidence_sha256") or "").strip())
+
+
+def _approval_lane_error(approval: dict, request: dict) -> str | None:
+    """77W/OBS-357:审批车道校验——返回错误文案,None=通过。"""
+    lane = approval.get("approved_by")
+    if lane not in APPROVED_BY_LANES:
+        return (f"77W/OBS-357: approved_by 枚举外值 {lane}，"
+                "合法=user/auto_rule/auto_approve"
+                "（指路 schemas/media_enrichment_request.schema.json）")
+    if lane in ("auto_rule", "auto_approve") and not (approval.get("basis") or "").strip():
+        return "77W/OBS-357: auto_* 车道必须带 basis 依据"
+    if lane == "user" and not _user_action_evidence(approval, request):
+        return ("user 车道无用户动作证据（user_images.json / approval_evidence 缺失），"
+                "拒绝记账 user（77W/OBS-357）")
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Media Enrichment Skill")
     parser.add_argument("--request", required=True)
@@ -1098,6 +1134,13 @@ def main():
                     asset.reasons.append(
                         "approval_identity_mismatch: " + ", ".join(asset.approval_identity_mismatch))
                 else:
+                    # 77W/OBS-357:审批车道校验(single_asset 搬运块前 fail-fast)——
+                    # 车道非法即记账 error(退出码 FAIL 路径),不消费批准、不改写
+                    # 版权状态,资产维持不可上传;历史 auto_approve 遗留值合法。
+                    lane_error = _approval_lane_error(approval, request)
+                    if lane_error is not None:
+                        builder.errors.append(lane_error)
+                        continue
                     consumed_asset_approvals.add(asset.asset_id)
                     asset.discovery_manifest_sha256 = approval["discovery_manifest_sha256"]
                     asset.approval_id = approval["approval_id"]

@@ -78,7 +78,11 @@ APPROVAL_CONTRACT_RULE = (
     "77A/OBS-308(审批合同,硬步骤):批准合同每条 single_asset 必带 approval_readiness_sha256,"
     "一律从最新的 approval_readiness_report.json 原样照抄、禁止自算、禁止引用旧轮报告;"
     "readiness 报告重生成后旧 sha 一律作废、旧批准合同自动失效;"
-    "缺字段或引用过期=FAIL_CLOSED 重批,不得复用旧合同。")
+    "缺字段或引用过期=FAIL_CLOSED 重批,不得复用旧合同。"
+    # 77W/OBS-358:media 阶段指令立规(规则冲突停机上报,禁执行端自裁)——
+    # 经 _media_two_phase 批准暂停点 meta(approval_contract_rule)下发给发文端。
+    "77W/OBS-358:任何两份规则文件(合同/协议/SKILL.md/指令)冲突时,一律停机上报审核方,"
+    "禁止执行端自裁;发现冲突的正确动作=原文贴回等档。")
 AIHOT_INJECTION_INSTRUCTIONS = (
     "素材已由正式注入入口提供(--items-file,自有素材注入)。"
     "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="

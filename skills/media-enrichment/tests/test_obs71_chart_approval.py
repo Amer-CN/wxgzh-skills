@@ -84,7 +84,7 @@ def _approval_for(frozen_record: dict, discovery_sha: str) -> dict:
         "discovery_manifest_sha256": discovery_sha,
         "approval_id": "AP-OBS71-REPLAY",
         "approved_scope": "single_asset",
-        "approved_by": "independent_reviewer",
+        "approved_by": "user",
         "approved_at": "2026-08-04T00:00:00Z",
         "approval_evidence_sha256": "e" * 64,
     }
