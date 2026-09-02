@@ -1960,5 +1960,27 @@
     "new_skill_version": "v2026.09.02-hammer.22",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260902T204358Z-cc21e33b",
+    "skill": "media-enrichment",
+    "reason": "77W 审批记录名实修复:approved_by 枚举+basis+用户证据门+recorder 车道校验;04 合同单源化+停机立规;supplemental permalink 通道",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-02T20:43:58Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "e9d57c01f652ba757a480af30d713e961ea851965d44d17fc7de1601b6b4ab34",
+    "new_root_sha256": "d6f618ad29f56694d0ea01a9ad33f5fff5f8a22610c76a802ce7e2bfcff6c1de",
+    "old_entrypoint_sha256": "c881e41482ceb84ff51d71a8c856a03245e5176845a2ac243da5ed6edc3782c3",
+    "new_entrypoint_sha256": "db775150fbc8d51000f7d6c2618a317ba729e252493b518739ce6fc014b515f0",
+    "old_validator_sha256": "9e91e9b04b126e69a8c3d56b129f4215d26f5f2fa7635b7b6a9910c4929bc1cd",
+    "new_validator_sha256": "9ff68c78da6423018fbdbe592a8eed0efaec7a5970fabaa5f52926f40a898620",
+    "old_full_commit_sha": "5bc3944e0c5150ea8c9438026957e271a5b86948",
+    "new_full_commit_sha": "684eb873c16857305cf5bbbde92613cce5d7799d",
+    "old_source_tree_sha": "050485052060b6e8032a3845d5bd6d048bad1453",
+    "new_source_tree_sha": "5ae3068d9488314b291fe181d66833aa30c4a5ba",
+    "old_skill_version": "0.1.0-dev30",
+    "new_skill_version": "0.1.0-dev31",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
