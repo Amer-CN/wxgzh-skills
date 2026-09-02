@@ -1,6 +1,15 @@
 # Release notes
 # Release notes
 
+## v0.1.13
+
+77T(档77T):
+
+- SKILL.md frontmatter 新增 `permissions:` 机器可读块；正文「权限与范围声明」节保留。
+- 新增 tests/test_hf77t_run_script_safety.py：run_script 列表参数无 shell 防御钉子（OH1）。
+- examples/03-technical/input.txt、examples/samples/C-technical/input.md 首行加夹具注（fidelity 保留样本，非部署指令）。
+- VERSION 0.1.12 → 0.1.13；SHA256SUMS 重算；verify_release.py VERSION_EXPECTED 同步。
+
 ## v0.1.12
 
 77S(档77S):

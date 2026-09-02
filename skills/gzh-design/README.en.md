@@ -88,7 +88,7 @@ One long-form article laid out in all 6 themes (full-fidelity screenshots with r
 
 ```bash
 # One-line install (recommended)
-npx skills add https://github.com/isjiamu/gzh-design-skill
+npx skills@1.5.23 add https://github.com/isjiamu/gzh-design-skill
 
 # Or manual clone
 git clone https://github.com/isjiamu/gzh-design-skill.git ~/.claude/skills/gzh-design
@@ -190,7 +190,7 @@ Give just a primary color or a vibe, and the generator derives the whole harmoni
 
 **Can it output several themes at once?** Yes — say "lay this out in each of these themes" for a batch to choose from.
 
-**How do I update?** Re-run `npx skills add https://github.com/isjiamu/gzh-design-skill`, or `git pull` in the install dir.
+**How do I update?** Re-run `npx skills@1.5.23 add https://github.com/isjiamu/gzh-design-skill`, or `git pull` in the install dir.
 
 **What if the agent's output isn't compliant?** Run `scripts/validate_gzh_html.py`; fix on ERROR until both gates are green. Still stuck? Open an Issue.
 

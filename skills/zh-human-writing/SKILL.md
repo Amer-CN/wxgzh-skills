@@ -2,6 +2,12 @@
 name: zh-human-writing
 version: "1.0"
 description: 简体中文写作编辑 Skill — 在不改变事实、意图、立场和任务边界的前提下减少模板化机器表达
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network: []            # 无网络调用
+  secrets: []            # 不读取凭据
+  subprocess: tests/run_tests.py + verify_release.py 自检（测试运行器以 sys.executable 调用本技能内脚本）
+  prohibited: 安装依赖、正式发布、群发、删除文件、不改事实/数字/URL
 ---
 
 # zh-human-writing v1

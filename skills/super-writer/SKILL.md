@@ -2,6 +2,12 @@
 name: super-writer
 description: >-
   中文长文与公众号文章写作系统。用于从主题、链接、PDF、访谈稿、笔记、素材包或草稿中完成写作简报、研究规划、证据地图、核心观点提炼与压力测试、文章结构设计、初稿、内容审稿和修订。适用于“写文章、写公众号、把素材写成长文、找角度、做大纲、重构草稿、内容审稿”等请求。不负责去 AI 味、美化排版、配图或发布；这些任务通过交接契约传给下游 Skill。
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network: []            # 无网络调用
+  secrets: []            # 不读取凭据
+  subprocess: 仅测试运行器以 sys.executable 调用本技能内脚本（仅 tests/ 自检）
+  prohibited: 安装依赖、正式发布、群发、删除文件
 ---
 
 # Super Writer

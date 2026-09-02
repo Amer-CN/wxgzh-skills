@@ -6,6 +6,18 @@ description: >-
   记录版权风险，根据 canonical claim 中已有数字生成原创数据图，上传合格图片，输出
   media_manifest.json 和插图位置建议。不修改文章事实，不替代写作/去 AI 味/排版 Skill，
   不创建公众号草稿或正式发布。
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network:
+    - 下载素材 claim source_url 页面图片
+    - 上传微信图床 api.weixin.qq.com
+  secrets: # 仅键名，值用 <env> 占位
+    - WECHAT_APP_ID
+    - WECHAT_APP_SECRET
+    - WECHAT_API_ALLOWED
+    - WECHAT_IMAGE_HOSTS
+  subprocess: build_zip/generate_evidence 本技能内脚本
+  prohibited: 安装依赖、正式发布、群发、删除文件
 ---
 
 # Media Enrichment
@@ -17,6 +29,12 @@ description: >-
 - **凭据**：仅从项目 .env 读取 WECHAT_APP_ID / WECHAT_APP_SECRET（及 WECHAT_API_ALLOWED / WECHAT_IMAGE_HOSTS 开关）；不硬编码、不回显。
 - **子进程**：scripts/build_zip.py、generate_evidence.py 调用本技能内脚本做打包/取证；无外部命令。
 - **明确不做**：不发布、不群发、不删除图床/草稿资源。
+
+### 自动决策边界
+
+- **自动批**：零图降级；auto_approve 开启（WXGZH_MEDIA_AUTO_APPROVE=1，默认关）且单图证据链齐全（76R/OBS-289 口径）。
+- **必须人工**：图片审批（默认道）、restricted 资产、上传微信前终审。
+- 来源：EA2×56，逐条对应 `scripts/run_media_enrichment.py` 决策点。
 
 ## 使命
 

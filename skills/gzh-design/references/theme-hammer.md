@@ -155,7 +155,7 @@
         </p>
       </section>
       <section style="flex-shrink:0;width:110px;height:110px;border-radius:16px;overflow:hidden;border:1px solid rgba(179,89,59,0.10);box-shadow:0 4px 12px rgba(0,0,0,0.06);">
-        <!-- 封面右侧图片，保留原图代码 -->
+        <!-- cover right image slot: keep original code -->
       </section>
     </section>
   </section>

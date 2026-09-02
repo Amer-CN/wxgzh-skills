@@ -9,6 +9,12 @@ description: >-
   不复制子 Skill 业务逻辑，不手写简化排版，不因子 Skill 失败而降级。代码中不存在正式发布/群发/
   定时发布/删除草稿能力——"发文"只创建草稿，正式发布只能由用户在微信后台手动进行。
   触发：用户说"发文：<选题>"/"续发"/"续发：<RUN_ID>"/"进度"/"验收编排Skill"。
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network: []            # 网络均经子技能
+  secrets: [WECHAT_APP_ID, WECHAT_APP_SECRET, WECHAT_API_ALLOWED]  # 透传 .env
+  subprocess: 六阶段链调用子技能 CLI（仓库内固定路径）
+  prohibited: 安装依赖、正式发布、群发、删除文件
 ---
 
 # wxgzh-pipeline — 微信公众号总编排 Skill

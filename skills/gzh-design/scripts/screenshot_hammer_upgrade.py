@@ -4,6 +4,7 @@
 使用 Playwright 在 430x800 视口下对两份 HTML 进行全页截图。
 """
 import os
+import subprocess
 import sys
 
 SKILL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,8 +14,8 @@ try:
     from playwright.sync_api import sync_playwright
 except ImportError:
     print("Playwright not installed. Installing...")
-    os.system(f"{sys.executable} -m pip install playwright")
-    os.system(f"{sys.executable} -m playwright install chromium")
+    subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=False)
+    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
     from playwright.sync_api import sync_playwright
 
 

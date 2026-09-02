@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.18-rc1 (2026-09-02) — 档77T：灵犀复扫第二轮（内容修复）
+
+- **OBS-351 权限声明机器可读（LP3）**：SKILL.md frontmatter 新增 `permissions:` 块（file-scope/network/secrets/subprocess/prohibited 五要素，与正文「权限与范围声明」节一致；正文节保留不动）。
+
 ## v0.4.17-rc1 (2026-09-01) — 档77S：灵犀安装安检合规（内容修复）
 
 - **OBS-345 AST7 显式分派**：`_apply_runtime_policy_defaults` 由 getattr/setattr 循环改为四字段全字面量分派；「仅对值为 None 的字段填默认」语义不变；新增 `tests/test_hf77s_runtime_policy_dispatch.py`（profile 默认填入 unset 字段 / 显式传参不被覆盖）。

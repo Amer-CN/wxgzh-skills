@@ -1,6 +1,14 @@
 ---
 name: gzh-design
 description: 微信公众号文章排版引擎，将 Markdown 转换为可直接粘贴到公众号编辑器的 HTML。主题风格从 references/theme-index.md 注册的自定义主题库中选取，自动章节编号、关键词下划线标记、引言卡片、目录导航、代码块、图片/GIF、作者签名。支持 Markdown / Word(.docx) / PDF / 纯文本输入（非 Markdown 先自动归一化），也支持"一键自动排版"（自动推断结构+选主题），还支持根据用户描述/参考图生成自定义主题组件库并保存本地复用。触发场景：(1) 用户提到"公众号排版""公众号文章""微信排版""gzh"，(2) 用户想把文章（md/docx/pdf/纯文本）转成公众号 HTML，(3) 用户说"自动排版""一键排版"公众号内容，(4) 用户想为公众号排版"生成新主题/自定义风格/按这张图做一套组件库"。不用于生成普通网页/落地页/PPT（用前端或 PPT 类 skill）。
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network:
+    - api.weixin.qq.com 草稿接口
+    - mmbiz.qpic.cn 图床
+  secrets: [WECHAT_APP_ID, WECHAT_APP_SECRET, WECHAT_API_ALLOWED]
+  subprocess: 仅测试运行器以 sys.executable 调用本技能内脚本
+  prohibited: 安装依赖、正式发布、群发、定时发布、删除草稿、删除文件
 ---
 
 # 公众号文章排版 Skill
@@ -13,7 +21,7 @@ description: 微信公众号文章排版引擎，将 Markdown 转换为可直接
 
 - **文件读写**：仅限 RUN 目录内文章 HTML/主题/封面产物与临时渲染文件。
 - **网络访问**：微信 API api.weixin.qq.com/cgi-bin/draft/add 与 draft/batchget（仅创建草稿与枚举草稿指纹）、素材/图床上传（mmbiz.qpic.cn）。无其他端点。
-- **凭据**：仅从项目 .env 读取 WECHAT_APP_ID / WECHAT_APP_SECRET / WECHAT_API_ALLOWED；不硬编码、不回显。
+- **凭据**：仅从项目 .env 读取 WECHAT_APP_ID / WECHAT_APP_SECRET / WECHAT_API_ALLOWED；不硬编码、不回显。凭据仅流向 https://api.weixin.qq.com（端点白名单：token/draft/add、draft/batchget、draft/get、material/add_material），零第三方。
 - **子进程**：渲染与发布脚本以子进程调用本技能内 Python 脚本；无外部命令。
 - **明确不做**：正式发布、群发、定时发布、删除草稿——全部禁用；仅创建草稿且必须走凭证门。
 

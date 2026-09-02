@@ -443,7 +443,7 @@
 <section style="max-width: 677px;margin: 0 auto;background: #FFFFFF;font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;color: #525252;line-height: 1.9;letter-spacing: 0.3px;overflow-x: hidden;">
 
   <!-- 1. 开头引言卡片（纯白 + 上下细线 + 衬线大字） -->
-  <!-- 组件 2 -->
+  <!-- component 2 -->
 
   <!-- 2. 前言正文（开场白） -->
   <section style="padding: 0 0 20px;">

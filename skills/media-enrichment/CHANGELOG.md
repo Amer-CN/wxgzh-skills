@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-dev29 (2026-09-02) — 77T
+
+- **CVE 依赖收紧**：requirements.txt 下限 requests>=2.32.4,<4（CVE-2024-35195 / CVE-2024-47081）、Pillow>=10.3,<13（CVE-2023-50447 ARCE / CVE-2023-44271 / CVE-2024-28219）；本机实测 requests 2.34.2 / Pillow 12.2.0。
+- **OBS-351 LP3**：SKILL.md frontmatter `permissions:` 块；声明节追加「自动决策边界」小节（EA2×56，76R/OBS-289 口径）。
+- **SSRF1 回归钉子**：新增 tests/test_hf77t_url_security_guard.py（补云元数据直连 / IPv4-mapped IPv6 URL / require_dns=False 公网放行三缺口）；fixtures/html/malicious-ssrf.html 头注样本定性。
+
 ## 0.1.0-dev28 (2026-09-01) — 77S
 
 - **LP3 权限声明**：SKILL.md 新增「权限与范围声明（最小权限）」节（文件读写/网络端点/凭据键名/子进程/明确不做）。

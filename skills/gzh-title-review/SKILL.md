@@ -1,6 +1,12 @@
 ---
 name: gzh-title-review
 description: 公众号标题复盘独立工具（流水线外）。读文章与发布数据，对照四分类归因（标题因素/选题时机/账号分发/无法判断）给出复盘结论与下一次可复用规则。不接编排器、不入锁、不影响发文流水线。
+permissions:
+  file-scope: 项目 RUN 目录与调用方显式传入路径
+  network: []            # 无网络调用
+  secrets: []            # 不读取凭据
+  subprocess: []
+  prohibited: 安装依赖、正式发布、群发、删除文件
 ---
 
 # gzh-title-review

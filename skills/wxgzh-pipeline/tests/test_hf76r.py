@@ -3,6 +3,7 @@
 - sw 指令含硬步骤:ACK 前必须跑 align_outline_budget + validate_single_product 且全绿,否则禁止 ACK;
 - 通用规则(276/279/283)抽为单一真源常量,三阶段共用(源码去重);
 - 语义零丢失:改写前(HEAD)与改写后产物指令规则清单一一对应;公共规则在源码中单写。
+- exec() 仅用于测试解析自身源码片段（AST1 基线）。
 """
 from __future__ import annotations
 

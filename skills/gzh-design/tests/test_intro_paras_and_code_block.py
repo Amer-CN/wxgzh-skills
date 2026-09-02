@@ -2,6 +2,7 @@
 
 Intro lines after the first line must render as body paragraphs BEFORE the
 first chapter title (previously silently dropped by parse_article).
+恶意字符串为渲染器逐字输出正例（OBS/YR1 基线）。
 """
 import importlib.util
 import sys

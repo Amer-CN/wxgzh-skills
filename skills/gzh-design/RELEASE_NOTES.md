@@ -1,4 +1,7 @@
-# gzh-design v2026.09.01-hammer.20
+# gzh-design v2026.09.02-hammer.21
+
+## v2026.09.02-hammer.21(档77T)
+- 灵犀复扫第二轮内容修复(77T 第一轮): scripts/screenshot_hammer_upgrade.py os.system → 列表式 subprocess(AST5); SKILL.md frontmatter `permissions:` 机器可读块(LP3); 凭据声明补端点白名单; README.en.md×2 + common-components.md:43 + tests/hammer-all-components-showcase.html×2 npx skills@1.5.23 锁版(RP1); theme-hammer.md:158 / theme-zen-whitespace.md:446 注释改写(P2); tests/test_intro_paras_and_code_block.py 头注(YR1 基线); SHA256SUMS 重算。
 
 ## v2026.09.01-hammer.20(档77S)
 - 灵犀安装安检合规(77S 第一轮内容修复): SKILL.md 新增「权限与范围声明（最小权限）」节（文件读写/网络端点/凭据键名/子进程/明确不做五要素）。

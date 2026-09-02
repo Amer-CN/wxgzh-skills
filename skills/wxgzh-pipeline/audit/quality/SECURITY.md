@@ -58,3 +58,34 @@ gzh-title-review 六份 SKILL.md 均已加「权限与范围声明（最小权�
 1 AST7=validate_article_length.py 动态属性（77S 显式分派修复）；4 RP1=npx 无锁版本
 （77S 锁 skills@1.5.23）；7 MP2=多行续行误判（77S 改单行）；1 LP3=权限声明缺口
 （77S 六 SKILL.md 补节）；1 EA3=LICENSE MIT 正文误报（本档④基线）。
+
+## ⑧ 第 2 轮复扫基线（77T，2026-09-02）
+
+- **TT3 六行 = 凭据仅流向 api.weixin.qq.com，零第三方**：六个端点常量全部位于
+  `skills/gzh-design/scripts/publish_wechat_draft.py:120-125`——TOKEN_URL（/cgi-bin/token）、
+  ADD_DRAFT_URL（/cgi-bin/draft/add）、BATCHGET_DRAFT_URL（/cgi-bin/draft/batchget）、
+  GET_DRAFT_URL（/cgi-bin/draft/get）、UPLOAD_MATERIAL_URL（/cgi-bin/material/add_material）、
+  UPLOADIMG_URL（/cgi-bin/media/uploadimg）；E2/PE3 同性质（凭据仅用于微信 API 所需）。
+- **SSRF1 ×12 = 守卫实现本体误报**：`media-enrichment/src/media_enrichment/url_security.py`
+  的 BLOCKED_RANGES 常量表（黑名单段族：0.0.0.0/8、10/8、100.64/10 CGN、127/8、169.254/16
+  含云元数据 169.254.169.254、172.16/12、192.168/16、224/4 组播、240/4、::1、fc00::/7、
+  fe80::/10、ff00::/8、2001:db8::/32 等）+ `media-enrichment/fixtures/html/malicious-ssrf.html`
+  测试样本（页面里的恶意 URL 是断言对象，非运行时内容）。守卫能力清单：黑名单段族 /
+  每跳重定向复检 / DNS 解析后复检（含 IPv4-mapped IPv6 还原）/ scheme 白名单（仅 http/https）/
+  下载尺寸上限；回归钉子 `tests/test_hf77t_url_security_guard.py`（77T）。
+- **YR1 = 渲染器逐字输出正例夹具**：`gzh-design/tests/test_intro_paras_and_code_block.py:115`
+  的 `rm -rf /tmp/x`、`git push --force origin main` 字符串是断言预期输出（验证渲染器逐字保留
+  恶意字符串，属正例夹具）；media `tests/fixtures/obs71/`（media_discovery_request.obs71.json、
+  final_article.obs71.md）同理，`rm -rf` 等是文章正文样本内容，非运行命令。
+- **RA1 = 路径 dirname 链误判**（扫描器噪声）；**MP2 = 多行续行误判形态**（沿 77S 基线③）；
+  **EA2 ×56 = auto_approve 决策链设计使然**（76R/OBS-289 口径，WXGZH_MEDIA_AUTO_APPROVE=1
+  默认关；自动批仅限零图降级与证据链齐全单图，media SKILL.md「自动决策边界」节已声明）。
+- **audit/ 目录 = 历史运行记录牵连**：命中项均为历史运行的审计产物记录，非运行时行为。
+  架构观察：audit/ 是否剥离出发行版，留待后续裁决，本档不动。
+- **OH1 = run_tests.py 列表参数无 shell**：zh-human-writing `tests/run_tests.py` 的
+  `run_script` 以 `cmd = [PYTHON, script] + args` 列表式调用 subprocess、无 shell=True；
+  防御测试 `tests/test_hf77t_run_script_safety.py` 钉住（77T）。
+- **LP3 = frontmatter permissions 块已加**：六份 SKILL.md 的 frontmatter 均含 `permissions:`
+  机器可读块（正文「权限与范围声明」节保留不动）；第 3 轮复扫验证扫描器识别情况。
+- **复扫预期**：CRITICAL/HIGH 应清零（SC4 已修、TT3/P2/YR1/SSRF1 本节基线化）；
+  残留中低危按本节与 77S ②-④节基线解释。
