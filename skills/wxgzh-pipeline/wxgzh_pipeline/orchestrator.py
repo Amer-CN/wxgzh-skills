@@ -195,7 +195,12 @@ class Orchestrator:
                       allow_stale=True : (None, vc+overridden) 留痕继续
           unknown  -> (None, vc)                 留痕继续(不猜、不阻断)
         调用失败/输出不可解析一律降级 unknown(建议性工具,不新增崩溃面)。
+        WXGZH_SKIP_VERSION_CHECK=1 时直接返回 (None, skipped)——零联网零
+        子进程的测试豁免门(77X/OBS-360),仅测试套件使用,生产路径不设此变量。
         """
+        if (_os_environ() or {}).get("WXGZH_SKIP_VERSION_CHECK") == "1":
+            return (None, {"status": "skipped",
+                           "detail": "WXGZH_SKIP_VERSION_CHECK=1 (77X/OBS-360)"})
         import subprocess as _sp
         import sys as _sys
         script = SKILL_ROOT / "scripts" / "version_check.py"
@@ -236,8 +241,10 @@ class Orchestrator:
             stop_after: str | None = None, allow_stale: bool = False) -> dict:
         ok, dreport = self.doctor()
         if not ok:
-            return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport,
-                        "run_wall_seconds": self._wall_seconds(st)}
+            # 77X/OBS-361:本分支原引用未定义的 st(修复前 NameError 潜伏)。
+            # _wall_seconds 强依赖 PipelineState.started_at,而 doctor 失败时
+            # RUN/state 尚不存在(resume() 同分支亦不带本键),故删键最小修复。
+            return {"status": "FAIL_CLOSED", "reason": "doctor failed", "doctor": dreport}
         # 77V:第 0 步版本新鲜度检查——doctor 之后、RUN 创建之前;resume() 不做。
         stale, vc_trace = self._version_check_step(allow_stale=allow_stale)
         if stale is not None:

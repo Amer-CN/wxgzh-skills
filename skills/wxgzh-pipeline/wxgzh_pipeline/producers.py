@@ -842,7 +842,11 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
                     "sha256": state.final_article_sha256 or sha256_file(article)},
         "materials": materials, "claims": claims,
         "asset_approvals": [
-            {field: rec[field] for field in sorted(_STABLE_SINGLE_ASSET_FIELDS)}
+            # 77X/OBS-363:白名单挑选后条件附加 basis(77W/OBS-357 auto_* 车道
+            # 依据字段)——必填集 _STABLE_SINGLE_ASSET_FIELDS 不动(user 车道无
+            # basis 属预期,_load_copyright_approvals:533 全非空校验不接纳它)。
+            {**{field: rec[field] for field in sorted(_STABLE_SINGLE_ASSET_FIELDS)},
+             **({"basis": rec["basis"]} if rec.get("basis") else {})}
             for _, rec in sorted(approvals["single_asset"].items())],
         "config": {
             "upload_mode": (

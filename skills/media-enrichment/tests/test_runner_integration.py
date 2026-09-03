@@ -181,7 +181,7 @@ class TestVersionConsistency:
     Gates: RUNTIME_VERSION_RESIDUE_DEV3=0, BUILD_VERSION_RESIDUE_DEV4=0,
     CURRENT_EVIDENCE_VERSION_RESIDUE_DEV4=0, OUTPUT_ZIP_NAME_MATCH=true."""
 
-    CURRENT = "0.1.0-dev31"
+    CURRENT = "0.1.0-dev32"
     # concatenated so this test file never contains the residue literals itself
     DEV3 = "0.1.0-dev" + "3"
     DEV4 = "0.1.0-dev" + "4"

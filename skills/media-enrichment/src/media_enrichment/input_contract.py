@@ -16,7 +16,7 @@ from typing import Any
 
 import jsonschema
 
-SKILL_VERSION = "0.1.0-dev31"
+SKILL_VERSION = "0.1.0-dev32"
 
 @dataclass
 class ValidationResult:
@@ -154,6 +154,23 @@ def validate_request(request_path: str | Path) -> ValidationResult:
                 errors.append(
                     f"Material {mat['material_id']} selects non-existent claim_id: {cid}"
                 )
+
+    # 3f: 77X/OBS-364 supplemental permalink 分流(与 validate_media_manifest.py
+    # REQUEST_MATERIAL_PERMALINK_LANE 同口径,双校验器一致)——supplemental 且
+    # aihot_permalink 非 null/非空时必须 aihot 站内域前缀,构造外站填充拒;
+    # normal/缺省不新增门槛(77W 口径:大量既有夹具 permalink 非 aihot 域)。
+    for mat in materials:
+        if not isinstance(mat, dict):
+            continue
+        if (mat.get("provenance") or "normal") != "supplemental":
+            continue
+        link = mat.get("aihot_permalink")
+        if link is not None and str(link) != "" and not str(link).startswith(
+                "https://aihot.virxact.com/"):
+            errors.append(
+                f"77X/OBS-364: supplemental 材料构造 aihot 站内页填充（{link}），"
+                f"无站内页应填 null（口径同 77W REQUEST_MATERIAL_PERMALINK_LANE）"
+            )
 
     # Step 4: Verify article SHA256
     article_path = request.get("article", {}).get("path", "")

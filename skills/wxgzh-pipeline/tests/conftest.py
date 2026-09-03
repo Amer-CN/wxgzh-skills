@@ -2,10 +2,15 @@
 parent dir (wxgzh-pipeline lives inside the skills home). All tests run offline
 (no WeChat side effects).
 """
+import os
 import sys
 from pathlib import Path
 
 import pytest
+
+# 77X/OBS-360:测试套件豁免版本新鲜度检查——编排器第 0 步经此零联网
+# (不发起 version_check.py 子进程;豁免门行为本身由 test_hf77x_misc.py 断言)。
+os.environ.setdefault("WXGZH_SKIP_VERSION_CHECK", "1")
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT))

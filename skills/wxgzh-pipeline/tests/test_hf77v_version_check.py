@@ -85,6 +85,8 @@ def test_77v_version_check_behind(monkeypatch):
 
 def test_77v_orchestrator_behind_stops_before_run_dir(orch, monkeypatch):
     """编排器 run() behind → STALE_VERSION 停机,RUN 目录未创建。"""
+    # 77X:豁免门落地后本测试显式退出套件级豁免,恢复 mock 原语义
+    monkeypatch.delenv("WXGZH_SKIP_VERSION_CHECK", raising=False)
     import subprocess as sp
     monkeypatch.setattr(sp, "run", _fake_run(_vc_payload("behind", "v2026.12.31-new")))
     out = orch.run("t")
@@ -97,6 +99,8 @@ def test_77v_orchestrator_behind_stops_before_run_dir(orch, monkeypatch):
 
 def test_77v_orchestrator_behind_allow_stale_continues(orch, monkeypatch):
     """--allow-stale:behind 留痕(overridden=true)继续跑完。"""
+    # 77X:豁免门落地后本测试显式退出套件级豁免,恢复 mock 原语义
+    monkeypatch.delenv("WXGZH_SKIP_VERSION_CHECK", raising=False)
     import subprocess as sp
     monkeypatch.setattr(sp, "run", _fake_run(_vc_payload("behind", "v2026.12.31-new")))
     out = orch.run("t", allow_stale=True)
@@ -126,6 +130,8 @@ def test_77v_version_check_unknown_lsremote_fail(monkeypatch, capsys):
 
 def test_77v_orchestrator_unknown_keeps_running_and_records(orch, monkeypatch):
     """unknown → 继续跑,st.version_check 留痕进 pipeline_state.json + run 结果。"""
+    # 77X:豁免门落地后本测试显式退出套件级豁免,恢复 mock 原语义
+    monkeypatch.delenv("WXGZH_SKIP_VERSION_CHECK", raising=False)
     import subprocess as sp
     monkeypatch.setattr(sp, "run", _fake_run(_vc_payload("unknown")))
     out = orch.run("t")

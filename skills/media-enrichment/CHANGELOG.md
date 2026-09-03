@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-dev32 (2026-09-03) — 77X
+
+- **OBS-364 input_contract supplemental 分流**：`input_contract.py` Step 3 交叉校验追加 3f——supplemental 且 aihot_permalink 非 null/非空时必须 `https://aihot.virxact.com/` 前缀，否则 error「77X/OBS-364: supplemental 材料构造 aihot 站内页填充（<permalink>），无站内页应填 null（口径同 77W REQUEST_MATERIAL_PERMALINK_LANE）」；normal/缺省不新增门槛（77W 口径不变）；与 `validate_media_manifest.py` REQUEST_MATERIAL_PERMALINK_LANE 双校验器一致。
+- **测试 +2**：新增 tests/test_hf77x_input_contract_supplemental.py（null 过 / 外站拒）。
+- **版本字面量全站同步 dev31 → dev32**（77J 既定模式）：VERSION / README / WXGZH_PIPELINE_INTEGRATION / build_zip / generate_evidence / _verify_dev7 / __init__ / input_contract / url_security(User-Agent) / 两处测试版本钉子。
+
 ## 0.1.0-dev31 (2026-09-03) — 77W
 
 - **OBS-357 审批车道名实修复**：request schema `approved_by` 改枚举 user/auto_rule/auto_approve（auto_approve=76R 遗留值，等同 auto_rule），新增同级 `basis` 依据字段（auto_* 车道必填）；`run_media_enrichment.py` 在 single_asset 批准搬运块前 fail-fast 校验车道——枚举外值拒、auto_* 缺 basis 拒、user 无用户动作证据拒（证据=user_images.json 既有通道含 material_id/source_url，或 approval 自带 approval_evidence_sha256 留痕）；SKILL.md 审批纪律节同步车道语义；既有测试夹具车道值 real-user/independent_reviewer 同步对齐枚举（16 测试语义不变）。
