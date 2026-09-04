@@ -24,6 +24,12 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
+# 77Y/OBS-370:可见字符计数与官方 validate_article_length.count_visible_chars
+# 同口径(import 单一真源;该脚本 stdlib 导入+main guard,模块导入无副作用)。
+from validate_article_length import count_visible_chars  # noqa: E402
+
+INTRO_SECTION_TITLE = "（导语）"
+
 NON_SECTION_HEADINGS = {"文章配置", "权重校验", "语义规划校验", "篇幅校验"}
 BUDGET_FIELDS = ("planned_chars", "minimum_chars", "maximum_chars")
 
@@ -81,6 +87,13 @@ def align_outline(text: str, target: int,
     total_old = sum(s["planned"] for s in sections)
     if total_old <= 0:
         return text, {}, ["outline: 各节 planned_chars 合计为 0,无法对齐"]
+    # 77Y/OBS-370:导语节(actual 传入的「（导语）」)参与预算分配——导语在大纲中
+    # 无 planned_chars/evidence 行,按简单上限处理:仅参与加权切分与整数分配、
+    # 进入输出清单(new),不写回任何大纲行(无预算字段可写,重写循环跳过)。
+    if actual and int(actual.get(INTRO_SECTION_TITLE) or 0) > 0:
+        sections = [{"title": INTRO_SECTION_TITLE, "start": None, "end": None,
+                     "planned": 0, "min_c": None, "max_c": None,
+                     "evidence_count": 0}] + sections
     # 76V/OBS-297:分节加权预算——按各节 evidence_ids 数量(素材密度)分配权重,
     # 不再均分/原比例;无任何 evidence 时回退原 planned 比例(与 76F 行为一致)。
     # 77A/OBS-306:actual 映射存在时按各节实测可见字数重排,不再只按 planned 估计。
@@ -115,6 +128,9 @@ def align_outline(text: str, target: int,
     lines = text.split("\n")
     section_ranges = [(s["start"], s["end"]) for s in sections]
     for s, ns in zip(sections, new_sections):
+        # 77Y/OBS-370:导语节无大纲行(start=None),跳过写回
+        if s["start"] is None:
+            continue
         for idx in range(s["start"], s["end"]):
             line = lines[idx]
             for field, new_val in (("planned_chars", ns["new"]),
@@ -178,11 +194,21 @@ def main(argv=None) -> int:
         atext = _read_text(art)
         heads = list(re.finditer(r"^##\s+(.+)$", atext, re.MULTILINE))
         actual = {}
+        # 77Y/OBS-370:计数口径与 count_visible_chars 同源(链接计文本/表格计单元格/
+        # 代码计内容),不再用「去空白全长」粗算;导语区(文首/H1 至第一个 ##)
+        # 计为「（导语）」节纳入 actual——此前导语字数不计入任何节,预算被正文节压占。
+        intro_body = atext[:heads[0].start()] if heads else atext
+        intro_chars = count_visible_chars(intro_body)
+        if intro_chars > 0:
+            actual[INTRO_SECTION_TITLE] = intro_chars
         for idx, hm in enumerate(heads):
             title = hm.group(1).strip()
             body = atext[hm.end(): heads[idx + 1].start() if idx + 1 < len(heads) else len(atext)]
-            actual[title] = len(re.sub(r"\s+", "", body))
+            actual[title] = count_visible_chars(body)
     new_text, info, errors = align_outline(text, target, actual=actual)
+    if actual is not None:
+        # 77Y/OBS-370:实测各节可见字数留痕(count_visible_chars 口径可核验)
+        info["actual"] = actual
     info["ok"] = not errors
     info["errors"] = errors
     if not errors and not a.dry_run:

@@ -12,6 +12,7 @@ import json
 import re
 import sys
 import time
+from datetime import datetime
 from urllib.parse import urlsplit
 from pathlib import Path
 
@@ -179,10 +180,14 @@ APPROVED_BY_LANES = ("user", "auto_rule", "auto_approve")
 
 
 def _user_action_evidence(approval: dict, request: dict) -> bool:
-    """77W/OBS-357:user 车道用户动作证据存在性检查(校验=证据存在性,
-    不改既有 user_images 注入行为)。证据=user_images.json 含该资产
-    material_id/source_url(:308/:470 既有通道),或 approval 记录自带
-    approval_evidence_sha256(审批留痕在案)。"""
+    """77W/OBS-357 + 77Y/OBS-371:user 车道用户动作证据存在性检查。
+
+    合法证据二选一:①user_images.json 匹配(既有通道:material_id/source_url);
+    ②approval 自带结构化 user_action 三要素——
+      {"user": <非空标识>, "action": "approved", "at": <ISO 时间戳>}。
+    pipeline 自产工件(approval_evidence_sha256/approval_readiness sha 等)一律
+    不构成 user 证据——77W 口径差①(approval_evidence_sha256 非空即过)作废,
+    圆形证据封堵(77Y/OBS-371)。"""
     material_id = approval.get("material_id") or ""
     source_page_url = approval.get("source_page_url") or ""
     for ui in (request.get("user_images") or []):
@@ -192,7 +197,21 @@ def _user_action_evidence(approval: dict, request: dict) -> bool:
             return True
         if source_page_url and ui.get("source_url") == source_page_url:
             return True
-    return bool((approval.get("approval_evidence_sha256") or "").strip())
+    ua = approval.get("user_action")
+    if not isinstance(ua, dict):
+        return False
+    if not str(ua.get("user") or "").strip():
+        return False
+    if str(ua.get("action") or "").strip() != "approved":
+        return False
+    at = str(ua.get("at") or "").strip()
+    if not at:
+        return False
+    try:
+        datetime.fromisoformat(at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
 
 
 def _approval_lane_error(approval: dict, request: dict) -> str | None:
@@ -205,9 +224,113 @@ def _approval_lane_error(approval: dict, request: dict) -> str | None:
     if lane in ("auto_rule", "auto_approve") and not (approval.get("basis") or "").strip():
         return "77W/OBS-357: auto_* 车道必须带 basis 依据"
     if lane == "user" and not _user_action_evidence(approval, request):
-        return ("user 车道无用户动作证据（user_images.json / approval_evidence 缺失），"
-                "拒绝记账 user（77W/OBS-357）")
+        return ("user 车道需用户真实动作工件（user_images.json 或 user_action "
+                "三要素 user/action=approved/at），pipeline 自产 sha 不算"
+                "（77Y/OBS-371），拒绝记账 user（77W/OBS-357）")
     return None
+
+
+# ── 77Y/OBS-366:basis 机械生成(用户裁决 2026-09-05)────────────────────────
+# 侦察结论(如实报告):media 子树内无既有 04 合同消费挂点;contracts 位于
+# wxgzh-pipeline 子树,与 media 子树同级(仓内 skills/ 布局与 installed 树同构),
+# 故取 SKILL_ROOT.parent 常量路径为最稳实现;读取失败不猜测(返回 None,
+# auto_* 车道不 blessed,不伪造 basis)。
+MEDIA_CONTRACT_PATH = (SKILL_ROOT.parent / "wxgzh-pipeline" / "contracts"
+                       / "04_media_enrichment.yaml")
+
+
+def _load_media_contract(path=None):
+    """77Y/OBS-366:实时读 04 合同 copyright_policy 节( yaml 解析;无 pyyaml
+    环境回退标量行正则提取,键集一致)。不可读/形状不对返回 None。"""
+    path = Path(path) if path else MEDIA_CONTRACT_PATH
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    data = None
+    try:
+        import yaml
+        data = yaml.safe_load(text)
+    except ImportError:
+        data = {}
+        in_block = False
+        for line in text.splitlines():
+            if re.match(r"^copyright_policy:\s*$", line):
+                in_block = True
+                continue
+            if in_block:
+                if line.strip() and not line.startswith(" "):
+                    in_block = False
+                    continue
+                m = re.match(r"^\s+([A-Z_]+):\s*(.+?)\s*(?:#.*)?$", line)
+                if m:
+                    data.setdefault("copyright_policy", {})[m.group(1)] = \
+                        m.group(2).strip("\"'")
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    cp = data.get("copyright_policy")
+    return cp if isinstance(cp, dict) else None
+
+
+def _asset_readiness_record(output_dir, asset_id):
+    """77Y/OBS-366:读 pipeline 侧 approval_readiness.json 中该资产的记录
+    (文件位于 <run>/media_enrichment/,= continue 输出目录父级)。缺失/损坏/
+    无该资产记录返回 None(证据链不可证,机械车道不 blessed)。"""
+    path = Path(output_dir).parent / "approval_readiness.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    for rec in data.get("assets") or []:
+        if isinstance(rec, dict) and rec.get("asset_id") == asset_id:
+            return rec
+    return None
+
+
+def _mechanical_basis(network_mode, config, contract, approval_readiness,
+                      asset_record):
+    """77Y/OBS-366/367:auto_* 车道 basis 机械生成(实时值,禁手填)。
+
+    条件=分类器非水印(decision!=rejected)/非受限(copyright_status!=restricted)
+    + 证据链齐(approval_readiness.approvable=true)+ 域名不在黑名单。
+    条件不满足返回 None——auto_rule 手填无效,不生成机械值,资产走既有
+    fail-fast(77W 三道门:restricted 覆盖/重分类/pipeline readiness enforce)。
+    basis 串模板(用户裁决 2026-09-05):
+    auto_rule lane(77Y/OBS-367): 04_media_enrichment.yaml COPYRIGHT_POLICY=<实时值>
+      + USER_BLANKET_APPROVAL=<实时值> + PER_IMAGE_MANUAL_REVIEW_REQUIRED=<实时值>;
+      approval_readiness.approvable=<值>; 分类器=<结果>; domain <host> 非水印高危
+    network_mode 参数按简报签名保留(当前模板不消费,留待后续档)。"""
+    def _get(obj, key, default=None):
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
+
+    decision = _get(asset_record, "decision") or ""
+    copyright_status = _get(asset_record, "copyright_status") or ""
+    if decision == "rejected" or copyright_status == "restricted":
+        return None
+    approval_readiness = approval_readiness or {}
+    approvable = bool(approval_readiness.get("approvable"))
+    if not approvable:
+        return None
+    resolved = _get(asset_record, "resolved_original_url") or ""
+    host = _host_of(resolved)
+    bl = [d.lower() for d in ((config or {}).get("domain_blacklist") or [])]
+    if any(host == d or host.endswith("." + d) for d in bl):
+        return None
+    cp = contract or {}
+    policy = cp.get("COPYRIGHT_POLICY", "UNAVAILABLE")
+    uba = cp.get("USER_BLANKET_APPROVAL", "UNAVAILABLE")
+    pimr = cp.get("PER_IMAGE_MANUAL_REVIEW_REQUIRED", "UNAVAILABLE")
+    return (f"auto_rule lane(77Y/OBS-367): 04_media_enrichment.yaml "
+            f"COPYRIGHT_POLICY={policy} + USER_BLANKET_APPROVAL={uba} + "
+            f"PER_IMAGE_MANUAL_REVIEW_REQUIRED={pimr}; "
+            f"approval_readiness.approvable={str(approvable).lower()}; "
+            f"分类器={decision}; domain {host} 非水印高危")
 
 
 def main():
@@ -389,7 +512,9 @@ def main():
                 if unbacked:
                     builder.errors.append(
                         "upload candidates without approval basis (FAIL_CLOSED): "
-                        + ", ".join(unbacked))
+                        + ", ".join(unbacked)
+                        + "；不选中的正路=rejected_with_reason 带理由处置"
+                          "（77Y/OBS-368），清零只针对存活未处置")
                     upload_candidate_ids = set()
                 else:
                     upload_candidate_ids = (set(asset_approvals) | material_approved_ids
@@ -1176,6 +1301,22 @@ def main():
                 asset.reasons = (
                     classification.rejection_reasons or classification.relevance_reasons)
 
+            # 77Y/OBS-366:auto_* 车道 basis 机械生成(置于重分类块之后,分类器
+            # 结果取终值)——agent 手填 basis 一律忽略,以 _mechanical_basis 实时
+            # 生成值入账;手填与机械值不一致不报错、以机械值为准留痕 reasons。
+            # 机械值为 None(分类器水印/受限/证据链断/合同不可读)时不 blessed,
+            # 资产走既有 fail-fast(77W 三道门)。
+            if (asset.approved_by in ("auto_rule", "auto_approve")
+                    and asset.asset_approval_consumed):
+                _mb = _mechanical_basis(
+                    network_mode, config, _load_media_contract(),
+                    _asset_readiness_record(output_dir, asset.asset_id) or {},
+                    asset)
+                if _mb and (approval.get("basis") or "").strip() != _mb:
+                    asset.reasons.append(
+                        "basis regenerated mechanically (77Y/OBS-366)")
+                    asset.reasons.append(_mb)
+
             # 76R/OBS-289:媒体审批自动放行模式(默认关)——WXGZH_MEDIA_AUTO_APPROVE=1
             # 且单图证据链齐全(observable_content 可读 + page_position 已知 + sha256 在册
             # + 感知去重通过 + 非黑名单域名)时自动批准并完整入账;任一要素缺失或命中
@@ -1296,6 +1437,14 @@ def main():
                                 asset.alt_text = placement.alt_text
     else:
         builder.warnings.append("Article file not found for placement planning")
+
+    # 77Y/OBS-368:rejected 处置一等公民——rejected 资产必须带理由(rejected_with_reason);
+    # 无理由的 rejected 记账 error(fail-closed),不得静默拒绝。
+    for _rej in builder.assets:
+        if _rej.decision == "rejected" and not (_rej.reasons or []):
+            builder.errors.append(
+                f"77Y/OBS-368: rejected asset {_rej.asset_id} without reason — "
+                "rejected_with_reason 处置必须带理由")
 
     # Secrets scan
     manifest = builder.build()

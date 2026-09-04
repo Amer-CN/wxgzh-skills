@@ -94,6 +94,28 @@ def main(argv=None) -> int:
             if not inc:
                 print(json.dumps({"status": "NO_RESUMABLE_RUN"}, ensure_ascii=False))
                 return 0
+            # 77Y/OBS-369:多候选停机——无参自动选中已实证误续他会话 RUN,
+            # 续发必须显式 RUN_ID;单候选仍自动续(档文允许)。
+            if len(inc) > 1:
+                from . import paths as P
+                from .state import load_state
+                inc_set = set(inc)
+                candidates = []
+                for r in P.list_runs(orch.project_root):
+                    if r.name not in inc_set:
+                        continue
+                    try:
+                        topic = load_state(r).topic
+                    except (OSError, ValueError):
+                        topic = None
+                    candidates.append({"run_id": r.name, "topic": topic})
+                print(json.dumps(
+                    {"status": "MULTIPLE_CANDIDATE_RUNS",
+                     "candidates": candidates,
+                     "hint": ("续发必须显式 RUN_ID：续发 <RUN_ID>"
+                              "（77Y/OBS-369：无参自动选中已实证误续他会话 RUN）")},
+                    ensure_ascii=False, indent=2))
+                return 1
             out = orch.resume(None)
             out["resumed_run_id"] = out.get("run_id") or (inc[0] if inc else None)
         else:

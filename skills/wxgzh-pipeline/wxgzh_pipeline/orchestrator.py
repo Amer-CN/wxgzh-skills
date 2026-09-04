@@ -190,7 +190,8 @@ class Orchestrator:
         在 doctor 通过后、RUN 目录创建前调用;resume() 不做本检查(续发优先把
         断点跑完,不新增停机点)。
         返回 (stale, trace):
-          current  -> (None, None)               静默继续,不留痕不打印额外行
+          current  -> (None, vc)                 留痕继续(77Y/OBS-372:三态留痕,
+                                                 current 与未跑/静默不可辨属缺陷)
           behind   -> allow_stale=False: (STALE_VERSION 停机 dict, None)
                       allow_stale=True : (None, vc+overridden) 留痕继续
           unknown  -> (None, vc)                 留痕继续(不猜、不阻断)
@@ -223,7 +224,8 @@ class Orchestrator:
                                  + ((proc.stdout or proc.stderr or "")[-200:]))}
         status = str(vc.get("status", "unknown"))
         if status == "current":
-            return None, None
+            # 77Y/OBS-372:current 也生成 trace 留痕(三态留痕,静默=与未跑不可辨)
+            return None, vc
         if status == "behind":
             if allow_stale:
                 vc["overridden"] = True
@@ -275,9 +277,9 @@ class Orchestrator:
         if items_file:
             # OBS-64:自有素材注入入口(正式通道);None = 正常 aihot 检索
             st.items_file = str(Path(items_file).resolve())
-        if vc_trace is not None:
-            # 77V:unknown / behind+--allow-stale 留痕,写进 pipeline_state.json
-            st.version_check = vc_trace
+        # 77V + 77Y/OBS-372:三态留痕恒写(current/behind+--allow-stale/unknown/
+        # skipped 全部落 state;None 保留向后兼容旧 state 语义)
+        st.version_check = vc_trace
         save_state(run_dir, st)
         out = self._drive(run_dir, st, disc, create_wechat_draft, stop_after=stop_after)
         if dup_warning:

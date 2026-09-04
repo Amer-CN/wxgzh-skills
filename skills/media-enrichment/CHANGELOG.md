@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-dev33 (2026-09-05) — 77Y
+
+- **OBS-366/367 auto_rule 车道合法化 + basis 机械生成**：`run_media_enrichment.py` 新增 `_mechanical_basis`——single_asset 搬运块对 approved_by=auto_rule/auto_approve 时 agent 手填 basis 一律忽略，以 04 合同 copyright_policy 实时值（yaml 解析 `SKILL_ROOT.parent/wxgzh-pipeline/contracts/04_media_enrichment.yaml`）+ approval_readiness.approvable + 分类器终值 + 域名排除结果机械生成入账；手填与机械值不一致不报错、留痕 reasons「basis regenerated mechanically (77Y/OBS-366)」；条件不满足（分类器水印/受限/证据链断）返回 None，走既有 fail-fast（77W 三道门）。人工终审点=用户草稿箱发布动作（用户裁决 2026-09-05）。
+- **OBS-371 user 车道圆形证据封堵**：`_user_action_evidence` 删除「approval_evidence_sha256 非空即过」分支（77W 口径差①作废）——pipeline 自产 sha 一律不构成 user 证据；合法证据二选一=user_images.json 既有通道，或结构化 user_action 三要素（user 非空/action=approved/at 为 ISO 时间戳）；无真实证据 FAIL 指路 77Y/OBS-371。
+- **OBS-368 rejected 一等公民**：unbacked FAIL_CLOSED 文案追加指路「不选中的正路=rejected_with_reason 带理由处置，清零只针对存活未处置」；rejected 资产无 reasons 记账 error（fail-closed）。
+- **SKILL.md「自动决策边界」节改写**：auto_rule 车道合法条件/终审点=发布键/rejected_with_reason 正路（77Y/OBS-367）；审批纪律节同步。
+- **测试**：新增 tests/test_hf77y_basis_lane.py（机械生成 3 + 圆形证据 2）；test_hf77w_approval_lane.py 按 77Y 口径同步（圆形证据改拒、user_action 通道）；user 车道夹具补 user_action 三要素（test_single_asset_e2e/test_obs71_chart_approval/test_hf76j_binding_consistency，测试语义不变）。
+- **版本字面量全站同步 dev32 → dev33**（77J 既定模式）：VERSION / README / WXGZH_PIPELINE_INTEGRATION / build_zip / generate_evidence / _verify_dev7 / __init__ / input_contract / url_security(User-Agent) / 两处测试版本钉子。
+
 ## 0.1.0-dev32 (2026-09-03) — 77X
 
 - **OBS-364 input_contract supplemental 分流**：`input_contract.py` Step 3 交叉校验追加 3f——supplemental 且 aihot_permalink 非 null/非空时必须 `https://aihot.virxact.com/` 前缀，否则 error「77X/OBS-364: supplemental 材料构造 aihot 站内页填充（<permalink>），无站内页应填 null（口径同 77W REQUEST_MATERIAL_PERMALINK_LANE）」；normal/缺省不新增门槛（77W 口径不变）；与 `validate_media_manifest.py` REQUEST_MATERIAL_PERMALINK_LANE 双校验器一致。

@@ -32,9 +32,10 @@ permissions:
 
 ### 自动决策边界
 
-- **自动批**：零图降级；auto_approve 开启（WXGZH_MEDIA_AUTO_APPROVE=1，默认关）且单图证据链齐全（76R/OBS-289 口径）。
-- **必须人工**：图片审批（默认道）、restricted 资产、上传微信前终审。
-- 来源：EA2×56，逐条对应 `scripts/run_media_enrichment.py` 决策点。
+- **自动批**：零图降级；auto_approve 机器车道开启（WXGZH_MEDIA_AUTO_APPROVE=1，默认关，非 live）且单图证据链齐全（76R/OBS-289 口径）；auto_rule 规则车道合法（77Y/OBS-367，用户裁决 2026-09-05）——条件=分类器非水印/非受限 + 证据链齐（approval_readiness.approvable=true）+ basis 机械生成（77Y/OBS-366，agent 手填 basis 一律忽略，以实时机械值为准）。
+- **人工终审点**：用户草稿箱发布动作（发布前过目图片）；图片审批过程道由 auto_rule 承载，非人工逐图审；restricted 资产仍拒。
+- **不选中的正路**：rejected_with_reason 处置（带理由，77Y/OBS-368，rejected 与 approved 同为一等公民）；守卫清零只针对「存活未处置」资产。
+- 来源：EA2×56 + 77Y，逐条对应 `scripts/run_media_enrichment.py` 决策点。
 
 ## 使命
 
@@ -209,7 +210,9 @@ python scripts/run_media_enrichment.py --request <request.json> --output-dir <di
   readiness 报告重生成后旧 sha 一律作废（旧批准合同自动失效，不得复用）。
 - **重复/镜像资产**：与其 canonical 孪生（同图，感知去重判定）共享审批依据——
   批准记录指向孪生资产 ID 并复用其 readiness，禁止裸批（无孪生依据不得独立批准）。
-- **审批车道（77W/OBS-357）**：`approved_by` 枚举=user/auto_rule/auto_approve——
-  user=真实用户动作（需 user_images.json 既有通道或审批留痕证据，无证据拒绝记账 user）；
-  auto_rule=规则车道（依据必填）；auto_approve=76R/OBS-289 遗留值（等同 auto_rule）；
-  auto_* 车道必填 `basis` 依据（合同/规则条号，如 76R/OBS-289、04 合同 copyright_policy 节）。
+- **审批车道（77W/OBS-357，77Y/OBS-367 收紧）**：`approved_by` 枚举=user/auto_rule/auto_approve——
+  user=真实用户动作（需 user_images.json 既有通道或结构化 user_action 三要素（user/action=approved/at），
+  pipeline 自产 sha（approval_evidence_sha256 等）不构成 user 证据（77Y/OBS-371），无证据拒绝记账 user）；
+  auto_rule=规则车道（77Y/OBS-367 合法化：分类器非水印/非受限+证据链齐+条件满足）；auto_approve=76R/OBS-289 遗留值（等同 auto_rule）；
+  auto_* 车道必填 `basis` 依据，且 agent 手填 basis 一律忽略、由 run_media_enrichment 按 04 合同实时值
+  机械生成入账（77Y/OBS-366）；不选中的正路=rejected_with_reason 带理由处置（77Y/OBS-368）。

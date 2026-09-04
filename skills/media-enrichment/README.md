@@ -3,7 +3,7 @@
 > 为已写好的中文文章提供**可追溯、可审计**的媒体资产（配图 + 原创数据图）的 Agent Skill。
 > An agent skill that supplies traceable, auditable media assets (images + original data charts) for finished articles.
 
-**版本 / Version**: 0.1.0-dev32 · **许可证 / License**: MIT
+**版本 / Version**: 0.1.0-dev33 · **许可证 / License**: MIT
 
 ## 概述
 

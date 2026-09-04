@@ -74,6 +74,9 @@ def _approval(discovery: dict, asset_id: str) -> dict:
         "approval_id": f"AP-{asset_id}", "approved_scope": "single_asset",
         "approved_by": "user", "approved_at": "2026-08-13T00:00:00Z",
         "approval_evidence_sha256": EVIDENCE_SHA,
+        # 77Y/OBS-371 夹具同步:圆形证据封堵后 user 车道须真实动作工件
+        "user_action": {"user": "fixture-user", "action": "approved",
+                        "at": "2026-08-13T00:00:00Z"},
     })
     return record
 

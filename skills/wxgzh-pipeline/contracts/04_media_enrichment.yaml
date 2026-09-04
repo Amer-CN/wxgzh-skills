@@ -6,9 +6,14 @@ must_run_after: zh_human_writing
 depends_on_freeze: final_article_sha256
 copyright_policy:
   # 77W/OBS-358:单一真源=media-enrichment SKILL.md「自动决策边界」节,本节仅镜像不改义
+  # 77Y/OBS-367 用户裁决 2026-09-05，终审点=草稿箱发布动作——PER_IMAGE_MANUAL_REVIEW_REQUIRED
+  # true→false(图片审批过程道由 auto_rule 承载,非人工逐图审;77Y 升版时值变化)。
   COPYRIGHT_POLICY: ALLOW_UNLESS_EXPLICITLY_PROHIBITED
   USER_BLANKET_APPROVAL: false
-  PER_IMAGE_MANUAL_REVIEW_REQUIRED: true
+  PER_IMAGE_MANUAL_REVIEW_REQUIRED: false
+  # 77Y/OBS-368(用户裁决 2026-09-05):rejected_with_reason 一等公民——不选中图片的
+  # 正路=带理由 rejected 处置;守卫清零只针对「存活未处置」资产。
+  REJECTED_WITH_REASON_FIRST_CLASS: true
   LICENSE_VERIFICATION_REQUIRED: false
   VISIBLE_SOURCE_CAPTION_REQUIRED: false
   UNKNOWN_COPYRIGHT_BLOCKING: false

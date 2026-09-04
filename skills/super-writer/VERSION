@@ -1,5 +1,5 @@
-version: 0.4.18-rc1
-previous_version: 0.4.17-rc1
+version: 0.4.19-rc1
+previous_version: 0.4.18-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -12,6 +12,6 @@ writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-09-02
-hotfix_name: 77T
-release_notes: "v0.4.18-rc1: 档77T — 灵犀复扫第二轮（内容修复）：SKILL.md frontmatter permissions 块（LP3 机器可读）。"
+hotfix_date: 2026-09-05
+hotfix_name: 77Y
+release_notes: "v0.4.19-rc1: 档77Y — 审批域根治（内容修复）：align_outline_budget --article 计数口径与导语区纳入（OBS-370）。"

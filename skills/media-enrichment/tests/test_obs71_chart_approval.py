@@ -87,6 +87,9 @@ def _approval_for(frozen_record: dict, discovery_sha: str) -> dict:
         "approved_by": "user",
         "approved_at": "2026-08-04T00:00:00Z",
         "approval_evidence_sha256": "e" * 64,
+        # 77Y/OBS-371 夹具同步:圆形证据封堵后 user 车道须真实动作工件
+        "user_action": {"user": "fixture-user", "action": "approved",
+                        "at": "2026-08-04T00:00:00Z"},
     }
 
 

@@ -102,6 +102,10 @@ def _approval(discovery: dict, asset_id="A-001", **overrides) -> dict:
         "approval_id": f"AP-{asset_id}", "approved_scope": "single_asset",
         "approved_by": "user", "approved_at": "2026-07-29T00:00:00Z",
         "approval_evidence_sha256": EVIDENCE_SHA,
+        # 77Y/OBS-371 夹具同步:圆形证据封堵后 user 车道须真实动作工件
+        # (user_action 三要素);本组测试语义(身份/绑定/上传机制)不变。
+        "user_action": {"user": "fixture-user", "action": "approved",
+                        "at": "2026-07-29T00:00:00Z"},
     })
     record.update(overrides)
     return record

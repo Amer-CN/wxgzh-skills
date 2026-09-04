@@ -82,7 +82,17 @@ APPROVAL_CONTRACT_RULE = (
     # 77W/OBS-358:media 阶段指令立规(规则冲突停机上报,禁执行端自裁)——
     # 经 _media_two_phase 批准暂停点 meta(approval_contract_rule)下发给发文端。
     "77W/OBS-358:任何两份规则文件(合同/协议/SKILL.md/指令)冲突时,一律停机上报审核方,"
-    "禁止执行端自裁;发现冲突的正确动作=原文贴回等档。")
+    "禁止执行端自裁;发现冲突的正确动作=原文贴回等档。"
+    # 77Y/OBS-367(用户裁决 2026-09-05):auto_rule 车道合法化+终审点=发布键;
+    # 76R「live 结构性不可能」结论作废更正——live 下 agent 手写审批经消费校验为
+    # 合法通道(守卫三道门兜底:approval_readiness_sha256 新鲜度/身份一致性/车道校验)。
+    "77Y/OBS-367:审批域唯一合法代批=auto_rule 车道(条件=分类器非水印/非受限"
+    "+证据链齐 approval_readiness.approvable=true+basis 机械生成(77Y/OBS-366,"
+    "agent 手填 basis 一律忽略、以 04 合同实时值机械生成为准));"
+    "人工终审点=用户草稿箱发布动作(发布前过目图片),图片审批过程道非人工;"
+    "approved_by=user 仍须用户真实动作证据(user_images.json 或 user_action 三要素,"
+    "pipeline 自产 sha 不算——77Y/OBS-371);"
+    "76R「live 结构性不可能」结论作废更正:live 下 agent 手写审批经消费校验为合法通道。")
 AIHOT_INJECTION_INSTRUCTIONS = (
     "素材已由正式注入入口提供(--items-file,自有素材注入)。"
     "禁止调用 AI HOT API;核验 aihot/ 三文件(fetch_log.mode="
@@ -284,6 +294,42 @@ def _agent_validator_args(stage: str, ctx, sd: Path) -> list[tuple[str, str, lis
     return []
 
 
+def _aihot_synthetic_original_check(sd: Path) -> list:
+    """77Y/OBS-373:aihot 合成条目契约自检(ACK 前挂点,_agent 内 ACK 校验通过后执行)。
+
+    逐条 deduplicated_items.json 条目——非 `cm` 前缀 id(合成/补充条目)时:
+    - links.original 不得为 aihot 站内页(https://aihot.virxact.com/ 前缀=冒充,
+      0srcql/nlmrly 二咬实证——story 页 URL 冒充 original);
+    - 且必须存在,provenance=supplemental 按 77X 分流允许 permalink null;
+      但 original 一旦存在,冒充禁令与 provenance 无关。
+    返回违规明细列表(空=通过);每条列明条目 id+缺什么。文件缺失/损坏不在此报
+    (既有 content_validate/schema 链负责)。"""
+    try:
+        items = read_json(sd / "deduplicated_items.json")
+    except (OSError, ValueError):
+        return []
+    if not isinstance(items, list):
+        return []
+    violations = []
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        iid = str(it.get("id") or "")
+        if not iid or iid.startswith("cm"):
+            continue
+        links = it.get("links") if isinstance(it.get("links"), dict) else {}
+        original = str(links.get("original") or "").strip()
+        if original.startswith("https://aihot.virxact.com/"):
+            violations.append(
+                f"{iid}: links.original 为 aihot 站内页({original})=冒充 original"
+                "（77Y/OBS-373），须填真实原始来源 URL")
+        elif not original and (it.get("provenance") or "normal") != "supplemental":
+            violations.append(
+                f"{iid}: 合成/补充条目缺 links.original（77Y/OBS-373）；"
+                "provenance=supplemental 按 77X 分流允许 null，否则必填")
+    return violations
+
+
 def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs) -> bool:
     """77I/OBS-321: resume reuses the frozen handshake request when its intent matches."""
     path = sd / AH.REQUEST_FILE
@@ -352,6 +398,16 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                              "entrypoint_path": None, "entrypoint_sha256": None}
     ok, hs = AH.verify_ack(sd, stage, agent_expected, run_dir=ctx.run_dir)
     outputs = [sd / o for o in expected if (sd / o).is_file()]
+    # 77Y/OBS-373:aihot ACK 前自检——合成条目(非 cm 前缀 id)links.original 契约。
+    # 违规=ACK 拒(handshake FAIL → execute_stage StageError 停机),错误列明
+    # 条目 id+缺什么。
+    synthetic_violations = (
+        _aihot_synthetic_original_check(sd) if (stage == "aihot" and ok) else [])
+    if synthetic_violations:
+        ok = False
+        hs = dict(hs, HANDSHAKE="FAIL",
+                  reason="; ".join(synthetic_violations),
+                  synthetic_original_violations=synthetic_violations)
     meta = {"exec_kind": EM.AGENT, "handshake": hs,
             "invoked_entrypoint": f"agent_handshake:{stage}",
             "entrypoint_path": None, "entrypoint_sha256": None}
@@ -846,7 +902,12 @@ def _build_media_request(ctx, sd: Path, state, *, phase: str = "discover") -> Pa
             # 依据字段)——必填集 _STABLE_SINGLE_ASSET_FIELDS 不动(user 车道无
             # basis 属预期,_load_copyright_approvals:533 全非空校验不接纳它)。
             {**{field: rec[field] for field in sorted(_STABLE_SINGLE_ASSET_FIELDS)},
-             **({"basis": rec["basis"]} if rec.get("basis") else {})}
+             **({"basis": rec["basis"]} if rec.get("basis") else {}),
+             # 77Y/OBS-371:条件附加 user_action(user 车道真实动作证据三要素,
+             # 与 basis 同法条件透传)——经 media_request 到达 media 消费侧
+             # _user_action_evidence;无该键不携带。
+             **({"user_action": rec["user_action"]}
+                if rec.get("user_action") else {})}
             for _, rec in sorted(approvals["single_asset"].items())],
         "config": {
             "upload_mode": (

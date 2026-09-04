@@ -43,8 +43,10 @@ def test_77w_approved_by_out_of_enum_rejected():
     assert "77W/OBS-357" in error and "枚举外值" in error
     assert "real-user" in error
     assert "schemas/media_enrichment_request.schema.json" in error
-    # 合法枚举三值均不报「枚举外值」(auto_* 可能报 basis 缺失,user 留痕在案)
-    assert runner._approval_lane_error(_approval(), {}) is None
+    # 合法枚举三值均不报「枚举外值」(auto_* 可能报 basis 缺失;user 车道按 77Y
+    # 口径可能报证据缺失,均不属枚举外值)
+    err_user = runner._approval_lane_error(_approval(approval_evidence_sha256=""), {})
+    assert err_user is None or "枚举外值" not in err_user
     for lane in ("auto_rule", "auto_approve"):
         error = runner._approval_lane_error(
             _approval(approved_by=lane, approval_evidence_sha256=None), {})
@@ -67,12 +69,14 @@ def test_77w_auto_rule_without_basis_rejected():
 
 
 def test_77w_user_lane_evidence_gate():
-    """③user 无证据拒 / 有 user_images 证据(既有通道)通过。"""
-    # 无证据:无 user_images 且 approval 不带 approval_evidence_sha256 → 拒
+    """③user 无证据拒 / 有 user_images 证据(既有通道)通过。
+    77Y/OBS-371:圆形证据封堵——approval_evidence_sha256 非空即过分支作废;
+    user_action 三要素为新增合法通道。"""
+    # 无证据:无 user_images 且 approval 不带任何用户动作工件 → 拒(77Y 文案)
     error = runner._approval_lane_error(
         _approval(approval_evidence_sha256=""), {})
-    assert error is not None and "user 车道无用户动作证据" in error
-    assert "77W/OBS-357" in error
+    assert error is not None and "user 车道需用户真实动作工件" in error
+    assert "77Y/OBS-371" in error and "77W/OBS-357" in error
     # 有 user_images 证据(source_url 命中既有通道)→ 通过
     request = {"user_images": [{"url": "https://img.example.test/1.png",
                                 "source_url": "https://www.example-source.test/a"}]}
@@ -83,8 +87,15 @@ def test_77w_user_lane_evidence_gate():
                                 "material_id": "M-001"}]}
     assert runner._approval_lane_error(
         _approval(approval_evidence_sha256=""), request) is None
-    # 审批留痕在案(approval 自带 approval_evidence_sha256)→ 通过
-    assert runner._approval_lane_error(_approval(), {}) is None
+    # 77Y/OBS-371:圆形证据拒——仅 pipeline 自产 approval_evidence_sha256,无
+    # user_images/user_action → 拒(pipeline 自产 sha 不算用户动作证据)
+    error = runner._approval_lane_error(_approval(), {})
+    assert error is not None and "77Y/OBS-371" in error
+    # user_action 三要素齐(user/action=approved/at 为 ISO)→ 通过
+    assert runner._approval_lane_error(_approval(
+        approval_evidence_sha256="",
+        user_action={"user": " operator ", "action": "approved",
+                     "at": "2026-09-05T12:00:00Z"}), {}) is None
 
 
 # ── OBS-359:supplemental permalink 通道(77W 规格 D 测试 +2)──────────

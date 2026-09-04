@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.4.19-rc1 (2026-09-05) — 档77Y：align --article 计数口径与导语区纳入（OBS-370）
+
+- **OBS-370 可见字符口径**：`align_outline_budget.py --article` 各节实测字数改用 `validate_article_length.count_visible_chars`（import 单一真源；链接只计文本、代码计内容、表格计单元格），不再「去空白全长」粗算；输出 info 新增 `actual` 留痕（实测可核验）。
+- **OBS-370 导语区纳入**：文首/H1 至第一个 `##` 的文本计为「（导语）」节纳入 actual 与预算分配（actual_weighted 按实测份额加权；导语在大纲中无预算字段，按简单上限处理——参与切分、进输出清单、不写回大纲行）；预算不再被正文节压占。
+- **测试 +2**：新增 tests/test_hf77y_align_article.py（计数口径与 count_visible_chars 一致/导语节在册且预算不再被压）。
+
 ## v0.4.18-rc1 (2026-09-02) — 档77T：灵犀复扫第二轮（内容修复）
 
 - **OBS-351 权限声明机器可读（LP3）**：SKILL.md frontmatter 新增 `permissions:` 块（file-scope/network/secrets/subprocess/prohibited 五要素，与正文「权限与范围声明」节一致；正文节保留不动）。
