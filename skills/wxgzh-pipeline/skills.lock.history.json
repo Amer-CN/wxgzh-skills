@@ -2000,5 +2000,43 @@
     "new_skill_version": "0.1.0-dev32",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260904T193929Z-6c7c119d",
+    "skill": "super-writer",
+    "reason": "77Y 审批域根治:sw align 可见字符口径+导语区;media basis 机械生成+auto_rule 合法化+圆形证据封堵+OBS-246+dev33",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-04T19:39:29Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "9e7adb23c99ca50c554073e15cfd56c288599ec09d5b25d5f0184cd59ee45223",
+    "new_root_sha256": "b24bf0f1520bde97dc6c93a5bc3655613ec32f44543baa2fbd94f5fac5e39339",
+    "old_full_commit_sha": "53c8f7a0cb882e8d50f8e7a224caa31e27c9b306",
+    "new_full_commit_sha": "38b0176080e2f2c841c9eb2be2816b82e9942beb",
+    "old_source_tree_sha": "1829575a198a4283106ecd0301334d8124acc337",
+    "new_source_tree_sha": "55ff10ec8017ba60d746c5d89ffb616117867332",
+    "old_skill_version": "0.4.18-rc1",
+    "new_skill_version": "0.4.19-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260904T193951Z-d9e778a9",
+    "skill": "media-enrichment",
+    "reason": "77Y 审批域根治:sw align 可见字符口径+导语区;media basis 机械生成+auto_rule 合法化+圆形证据封堵+OBS-246+dev33",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-04T19:39:51Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "19da7e5979e772fef48f039c4cd9ec004828225a3cb8b29e20b9769040705caa",
+    "new_root_sha256": "700cefd104353c4c08894dd6d705e4695cb34d9f95f73705c30bfa9682fdf767",
+    "old_entrypoint_sha256": "db775150fbc8d51000f7d6c2618a317ba729e252493b518739ce6fc014b515f0",
+    "new_entrypoint_sha256": "aa9d10b96d56d8626227856bbd04bffb5ca01bfb6a3dd77950c7eb884a84b3b6",
+    "old_full_commit_sha": "b156dc18b2e45afeaa6e6636a422eedc53ddeeb9",
+    "new_full_commit_sha": "38b0176080e2f2c841c9eb2be2816b82e9942beb",
+    "old_source_tree_sha": "8d612cbc685c2eff41b373886bafc93491980e30",
+    "new_source_tree_sha": "97f87c1c6221553c68f955d7297b1f28ebb9abd9",
+    "old_skill_version": "0.1.0-dev32",
+    "new_skill_version": "0.1.0-dev33",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
