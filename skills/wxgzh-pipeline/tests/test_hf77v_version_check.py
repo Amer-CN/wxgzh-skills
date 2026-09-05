@@ -63,7 +63,14 @@ def test_77v_version_check_current(monkeypatch):
     out = vc.check(skills_home=SKILL_ROOT.parent)
     assert out["status"] == "current"
     assert out["latest"] == "v2026.01.01-old"
-    assert out["current"]["baseline_date"] == "2026-09-02"
+    # 77Y-F/OBS-372:baseline_date 从 history 最后一条 recorded_at 动态读取
+    # (hotfix7/77O-F 单一真源同法),不再硬编码——77X relock 后日期推进即过期
+    import json as _json
+    from pathlib import Path as _Path
+    _hp = SKILL_ROOT / "skills.lock.history.json"
+    _last = _json.loads(_hp.read_text(encoding="utf-8"))[-1]
+    _expected_date = str(_last.get("recorded_at") or "")[:10]
+    assert out["current"]["baseline_date"] == _expected_date
     assert out["current"]["baseline_source"] == "skills.lock.history.json"
     # 同日取字典序最大、日期为主序
     assert vc._latest_vtag(

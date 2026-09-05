@@ -117,6 +117,7 @@ def _mk_supp_run(tmp_path) -> Path:
              "source_url": "https://x.com/a", "title": "素材A"},
             {"material_id": "M-SUP", "provenance": "supplemental",
              "source_url": "https://official.example.com/blog/h3-release",
+             "aihot_permalink": "https://aihot.virxact.com/items/supp-h3",
              "title": "官方公告:H3 发布",
              "selected_claim_ids": ["C-2"]},
         ],
@@ -135,7 +136,7 @@ def _mk_supp_run(tmp_path) -> Path:
          "aihot_permalink": "https://x.com/a", "status": "used"},
         {"id": "M-SUP", "title": "官方公告:H3 发布",
          "source_url": "https://official.example.com/blog/h3-release",
-         "aihot_permalink": "https://official.example.com/blog/h3-release",
+         "aihot_permalink": None,
          "status": "used", "provenance": "supplemental"},
     ]}}
     (rd / "super_writer" / "material-ledger.yaml").write_text(
