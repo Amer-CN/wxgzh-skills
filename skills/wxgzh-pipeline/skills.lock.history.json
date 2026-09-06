@@ -2038,5 +2038,23 @@
     "new_skill_version": "0.1.0-dev33",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260906T155236Z-f2ae2262",
+    "skill": "super-writer",
+    "reason": "77Z 版本检查内容口径+信封官方刷新+标题候选证据完备:sw 0.4.20-rc1(VSP 逐候选门)+MANIFEST 重算",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-06T15:52:36Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "b24bf0f1520bde97dc6c93a5bc3655613ec32f44543baa2fbd94f5fac5e39339",
+    "new_root_sha256": "5c30077fe19830555aba1bb0fd14e2497c0cefe52c88ddb34bf833733b253c23",
+    "old_full_commit_sha": "38b0176080e2f2c841c9eb2be2816b82e9942beb",
+    "new_full_commit_sha": "0446ce3293c72d58cbb9a1e20c74676c71445646",
+    "old_source_tree_sha": "55ff10ec8017ba60d746c5d89ffb616117867332",
+    "new_source_tree_sha": "ed39e29d2ba316f97d17105887a3a4bd3ba9f13f",
+    "old_skill_version": "0.4.19-rc1",
+    "new_skill_version": "0.4.20-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]

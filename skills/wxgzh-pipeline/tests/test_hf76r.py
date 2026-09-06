@@ -111,7 +111,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301",
                             "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309",
                             "77J/OBS-324", "77M/OBS-330", "77O/OBS-337", "77R/OBS-342",
-                            "77Z/OBS-375"}, f"{k}: 意外新增规则 {extra}"
+                            "77Z/OBS-375", "77Z/OBS-376"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():

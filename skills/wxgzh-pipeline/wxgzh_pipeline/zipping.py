@@ -18,7 +18,9 @@ FORBIDDEN_NAMES = {".env"}
 FORBIDDEN_SUFFIXES = {".zip"}
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
 PIPELINE_RELEASE_INCLUDES = (".github/workflows/ci.yml",)
-PIPELINE_RELEASE_EXCLUDES = (".gitattributes",)
+# 77Z/OBS-374:.installed-from=installer 落盘的装机侧本地标记(源 sha/tag),
+# 属本地产物不入发布/比对集(OBS-68 与 installer 同源规则,在此单点豁免)。
+PIPELINE_RELEASE_EXCLUDES = (".gitattributes", ".installed-from")
 
 
 def _skip(p: Path, include_paths=(), exclude_paths=()) -> bool:
