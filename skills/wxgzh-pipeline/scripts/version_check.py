@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 """scripts/version_check.py — 77V 版本新鲜度检查（建议性工具，永远 exit 0）。
 
-比对本地构建基线日期与远端最新发版 tag，供编排器第 0 步调用（77V）：
+比对本地与远端，供编排器第 0 步调用（77V）：
   远端面：`git ls-remote --tags <origin>`（固定 origin URL 常量，不依赖本地
         .git；装机侧拷贝没有 .git 也能跑）。只认 `v` 前缀 tag，格式
-        `vYYYY.MM.DD-<suffix>`：日期为主序、同日取字典序最大。
+        `vYYYY.MM.DD-<suffix>`：日期为主序、同日取字典序最大；77Z/OBS-374
+        起解析 (tag, sha) 双列。
   本地面：skills.lock.json 的四个锁技能 skill_version + pipeline VERSION 文件
         version 行 + 锁文件 sha256。
-  基线：本地自报构建基线日期——优先 skills.lock.history.json 最后一条
-        recorded_at 的 ISO 日期部分（装机侧 lock 旁若有 history 拷贝即用之）；
-        否则 fallback 读 VERSION 的 release_date；pipeline version 的 hotfix
-        后缀（如 9R25）与 tag 日期不可比，一律不猜。
-  判定：远端最新 tag 日期 > 本地基线日期 → behind；相等或更小 → current；
-        不可比（基线缺失 / ls-remote 失败 / 远端无可识别 tag）→ unknown。
+  内容口径（77Z/OBS-374，优先）：装机侧 pipeline root 有 `.installed-from`
+        标记（install.py 装机同步完成时写：source_commit/resolved_tag/
+        recorded_at 单行 JSON）且 ls-remote 成功时，latest tag sha == 标记
+        source_commit（或 resolved_tag sha）→ current；不等 → behind
+        （更新路径真实可清除）；日期口径降级为 detail 附加说明。
+  基线（标记缺失时回退，向后兼容旧装机拷贝）：本地自报构建基线日期——优先
+        skills.lock.history.json 最后一条 recorded_at 的 ISO 日期部分（装机侧
+        lock 旁若有 history 拷贝即用之）；否则 fallback 读 VERSION 的
+        release_date；pipeline version 的 hotfix 后缀（如 9R25）与 tag 日期
+        不可比，一律不猜。
+  判定：内容口径优先（见上）；无标记时远端最新 tag 日期 > 本地基线日期 →
+        behind；相等或更小 → current；不可比（基线缺失 / ls-remote 失败 /
+        远端无可识别 tag）→ unknown。
 
 stdout 输出单行 JSON（stdout 单行，永不抛错退出）：
   {"status": "current|behind|unknown", "current": {...本地快照},
@@ -102,8 +110,13 @@ def _baseline_from_version(version_file: Path) -> str | None:
     return rd if rd and DATE_RE.match(rd) else None
 
 
-def _ls_remote_tags(remote: str) -> tuple[list[str], str | None]:
-    """git ls-remote --tags；返回 (v 前缀 tag 名列表, 错误或 None)。"""
+def _ls_remote_tags(remote: str) -> tuple[list[tuple[str, str]], str | None]:
+    """git ls-remote --tags；返回 ((tag, sha) 列表, 错误或 None)。
+
+    77Z/OBS-374:升级返回 (tag, sha) 双列——ls-remote 输出本就含
+    `<sha>\trefs/tags/x`,解析双列,供内容口径比对 latest tag sha。
+    annotated tag 的本体行与 peeled(^{}) 行同 sha,去重同名取本体。
+    """
     try:
         proc = subprocess.run(["git", "ls-remote", "--tags", remote],
                               capture_output=True, text=True,
@@ -114,21 +127,29 @@ def _ls_remote_tags(remote: str) -> tuple[list[str], str | None]:
     if proc.returncode != 0:
         return [], (f"git ls-remote 失败 rc={proc.returncode}: "
                     f"{((proc.stderr or proc.stdout or '').strip())[-200:]}")
-    tags = []
+    tags: list[tuple[str, str]] = []
+    peeled: dict[str, str] = {}
     for line in (proc.stdout or "").splitlines():
-        ref = line.split("\t", 1)[-1].strip() if "\t" in line else ""
-        if ref.startswith("refs/tags/"):
-            name = ref[len("refs/tags/"):]
-            if name.endswith("^{}"):  # peeled annotated tag：与本体同名，去重
-                name = name[:-3]
-            tags.append(name)
-    return sorted(set(tags)), None
+        parts = line.split("\t")
+        if len(parts) != 2:
+            continue
+        sha, ref = parts[0].strip(), parts[1].strip()
+        if not ref.startswith("refs/tags/"):
+            continue
+        name = ref[len("refs/tags/"):]
+        if name.endswith("^{}"):  # peeled annotated tag：本体同名，取 peeled sha
+            peeled[name[:-3]] = sha
+        else:
+            tags.append((name, sha))
+    # annotated tag 本体行指向 tag 对象；内容口径比对取 peeled 后的 commit sha。
+    return sorted({(n, peeled.get(n, s)) for n, s in tags}), None
 
 
-def _latest_vtag(tags: list[str]) -> tuple[str | None, tuple | None]:
+def _latest_vtag(tags: list[str] | list[tuple[str, str]]) -> tuple[str | None, tuple | None]:
     """v 前缀 tag 里按（日期主序、同日字典序最大 suffix）取最新。"""
     best, best_key = None, None
-    for t in tags:
+    for item in tags:
+        t = item[0] if isinstance(item, tuple) else item
         m = TAG_RE.match(t)
         if not m:
             continue
@@ -137,6 +158,54 @@ def _latest_vtag(tags: list[str]) -> tuple[str | None, tuple | None]:
         if best_key is None or key > best_key:
             best, best_key = t, key
     return best, (best_key[0] if best_key else None)
+
+
+def _read_installed_marker(skills_home: Path) -> dict | None:
+    """77Z/OBS-374:读装机侧 pipeline root 下 .installed-from 标记(install.py 写)。
+
+    路径推导=skills_home 推导的 pipeline root(skills_home/wxgzh-pipeline),
+    与 install.py 既有 installed 目标推导同源;缺失/损坏/无 source_commit → None
+    (回退既有日期口径,向后兼容旧装机拷贝)。
+    """
+    p = Path(skills_home) / "wxgzh-pipeline" / ".installed-from"
+    if not p.is_file():
+        return None
+    try:
+        m = json.loads(p.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return None
+    if not isinstance(m, dict) or not m.get("source_commit"):
+        return None
+    return m
+
+
+def _marker_content_check(marker: dict, tags: list[tuple[str, str]],
+                          baseline: str | None, latest: str,
+                          tag_date: tuple) -> dict:
+    """77Z/OBS-374:内容口径判定——latest tag sha 与装机标记 source_commit 比对。
+
+    sha 相等 → current(日期粒度误报消除核心:内容即最新,日期早晚不再参与判定);
+    不等 → behind,更新路径真实可清除;日期口径降级为 detail 附加说明。
+    """
+    latest_sha = dict(tags).get(latest)
+    marker_sha = str(marker.get("source_commit") or "")
+    resolved = str(marker.get("resolved_tag") or "")
+    if resolved and resolved != latest:
+        # 标记的 resolved_tag 指向更旧 tag → 装机源落后,仍按 behind 报
+        marker_sha = dict(tags).get(resolved, marker_sha)
+    date_note = ""
+    if baseline:
+        date_note = (f"(日期口径仅展示:本地基线 {baseline},"
+                     f"最新 tag 日期 {'.'.join(map(str, tag_date))})")
+    if latest_sha and marker_sha and marker_sha == latest_sha:
+        return {"status": "current",
+                "detail": (f"装机内容即最新:installed-from source_commit "
+                           f"{marker_sha[:12]} == 最新发布 {latest}({latest_sha[:12]})"
+                           f"{('——' + date_note) if date_note else ''}")}
+    return {"status": "behind",
+            "detail": (f"装机版本 {marker_sha[:12]} ≠ 最新发布 {latest}"
+                       f"({(latest_sha or '?')[:12]})——更新路径真实可清除"
+                       f"{(';' + date_note) if date_note else ''}")}
 
 
 def check(skills_home: str | Path | None = None,
@@ -196,6 +265,19 @@ def check(skills_home: str | Path | None = None,
     if latest is None:
         return {"status": "unknown", "current": snapshot, "latest": None,
                 "detail": f"远端无 v 前缀 tag（vYYYY.MM.DD-<suffix>）可识别：{remote}"}
+    # 77Z/OBS-374:标记优先——装机侧有 .installed-from 时走内容口径(sha 比对),
+    # 日期口径降级为 detail 展示;标记缺失回退既有日期口径(向后兼容旧装机拷贝)。
+    marker = _read_installed_marker(skills_home)
+    if marker is not None:
+        snapshot["installed_from"] = {"source_commit": marker.get("source_commit"),
+                                      "resolved_tag": marker.get("resolved_tag"),
+                                      "recorded_at": marker.get("recorded_at")}
+        if baseline is None:
+            return {"status": "unknown", "current": snapshot, "latest": latest,
+                    "detail": detail}
+        verdict = _marker_content_check(marker, tags, baseline, latest, tag_date)
+        return {"status": verdict["status"], "current": snapshot, "latest": latest,
+                "detail": verdict["detail"]}
     if baseline is None:
         return {"status": "unknown", "current": snapshot, "latest": latest,
                 "detail": detail}

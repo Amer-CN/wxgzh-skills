@@ -49,6 +49,7 @@ _COMMON_RULES_283 = "76L/OBS-283(反顶包明规,通用规则):禁止手写 HTML
 _COMMON_RULES += "77I+77O/receipt 纪律:receipt/stage_result 任何字段禁止手工编辑/手写/补写,无例外(含演练、fake_live、dry-run、断档恢复);hash 漂移一律走重 ACK 正路(76F/OBS-276 规程),发现缺 receipt 的正确动作是 orchestrator 续发/重跑,不是补写;违反按顶包红旗处理。"
 _COMMON_RULES += "77O/OBS-337(LIVE 默认纪律):发文流程默认 LIVE 建草稿;.env 双字段齐备且 WXGZH_WECHAT_API_ALLOWED=1 即视为 LIVE 授权到位;dry-run 仅限用户明说预览/凭证缺失/ALLOWED=0 三种情形,且必须在体检第 1 项如实标注。"
 _COMMON_RULES += "77O/分工纪律:体检报告只报事实与风险,不得向用户索要流程内决断;流程内决断一律由审核方出档。"
+_COMMON_RULES += "77Z/OBS-375:上游合法修正后信封由编排器按当前 upstream 自动重签(复用判定含 upstream 时效),agent 无需也无权手动重签;76F 禁删对象=产物/receipt,请求信封重签系官方动作不在禁列。"
 
 
 AGENT_INSTRUCTIONS = {
@@ -61,6 +62,8 @@ AGENT_INSTRUCTIONS = {
 
 AGENT_INSTRUCTIONS["super_writer"] += "77J/OBS-324:registry 预检已接入 ACK 官方链——validate_single_product --product registry --file ... --dedup ... --ledger ... 任一 FAIL 即拒；禁等 media 段暴露，禁手改 registry 后只改 receipt。"
 AGENT_INSTRUCTIONS["super_writer"] += "77M/OBS-330:容器 type 枚举单一真源——:::alert type= 只能用 note/tip/important/warning/caution、:::quote type= 只能用 normal/highlight/sourced；枚举外直接 FAIL 并指路 references/component-catalog.md。77M preflight 硬步骤：ACK 前本地全套 VSP 预检（article/registry/semantic-map/handoff/outline）清零再 ACK，不清零不得 ACK。"
+# 77Z/OBS-376:Phase 6 标题候选逐候选证据完备(硬措辞,VSP 逐候选门同步)。
+AGENT_INSTRUCTIONS["super_writer"] += "77Z/OBS-376:title_candidates 逐候选证据完备——每候选四组归属+五维评分（五项 1–5 整数）+显式风险标记（无风险须写「风险标记：无」），缺一 VSP --product handoff FAIL；reason 层逐候选记录，禁只评选定主标题。"
 
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
 # OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。
@@ -330,8 +333,14 @@ def _aihot_synthetic_original_check(sd: Path) -> list:
     return violations
 
 
-def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs) -> bool:
-    """77I/OBS-321: resume reuses the frozen handshake request when its intent matches."""
+def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs,
+                            upstream: dict | None = None) -> bool:
+    """77I/OBS-321: resume reuses the frozen handshake request when its intent matches.
+
+    77Z/OBS-375:复用条件加严(第三判定)——请求信封内 upstream_hashes 必须与当前
+    盘上 upstream 一致;不一致 → False(不复用)→ 走 _agent request_frozen=False
+    分支的既有覆盖写重签(编排器重签=官方动作,零删文件,76F 禁删对象不涉)。
+    """
     path = sd / AH.REQUEST_FILE
     if not path.is_file():
         return False
@@ -339,8 +348,14 @@ def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs)
         req = read_json(path)
     except (OSError, ValueError):
         return False
-    return (req.get("run_id") == run_id and req.get("stage") == stage
-            and list(req.get("expected_outputs") or []) == list(expected_outputs))
+    if not (req.get("run_id") == run_id and req.get("stage") == stage
+            and list(req.get("expected_outputs") or []) == list(expected_outputs)):
+        return False
+    if upstream is not None:
+        bound = req.get("upstream_hashes") or {}
+        if bound != (upstream or {}):
+            return False
+    return True
 
 
 def _agent(ctx, stage, sd, expected, agent_expected, state):
@@ -350,7 +365,10 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
     inputs = {"topic": state.topic, "frozen_article_sha256": state.final_article_sha256}
     injection_meta = None
     # 77I/OBS-321: resume must not rewrite a frozen request; token drift is a root bug.
-    request_frozen = _reusable_agent_request(sd, state.run_id, stage, agent_expected)
+    # 77Z/OBS-375:upstream 时效进复用判定——上游合法修正后这里返回 False,
+    # 走下方 request_frozen=False 分支的既有覆盖写(编排器官方重签,零删文件)。
+    request_frozen = _reusable_agent_request(
+        sd, state.run_id, stage, agent_expected, upstream)
     # OBS-64(档64):自有素材注入正门——aihot 阶段若指定 --items-file,
     # 由 Pipeline 代码(而非 agent)写三文件:同构 schema 校验 + 来源留痕 +
     # 注入标记;agent 只核验后 ACK,不得再调用 AI HOT API。

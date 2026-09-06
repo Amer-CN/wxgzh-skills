@@ -130,7 +130,7 @@ def test_validate_single_product_handoff(tmp_path):
   title_candidates: ["A", "B", "C"]
   hook_line: "钩子"
   selected_title: "A"
-  title_selection_reason: "稳健准确4/网感点击4/专业权威3/长期价值2；五维评分：点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4；风险标记：无标题党、无堆砌、无据风险已核对、时效风险低"
+  title_selection_reason: "稳健准确=A，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无；网感点击=B，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无；专业权威=C，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无"
   formatter:
     cover:
       kicker: null

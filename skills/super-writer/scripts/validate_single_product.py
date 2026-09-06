@@ -34,6 +34,18 @@ from validate_article_length import parse_outline_budgets  # noqa: E402
 STRIKE_ASSUMPTION_MAX_WEIGHT = 18.0
 SUBTITLE_MAX_WEIGHT = 20.0
 
+# 77Z/OBS-376:标题候选逐候选证据完备——四组归属/五维评分/显式风险标记。
+TITLE_GROUPS = ("稳健准确", "网感点击", "专业权威", "长期价值")
+TITLE_DIMENSIONS = ("点击欲望", "事实匹配", "人群匹配", "差异化", "长期价值")
+TITLE_RISKS = ("标题党", "堆砌", "无据", "时效")
+# 逐候选段窗口:reason 内候选文本出现处向后截取的判定半径(字符上限),
+# 且遇句段边界(；;。)即截断——评分/风险必须与候选同段,「五维评分（选定
+# 主标题）」类后置总段不得误记到邻段候选头上(历史 reason 实证)。
+_TITLE_WINDOW = 200
+_TITLE_SEGMENT_BREAKS = "；;。"
+_GROUP_SEPS = ("=", "：", ":")
+_RISK_NONE_RE = re.compile(r"风险标记[：:]\s*无")
+
 # 76A/OBS-252:handoff full-mode 必填字段(与 validate_article_length 同源)
 HANDOFF_REQUIRED_FIELDS = ["schema_version", "prose_craft_applied",
                            "prose_craft_version", "formatter.cover"]
@@ -237,6 +249,127 @@ def check_article(path: Path) -> tuple[list, dict]:
     return errors, checks
 
 
+def _title_scores_ok(scores) -> bool:
+    """五维评分形状:五个 1–5 整数(dict 按五维名取值 / list 恰 5 项)。"""
+    if isinstance(scores, dict):
+        return all(_int_score(scores.get(dim)) for dim in TITLE_DIMENSIONS)
+    if isinstance(scores, list):
+        return len(scores) == 5 and all(_int_score(v) for v in scores)
+    return False
+
+
+def _int_score(value) -> bool:
+    return (not isinstance(value, bool) and isinstance(value, int)
+            and 1 <= value <= 5)
+
+
+def _title_risk_ok(risk) -> bool:
+    """显式风险标记:命中四风险之一,或显式写「风险标记：无」(「无」必须显式)。"""
+    if not isinstance(risk, str) or not risk.strip():
+        return False
+    if any(marker in risk for marker in TITLE_RISKS):
+        return True
+    return bool(_RISK_NONE_RE.search(risk))
+
+
+def _candidate_text(cand) -> str:
+    if isinstance(cand, dict):
+        for key in ("title", "text", "candidate"):
+            value = cand.get(key)
+            if isinstance(value, str) and value.strip():
+                return value
+        return ""
+    return cand if isinstance(cand, str) else ""
+
+
+def _candidate_windows(reason: str, text: str):
+    """reason 内 text 每次出现处的判定窗口(同句段,向后截 _TITLE_WINDOW 上限)。
+
+    窗口同时携带「该出现是否处于 组=标题 映射位」标志(77Z/OBS-376:
+    现候选是纯字符串列表,分组按 reason 中的「组=标题」映射判定)。
+    """
+    out = []
+    start = 0
+    while True:
+        pos = reason.find(text, start)
+        if pos < 0 or not text:
+            break
+        end = pos + len(text)
+        prefix = reason[max(0, pos - 12):pos]
+        grouped = any(prefix.endswith(g + sep)
+                      for g in TITLE_GROUPS for sep in _GROUP_SEPS)
+        window = reason[end:end + _TITLE_WINDOW]
+        cut = -1
+        for ch in _TITLE_SEGMENT_BREAKS:
+            idx = window.find(ch)
+            if idx != -1 and (cut == -1 or idx < cut):
+                cut = idx
+        if cut != -1:
+            window = window[:cut]
+        out.append({"grouped": grouped, "window": window})
+        start = end
+    return out
+
+
+def _window_scored(window: str) -> bool:
+    """窗口内五维评分齐备:每维名后(可隔 ：: 分隔)紧跟 1–5 整数。
+
+    不认「=」作分隔,防「长期价值=5 公里」类标题误读为评分(历史 reason 实证)。
+    """
+    for dim in TITLE_DIMENSIONS:
+        m = re.search(re.escape(dim) + r"\s*[：:]?\s*([1-5])(?![0-9])", window)
+        if not m:
+            return False
+    return True
+
+
+def _window_risked(window: str) -> bool:
+    if any(marker in window for marker in TITLE_RISKS):
+        return True
+    return bool(_RISK_NONE_RE.search(window))
+
+
+def _title_candidate_errors(candidates, reason) -> list[str]:
+    """77Z/OBS-376:逐候选证据完备——四组归属/五维评分/显式风险标记,缺一即报。
+
+    候选为纯字符串列表时(现生产实况),三项证据均从 reason 逐候选段判定:
+    分组=「组=标题」映射位;五维=候选出现处向后窗口五维齐备;风险=窗口内
+    显式标记(命中四风险之一或显式写「风险标记：无」)。候选为 dict 时优先
+    读显式字段(group/scores/risk),缺字段回退 reason 映射。
+    数量/类型不在 3–5 等形状错误由 reason 整体层既有检查负责,本层不重复。
+    """
+    errors = []
+    if not isinstance(candidates, list):
+        return errors
+    reason = str(reason or "")
+    for idx, cand in enumerate(candidates, 1):
+        label = f"候选{idx}"
+        if isinstance(cand, dict):
+            text = _candidate_text(cand)
+            group = cand.get("group")
+            scores = cand.get("scores")
+            risk = cand.get("risk") or cand.get("risk_marker")
+        else:
+            text, group, scores, risk = _candidate_text(cand), None, None, None
+        windows = _candidate_windows(reason, text) if text else []
+        if not (isinstance(group, str) and group in TITLE_GROUPS):
+            if not any(w["grouped"] for w in windows):
+                errors.append(
+                    f"{label} 缺分组归属(四组之一:稳健准确/网感点击/专业权威/"
+                    f"长期价值——reason 按「组=标题」逐候选映射)")
+        if not _title_scores_ok(scores):
+            if not any(_window_scored(w["window"]) for w in windows):
+                errors.append(
+                    f"{label} 缺五维评分(点击欲望/事实匹配/人群匹配/差异化/"
+                    f"长期价值,五项 1–5 整数,reason 逐候选记录,禁只评选定主标题)")
+        if not _title_risk_ok(risk):
+            if not any(_window_risked(w["window"]) for w in windows):
+                errors.append(
+                    f"{label} 缺显式风险标记(命中标题党/堆砌/无据/时效之一,"
+                    f"或显式写「风险标记：无」——「无」必须显式)")
+    return errors
+
+
 def check_handoff(path: Path) -> tuple[list, dict]:
     try:
         data = yaml.safe_load(_read_text(path))
@@ -285,6 +418,7 @@ def check_handoff(path: Path) -> tuple[list, dict]:
     out_errors.extend(_single_line_budget_errors(
         "handoff: hook_line(副标题兜底)", h.get("hook_line"), SUBTITLE_MAX_WEIGHT))
     # 77O/OBS-336:title playbook adoption is FAIL-level; handoff schema unchanged.
+    # 77Z/OBS-376:reason 整体检查保留(分组覆盖≥3 组),新增逐候选层。
     candidates = h.get("title_candidates")
     reason = h.get("title_selection_reason")
     title_errors = []
@@ -301,6 +435,7 @@ def check_handoff(path: Path) -> tuple[list, dict]:
     risk_markers = ("标题党", "堆砌", "无据", "时效", "风险标记")
     if not any(marker in str(reason) for marker in risk_markers):
         title_errors.append("缺风险标记(标题党/堆砌/无据/时效)")
+    title_errors.extend(_title_candidate_errors(candidates, reason))
     if title_errors:
         out_errors.append("对照 references/title-playbook.md: " + "; ".join(title_errors))
         checks["title_playbook_errors"] = title_errors

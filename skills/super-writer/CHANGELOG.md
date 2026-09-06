@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.20-rc1 (2026-09-06) — 档77Z：标题候选逐候选证据完备（OBS-376）
+
+- **OBS-376 标题逐候选门**：`validate_single_product.py --product handoff` 新增逐候选层 `_title_candidate_errors`——每 title_candidate 必须有四组归属（纯字符串候选按 reason「组=标题」映射位判定；dict 候选可读显式 `group` 字段）+ 五维评分（五项 1–5 整数，`scores` 字段或 reason 逐候选段——同句段窗口判定，句段边界截断，防「五维评分（选定主标题）」后置总段误记邻段候选）+ 显式风险标记（命中标题党/堆砌/无据/时效之一，或显式写「风险标记：无」）；缺一 FAIL 指路 `references/title-playbook.md` 且错误文案含候选序号；77O 的 reason 整体层（分组覆盖≥3 组）保留。
+- **测试 +4**：新增 tests/test_hf77z_title_gate.py（全候选齐过/缺分组 FAIL/缺五维 FAIL（tlztos 只评主标题场景）/缺风险标记 FAIL（含「无」未显式写出场景））；既有夹具 3 处 reason 同步至逐候选形态（test_hf76f_tools、test_hf76t_strike_assumption、pipeline test_hf77k_quote_gate，测试语义不变）。
+
 ## v0.4.19-rc1 (2026-09-05) — 档77Y：align --article 计数口径与导语区纳入（OBS-370）
 
 - **OBS-370 可见字符口径**：`align_outline_budget.py --article` 各节实测字数改用 `validate_article_length.count_visible_chars`（import 单一真源；链接只计文本、代码计内容、表格计单元格），不再「去空白全长」粗算；输出 info 新增 `actual` 留痕（实测可核验）。

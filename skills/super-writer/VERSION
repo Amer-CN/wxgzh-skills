@@ -1,5 +1,5 @@
-version: 0.4.19-rc1
-previous_version: 0.4.18-rc1
+version: 0.4.20-rc1
+previous_version: 0.4.19-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -7,11 +7,11 @@ smoke_test: passed
 formal_phase4: skipped_for_personal_use
 evaluation_method: continuous_dogfooding
 iteration_strategy: integrate_proven_editorial_flow
-test_count: 292
+test_count: 296
 writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-09-05
-hotfix_name: 77Y
-release_notes: "v0.4.19-rc1: 档77Y — 审批域根治（内容修复）：align_outline_budget --article 计数口径与导语区纳入（OBS-370）。"
+hotfix_date: 2026-09-06
+hotfix_name: 77Z
+release_notes: "v0.4.20-rc1: 档77Z — 标题候选逐候选证据完备（内容修复）：VSP handoff 逐候选门（OBS-376）。"

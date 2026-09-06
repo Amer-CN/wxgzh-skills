@@ -14,7 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 _HERE = Path(__file__).resolve()
@@ -59,6 +59,55 @@ def _find_source() -> tuple[Path, Path | None, Path | None]:
         if (bundle / "locked-skills").is_dir() and (bundle / "wxgzh-pipeline").is_dir():
             return bundle / "wxgzh-pipeline", bundle / "locked-skills", bundle
     return SKILL_ROOT, None, None
+
+
+# 77Z/OBS-374:装机同步完成标记——装机侧 pipeline skill root 落 .installed-from,
+# 内容口径(内容最新性)供 scripts/version_check.py 优先读取(日期口径降级为
+# detail 展示)。路径与 install() 既有 installed 目标推导同源(target/wxgzh-pipeline)。
+INSTALLED_FROM_FILENAME = ".installed-from"
+
+
+def _resolve_source_head(src: Path) -> tuple[str, str | None]:
+    """源仓 HEAD sha + HEAD 可达的最新 v 前缀 tag(无则 None)。_git 已有可复用。"""
+    git_root = Path(src)
+    cur = Path(src).resolve()
+    while not (cur / ".git").exists():
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    if (cur / ".git").exists():
+        git_root = cur
+    head = _git(git_root, "rev-parse", "HEAD")
+    tag = None
+    try:
+        # HEAD 可达的最新 v-tag;git describe 无 tag 时返回非零,tag=None 即可。
+        described = _git(git_root, "describe", "--tags", "--match", "v*",
+                         "--abbrev=0", "HEAD")
+        if described:
+            tag = described
+    except InstallReceiptError:
+        tag = None
+    return head or "", tag
+
+
+def _write_installed_from(target: Path, src_pipeline: Path) -> Path | None:
+    """77Z/OBS-374:写 .installed-from 到装机侧 pipeline skill root(单行 JSON)。
+
+    装机同步完成后调用;源仓无 .git(纯 bundle 装机)时 head 为空——标记仍写
+    (source_commit="" 表示来源不可考,version_check 侧视为标记缺失回退日期口径)。
+    """
+    try:
+        head, tag = _resolve_source_head(src_pipeline)
+        marker = {"source_commit": head,
+                  "resolved_tag": tag,
+                  "recorded_at": datetime.now(timezone.utc)
+                  .replace(microsecond=0).isoformat().replace("+00:00", "Z")}
+        path = Path(target) / "wxgzh-pipeline" / INSTALLED_FROM_FILENAME
+        path.write_text(json.dumps(marker, ensure_ascii=False, separators=(",", ":")),
+                        encoding="utf-8")
+        return path
+    except (InstallReceiptError, OSError, ValueError):
+        return None
 
 
 def _git(src: Path, *args: str) -> str | None:
@@ -422,6 +471,8 @@ def install(
                 _rollback_switch(target, switched, backups, receipts_backup)
                 raise InstallReceiptError(
                     "post-switch complete lock action gates failed; rolled back")
+            # 77Z/OBS-374:装机同步完成处落 installed-from 标记(内容口径)。
+            _write_installed_from(target, pipeline_source)
             return {
                 "ok": True, "dry_run": False, "target_skills_home": str(target),
                 "env_untouched": True, "plan": plan,

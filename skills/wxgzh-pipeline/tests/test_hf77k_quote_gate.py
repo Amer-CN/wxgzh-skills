@@ -72,7 +72,8 @@ def test_obs327_handoff_null_is_honest_only_when_not_applied(tmp_path):
   hook_line: "hook"
   selected_title: "A"
   # 77O/OBS-336: title playbook fields are FAIL-level; keep this fixture valid.
-  title_selection_reason: "分组:稳健准确/网感点击/专业权威;五维:点击欲望/事实匹配/人群匹配/差异化/长期价值;风险标记:无标题党/无堆砌/无无据/无时效"
+  # 77Z/OBS-376: 逐候选层落库后夹具同步(逐候选 组=标题+五维+风险标记),测试语义不变。
+  title_selection_reason: "分组:稳健准确=A，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无；网感点击=B，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无；专业权威=C，点击欲望4/事实匹配4/人群匹配4/差异化4/长期价值4，风险标记：无"
   formatter:
     cover:
       kicker: "深度观察"
