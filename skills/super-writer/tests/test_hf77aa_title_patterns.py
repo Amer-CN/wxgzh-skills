@@ -19,6 +19,8 @@ HITS = (REF_DIR / "title-hits.md").read_text(encoding="utf-8")
 # lengyi-title 原榜已知完整标题串(附录 A #6 案例原文)——零命中防抄袭
 ORIGINAL_BANGUMI_TITLES = [
     "40年没变过的Email，被腾讯重新定义了",
+    "中国版Codex来了，Qwen3.7-Max免费用！",
+    "最值得推荐的20个宝藏Skills，小众但真香",
 ]
 
 # 简报允许在册的六范式名(自写配方,非原榜标题)
