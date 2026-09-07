@@ -2056,5 +2056,27 @@
     "new_skill_version": "0.4.20-rc1",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260907T165250Z-fb89f516",
+    "skill": "super-writer",
+    "reason": "77AA 标题生成端升级:sw 0.4.21-rc1(六范式语料 title-patterns+关键词实证表+hits 台账 title-hits+Phase 6 回填义务 OBS-377)+MANIFEST 重算",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-07T16:52:50Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "5c30077fe19830555aba1bb0fd14e2497c0cefe52c88ddb34bf833733b253c23",
+    "new_root_sha256": "bcd7d526fca15bc0730579b4d149b5653f74cd397def6bf6ea75eb9bd028ad64",
+    "old_manifest_sha256": "d912f622ccb2c108ce5a65269af6aee9904f9a91ab48a4f4c0ccd03f0d6583a7",
+    "new_manifest_sha256": "e5896d47903cfcd69937cc30ba982af59ae79beb146036649c29041dda5ffb58",
+    "old_file_count": 56,
+    "new_file_count": 58,
+    "old_full_commit_sha": "0446ce3293c72d58cbb9a1e20c74676c71445646",
+    "new_full_commit_sha": "2a39a54dcd872280a70bb8f445a4634e65ab37c6",
+    "old_source_tree_sha": "ed39e29d2ba316f97d17105887a3a4bd3ba9f13f",
+    "new_source_tree_sha": "677e28eed7b5dd50ecf883d4a8e07170394b0eb2",
+    "old_skill_version": "0.4.20-rc1",
+    "new_skill_version": "0.4.21-rc1",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
