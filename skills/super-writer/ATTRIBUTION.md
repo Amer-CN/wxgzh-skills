@@ -11,5 +11,7 @@
 - xiaomoBoy/claude-writing-skills — 评分器与评分器校准分离
 - OneSpiral/ghost-writer — 多维文风画像
 - liucongg/liucong-skills（gzh-title-strategist，Apache-2.0）— 标题方法论气质参考（无据不加/不吹推荐池/一个主承诺/保留作者语气）；档 77D 自写措辞，仅致谢不搬运原文
+- woyin2024/lengyi-title — 标题六范式分类与 TOP50 结构统计数据（档 77AA 嫁接：README 声称 MIT、无 LICENSE 文件，按「不复制原文」原则只取范式结构与统计规律，未搬运任何标题原文与段落；建议后续向作者确认许可证）
+- liucongg/liucong-skills（empirical-signals.md，Apache-2.0）— 标题关键词实证表（档 77AA 并入 references/title-patterns.md：引用关联数据与使用规则，注明出处，不搬运原文段落）
 
 项目链接见此前研究记录或对应 GitHub 仓库。

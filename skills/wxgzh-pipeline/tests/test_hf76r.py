@@ -111,7 +111,7 @@ def test_obs288_semantic_zero_loss_rule_inventory():
         assert extra <= {"76R/OBS-290", "76T/OBS-293", "76U/OBS-294", "76W/OBS-301",
                             "76Y-R/OBS-305", "77A/OBS-307", "77A/OBS-308", "77A/OBS-309",
                             "77J/OBS-324", "77M/OBS-330", "77O/OBS-337", "77R/OBS-342",
-                            "77Z/OBS-375", "77Z/OBS-376"}, f"{k}: 意外新增规则 {extra}"
+                            "77Z/OBS-375", "77Z/OBS-376", "77AA/OBS-377"}, f"{k}: 意外新增规则 {extra}"
 
 
 def test_obs290_material_exhausted_instruction():
@@ -226,9 +226,10 @@ def test_obs304_ledger_count_command():
     # 77X 更新:OBS-360..365 登记后 119..365 = 247 个编号(76Y-R/77K 起计数实测为准)
     # 77Y 更新:OBS-366..373 登记后 119..373 = 255 个编号(76Y-R/77K 起计数实测为准)
     # 77Z 更新:OBS-374..376 登记后 119..376 = 258 个编号(76Y-R/77K 起计数实测为准)
-    assert n == 258, f"唯一编号实测 {n} != 258"
+    # 77AA 更新:OBS-377 登记后 119..377 = 259 个编号(76Y-R/77K 起计数实测为准)
+    assert n == 259, f"唯一编号实测 {n} != 259"
     # 区间连续无缺号
-    assert set(range(119, 377)) <= nums, "119..376 区间有缺号"
+    assert set(range(119, 378)) <= nums, "119..377 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():

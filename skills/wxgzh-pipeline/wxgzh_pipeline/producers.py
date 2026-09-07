@@ -64,6 +64,8 @@ AGENT_INSTRUCTIONS["super_writer"] += "77J/OBS-324:registry 预检已接入 ACK 
 AGENT_INSTRUCTIONS["super_writer"] += "77M/OBS-330:容器 type 枚举单一真源——:::alert type= 只能用 note/tip/important/warning/caution、:::quote type= 只能用 normal/highlight/sourced；枚举外直接 FAIL 并指路 references/component-catalog.md。77M preflight 硬步骤：ACK 前本地全套 VSP 预检（article/registry/semantic-map/handoff/outline）清零再 ACK，不清零不得 ACK。"
 # 77Z/OBS-376:Phase 6 标题候选逐候选证据完备(硬措辞,VSP 逐候选门同步)。
 AGENT_INSTRUCTIONS["super_writer"] += "77Z/OBS-376:title_candidates 逐候选证据完备——每候选四组归属+五维评分（五项 1–5 整数）+显式风险标记（无风险须写「风险标记：无」），缺一 VSP --product handoff FAIL；reason 层逐候选记录，禁只评选定主标题。"
+# 77AA/OBS-377:标题 hits 台账回填义务(轻义务,不阻断流水线)。
+AGENT_INSTRUCTIONS["super_writer"] += "77AA/OBS-377:发文后将本篇选定标题追入 references/title-hits.md 台账（日期/RUN_ID/标题/组/五维分/风险标记/表现回填位,验证状态=待回填;轻义务,不阻断流水线）。"
 
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
 # OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。
