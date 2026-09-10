@@ -1,5 +1,5 @@
-version: 0.4.21-rc1
-previous_version: 0.4.20-rc1
+version: 0.4.21-rc2
+previous_version: 0.4.21-rc1
 baseline_commit: 9d2e77f
 status: release_candidate
 engineering_tests: passed
@@ -12,6 +12,6 @@ writing_core_freeze_date: 2026-07-14
 release_date: 2026-08-10
 handoff_contract_version: v2.0
 semantic_roles_count: 41
-hotfix_date: 2026-09-07
-hotfix_name: 77AA
-release_notes: "v0.4.21-rc1: 档77AA — 标题生成端升级：六范式语料+关键词实证表+hits 台账（OBS-377）。"
+hotfix_date: 2026-09-10
+hotfix_name: 77AB
+release_notes: "v0.4.21-rc2: 档77AB——生产 hits 台账首次回流（m9coc1 行入册，title-hits 数据文件在锁面内，生产写入致装机侧 hash 漂移的根治留待后续档）；77AA-F 锚点测试两 pattern 行同步。"
