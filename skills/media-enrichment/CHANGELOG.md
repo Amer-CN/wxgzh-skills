@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-dev34 (2026-09-10) — 77AB
+
+- **OBS-378 aihot 域名双前缀适配**：`url_security.py` 顶部新增单一真源常量 `AIHOT_SITE_PREFIXES = ("https://aihot.virxact.com/", "https://aihot.news/")`（上游 301 迁移双域，防冒充门语义不变——两域都是站内页）；三处前缀判定改双前缀——`run_media_enrichment.py` internal_page 判定（重分类块）、`input_contract.py` Step 3f supplemental 分流、`validate_media_manifest.py` REQUEST_MATERIAL_PERMALINK_LANE 全部改用常量（`any(startswith)`），内联单前缀判定绝版；「非 null 须 aihot 前缀」=双前缀集合，外站填充拒不放松；wxgzh-pipeline producers 冒充门同步双前缀+顶部同值常量（守卫测试钉两子树一致，照 77W 两文一致守卫先例）。
+- **OBS-378 禁改写上游域名明规**：SKILL.md 绝对约束新增第 10 条——记录层禁止改写上游返回的域名（permalink/links 各字段保留上游返回原值），门的职责是兼容双域，不是倒逼改写；pipeline aihot 指令追加同义明规（77AB/OBS-378）。
+- **OBS-379 40164 上传前探针**：`uploader.py` 新增 `probe_token()`——复用 `_get_access_token` 结构发一次 token 请求（不缓存 token、不影响 `_access_token` 状态），返回 `{ok, errcode, errmsg, ip}`（ip=errmsg 正则解析的出口 IPv4），错误信息经 `_scrub_token`；`run_media_enrichment.py` 批量上传循环起点前挂探针（live 模式才探，fake/offline 不触网）——40164（微信 IP 白名单拦截）=FAIL_CLOSED 停机（builder.errors，上传循环整体跳过=零张上传），探针失败但非 40164 不新增停机点（按既有 token error 路径逐资产处理，不误伤）；探针观测留痕 `upload_events.json` 附 `token_probe` 键（照 `_last_token_observation` 形状）。
+- **测试**：新增 tests/test_hf77ab_dual_domain.py（分流双域 2 + internal_page 接线 1 + SKILL 锚点 1 + 探针 3——真实 `probe_token` + mock 传输层在进程内跑真 main()）；pipeline 侧新增 tests/test_hf77ab_guard.py（producers 门双域 3 + 接线 1 + 指令锚点 1 + 双文一致守卫 1）。
+- **版本字面量全站同步 dev33 → dev34**（77J 既定模式）：VERSION / README / WXGZH_PIPELINE_INTEGRATION / build_zip / generate_evidence / _verify_dev7 / __init__ / input_contract / url_security(User-Agent) / 两处测试版本钉子。
+
 ## 0.1.0-dev33 (2026-09-05) — 77Y
 
 - **OBS-366/367 auto_rule 车道合法化 + basis 机械生成**：`run_media_enrichment.py` 新增 `_mechanical_basis`——single_asset 搬运块对 approved_by=auto_rule/auto_approve 时 agent 手填 basis 一律忽略，以 04 合同 copyright_policy 实时值（yaml 解析 `SKILL_ROOT.parent/wxgzh-pipeline/contracts/04_media_enrichment.yaml`）+ approval_readiness.approvable + 分类器终值 + 域名排除结果机械生成入账；手填与机械值不一致不报错、留痕 reasons「basis regenerated mechanically (77Y/OBS-366)」；条件不满足（分类器水印/受限/证据链断）返回 None，走既有 fail-fast（77W 三道门）。人工终审点=用户草稿箱发布动作（用户裁决 2026-09-05）。

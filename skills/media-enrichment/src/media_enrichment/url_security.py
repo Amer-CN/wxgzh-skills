@@ -17,6 +17,10 @@ from urllib.parse import urlparse, urlunparse, urljoin
 
 ALLOWED_SCHEMES = {"http", "https"}
 
+# 77AB/OBS-378:上游 301 迁移双域——aihot 站内页常量前缀单一真源(virxact 与
+# aihot.news 都是站内页);防冒充门语义不变,判定一律取本常量,不再内联单前缀。
+AIHOT_SITE_PREFIXES = ("https://aihot.virxact.com/", "https://aihot.news/")
+
 BLOCKED_HOSTS = {
     "localhost",
     "0.0.0.0",
@@ -223,7 +227,7 @@ def safe_fetch_with_redirects(
     current_url = normalize_url(url)
     redirect_chain: list[str] = []
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev33"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev34"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):
@@ -297,7 +301,7 @@ def safe_download_with_redirects(
     redirect_chain: list[str] = []
     output_path = Path(output_path)
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev33"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev34"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):

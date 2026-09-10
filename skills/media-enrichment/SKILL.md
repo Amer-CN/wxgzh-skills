@@ -56,6 +56,7 @@ permissions:
 7. 原创数据图只能使用 canonical claim 中已有的数字，不得联网补充数据或推算未给出的数值。
 8. 输入不合法时 fail-closed，不生成"看起来成功"的 manifest。
 9. 日志和 manifest 中禁止出现 Token、Secret、Cookie 等敏感信息。
+10. 记录层禁止改写上游返回的域名——permalink/links 各字段保留上游返回原值（77AB/OBS-378）；门的职责是兼容双域，不是倒逼改写。
 
 ## 职责边界
 

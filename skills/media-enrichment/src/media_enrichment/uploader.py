@@ -276,6 +276,51 @@ class WechatImageHostUploader:
         except Exception as exc:
             return "", _scrub_token(f"token request failed: {exc}")
 
+    def probe_token(self) -> dict:
+        """77AB/OBS-379:批量上传前 token 探针(单一请求,零上传)。
+
+        复用 _get_access_token 结构发一次 token 请求——不缓存 token、不影响
+        _access_token 状态。返回 {"ok": bool, "errcode": int|None, "errmsg": str,
+        "ip": str|None}(ip=从 errmsg 正则解析的出口 IPv4,解析不到则 None);
+        网络异常 → {"ok": False, "errcode": None, "errmsg": "<异常>", "ip": None}。
+        错误信息一律经 _scrub_token;观测留痕照 _last_token_observation 形状记入
+        self._last_probe_observation(不触碰 _last_token_observation)。
+        """
+        if not self.app_id or not self.app_secret:
+            self._last_probe_observation = dict(self._last_token_observation)
+            return {"ok": False, "errcode": None,
+                    "errmsg": "WECHAT_APP_ID or WECHAT_APP_SECRET not set",
+                    "ip": None}
+        try:
+            import requests
+            url = "https://api.weixin.qq.com/cgi-bin/token"
+            params = {"grant_type": "client_credential",
+                      "appid": self.app_id, "secret": self.app_secret}
+            started = time.monotonic()
+            resp = requests.get(url, params=params, timeout=10)
+            elapsed = round(time.monotonic() - started, 6)
+            data = resp.json()
+            self._last_probe_observation = {
+                "http_status": resp.status_code,
+                "wechat_errcode": data.get("errcode"),
+                "wechat_errmsg": data.get("errmsg"),
+                "request_elapsed_seconds": elapsed,
+                "endpoint_path": "/cgi-bin/token",
+                "request_attempt_index": 1,
+            }
+            if "access_token" in data:
+                return {"ok": True, "errcode": None, "errmsg": "", "ip": None}
+            errmsg = _scrub_token(str(data.get("errmsg", "unknown")))
+            ip_m = re.search(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])",
+                             errmsg)
+            return {"ok": False, "errcode": data.get("errcode"),
+                    "errmsg": errmsg,
+                    "ip": ip_m.group(0) if ip_m else None}
+        except Exception as exc:
+            return {"ok": False, "errcode": None,
+                    "errmsg": _scrub_token(f"token request failed: {exc}"),
+                    "ip": None}
+
     def upload(self, local_path: str, asset_id: str = "", copyright_status: str = "unknown") -> UploadResult:
         if copyright_status != "known_allowed":
             return UploadResult(

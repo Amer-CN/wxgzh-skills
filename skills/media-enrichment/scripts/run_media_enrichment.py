@@ -133,7 +133,7 @@ def _fetch_material_pages(mat: dict, network_mode: str, fixture_dir,
 from media_enrichment.image_extractor import extract_images
 from media_enrichment.section_align import section_matches_claims
 from media_enrichment.proxy_decoder import decode_proxy_url
-from media_enrichment.url_security import is_safe_url
+from media_enrichment.url_security import is_safe_url, AIHOT_SITE_PREFIXES
 from media_enrichment.downloader import download_image
 from media_enrichment.image_inspector import inspect_image
 from media_enrichment.image_deduplicator import deduplicate_asset, DedupState
@@ -385,6 +385,8 @@ def main():
     upload_mode = "dry_run" if args.phase == "discover" else requested_upload_mode
     # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
     upload_events: list = []
+    # 77AB/OBS-379:批量上传前 token 探针结果(None=未探:非 live/非微信上传器)。
+    token_probe_result = None
     existing_upload_events: dict[str, dict] = {}
     if args.phase == "continue":
         events_path = output_dir / "upload_events.json"
@@ -1223,8 +1225,25 @@ def main():
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 builder.errors.append(f"approval_identity_mismatch: cannot read discovery manifest: {exc}")
 
-        current_by_id = {item["asset_id"]: item for item in discovery_records}
-        for asset, local_path, inspection, extraction_method in pending_uploads:
+    # 77AB/OBS-379:批量上传前 token 探针(上传循环起点,挂点=continue 相位
+    # pending_uploads 批量上传循环之前)。live 模式才探(fake/offline 不触网);
+    # 40164(微信 IP 白名单拦截)=FAIL_CLOSED 停机——builder.errors 记账(退出码
+    # 1),上传循环整体跳过=零张上传;探针失败但非 40164 不新增停机点,按既有
+    # token error 路径逐资产处理(不误伤)。
+    if network_mode == "live" and hasattr(uploader, "probe_token"):
+        token_probe_result = uploader.probe_token()
+        if token_probe_result.get("errcode") == 40164:
+            builder.errors.append(
+                f"77AB/OBS-379: 微信上传 IP 白名单拦截(40164)——出口 IP "
+                f"{token_probe_result.get('ip') or '未知(解析失败)'}，"
+                "请到微信公众号后台「设置与开发→基本配置→IP 白名单」加入该 IP 后重跑;"
+                "探针拦截于批量上传前,零张上传。"
+                f"errmsg 原文: {token_probe_result.get('errmsg')}")
+
+    current_by_id = {item["asset_id"]: item for item in discovery_records}
+    for asset, local_path, inspection, extraction_method in (
+            [] if (token_probe_result or {}).get("errcode") == 40164
+            else pending_uploads):
             approval = asset_approvals.get(asset.asset_id)
             frozen = approved_records.get(asset.asset_id)
             mismatches: list[str] = []
@@ -1290,8 +1309,9 @@ def main():
                     min_height=config.get("min_height", 360),
                     context="", copyright_status="known_allowed",
                     extraction_method=extraction_method,
-                    internal_page=((asset.source_page_url or "").startswith(
-                        "https://aihot.virxact.com/")),
+                    # 77AB/OBS-378:站内页判定改双前缀(单一真源常量)。
+                    internal_page=any((asset.source_page_url or "").startswith(
+                        p) for p in AIHOT_SITE_PREFIXES),
                 )
                 asset.decision = classification.decision
                 asset.relevance_status = (
@@ -1471,9 +1491,22 @@ def main():
 
     # dev2-hotfix2: persist the serial upload event log for downstream audit
     events_path = output_dir / "upload_events.json"
+    events_payload = {"schema_version": "1.0", "serial": True,
+                      "events": upload_events}
+    # 77AB/OBS-379:探针观测留痕(照 _last_token_observation 形状 + 探针
+    # ok/errcode/errmsg/ip 四键);未探(非 live/非微信上传器)不写键,零形状变化。
+    if token_probe_result is not None:
+        _probe_obs = dict(getattr(uploader, "_last_probe_observation", None)
+                          or {})
+        _probe_obs.update({
+            "ok": token_probe_result.get("ok"),
+            "errcode": token_probe_result.get("errcode"),
+            "errmsg": token_probe_result.get("errmsg"),
+            "ip": token_probe_result.get("ip"),
+        })
+        events_payload["token_probe"] = _probe_obs
     with open(events_path, "w", encoding="utf-8") as f:
-        json.dump({"schema_version": "1.0", "serial": True,
-                   "events": upload_events}, f, ensure_ascii=False, indent=2)
+        json.dump(events_payload, f, ensure_ascii=False, indent=2)
 
     # OBS-43: Pipeline's stage contract reads required outputs at the stage root,
     # while two-phase execution keeps its canonical continue copies in continue/.

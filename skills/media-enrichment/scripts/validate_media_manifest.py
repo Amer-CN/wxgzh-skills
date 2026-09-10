@@ -19,7 +19,7 @@ sys.path.insert(0, str(SKILL_ROOT / "src"))
 
 import jsonschema
 from urllib.parse import urlparse
-from media_enrichment.url_security import is_private_network_url
+from media_enrichment.url_security import is_private_network_url, AIHOT_SITE_PREFIXES
 from media_enrichment.uploader import scan_for_secrets
 from media_enrichment.image_inspector import inspect_image, compute_sha256
 from media_enrichment.input_contract import compute_file_sha256
@@ -162,8 +162,9 @@ def validate_manifest(manifest_path: str, request_path: str | None = None) -> di
 
             # 77W/OBS-359:supplemental permalink 通道——按 provenance 分流。
             # supplemental:aihot_permalink 允许 null(无站内页);非 null 时必须
-            # https://aihot.virxact.com/ 前缀(构造外站填充拒)。normal/缺省维持
-            # 既有口径(schema required + format uri),不新增域门槛。
+            # aihot 站内域(virxact/aihot.news) 前缀(构造外站填充拒;77AB/OBS-378
+            # 双前缀)。normal/缺省维持既有口径(schema required + format uri),
+            # 不新增域门槛。
             lane_errors = []
             for m in materials:
                 if not isinstance(m, dict):
@@ -171,8 +172,8 @@ def validate_manifest(manifest_path: str, request_path: str | None = None) -> di
                 if (m.get("provenance") or "normal") != "supplemental":
                     continue
                 link = m.get("aihot_permalink")
-                if link is not None and not str(link).startswith(
-                        "https://aihot.virxact.com/"):
+                if link is not None and not any(str(link).startswith(
+                        p) for p in AIHOT_SITE_PREFIXES):
                     lane_errors.append(
                         f"{m.get('material_id', '?')}: supplemental 无站内页应填 null"
                         f"(外站填充拒: {str(link)[:80]})")

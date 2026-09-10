@@ -36,6 +36,11 @@ from .subprocess_runner import run_script
 from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
                                 enforce_approval_readiness)
 
+# 77AB/OBS-378:aihot 站内页双前缀常量(上游 301 迁移,virxact 与 aihot.news 都是
+# 站内页)。与 media-enrichment url_security.AIHOT_SITE_PREFIXES 同值——两子树无法
+# 共享 import,以守卫测试钉一致(照 77W 两文一致守卫先例,tests/test_hf77ab_guard.py)。
+AIHOT_SITE_PREFIXES = ("https://aihot.virxact.com/", "https://aihot.news/")
+
 # 76R/OBS-288:指令瘦身——76F/OBS-276(恢复SOP)/76F/OBS-279(编码)/76L/OBS-283
 # (反顶包明规)三条通用规则抽为单一真源常量,三 agent 阶段共用;源码去重
 # (原文三条各复制三份 → 单一常量),产物指令(拼接后)与改写前逐字一致。
@@ -66,6 +71,9 @@ AGENT_INSTRUCTIONS["super_writer"] += "77M/OBS-330:容器 type 枚举单一真�
 AGENT_INSTRUCTIONS["super_writer"] += "77Z/OBS-376:title_candidates 逐候选证据完备——每候选四组归属+五维评分（五项 1–5 整数）+显式风险标记（无风险须写「风险标记：无」），缺一 VSP --product handoff FAIL；reason 层逐候选记录，禁只评选定主标题。"
 # 77AA/OBS-377:标题 hits 台账回填义务(轻义务,不阻断流水线)。
 AGENT_INSTRUCTIONS["super_writer"] += "77AA/OBS-377:发文后将本篇选定标题追入 references/title-hits.md 台账（日期/RUN_ID/标题/组/五维分/风险标记/表现回填位,验证状态=待回填;轻义务,不阻断流水线）。"
+# 77AB/OBS-378:aihot 站内页双域明规(上游 301 迁移;记录层禁改写上游域名;
+# 双前缀判定单一真源=AIHOT_SITE_PREFIXES,守卫测试钉两子树一致)。
+AGENT_INSTRUCTIONS["aihot"] += "77AB/OBS-378:aihot 站内页=virxact 与 aihot.news 双域(301 迁移);记录层禁改写上游返回的域名,permalink/links 保留原值;双前缀判定单一真源(AIHOT_SITE_PREFIXES,守卫测试钉两子树一致)。"
 
 # OBS-187(档71G,5b):aihot 注入路径运行时指令串(供反硬编码测试扫描,不复制)。
 # OBS-198(档71H,2c):错误文案单一来源(live 未授权微信 API)。
@@ -303,7 +311,7 @@ def _aihot_synthetic_original_check(sd: Path) -> list:
     """77Y/OBS-373:aihot 合成条目契约自检(ACK 前挂点,_agent 内 ACK 校验通过后执行)。
 
     逐条 deduplicated_items.json 条目——非 `cm` 前缀 id(合成/补充条目)时:
-    - links.original 不得为 aihot 站内页(https://aihot.virxact.com/ 前缀=冒充,
+    - links.original 不得为 aihot 站内页(virxact/aihot.news 双域)=冒充,
       0srcql/nlmrly 二咬实证——story 页 URL 冒充 original);
     - 且必须存在,provenance=supplemental 按 77X 分流允许 permalink null;
       但 original 一旦存在,冒充禁令与 provenance 无关。
@@ -324,7 +332,8 @@ def _aihot_synthetic_original_check(sd: Path) -> list:
             continue
         links = it.get("links") if isinstance(it.get("links"), dict) else {}
         original = str(links.get("original") or "").strip()
-        if original.startswith("https://aihot.virxact.com/"):
+        # 77AB/OBS-378:双前缀判定(单一真源常量,防冒充语义不放松——两域都拦)。
+        if any(original.startswith(p) for p in AIHOT_SITE_PREFIXES):
             violations.append(
                 f"{iid}: links.original 为 aihot 站内页({original})=冒充 original"
                 "（77Y/OBS-373），须填真实原始来源 URL")
