@@ -13,14 +13,11 @@ from pathlib import Path
 
 import wxgzh_pipeline.producers as PR
 
-from conftest import SKILL_ROOT
-
+# 77AB-R1:自算 SKILL_ROOT(dual_domain 同法)——组合跑跨套件时 sys.modules
+# ["conftest"] 由最后装载的测试目录独占,bare import 会拿到对侧根;
+# 跨技能 import 一并延迟到测试期,收集期零副作用。
+SKILL_ROOT = Path(__file__).resolve().parents[1]
 MEDIA_SRC = SKILL_ROOT.parent / "media-enrichment" / "src"
-sys.path.insert(0, str(MEDIA_SRC))
-
-from media_enrichment.url_security import (  # noqa: E402
-    AIHOT_SITE_PREFIXES as MEDIA_PREFIXES,
-)
 
 
 def _stage_with_items(tmp_path: Path, items) -> Path:
@@ -93,6 +90,11 @@ def test_77ab_instruction_rewrite_ban_anchor():
 def test_77ab_dual_tree_prefixes_single_source():
     """⑤双文一致守卫:producers 与 media url_security 常量逐字相等
     (import 两侧比较),且恰含 virxact/aihot.news 两前缀。"""
+    # 77AB-R1:sys.path 注入与跨技能 import 移入函数内,收集期零副作用。
+    sys.path.insert(0, str(MEDIA_SRC))
+    from media_enrichment.url_security import (
+        AIHOT_SITE_PREFIXES as MEDIA_PREFIXES,
+    )
     assert PR.AIHOT_SITE_PREFIXES == MEDIA_PREFIXES
     assert set(PR.AIHOT_SITE_PREFIXES) == {
         "https://aihot.virxact.com/", "https://aihot.news/"}

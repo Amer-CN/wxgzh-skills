@@ -14,7 +14,7 @@ from pathlib import Path
 
 import wxgzh_pipeline.producers as PR
 
-from conftest import SKILL_ROOT
+SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_obs288_preflight_mandatory_hard_step():
