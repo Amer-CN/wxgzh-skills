@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.21-rc3 (2026-09-10) — 档77AC：title-hits 移出锁面（OBS-380，77AA 设计债务根治）
+
+- **title-hits.md 物理移位**：`references/title-hits.md` → `wxgzh-pipeline/audit/quality/title-hits.md`（git mv 纯重命名，内容零改动——3bhpi2 种子行与 m9coc1 回流行逐字节保留）。77AB 实战实证：生产数据台账居锁 runtime 面内，生产 RUN 追加行即漂装机侧 sw root hash、doctor gate 拦 relock。照 77R 同族先例（ai-tone-calibration.jsonl 生产累积数据居 pipeline audit/quality/ 无锁面）归位——生产数据本不属于 skill 静态资源面。移出后生产写入不再触碰任何锁哈希面（sw root hash/runtime manifest/OBS_68 均不含）。
+- **引用同步**：sw Phase 6 指令面 77AA/OBS-377 句路径 references/ → audit/quality/（措辞其余不动，wxgzh-pipeline producers.py）；锚点测试 hits 锚改指新路径（tests/test_hf77aa_title_patterns.py）。
+
 ## v0.4.21-rc1 (2026-09-07) — 档77AA：标题生成端升级（OBS-377）
 
 - **六范式语料库**：新增 `references/title-patterns.md`——双目标原则（阅读量 vs 分享率二选一，起题前先定，实证 14.5 万阅读爆款分享率仅 1.9%）+ 六范式（新品速报/保姆级干货/清单盘点/第一人称战绩/横评实测/行业观点）各配定义+生成公式+适用场景+本号领域自写示例 2-3 条 + 结构统计表（22–27 字目标/Top10 均值 25.7/80% 逗号分段/56% 含数字/92% 点名带版本号/感叹号≤1/问号仅真痛点/`|` 后缀挂附加承诺/免费零门槛强钩子/「揭秘·震惊·颠覆认知」0 条禁用）。ATTRIBUTION：范式结构与统计嫁接自 woyin2024/lengyi-title（README 声称 MIT、无 LICENSE 文件，按「不复制原文」原则只取结构与统计规律，不搬运任何标题原文，建议向作者确认许可证）。

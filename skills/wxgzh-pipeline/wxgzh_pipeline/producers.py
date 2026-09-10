@@ -70,7 +70,7 @@ AGENT_INSTRUCTIONS["super_writer"] += "77M/OBS-330:容器 type 枚举单一真�
 # 77Z/OBS-376:Phase 6 标题候选逐候选证据完备(硬措辞,VSP 逐候选门同步)。
 AGENT_INSTRUCTIONS["super_writer"] += "77Z/OBS-376:title_candidates 逐候选证据完备——每候选四组归属+五维评分（五项 1–5 整数）+显式风险标记（无风险须写「风险标记：无」），缺一 VSP --product handoff FAIL；reason 层逐候选记录，禁只评选定主标题。"
 # 77AA/OBS-377:标题 hits 台账回填义务(轻义务,不阻断流水线)。
-AGENT_INSTRUCTIONS["super_writer"] += "77AA/OBS-377:发文后将本篇选定标题追入 references/title-hits.md 台账（日期/RUN_ID/标题/组/五维分/风险标记/表现回填位,验证状态=待回填;轻义务,不阻断流水线）。"
+AGENT_INSTRUCTIONS["super_writer"] += "77AA/OBS-377:发文后将本篇选定标题追入 audit/quality/title-hits.md 台账（日期/RUN_ID/标题/组/五维分/风险标记/表现回填位,验证状态=待回填;轻义务,不阻断流水线）。"
 # 77AB/OBS-378:aihot 站内页双域明规(上游 301 迁移;记录层禁改写上游域名;
 # 双前缀判定单一真源=AIHOT_SITE_PREFIXES,守卫测试钉两子树一致)。
 AGENT_INSTRUCTIONS["aihot"] += "77AB/OBS-378:aihot 站内页=virxact 与 aihot.news 双域(301 迁移);记录层禁改写上游返回的域名,permalink/links 保留原值;双前缀判定单一真源(AIHOT_SITE_PREFIXES,守卫测试钉两子树一致)。"

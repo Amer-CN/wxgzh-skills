@@ -14,7 +14,8 @@ from pathlib import Path
 REF_DIR = Path(__file__).resolve().parents[1] / "references"
 PATTERNS = (REF_DIR / "title-patterns.md").read_text(encoding="utf-8")
 PLAYBOOK = (REF_DIR / "title-playbook.md").read_text(encoding="utf-8")
-HITS = (REF_DIR / "title-hits.md").read_text(encoding="utf-8")
+# 77AC/OBS-380:title-hits.md 移出 sw 锁面,真身居 pipeline audit/quality/(生产数据归位)。
+HITS = (Path(__file__).resolve().parents[2] / "wxgzh-pipeline" / "audit" / "quality" / "title-hits.md").read_text(encoding="utf-8")
 
 # lengyi-title 原榜已知完整标题串(附录 A #6 案例原文)——零命中防抄袭
 ORIGINAL_BANGUMI_TITLES = [
