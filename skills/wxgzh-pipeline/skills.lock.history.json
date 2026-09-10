@@ -2118,5 +2118,27 @@
     "new_skill_version": "0.1.0-dev34",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20260910T172524Z-1fae7545",
+    "skill": "super-writer",
+    "reason": "77AC/OBS-380: title-hits 移出锁面 sw 0.4.21-rc3",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-10T17:25:24Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "c79a53fe1259c39f3e9f62954ac95b5edd7995febd024fc3614e76623765ba4a",
+    "new_root_sha256": "5061f4949653ecebf1fb803db1ae2f81863ff09026d08e6e87db1a78330330f6",
+    "old_manifest_sha256": "e5896d47903cfcd69937cc30ba982af59ae79beb146036649c29041dda5ffb58",
+    "new_manifest_sha256": "6444c081c8c2180626d2578becfb97e23e0fb36972542654df7fa9efa35dd439",
+    "old_file_count": 58,
+    "new_file_count": 57,
+    "old_full_commit_sha": "b94448683d396833425716b9043a22a62c2260dd",
+    "new_full_commit_sha": "61987a758690ad853af3fca6ee4fe8c700be93d8",
+    "old_source_tree_sha": "967d99d40dab85e1762d59b0904290d64582b0ac",
+    "new_source_tree_sha": "fe01075f70c008910c5ec892d489a4f28284d5f4",
+    "old_skill_version": "0.4.21-rc2",
+    "new_skill_version": "0.4.21-rc3",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
