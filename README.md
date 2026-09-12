@@ -72,7 +72,7 @@ README 装全家桶。没有公众号也不影响——前三个 skill 照常用
 </tr>
 </table>
 
-> 当前版本速览：sw 0.4.21-rc3 · zh 0.1.14 · gzh hammer.22 · media dev35 · pipeline 9R32（发版打 `vYYYY.MM.DD-<档号>` tag；编排器第 0 步自动检查更新）
+> 当前版本速览：sw 0.4.21-rc3 · zh 0.1.14 · gzh hammer.22 · media dev35 · pipeline 9R33（发版打 `vYYYY.MM.DD-<档号>` tag；编排器第 0 步自动检查更新）
 
 ## 📋 五个 Skill
 
@@ -82,7 +82,7 @@ README 装全家桶。没有公众号也不影响——前三个 skill 照常用
 | 🧼 [zh-human-writing](./skills/zh-human-writing) | 去 AI 味编辑：词表审计 + 逐句保真门禁 + AI-tone 六族 | ✅ 零依赖 | 0.1.14 |
 | 🔨 [gzh-design](./skills/gzh-design) | 排版引擎：Markdown → 公众号精致 HTML（**基于 isjiamu 版增强，见来源与致谢**） | ✅ 零依赖 | hammer.22 |
 | 🖼️ [media-enrichment](./skills/media-enrichment) | 配图管线：抓取/视频封面/数据图表 + 版权证据链 + SSRF 守卫 | 流水线配套 | 0.1.0-dev35 |
-| 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 + 安全基线 | 需装齐四个依赖 | dev2-hotfix9R32 |
+| 🎛️ [wxgzh-pipeline](./skills/wxgzh-pipeline) | 总编排器：六阶段流水线 + 锁链治理 + 凭证交付 + 安全基线 | 需装齐四个依赖 | dev2-hotfix9R33 |
 
 ## 📦 独立工具（不在流水线内）
 

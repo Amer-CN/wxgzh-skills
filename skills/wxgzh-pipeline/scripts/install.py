@@ -67,6 +67,148 @@ def _find_source() -> tuple[Path, Path | None, Path | None]:
 INSTALLED_FROM_FILENAME = ".installed-from"
 
 
+# 77AE/OBS-382:installer 同步时保留的装机侧生产数据文件(相对 wxgzh-pipeline skill 根)。
+# - audit/quality/title-hits.md:只追加、RUN_ID 键(档 77AA 纪律)。
+# - audit/quality/ai-tone-calibration.jsonl:append-only(整行精确并集，无原地改语义)。
+PRESERVED_PRODUCTION_DATA = (
+    "audit/quality/title-hits.md",
+    "audit/quality/ai-tone-calibration.jsonl",
+)
+
+
+def _production_run_id(row_line: str) -> str:
+    """title-hits 数据行按第二个 `|` 单元格(RUN_ID)取键。"""
+    cells = [cell.strip() for cell in row_line.strip().strip("|").split("|")]
+    return cells[1] if len(cells) >= 2 else ""
+
+
+def _split_ledger_table(text: str):
+    """拆分台账 ledger 表为(前缀行, 表头行, 分隔行, 数据行, 后缀行)；找不到返回 None。"""
+    lines = text.splitlines()
+    header_idx = None
+    for idx, line in enumerate(lines):
+        if line.strip().startswith("|") and "RUN_ID" in line:
+            header_idx = idx
+            break
+    if header_idx is None or header_idx + 1 >= len(lines):
+        return None
+    sep_line = lines[header_idx + 1]
+    if "---" not in sep_line:
+        return None
+    data_start = header_idx + 2
+    data_end = data_start
+    while data_end < len(lines) and lines[data_end].strip().startswith("|"):
+        data_end += 1
+    return (
+        lines[:header_idx],
+        lines[header_idx],
+        sep_line,
+        lines[data_start:data_end],
+        lines[data_end:],
+    )
+
+
+def _merge_title_hits_text(new_text: str, backup_text: str) -> str:
+    """title-hits 合并：new 顺序为底，new 赢同 RUN_ID，backup 独有行按 backup 顺序追加。"""
+    new_parts = _split_ledger_table(new_text)
+    backup_parts = _split_ledger_table(backup_text)
+    if new_parts is None or backup_parts is None:
+        # 非台账形态回退：整行精确并集(new 顺序 + backup 独有行)，双向不丢。
+        new_lines = new_text.splitlines()
+        backup_lines = backup_text.splitlines()
+        seen = set(new_lines)
+        merged = list(new_lines)
+        for line in backup_lines:
+            if line not in seen:
+                seen.add(line)
+                merged.append(line)
+        result = "\n".join(merged)
+        if new_text.endswith("\n") or backup_text.endswith("\n"):
+            result += "\n" if merged else ""
+        return result
+    prefix, header, sep, new_rows, suffix = new_parts
+    _, _, _, backup_rows, _ = backup_parts
+    new_by_key: dict[str, str] = {}
+    new_order: list[str] = []
+    for row in new_rows:
+        key = _production_run_id(row)
+        if key and key not in new_by_key:
+            new_order.append(key)
+        if key:
+            new_by_key[key] = row
+        elif row not in new_by_key.values():
+            # 无键行(如空行变体)按原文保留，避免丢行。
+            new_order.append(row)
+            new_by_key[row] = row
+    merged_rows = [new_by_key[key] for key in new_order]
+    for row in backup_rows:
+        key = _production_run_id(row)
+        if key:
+            if key not in new_by_key:
+                merged_rows.append(row)
+        elif row not in set(merged_rows):
+            merged_rows.append(row)
+    result_lines = [*prefix, header, sep, *merged_rows, *suffix]
+    result = "\n".join(result_lines)
+    if new_text.endswith("\n"):
+        result += "\n"
+    return result
+
+
+def _merge_jsonl_text(new_text: str, backup_text: str) -> str:
+    """jsonl 合并：整行精确并集(backup 顺序 + new 独有行追加)。"""
+    backup_lines = [line for line in backup_text.splitlines() if line != ""]
+    new_lines = [line for line in new_text.splitlines() if line != ""]
+    seen: set[str] = set()
+    merged: list[str] = []
+    for line in backup_lines:
+        if line not in seen:
+            seen.add(line)
+            merged.append(line)
+    for line in new_lines:
+        if line not in seen:
+            seen.add(line)
+            merged.append(line)
+    if not merged:
+        return ""
+    return "\n".join(merged) + "\n"
+
+
+def _merge_production_file(backup_path, new_path) -> str:
+    """合并单个生产数据文件(backup=装机旧版，new=仓侧新版)，结果落盘到 new_path。
+
+    返回动作词：merged/kept-new/restored-backup/identical。
+    """
+    backup_path = Path(backup_path)
+    new_path = Path(new_path)
+    backup_exists = backup_path.is_file()
+    new_exists = new_path.is_file()
+    if not backup_exists and not new_exists:
+        return "kept-new"
+    if not backup_exists:
+        return "kept-new"
+    if not new_exists:
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        new_path.write_bytes(backup_path.read_bytes())
+        return "restored-backup"
+    backup_bytes = backup_path.read_bytes()
+    new_bytes = new_path.read_bytes()
+    if backup_bytes == new_bytes:
+        return "identical"
+    suffix = new_path.suffix.lower() or backup_path.suffix.lower()
+    if suffix == ".jsonl":
+        merged_text = _merge_jsonl_text(
+            new_bytes.decode("utf-8"), backup_bytes.decode("utf-8"))
+    else:
+        merged_text = _merge_title_hits_text(
+            new_bytes.decode("utf-8"), backup_bytes.decode("utf-8"))
+    merged_bytes = merged_text.encode("utf-8")
+    if merged_bytes == new_bytes:
+        return "identical"
+    new_path.write_bytes(merged_bytes)
+    return "merged"
+
+
 def _resolve_source_head(src: Path) -> tuple[str, str | None]:
     """源仓 HEAD sha + HEAD 可达的最新 v 前缀 tag(无则 None)。_git 已有可复用。"""
     git_root = Path(src)
@@ -471,6 +613,15 @@ def install(
                 _rollback_switch(target, switched, backups, receipts_backup)
                 raise InstallReceiptError(
                     "post-switch complete lock action gates failed; rolled back")
+            # 77AE/OBS-382:final verify 已在合并前跑过(干净树才能过)；此处合并装机侧
+            # 生产数据(backup)与仓侧新版(target)，双向不丢；doctor 面天然排除 audit。
+            production_data_preserved: dict[str, str] = {}
+            if backups.get("wxgzh-pipeline") is not None:
+                backup_root = backups["wxgzh-pipeline"]
+                for rel in PRESERVED_PRODUCTION_DATA:
+                    action_word = _merge_production_file(
+                        backup_root / rel, target / "wxgzh-pipeline" / rel)
+                    production_data_preserved[rel] = action_word
             # 77Z/OBS-374:装机同步完成处落 installed-from 标记(内容口径)。
             _write_installed_from(target, pipeline_source)
             return {
@@ -480,6 +631,7 @@ def install(
                     name: final_verify[name].get("ok") for name in sorted(expected_skills)
                 },
                 "pipeline_release_include": pipeline_release_include,
+                "production_data_preserved": production_data_preserved,
                 "note": "installer never runs an article / uploads images / creates a draft",
             }
         finally:
