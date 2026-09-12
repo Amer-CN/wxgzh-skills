@@ -227,7 +227,7 @@ def safe_fetch_with_redirects(
     current_url = normalize_url(url)
     redirect_chain: list[str] = []
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev34"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev35"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):
@@ -301,7 +301,7 @@ def safe_download_with_redirects(
     redirect_chain: list[str] = []
     output_path = Path(output_path)
 
-    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev34"}
+    default_headers = {"User-Agent": "media-enrichment/0.1.0-dev35"}
     if headers:
         default_headers.update(headers)
     for hop in range(MAX_REDIRECTS + 1):

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev35 (2026-09-12) — 77AD
+
+- **OBS-381 审批台账机械回写封堵**：continue 消费链上，auto_* 车道的 `basis` 以 `_mechanical_basis` 实时值回写落账 `copyright_approval.json`（与 `manifest.reasons` 同值），手填值不入账；新增 `basis_provenance` 标记（`orchestrator_mechanical_rewrite (77AD/OBS-381)`）——缺标记的手填走回写 heal，标记在但值非机械=伪造，`_approval_lane_error` 拒收并指路；机械值为 `None` 时记账 error 走 77W fail-fast，该资产摘除消费、不落账、不上传。
+- **OBS-381 手填行为留痕**：手填与机械不一致被忽略时计数 `hand_filled_basis_ignored`，循环后进 manifest `warnings`（体检可见），不再静默覆盖。
+- **测试**：新增 tests/test_hf77ad_basis_rewrite.py（14j153 形状重放 True→False 全机械+标记/warnings 计数/伪造拒收/None fail-fast 不落账/回写 helper 边界）。
+- **版本字面量全站同步 dev34 → dev35**（77J 既定模式）。
+
 ## 0.1.0-dev34 (2026-09-10) — 77AB
 
 - **OBS-378 aihot 域名双前缀适配**：`url_security.py` 顶部新增单一真源常量 `AIHOT_SITE_PREFIXES = ("https://aihot.virxact.com/", "https://aihot.news/")`（上游 301 迁移双域，防冒充门语义不变——两域都是站内页）；三处前缀判定改双前缀——`run_media_enrichment.py` internal_page 判定（重分类块）、`input_contract.py` Step 3f supplemental 分流、`validate_media_manifest.py` REQUEST_MATERIAL_PERMALINK_LANE 全部改用常量（`any(startswith)`），内联单前缀判定绝版；「非 null 须 aihot 前缀」=双前缀集合，外站填充拒不放松；wxgzh-pipeline producers 冒充门同步双前缀+顶部同值常量（守卫测试钉两子树一致，照 77W 两文一致守卫先例）。

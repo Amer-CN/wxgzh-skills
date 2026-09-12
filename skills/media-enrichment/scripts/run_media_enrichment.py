@@ -178,6 +178,11 @@ def _source_content_description(candidate, material_title: str | None = None):
 # 77W/OBS-357:审批车道(approved_by)合法枚举与依据要求。
 APPROVED_BY_LANES = ("user", "auto_rule", "auto_approve")
 
+# 77AD/OBS-381:编排器机械回写 provenance 标记——auto_* 记录的 basis 只有带此
+# 标记才被视为编排器机械值;缺标记=执行端手填(可回写 heal);标记在但值非机械=
+# 伪造,必须拒收。
+MECHANICAL_BASIS_PROVENANCE = "orchestrator_mechanical_rewrite (77AD/OBS-381)"
+
 
 def _user_action_evidence(approval: dict, request: dict) -> bool:
     """77W/OBS-357 + 77Y/OBS-371:user 车道用户动作证据存在性检查。
@@ -223,6 +228,14 @@ def _approval_lane_error(approval: dict, request: dict) -> str | None:
                 "（指路 schemas/media_enrichment_request.schema.json）")
     if lane in ("auto_rule", "auto_approve") and not (approval.get("basis") or "").strip():
         return "77W/OBS-357: auto_* 车道必须带 basis 依据"
+    if lane in ("auto_rule", "auto_approve"):
+        # 77AD/OBS-381:伪造机械回写检测——声明了编排器机械 provenance 但值
+        # 并不由本规则背书的，视为伪造手写，拒绝入账（缺标记的手填走回写 heal）。
+        _prov = approval.get("basis_provenance")
+        if _prov is not None and _prov != MECHANICAL_BASIS_PROVENANCE:
+            return ("77AD/OBS-381: auto_* 记录 basis_provenance 不可信"
+                    f"({_prov!r})——伪造机械回写，拒绝入账；合法标记为 "
+                    f"{MECHANICAL_BASIS_PROVENANCE}，且 basis 必须与机械值一致")
     if lane == "user" and not _user_action_evidence(approval, request):
         return ("user 车道需用户真实动作工件（user_images.json 或 user_action "
                 "三要素 user/action=approved/at），pipeline 自产 sha 不算"
@@ -333,6 +346,41 @@ def _mechanical_basis(network_mode, config, contract, approval_readiness,
             f"分类器={decision}; domain {host} 非水印高危")
 
 
+def _rewrite_approval_basis_file(approval_file, asset_id, mechanical_basis):
+    """77AD/OBS-381:把落账 copyright_approval.json 里指定 auto_* 记录的 basis
+    回写为机械值并打 provenance 标记（与 manifest.reasons 同值）。
+
+    返回 True=文件现已承载该资产的机械值（含本来就一致）；False=无法回写
+    （文件缺失/损坏/找不到对应 single_asset auto_* 记录），调用方按失败处理。
+    只改命中记录的 basis/basis_provenance 两键，其余逐字不动。
+    """
+    try:
+        path = Path(approval_file)
+        if not path.is_file():
+            return False
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    if not isinstance(data, dict):
+        return False
+    hit = False
+    for rec in data.get("approvals", []) or []:
+        if (isinstance(rec, dict) and rec.get("asset_id") == asset_id
+                and rec.get("approved_scope") == "single_asset"
+                and rec.get("approved_by") in ("auto_rule", "auto_approve")):
+            hit = True
+            rec["basis"] = mechanical_basis
+            rec["basis_provenance"] = MECHANICAL_BASIS_PROVENANCE
+    if not hit:
+        return False
+    try:
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8")
+    except OSError:
+        return False
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Media Enrichment Skill")
     parser.add_argument("--request", required=True)
@@ -423,6 +471,11 @@ def main():
     # matched to a stable identity after discovery and content hashing complete.
     asset_approvals = {ap["asset_id"]: ap for ap in request.get("asset_approvals", [])}
     consumed_asset_approvals: set[str] = set()
+    # 77AD/OBS-381:手填 basis 被忽略计数（任务 2 留痕，循环后进 manifest warnings）。
+    hand_filled_basis_ignored = 0
+    # 77AD/OBS-381:落账文件与请求同目录（编排器 _build_media_request 落点）——
+    # auto_* 机械值回写目标；文件缺失则跳过回写（纯函数单测夹具无此文件）。
+    approval_file_path = Path(args.request).parent / "copyright_approval.json"
     discovery_records: list[dict] = []
     pending_uploads: list[tuple[AssetRecord, str, object, str]] = []
     # offline image "downloads" read from a sibling images/ fixture dir (no network)
@@ -1326,16 +1379,34 @@ def main():
             # 生成值入账;手填与机械值不一致不报错、以机械值为准留痕 reasons。
             # 机械值为 None(分类器水印/受限/证据链断/合同不可读)时不 blessed,
             # 资产走既有 fail-fast(77W 三道门)。
+            # 77AD/OBS-381:机械值为 None 时该资产不落账——记账 error + 摘除消费
+            # （fail-fast）；手填与机械不一致时计数 hand_filled_basis_ignored+1
+            # 并把落账 copyright_approval.json 同值回写（与 manifest.reasons
+            # 同值），手填值不入账。
             if (asset.approved_by in ("auto_rule", "auto_approve")
                     and asset.asset_approval_consumed):
                 _mb = _mechanical_basis(
                     network_mode, config, _load_media_contract(),
                     _asset_readiness_record(output_dir, asset.asset_id) or {},
                     asset)
-                if _mb and (approval.get("basis") or "").strip() != _mb:
+                if not _mb:
+                    builder.errors.append(
+                        "77AD/OBS-381: auto_* 车道无法机械生成 basis"
+                        f"({asset.asset_id})，该资产不落账——走 77W fail-fast")
+                    consumed_asset_approvals.discard(asset.asset_id)
+                    continue
+                if (approval.get("basis") or "").strip() != _mb:
+                    hand_filled_basis_ignored += 1
                     asset.reasons.append(
                         "basis regenerated mechanically (77Y/OBS-366)")
                     asset.reasons.append(_mb)
+                    if approval_file_path.is_file() and not _rewrite_approval_basis_file(
+                            approval_file_path, asset.asset_id, _mb):
+                        builder.errors.append(
+                            "77AD/OBS-381: 落账 copyright_approval.json 机械回写失败"
+                            f"({asset.asset_id})——文件损坏或记录缺失，不落账")
+                        consumed_asset_approvals.discard(asset.asset_id)
+                        continue
 
             # 76R/OBS-289:媒体审批自动放行模式(默认关)——WXGZH_MEDIA_AUTO_APPROVE=1
             # 且单图证据链齐全(observable_content 可读 + page_position 已知 + sha256 在册
@@ -1426,6 +1497,14 @@ def main():
 
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
+
+    # 77AD/OBS-381:手填行为留痕——被忽略的手填 basis 计数进 manifest warnings
+    # （体检可见），不再静默覆盖；伪造机械标记的拒收见 _approval_lane_error。
+    if hand_filled_basis_ignored:
+        builder.warnings.append(
+            f"hand_filled_basis_ignored={hand_filled_basis_ignored} "
+            "(77AD/OBS-381): auto_* 手填 basis 已忽略并机械回写落账 "
+            "copyright_approval.json；落账值以 manifest.reasons 机械值为准")
 
 
     # Placement

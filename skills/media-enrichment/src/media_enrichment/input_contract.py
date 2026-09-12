@@ -21,7 +21,7 @@ import jsonschema
 # package_root(src/)在其加载前已入 sys.path,绝对 import 两侧通吃。
 from media_enrichment.url_security import AIHOT_SITE_PREFIXES
 
-SKILL_VERSION = "0.1.0-dev34"
+SKILL_VERSION = "0.1.0-dev35"
 
 @dataclass
 class ValidationResult:
