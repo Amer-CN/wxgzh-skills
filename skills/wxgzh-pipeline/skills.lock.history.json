@@ -2140,5 +2140,25 @@
     "new_skill_version": "0.4.21-rc3",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20260912T095253Z-477cfc2a",
+    "skill": "media-enrichment",
+    "reason": "77AD 审批台账机械回写封堵+手填行为留痕;dev35",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-12T09:52:53Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "5f12fda50d2bb79fbd910a5cabe6b3bb8be3c40e76001105146a2325c224a810",
+    "new_root_sha256": "6560178d0a62fceff047bd498dbc22a5b7ce00f9aacaf4200c748d34cca55d9f",
+    "old_entrypoint_sha256": "d24e266c91942736005dbf3683aa7e5f743796c1f3b078d3c6e75a6d43cdda6d",
+    "new_entrypoint_sha256": "327867a8cfd5e9de97f3184a641c007c760053def50a72241c8aeae11d8af634",
+    "old_full_commit_sha": "b94448683d396833425716b9043a22a62c2260dd",
+    "new_full_commit_sha": "7b6b47b854007b31d7a95f2cea4922573850566e",
+    "old_source_tree_sha": "07d670f60528998b1ddd8200ba4aecbaf81cac82",
+    "new_source_tree_sha": "d34dd715887045230f963988116a4664a13a7a39",
+    "old_skill_version": "0.1.0-dev34",
+    "new_skill_version": "0.1.0-dev35",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
