@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build script for media-enrichment v0.1.0-dev35.
+"""Build script for media-enrichment v0.1.0-dev36.
 
 Sequence:
   a. Generate all fixtures
@@ -15,6 +15,7 @@ Sequence:
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -28,11 +29,15 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = SKILL_ROOT.parent.parent
-BUILD_VERSION = "0.1.0-dev35"
+BUILD_VERSION = "0.1.0-dev36"
 
 OUTPUT_ZIP = PROJECT_ROOT / f"media-enrichment-v{BUILD_VERSION}.zip"
 EVIDENCE_DIR = SKILL_ROOT / "evidence"
-EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_evidence_dir() -> None:
+    """77AG/OBS-384:evidence/ 只在真跑时建——import/--help/未知参数零副作用。"""
+    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Required fixture images — verified by explicit list, not a brittle count
 EXPECTED_FIXTURE_IMAGES = {
@@ -343,7 +348,15 @@ def step_i_summary(zip_sha, verification_pass):
     return final
 
 
-def main():
+def main(argv=None):
+    # 77AG/OBS-384:参数护栏——未知参数先过 argparse（exit 2 + usage，零文件落盘）；
+    # --help 正常打印零副作用；裸调语义不变。本脚本无业务参数。
+    argparse.ArgumentParser(
+        prog="build_zip.py",
+        description="Build media-enrichment release ZIP "
+                    "(runs fixtures+tests+evidence, writes evidence/ + repo-root ZIP)",
+    ).parse_args(argv)
+    _ensure_evidence_dir()
     print(f"Building media-enrichment v{BUILD_VERSION}")
     print(f"Skill root: {SKILL_ROOT}")
     print(f"Output ZIP: {OUTPUT_ZIP}")

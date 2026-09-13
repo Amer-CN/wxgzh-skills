@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all evidence files for media-enrichment v0.1.0-dev35.
+"""Generate all evidence files for media-enrichment v0.1.0-dev36.
 
 Uses pytest --json-report for structured test results.
 All test_summary fields come from structured reports — no hardcoding.
@@ -7,6 +7,7 @@ All test_summary fields come from structured reports — no hardcoding.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
@@ -20,9 +21,13 @@ sys.path.insert(0, str(SKILL_ROOT / "src"))
 sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 EVIDENCE_DIR = SKILL_ROOT / "evidence"
-EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
-VERSION = "0.1.0-dev35"
+
+def _ensure_evidence_dir() -> None:
+    """77AG/OBS-384:evidence/ 只在真跑时建——import/--help/未知参数零副作用。"""
+    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+
+VERSION = "0.1.0-dev36"
 
 def compute_file_sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -536,7 +541,15 @@ def generate_test_summary(unit_results, security_report, dedup_report,
     return summary
 
 
-def main():
+def main(argv=None):
+    # 77AG/OBS-384:参数护栏——未知参数先过 argparse（exit 2 + usage，零文件落盘）；
+    # --help 正常打印零副作用；裸调语义不变。本脚本无业务参数。
+    argparse.ArgumentParser(
+        prog="generate_evidence.py",
+        description="Generate all evidence files for "
+                    "media-enrichment (writes skills/media-enrichment/evidence/)",
+    ).parse_args(argv)
+    _ensure_evidence_dir()
     unit_results = generate_unit_test_evidence()
     security_report = generate_security_test_report()
     dedup_report = generate_dedup_test_report()

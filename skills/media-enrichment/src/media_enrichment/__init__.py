@@ -1,7 +1,7 @@
 """media-enrichment Skill package.
 
-Version: 0.1.0-dev35
+Version: 0.1.0-dev36
 """
 
-__version__ = "0.1.0-dev35"
+__version__ = "0.1.0-dev36"
 SKILL_NAME = "media-enrichment"

@@ -233,9 +233,10 @@ def test_obs304_ledger_count_command():
     # 77AD 更新:OBS-381 登记后 119..381 = 263 个编号(76Y-R/77K 起计数实测为准)
     # 77AE 更新:OBS-382 登记后 119..382 = 264 个编号(76Y-R/77K 起计数实测为准)
     # 77AF 更新:OBS-383 登记后 119..383 = 265 个编号(76Y-R/77K 起计数实测为准)
-    assert n == 265, f"唯一编号实测 {n} != 265"
+    # 77AG 更新:OBS-384 登记后 119..384 = 266 个编号(76Y-R/77K 起计数实测为准)
+    assert n == 266, f"唯一编号实测 {n} != 266"
     # 区间连续无缺号
-    assert set(range(119, 384)) <= nums, "119..383 区间有缺号"
+    assert set(range(119, 385)) <= nums, "119..384 区间有缺号"
 
 
 def test_obs301_pwsh_redirect_rule():

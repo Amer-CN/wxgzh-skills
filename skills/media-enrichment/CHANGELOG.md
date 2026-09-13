@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-dev36 (2026-09-14) — 77AG
+
+- **OBS-384 自测工具参数护栏**：`scripts/generate_evidence.py` 与 `scripts/build_zip.py`（同病并入）main() 入口先过 argparse（零业务参数）——未知参数 exit 2 + usage 零文件落盘，`--help` 正常打印零副作用，裸调语义零变化；`EVIDENCE_DIR.mkdir` 由 import 时移入真跑路径（import/--help/未知参数不建 evidence/）。
+- **测试**：新增 tests/test_hf77ag_cli_guard.py（bogus flag 双文件 exit 2 + 零新增/--help 双文件 exit 0 + 零副作用，子进程 DEVNULL 无管道）。
+- **版本字面量全站同步 dev35 → dev36**（77J 既定模式）。
+
 ## 0.1.0-dev35 (2026-09-12) — 77AD
 
 - **OBS-381 审批台账机械回写封堵**：continue 消费链上，auto_* 车道的 `basis` 以 `_mechanical_basis` 实时值回写落账 `copyright_approval.json`（与 `manifest.reasons` 同值），手填值不入账；新增 `basis_provenance` 标记（`orchestrator_mechanical_rewrite (77AD/OBS-381)`）——缺标记的手填走回写 heal，标记在但值非机械=伪造，`_approval_lane_error` 拒收并指路；机械值为 `None` 时记账 error 走 77W fail-fast，该资产摘除消费、不落账、不上传。
