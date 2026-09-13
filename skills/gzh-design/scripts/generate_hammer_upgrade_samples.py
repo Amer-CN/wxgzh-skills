@@ -699,18 +699,19 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
 </section>'''
 
 
+# toc 卡片单行纪律:标题/副标题再长只占一行(省略号截断),卡片等高不臃肿。
 def _toc_card(t, part_label, title, subtitle, highlight):
     p = t["primary"]
     if highlight:
         return f'''<section style="display:inline-block;white-space:normal;vertical-align:top;width:110px;background:linear-gradient(135deg,{p},{t['secondary']});border-radius:12px;padding:12px;margin-right:8px;">
       <p style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1px;margin:0 0 5px;"><span leaf="">{part_label}</span></p>
-      <p style="font-size:13px;font-weight:800;color:#fff;margin:0 0 3px;"><span leaf="">{title}</span></p>
-      <p style="font-size:10px;color:rgba(255,255,255,0.7);margin:0;"><span leaf="">{subtitle}</span></p>
+      <p style="font-size:13px;font-weight:800;color:#fff;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span leaf="">{title}</span></p>
+      <p style="font-size:10px;color:rgba(255,255,255,0.7);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span leaf="">{subtitle}</span></p>
     </section>'''
     return f'''<section style="display:inline-block;white-space:normal;vertical-align:top;width:110px;background:#fff;border:1px solid {t['border_gray']};border-radius:12px;padding:12px;margin-right:8px;box-shadow:0 2px 6px rgba(0,0,0,0.04);">
       <p style="font-size:9px;font-weight:700;color:{t['aux_text']};letter-spacing:1px;margin:0 0 5px;"><span leaf="">{part_label}</span></p>
-      <p style="font-size:13px;font-weight:800;color:{t['title_color']};margin:0 0 3px;"><span leaf="">{title}</span></p>
-      <p style="font-size:10px;color:{t['aux_text']};margin:0;"><span leaf="">{subtitle}</span></p>
+      <p style="font-size:13px;font-weight:800;color:{t['title_color']};margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span leaf="">{title}</span></p>
+      <p style="font-size:10px;color:{t['aux_text']};margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span leaf="">{subtitle}</span></p>
     </section>'''
 
 
