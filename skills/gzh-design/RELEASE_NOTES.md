@@ -1,4 +1,8 @@
-# gzh-design v2026.09.02-hammer.22
+# gzh-design v2026.09.14-hammer.23
+
+## v2026.09.14-hammer.23(档77AH)
+- toc-scroll 卡片标题/副标题单行截断部署：`scripts/generate_hammer_upgrade_samples.py` `_toc_card` 两分支 4 个 `<p>` 加 `white-space:nowrap;overflow:hidden;text-overflow:ellipsis;` + 1 行注释；卡片等高不臃肿。渲染 bugfix 部署，palette/配色/字号等主题设计值零触碰（GZH 键维持 0）；SHA256SUMS 重算。
+- 回归测试 +1：tests/test_toc_card_single_line.py（长标题保留+截断断言/PART 斜杠副标题单行）。
 
 ## v2026.09.02-hammer.22(档77U)
 - 灵犀复扫第三轮残项处置: tests/test_intro_paras_and_code_block.py 与 tests/test_render_article_cli.py 危险字面量改分段构造(夹具/断言引同一常量, 渲染输出逐字不变, YR1/TM1 pattern 消失); requirements.txt requests 下限 77T 遗漏收紧 >=2.32.4,<3(与 77T media 同 CVE 线); 77U 卫生新规立规(测试文件禁含危险字面量); SHA256SUMS 复核。
