@@ -2198,5 +2198,29 @@
     "new_skill_version": "v2026.09.14-hammer.23",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260914T091834Z-54d30d4f",
+    "skill": "gzh-design",
+    "reason": "77AI toc卡片副标题透传:hammer.24+SHA256SUMS更新",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-14T09:18:34Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "c22775d7280af242ce8495c70a0b419470a20551a5f7b5429612c8940b7706fb",
+    "new_root_sha256": "d732d26a3c3082cd3004a82d8d601369667c37a4b94cdb256b358a16a5a963e9",
+    "old_entrypoint_sha256": "4c1346e890093240c10f696ec4790bdf7891297231c6e06a9a0420595828fc8e",
+    "new_entrypoint_sha256": "fbb62cbd6a2b1620533c6d2a3320a2cb22a8fb2e566821b7eb83c2a14ec62f6d",
+    "old_render_entry_sha256": "4c1346e890093240c10f696ec4790bdf7891297231c6e06a9a0420595828fc8e",
+    "new_render_entry_sha256": "fbb62cbd6a2b1620533c6d2a3320a2cb22a8fb2e566821b7eb83c2a14ec62f6d",
+    "old_component_source_sha256": "e5115ede95e57477274e3643fb83d364cbb4f33599809e9172ebbe1e16bd3c0e",
+    "new_component_source_sha256": "a1f0229c434135e234d9b7b62cae3c89a4a4e2e1f8bb3127a62b0c6a59a5af6d",
+    "old_full_commit_sha": "7a8266bbc3b7f22e69f1b6aab87843cf3756f4f9",
+    "new_full_commit_sha": "3fb05c3164b8a400e309efd0eb216cb64b75d617",
+    "old_source_tree_sha": "f9a4bf8cc717811ea3a07d1aa71407192680b88e",
+    "new_source_tree_sha": "a7a708ab69896b2ec24b87f1935317afe1873e8e",
+    "old_skill_version": "v2026.09.14-hammer.23",
+    "new_skill_version": "v2026.09.14-hammer.24",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
