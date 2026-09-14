@@ -85,6 +85,22 @@ def split_title(title: str) -> tuple[str, str]:
     return title, "深度拆解"
 
 
+def chapter_first_sentence(chapter: dict) -> str:
+    """77AI:章节副标题=首段首句（按 。！？ 切分取首句，去首尾空白）。
+
+    首段=paras 中首个 kind==para 的 text；无首段/首句空/code/table 首项
+    → 回退 ""（现状保持）。超长不管（toc 卡片省略号收）。
+    """
+    for p in (chapter or {}).get("paras") or []:
+        if not isinstance(p, dict) or p.get("kind") != "para":
+            continue
+        text = (p.get("text") or "").strip()
+        if not text:
+            continue
+        return re.split(r"[。！？]", text, maxsplit=1)[0].strip()
+    return ""
+
+
 def parse_article(md: str) -> dict:
     """Parse H1 title, intro paragraph(s), and H2 chapters with paragraphs.
 
@@ -266,6 +282,8 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
     title = title or parsed["title"]
     chapters = parsed["chapters"] or [{"title": title, "paras": [parsed.get("intro", "")]}]
     chapter_titles = [c["title"] for c in chapters]
+    # 77AI:toc 卡片副标题=各章节首段首句（与 titles 等长对齐；空回退 ""）。
+    chapter_subtitles = [chapter_first_sentence(c) for c in chapters]
     usage = {"cover_breaking": 0, "toc_scroll": 0, "chapter_title": 0,
              "fixed_signature": 0, "footer_cta": 0,
              "image_2a_standard": 0, "image_media_text_card": 0, "paragraph": 0,
@@ -288,7 +306,7 @@ def render(theme_key: str, parsed: dict, body_images: list[dict],
                                 date=cover_date, brand=brand, tags=tags))
     usage["cover_breaking"] += 1
 
-    parts.append(H.hammer_toc(theme_key, chapter_titles))
+    parts.append(H.hammer_toc(theme_key, chapter_titles, chapter_subtitles))
     usage["toc_scroll"] += 1
 
     # OBS-73 (根治): intro paragraphs render BEFORE the first chapter title.

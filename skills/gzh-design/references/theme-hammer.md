@@ -227,6 +227,8 @@
 
 2 个及以上章节时生成。第一个卡片砖红高亮，最后一个固定为"写在最后"（PART ///）。
 
+卡片标题/副标题单行纪律：再长只占一行（省略号截断），卡片等高；副标题取对应章节首段首句（无首段回退空）。
+
 ```html
 <section style="margin:0 20px 32px;">
   <section style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">

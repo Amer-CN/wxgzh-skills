@@ -715,13 +715,19 @@ def _toc_card(t, part_label, title, subtitle, highlight):
     </section>'''
 
 
-def hammer_toc(theme_key, chapter_titles):
-    """Horizontal scroll TOC. One card per chapter (PART 01..0N) + a PART /// card."""
+def hammer_toc(theme_key, chapter_titles, subtitles=None):
+    """Horizontal scroll TOC. One card per chapter (PART 01..0N) + a PART /// card.
+
+    77AI:副标题序列与 chapter_titles 等长对齐；缺省/不足回退 ""（现状保持）。
+    超长不管——toc 卡片副标题行自带单行省略号（77AH 单行纪律）。
+    """
     t = PALETTES[theme_key]
     n = len(chapter_titles)
+    subs = list(subtitles or [])
     cards = []
     for i, title in enumerate(chapter_titles, 1):
-        cards.append(_toc_card(t, f"PART {i:02d}", title, "", highlight=(i == 1)))
+        sub = subs[i - 1] if i - 1 < len(subs) and subs[i - 1] else ""
+        cards.append(_toc_card(t, f"PART {i:02d}", title, sub, highlight=(i == 1)))
     cards.append(_toc_card(t, "PART ///", "写在最后", "署名与 CTA", highlight=False))
     return f'''<section style="margin:0 20px 32px;">
   <section style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">

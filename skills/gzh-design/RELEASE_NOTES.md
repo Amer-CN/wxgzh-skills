@@ -1,4 +1,8 @@
-# gzh-design v2026.09.14-hammer.23
+# gzh-design v2026.09.14-hammer.24
+
+## v2026.09.14-hammer.24(档77AI)
+- toc 卡片副标题透传：章节副标题 = 首段首句（按 。！？ 切分取首句，去首尾空白；无首段/首句空回退 ""）；`hammer_toc` 加可选参数 `subtitles`（旧双参调用零影响），render 组装传入；超长不管（77AH 卡片省略号收）。渲染数据透传，palette/字号/配色零触碰；SHA256SUMS 更新。
+- 回归测试 +1：tests/test_hf77ai_toc_subtitle.py（三章首句/空章节回退/长首句截断/旧调用兼容）。
 
 ## v2026.09.14-hammer.23(档77AH)
 - toc-scroll 卡片标题/副标题单行截断部署：`scripts/generate_hammer_upgrade_samples.py` `_toc_card` 两分支 4 个 `<p>` 加 `white-space:nowrap;overflow:hidden;text-overflow:ellipsis;` + 1 行注释；卡片等高不臃肿。渲染 bugfix 部署，palette/配色/字号等主题设计值零触碰（GZH 键维持 0）；SHA256SUMS 重算。
