@@ -22,6 +22,7 @@
 - footer-cta
 """
 import os
+import re
 import sys
 
 SKILL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -700,6 +701,20 @@ def hammer_cover(theme_key, kicker, strike, title_line1, title_line2, subtitle,
 
 
 # toc 卡片单行纪律:标题/副标题再长只占一行(省略号截断),卡片等高不臃肿。
+def _toc_display_title(title):
+    """77AJ:toc 卡片标题去序号显示（仅显示副本，章节数据只读不动）。
+
+    脱 `一、`/`二、` 等中文数字序号与 `1.`/`2 ` 等阿拉伯数字序号；
+    `PART ///` 末卡不经此函数；脱空回退原文。
+    """
+    for pat in (r"^[一二三四五六七八九十]+[、．.]",
+                r"^\d+[、.．\s]"):
+        stripped = re.sub(pat, "", title or "", count=1).strip()
+        if stripped != (title or "").strip():
+            return stripped or title
+    return title
+
+
 def _toc_card(t, part_label, title, subtitle, highlight):
     p = t["primary"]
     if highlight:
@@ -720,6 +735,8 @@ def hammer_toc(theme_key, chapter_titles, subtitles=None):
 
     77AI:副标题序列与 chapter_titles 等长对齐；缺省/不足回退 ""（现状保持）。
     超长不管——toc 卡片副标题行自带单行省略号（77AH 单行纪律）。
+    77AJ:标题显示副本脱序号（PART 序号与"一、二、"双重编号不同框）；
+    副标题/章节数据/正文/锚点不动，PART /// 末卡不动。
     """
     t = PALETTES[theme_key]
     n = len(chapter_titles)
@@ -727,7 +744,8 @@ def hammer_toc(theme_key, chapter_titles, subtitles=None):
     cards = []
     for i, title in enumerate(chapter_titles, 1):
         sub = subs[i - 1] if i - 1 < len(subs) and subs[i - 1] else ""
-        cards.append(_toc_card(t, f"PART {i:02d}", title, sub, highlight=(i == 1)))
+        cards.append(_toc_card(t, f"PART {i:02d}", _toc_display_title(title),
+                              sub, highlight=(i == 1)))
     cards.append(_toc_card(t, "PART ///", "写在最后", "署名与 CTA", highlight=False))
     return f'''<section style="margin:0 20px 32px;">
   <section style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
