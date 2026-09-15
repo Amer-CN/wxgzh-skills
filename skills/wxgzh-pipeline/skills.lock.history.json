@@ -2222,5 +2222,25 @@
     "new_skill_version": "v2026.09.14-hammer.24",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20260915T045435Z-050d343e",
+    "skill": "gzh-design",
+    "reason": "77AJ/OBS-387: toc卡片标题去序号显示 hammer.25",
+    "removed_required_files": [],
+    "recorded_at": "2026-09-15T04:54:35Z",
+    "doctor_result": "PASS",
+    "old_root_sha256": "d732d26a3c3082cd3004a82d8d601369667c37a4b94cdb256b358a16a5a963e9",
+    "new_root_sha256": "28db100ce3ddfee708d74c111639d0dcdea5167f581237074abf436c6418c480",
+    "old_component_source_sha256": "a1f0229c434135e234d9b7b62cae3c89a4a4e2e1f8bb3127a62b0c6a59a5af6d",
+    "new_component_source_sha256": "83c0cea2d9a0065fcbfe79d916e7e6cc83c0e1c9024618f5d5f6628293ba4f07",
+    "old_full_commit_sha": "3fb05c3164b8a400e309efd0eb216cb64b75d617",
+    "new_full_commit_sha": "427fccfaca580f4bc8db3db38638665c289b7cd4",
+    "old_source_tree_sha": "a7a708ab69896b2ec24b87f1935317afe1873e8e",
+    "new_source_tree_sha": "fe3867a275399a94d16bdb8bc15df11770307a6b",
+    "old_skill_version": "v2026.09.14-hammer.24",
+    "new_skill_version": "v2026.09.14-hammer.25",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]

@@ -78,10 +78,10 @@
       "skill_name": "gzh-design",
       "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
       "branch": "main",
-      "full_commit_sha": "427fccfaca580f4bc8db3db38638665c289b7cd4",
-      "source_tree_sha": "fe3867a275399a94d16bdb8bc15df11770307a6b",
-      "skill_version": "v2026.09.14-hammer.25",
-      "skill_root_sha256": "28db100ce3ddfee708d74c111639d0dcdea5167f581237074abf436c6418c480",
+      "full_commit_sha": "3fb05c3164b8a400e309efd0eb216cb64b75d617",
+      "source_tree_sha": "a7a708ab69896b2ec24b87f1935317afe1873e8e",
+      "skill_version": "v2026.09.14-hammer.24",
+      "skill_root_sha256": "d732d26a3c3082cd3004a82d8d601369667c37a4b94cdb256b358a16a5a963e9",
       "runtime_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
       "runtime_file_count": 76,
       "entrypoint": "scripts/render_article.py",
@@ -98,7 +98,7 @@
       "render_entry": "scripts/render_article.py",
       "render_entry_sha256": "fbb62cbd6a2b1620533c6d2a3320a2cb22a8fb2e566821b7eb83c2a14ec62f6d",
       "component_source": "scripts/generate_hammer_upgrade_samples.py",
-      "component_source_sha256": "83c0cea2d9a0065fcbfe79d916e7e6cc83c0e1c9024618f5d5f6628293ba4f07",
+      "component_source_sha256": "a1f0229c434135e234d9b7b62cae3c89a4a4e2e1f8bb3127a62b0c6a59a5af6d",
       "path": "skills/gzh-design"
     },
     "aihot": {
