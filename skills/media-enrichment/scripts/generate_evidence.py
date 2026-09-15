@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all evidence files for media-enrichment v0.1.0-dev36.
+"""Generate all evidence files for media-enrichment v0.1.0-dev37.
 
 Uses pytest --json-report for structured test results.
 All test_summary fields come from structured reports — no hardcoding.
@@ -27,7 +27,7 @@ def _ensure_evidence_dir() -> None:
     """77AG/OBS-384:evidence/ 只在真跑时建——import/--help/未知参数零副作用。"""
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
-VERSION = "0.1.0-dev36"
+VERSION = "0.1.0-dev37"
 
 def compute_file_sha256(path: Path) -> str:
     h = hashlib.sha256()

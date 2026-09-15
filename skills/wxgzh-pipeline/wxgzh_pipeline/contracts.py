@@ -226,13 +226,42 @@ def enforce_contract(stage: str, sd, ctx=None, state=None, side_effects=None) ->
                 if not ev_p.is_file():
                     chk("upload_events_present", False, "upload_events.json missing")
                 else:
-                    events = json.loads(ev_p.read_text(encoding="utf-8")).get("events", [])
+                    events_payload = json.loads(ev_p.read_text(encoding="utf-8"))
+                    events = events_payload.get("events", [])
+                    # 77AL/OBS-389:并发上限口径双确认——契约声明值必须与上传事件
+                    # 表台账值一致(防「契约写 4、实际跑 16」的静默放宽)。历史事件
+                    # 表(77AL 前产物/离线夹具)无台账键 → 该项不适用判通过。
+                    declared_workers = c.get("upload", {}).get("parallel_workers")
+                    logged_workers = events_payload.get("parallel_workers")
+                    chk("upload_parallel_workers_declared",
+                        logged_workers is None or declared_workers == logged_workers,
+                        f"contract={declared_workers} upload_events={logged_workers}")
                     ordered = sorted(
                         (e for e in events if e.get("status") != "skipped_already_uploaded"),
                         key=lambda e: e.get("start_monotonic", 0))
-                    overlap = any(ordered[i + 1].get("start_monotonic", 0) < ordered[i].get("end_monotonic", 0)
-                                  for i in range(len(ordered) - 1))
-                    chk("upload_no_overlap", not overlap, "parallel/overlapping uploads detected")
+                    # 77AL/OBS-389:上传改批次并发(批内并发、批间串行)。逐条带
+                    # batch_size 批次标记的事件表按「批次分区」判定重叠——贪心
+                    # 区间着色,所需并发道数不得超过所声明的批次数;未带批次标记
+                    # 的旧串行事件表(77AL 前产物/旧调用)沿用原逐对无重叠判定。
+                    batch_size = max(
+                        (int(e.get("batch_size") or 0) for e in ordered), default=0)
+                    if batch_size > 0:
+                        lanes: list[float] = []
+                        for e in ordered:
+                            start = e.get("start_monotonic", 0)
+                            for i, lane_end in enumerate(lanes):
+                                if lane_end <= start:
+                                    lanes[i] = e.get("end_monotonic", 0)
+                                    break
+                            else:
+                                lanes.append(e.get("end_monotonic", 0))
+                        overlap = len(lanes) > batch_size
+                    else:
+                        overlap = any(ordered[i + 1].get("start_monotonic", 0) < ordered[i].get("end_monotonic", 0)
+                                      for i in range(len(ordered) - 1))
+                    chk("upload_no_overlap", not overlap,
+                        "concurrent uploads exceed the declared batch size"
+                        if batch_size > 0 else "parallel/overlapping uploads detected")
                     from collections import Counter
                     succ = Counter(e["asset_id"] for e in events if e.get("status") == "success")
                     dup = [a for a, n in succ.items() if n > 1]

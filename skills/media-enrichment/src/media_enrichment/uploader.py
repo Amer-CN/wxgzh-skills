@@ -14,12 +14,22 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .downloader_mime import detect_mime
+
+# 77AL:上传并发上限(显式常量,单一真源)。批次内并发、批次间串行——批次数=
+# ceil(资产数/上限)。抓取阶段的 FETCH_WORKERS 与本常量互不相干。
+UPLOAD_WORKERS = 4
+
+# 事件表追加互斥锁:并发批次下 upload_events 顺序不再等于完成顺序,
+# 追加必须原子(避免 list.append 交错或丢事件)。
+_EVENTS_LOCK = threading.Lock()
 
 SENSITIVE_PATTERNS = [
     "token", "secret", "cookie", "password", "api_key", "apikey",
@@ -115,15 +125,22 @@ def transcode_webp_to_jpeg(local_path: str) -> tuple[str, dict | None, str | Non
 
 
 def timed_upload(uploader, events: list, local_path: str, asset_id: str,
-                 copyright_status: str) -> "UploadResult":
-    """Run one upload SERIALLY and append a verifiable event record (start/end
-    monotonic + wall-clock). The event log lets downstream auditors prove
-    uploads never overlapped and each asset had exactly one attempt."""
+                 copyright_status: str, batch_index: int | None = None,
+                 batch_size: int | None = None, event_slot: int | None = None
+                 ) -> "UploadResult":
+    """Run one upload and append a verifiable event record (start/end monotonic
+    + wall-clock), so downstream auditors can prove exactly one attempt per
+    asset. 77AL:上传按批次并发(批内并发、批间串行)后,事件表不再是全局无
+    重叠序列——批次标记(batch_index/batch_size)入账,审计口径由
+    wxgzh-pipeline validate 的批次分区重叠判定接管(见 contracts.py)。
+    并发时调用方传 event_slot 预留槽位(完成顺序不再是入账顺序,事件表恒等于
+    资产顺序,与串行语义一致)。旧串行调用(不传批次参数)的入账形状与语义
+    逐字不变。"""
     start_m = time.monotonic()
     started = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     result = uploader.upload(local_path, asset_id, copyright_status=copyright_status)
     end_m = time.monotonic()
-    events.append({
+    event = {
         "asset_id": asset_id, "mode": result.mode, "status": result.status,
         "started_at": started,
         "ended_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -136,8 +153,47 @@ def timed_upload(uploader, events: list, local_path: str, asset_id: str,
         "request_attempt_index": result.request_attempt_index,
         "media_id": result.media_id,
         "url": result.remote_url if result.status == "success" else None,
-    })
+    }
+    if batch_index is not None:
+        event["batch_index"] = batch_index
+    if batch_size is not None:
+        event["batch_size"] = batch_size
+    with _EVENTS_LOCK:
+        if event_slot is None:
+            events.append(event)
+        else:
+            events[event_slot] = event
     return result
+
+
+def upload_assets_parallel(uploader, events: list, items: list,
+                           workers: int = UPLOAD_WORKERS) -> list:
+    """77AL:按批次并发上传(批内并发、批间串行),返回与 items 同序的结果表。
+
+    items = [(local_path, asset_id, copyright_status), ...]。批次数 =
+    ceil(len(items)/workers);每批 threads 数 = 该批实际条数,各批恒有
+    batch_index/batch_size 留痕。事件表按资产顺序占用预留槽位(完成顺序不入账
+    顺序),结果同序返回;调用方逐资产回写保持串行形态(manifest 单写语义不变:
+    并发只发生在 uploader.upload 内部)。
+    """
+    results: list = [None] * len(items)
+    if not items:
+        return results
+    with _EVENTS_LOCK:
+        slot_base = len(events)
+        events.extend([None] * len(items))
+    for batch_index, start in enumerate(range(0, len(items), workers)):
+        batch = list(enumerate(items[start:start + workers]))
+        with ThreadPoolExecutor(max_workers=len(batch)) as pool:
+            futures = [
+                pool.submit(timed_upload, uploader, events, local_path, asset_id,
+                            copyright_status, batch_index, len(batch),
+                            slot_base + start + offset)
+                for offset, (local_path, asset_id, copyright_status) in batch
+            ]
+            for (offset, _item), future in zip(batch, futures):
+                results[start + offset] = future.result()
+    return results
 
 
 @dataclass

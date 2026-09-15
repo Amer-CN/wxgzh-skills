@@ -142,6 +142,7 @@ from media_enrichment.chart_generator import build_chart_specs, generate_chart
 from media_enrichment.uploader import (
     transcode_webp_to_jpeg,
     create_uploader, normalize_wechat_url, scan_for_secrets, timed_upload,
+    upload_assets_parallel, UPLOAD_WORKERS,
 )
 from media_enrichment.placement_planner import find_anchors
 from media_enrichment.manifest_builder import ManifestBuilder, AssetRecord
@@ -431,7 +432,8 @@ def main():
     dedup_state = DedupState()
     requested_upload_mode = config.get("upload_mode", "dry_run")
     upload_mode = "dry_run" if args.phase == "discover" else requested_upload_mode
-    # dev2-hotfix2: serial upload event log (proves no overlap, one attempt/asset)
+    # dev2-hotfix2: upload event log (one attempt/asset)。77AL 起改为批次并发
+    # (批内并发、批间串行),事件表带 batch_index/batch_size 批次标记。
     upload_events: list = []
     # 77AB/OBS-379:批量上传前 token 探针结果(None=未探:非 live/非微信上传器)。
     token_probe_result = None
@@ -1294,6 +1296,8 @@ def main():
                 f"errmsg 原文: {token_probe_result.get('errmsg')}")
 
     current_by_id = {item["asset_id"]: item for item in discovery_records}
+    # 77AL:上传计划(asset, 上传路径, 版权状态)——循环内只登记,循环外并发执行。
+    upload_plan: list[tuple] = []
     for asset, local_path, inspection, extraction_method in (
             [] if (token_probe_result or {}).get("errcode") == 40164
             else pending_uploads):
@@ -1468,6 +1472,7 @@ def main():
                         "url": prior["url"],
                         "source_event": "existing_success_event",
                     })
+                    continue
                 else:
                     # 76D/OBS-259:上传前 WebP→JPEG 自动转码(微信 40005 实证);
                     # 转码成功用新路径上传并留痕,转码失败 fail-closed(不上传)。
@@ -1481,19 +1486,30 @@ def main():
                     if tinfo is not None:
                         tinfo = dict(tinfo, asset_id=asset.asset_id)
                         builder.transcodes.append(tinfo)
-                    upload_result = timed_upload(
-                        uploader, upload_events, upload_path, asset.asset_id,
-                        copyright_status=asset.copyright_status,
-                    )
-                    asset.upload = {
-                        "mode": upload_mode, "status": upload_result.status,
-                        "remote_url": upload_result.remote_url,
-                        "response_sha256": upload_result.response_sha256,
-                    }
-                    if upload_result.status != "success":
-                        builder.errors.append(
-                            f"upload failed for {asset.asset_id}: "
-                            f"{upload_result.error or 'no success response'}")
+                    # 77AL:此处只登记待上传计划(路径/版权状态),真正上传在循环
+                    # 外按批次并发执行;资产 id 与事件表顺序仍按本循环顺序。
+                    upload_plan.append(
+                        (asset, upload_path, asset.copyright_status))
+
+    # 77AL/OBS-389:批量上传按批次并发(批内 UPLOAD_WORKERS 并发、批间串行);
+    # 结果同序回写,manifest 仍单写者(并发只发生在 uploader.upload 内部)。
+    upload_results = (
+        [] if not upload_plan
+        else upload_assets_parallel(uploader, upload_events, [
+            (plan_local_path, plan_asset.asset_id, plan_copyright)
+            for plan_asset, plan_local_path, plan_copyright in upload_plan
+        ], workers=UPLOAD_WORKERS))
+    for (asset, _local_path, _copyright_status), upload_result in zip(
+            upload_plan, upload_results):
+        asset.upload = {
+            "mode": upload_mode, "status": upload_result.status,
+            "remote_url": upload_result.remote_url,
+            "response_sha256": upload_result.response_sha256,
+        }
+        if upload_result.status != "success":
+            builder.errors.append(
+                f"upload failed for {asset.asset_id}: "
+                f"{upload_result.error or 'no success response'}")
 
     for aid in sorted(set(asset_approvals) - consumed_asset_approvals):
         builder.warnings.append(f"asset_approval for {aid} NOT consumed")
@@ -1568,9 +1584,12 @@ def main():
     write_bindings(manifest, bindings_path,
                    max_images=config.get("max_total_images"))
 
-    # dev2-hotfix2: persist the serial upload event log for downstream audit
+    # dev2-hotfix2/77AL: persist the upload event log for downstream audit。
+    # serial 键为历史契约键(键在位);77AL 起并发上限入账 parallel_workers,
+    # 每条事件带 batch_index/batch_size=批次标记(批内并发、批间串行)。
     events_path = output_dir / "upload_events.json"
     events_payload = {"schema_version": "1.0", "serial": True,
+                      "parallel_workers": UPLOAD_WORKERS,
                       "events": upload_events}
     # 77AB/OBS-379:探针观测留痕(照 _last_token_observation 形状 + 探针
     # ok/errcode/errmsg/ip 四键);未探(非 live/非微信上传器)不写键,零形状变化。

@@ -1,5 +1,6 @@
 """Stage 4 — media-enrichment. Runs after freeze. Bindings must be eligible +
-upload success + mmbiz + sha==manifest, >=6 images. Serial upload, no bypass.
+upload success + mmbiz + sha==manifest, >=6 images. 77AL/OBS-389:upload 批次
+并发(批内 UPLOAD_WORKERS 并发、批间串行、批次标记入账),no bypass.
 """
 from __future__ import annotations
 
@@ -26,10 +27,11 @@ def invoked_entrypoint(ctx):
 
 
 def side_effects(ctx, state):
-    # Only LIVE performs a real serial upload to mmbiz. offline_fixture (copy) and
-    # fake_live (wechat_audit, no network) declare NO real write side-effect.
+    # Only LIVE performs a real batch-parallel upload to mmbiz. offline_fixture
+    # (copy) and fake_live (wechat_audit, no network) declare NO real write
+    # side-effect. 77AL/OBS-389:上传为批内并发、批间串行。
     if ctx.network_mode == "live":
-        return [{"type": "wechat_image_upload", "detail": "serial uploadimg to mmbiz.qpic.cn"}]
+        return [{"type": "wechat_image_upload", "detail": "batch-parallel uploadimg to mmbiz.qpic.cn"}]
     detail = ("offline fixture — no real WeChat image upload"
               if ctx.network_mode == "offline_fixture"
               else f"{ctx.network_mode} wechat_audit — deterministic mmbiz URL, no network/upload")

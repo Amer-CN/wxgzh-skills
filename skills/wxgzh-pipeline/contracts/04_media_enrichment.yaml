@@ -32,7 +32,15 @@ counts:
   TARGET_NOT_MET_IS_WARNING: true
   MIN_NOT_MET_IS_BLOCKING: true
 upload:
+  # 77AL/OBS-389:上传由「全局串行」改为「批次并发」——批内并发(上限单一真源=
+  # media-enrichment src/media_enrichment/uploader.py UPLOAD_WORKERS)、批间串行;
+  # 上传事件逐条带 batch_index/batch_size 批次标记,重叠判定=批次分区(同批内允许
+  # 重叠、跨批不得重叠)= wxgzh_pipeline/contracts.py upload_no_overlap。
+  # serial 键为历史契约键,保留供 validate 明确上传语义(取值 true=不放开「无重叠」
+  # 与「每资产恰一次成功」两条审计不变量,只放开重叠的判法为批次分区)。
   serial: true
+  parallel_workers: 4
+  overlap_semantics: batch_partition
   manifest_single_writer: true
   no_orchestrator_bypass: true
 # 76V/OBS-296(审批口径纪律):
