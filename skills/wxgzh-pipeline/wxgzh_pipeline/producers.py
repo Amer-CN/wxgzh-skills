@@ -31,6 +31,7 @@ import yaml
 from . import execmodel as EM
 from . import agent_handshake as AH
 from . import secrets as SEC
+from . import section_retry as SR
 from .state import read_json, sha256_file
 from .subprocess_runner import run_script
 from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
@@ -40,6 +41,15 @@ from .approval_evidence import (ApprovalEvidenceError, build_approval_readiness,
 # 站内页)。与 media-enrichment url_security.AIHOT_SITE_PREFIXES 同值——两子树无法
 # 共享 import,以守卫测试钉一致(照 77W 两文一致守卫先例,tests/test_hf77ab_guard.py)。
 AIHOT_SITE_PREFIXES = ("https://aihot.virxact.com/", "https://aihot.news/")
+
+# 77AK/OBS-388:单节回滚重试上限(显式常量,单一真源)。官方校验失败时,最多对
+# 失败节做 SECTION_RETRY_MAX_ATTEMPTS 轮「失败节重生成→重组装→重跑该节校验」;
+# 超过上限即保留既有失败语义(meta.official_validator_failed → 阶段 FAIL_CLOSED,
+# 不再整阶段重跑 agent)。
+SECTION_RETRY_MAX_ATTEMPTS = 1
+# 单节重试只认这些官方校验器(其判定面=article.md 的节内容);其余校验器失败
+# (registry/semantic-map 等整文件产物)不适用单节粒度,保留整阶段重跑语义。
+SECTION_RETRY_VALIDATORS = ("validate_article_length.py",)
 
 # 76R/OBS-288:指令瘦身——76F/OBS-276(恢复SOP)/76F/OBS-279(编码)/76L/OBS-283
 # (反顶包明规)三条通用规则抽为单一真源常量,三 agent 阶段共用;源码去重
@@ -59,7 +69,7 @@ _COMMON_RULES += "77Z/OBS-375:上游合法修正后信封由编排器按当前 u
 
 AGENT_INSTRUCTIONS = {
     "aihot": "Query AI HOT (anonymous read-only), aggregate + dedup; do not write the article. 76H/OBS-267(超窗取料规程,通用规则):选题关键素材可能超出 7 天窗口、或用户显式写历史/回顾类选题时,按下列顺序取料:①已知关键日期 → /api/v1/dailies/{date} 取当日日报(归档正式端点);②精选池快照检索:selected/snapshot(fields=minimal,翻完分页后本地按关键词过滤,遵守 ETag/流量纪律;仅超窗选题使用,日常发文不走快照);③热点事件回溯:hot-topics → /api/v1/stories/{publicId} 时间线(逆序报道可回溯超 7 天);④官方源直采:官方博客/公告页/releases 等一手来源(永久可访问,宣传图就在上面)——走补充来源注册(registry/ledger provenance=supplemental);⑤仍缺 → 明示用户手动注入(items_file_injection 既有通道,不得静默降级)。AIHOT 授权边界不变:匿名只读、不绕过速率限制、不批量抓取全站。76U/OBS-294(取料并行化,通用规则):窗口内常规取料的独立查询(hot-topics / selected / all 各关键词等多路互不依赖的查询)必须在同一轮并行发出,禁止无依赖查询串行排队;fetch_log 每路查询增记耗时(或并行批次标记);超窗取料五步顺序(日报→快照→回溯→直采→注入)是条件递进设计,保持串行不动。77A/OBS-307(dedup 顶层形状,硬措辞):deduplicated_items.json 顶层必须是数组(list);写成 dict 或包装对象(如 items 键包裹)直接拒,先回读 01_aihot.yaml 再重写。76J/OBS-273(dedup 模板):deduplicated_items.json 严格按 contracts/01_aihot.yaml 的字段模板书写(id/title/source_url 必填,links/content/published_at/category/score/selected/aihot_permalink/provenance 可选),不得自造字段名或改动既有键(aihot_permalink 类字段名税绝版)。" + _COMMON_RULES,
-    "super_writer": 'Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK. 注入路径强制(OBS-88/66):1)数字对比事实登记为结构化 numbers(unit/value)+chart_group+metric_name+series_label,中文数字转阿拉伯;2)命令/脚本/输出以 fenced code block 原文呈现(并列短句除外);3)并列短句按语义分组拆 :::alert 块,每组一块逐字不改、全文仅一次,阻断/提醒 type 异,title 自拟;4)数字对比首次出现章节展开,不多章重复,导语不出现。76F/OBS-276+279(合一):卡 ACK/request 循环:按最新 agent_handshake_request.json 重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁删文件重来;路径 POSIX 正斜杠;JSON utf-8 无 BOM,读侧容忍不重写。76G-R/OBS-265:a)prose_craft_applied/version 如实:执行 R1–R9 自检才许 true,未执行必须 false,禁默认/留空;b)Phase 6 标题选定必做:按评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定,selected_title/title_selection_reason 必填非空,article.md H1 必须与 selected_title 一致。76R/OBS-288(硬步骤):ACK 前两步必须全绿,否则禁写 ACK——①outline 后运行:python super-writer 仓 scripts/align_outline_budget.py --outline <outline.md> --target-visible-chars <目标字数>(±5% 对齐,只调预算,保护域/数字/产品名不动);②每个关键产物(outline/core-card/semantic-map/handoff/registry)后立即运行:python scripts/validate_single_product.py --product <名> --file <路径>,失败补字段重跑,全部 valid=true 才许写 ACK。76R/OBS-290:素材写干即停:claim 全覆盖且材料门过,长度下限降 advisory(不足留痕,不逼扩写);禁注水(填充语/重复/无信息段);素材足而薄仍 FAIL。76T/OBS-293:handoff formatter.cover.strike_assumption 填「被本文证据否定的旧认知/流行看法」(≤40 字,须素材可支撑,禁捏造稻草人);缺失不 FAIL 但划线句整行不渲染;旧 strike 兼容,不用 hook_line 填划线位。76Y-R/OBS-305:RUN 中遇 doctor/锁 FAIL_CLOSED:停机报告等档;禁自行 relock(含正门)、禁扩权、禁维护命令(如 --regenerate-registry)重写 skill 树。76W/OBS-301:校验报告/JSON 落盘禁 pwsh 重定向(> / >>),一律 cmd /c 重定向或 python 写文件(encoding=utf-8)。76Q/OBS-287+285:registry 顶层 dict{claims,materials}(禁数组);materials[].dedup_id 逐字=deduplicated_items.json 的 id;claim/material source_url 逐字相等(含锚点);handoff.yaml 顶层 {handoff:{...}} 双层,单层拒。76Q/OBS-286:正文禁 ** 加粗(渲染器不支持,语法门会拒);强调用 :::alert 等,禁手写。76L/OBS-283:禁手写 HTML/脚本顶包 gzh_design 渲染产物;禁绕过阶段直调 publish_wechat_draft.py(--evidence 凭证门);六阶段 receipt 不齐=顶包红旗,不可发;遇阻=停下报告,禁绕过/侧门。77D/标题双轨:Phase 6 按 references/title-playbook.md 升标题——title_candidates 按四组生成(稳健准确4/网感点击4/专业权威3/长期价值2,有数据依据才出数据关键词);title_selection_reason 含五维评分(点击欲望/事实匹配/人群匹配/差异化/长期价值,各1–5)与风险标记(标题党/堆砌/无据/时效);推荐 1 主 2 备+各自理由;handoff 字段零变动(渲染/草稿链不动)。',
+    "super_writer": 'Run Super Writer Material-Heavy Full Mode. Generate every requested product, then run the locked official validate_article_length.py with --full-mode --json and save its exact JSON stdout as full_mode_validator_report.json before ACK. 注入路径强制(OBS-88/66):1)数字对比事实登记为结构化 numbers(unit/value)+chart_group+metric_name+series_label,中文数字转阿拉伯;2)命令/脚本/输出以 fenced code block 原文呈现(并列短句除外);3)并列短句按语义分组拆 :::alert 块,每组一块逐字不改、全文仅一次,阻断/提醒 type 异,title 自拟;4)数字对比首次出现章节展开,不多章重复,导语不出现。76F/OBS-276+279(合一):卡 ACK/request 循环:按最新 agent_handshake_request.json 重新 ACK(python -m wxgzh_pipeline.ack_cli --stage-dir <stage目录>),禁删文件重来;路径 POSIX 正斜杠;JSON utf-8 无 BOM,读侧容忍不重写。76G-R/OBS-265:a)prose_craft_applied/version 如实:执行 R1–R9 自检才许 true,未执行必须 false,禁默认/留空;b)Phase 6 标题选定必做:按评分尺(具体>有判断>贴核心张力>长度≤30字>无标题党空壳)选定,selected_title/title_selection_reason 必填非空,article.md H1 必须与 selected_title 一致。76R/OBS-288(硬步骤):ACK 前两步必须全绿,否则禁写 ACK——①outline 后运行:python super-writer 仓 scripts/align_outline_budget.py --outline <outline.md> --target-visible-chars <目标字数>(±5% 对齐,只调预算,保护域/数字/产品名不动);②每个关键产物(outline/core-card/semantic-map/handoff/registry)后立即运行:python scripts/validate_single_product.py --product <名> --file <路径>,全部 valid=true 才许写 ACK(pipeline 官方校验链=唯一真源)。76R/OBS-290:素材写干即停:claim 全覆盖且材料门过,长度下限降 advisory(不足留痕,不逼扩写);禁注水(填充语/重复/无信息段);素材足而薄仍 FAIL。76T/OBS-293:handoff formatter.cover.strike_assumption 填「被本文证据否定的旧认知/流行看法」(≤40 字,须素材可支撑,禁捏造稻草人);缺失不 FAIL 但划线句整行不渲染;旧 strike 兼容,不用 hook_line 填划线位。76Y-R/OBS-305:RUN 中遇 doctor/锁 FAIL_CLOSED:停机报告等档;禁自行 relock(含正门)、禁扩权、禁维护命令(如 --regenerate-registry)重写 skill 树。76W/OBS-301:校验报告/JSON 落盘禁 pwsh 重定向(> / >>),一律 cmd /c 重定向或 python 写文件(encoding=utf-8)。76Q/OBS-287+285:registry 顶层 dict{claims,materials}(禁数组);materials[].dedup_id 逐字=deduplicated_items.json 的 id;claim/material source_url 逐字相等(含锚点);handoff.yaml 顶层 {handoff:{...}} 双层,单层拒。76Q/OBS-286:正文禁 ** 加粗(渲染器不支持,语法门会拒);强调用 :::alert 等,禁手写。76L/OBS-283:禁手写 HTML/脚本顶包 gzh_design 渲染产物;禁绕过阶段直调 publish_wechat_draft.py(--evidence 凭证门);六阶段 receipt 不齐=顶包红旗,不可发;遇阻=停下报告,禁绕过/侧门。77D/标题双轨:Phase 6 按 references/title-playbook.md 升标题——title_candidates 按四组生成(稳健准确4/网感点击4/专业权威3/长期价值2,有数据依据才出数据关键词);title_selection_reason 含五维评分(点击欲望/事实匹配/人群匹配/差异化/长期价值,各1–5)与风险标记(标题党/堆砌/无据/时效);推荐 1 主 2 备+各自理由;handoff 字段零变动(渲染/草稿链不动)。',
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). fidelity_report.json 自报 length_retention 必须为 balanced(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。76J/OBS-272(专名明规,通用规则):产品名/专名中的词永不改写——如 Luma Agents、ComfyUI、MiniMax H3 等,任何语言/词形(Agent、agent、Agents)都不得因「疑似 AI 味」被改写或删除;检测报告中的 FT-001 advisory 命中无需处理、不影响交付(76D 专名豁免语义);改写产品名即违反「不得改产品名」铁律。77A/OBS-309(半角引号,zh 阶段机械归一):final_article.md 的中文语境半角双引号由管线统一归一(成对转全角、跳过代码块/行内代码),单边落单不猜、留 WARNING 不硬改;正文不得自行手改引号凑数,发布预检不再当首个拦截点;76C WXGZH_ALLOW_WARNINGS 语义不变。" + _COMMON_RULES,
     "zh_human_writing": "De-AI the Super Writer article only; freeze final_article.md (no new facts). fidelity_report.json 自报 length_retention 必须为 balanced(管线以 --length-retention balanced 实跑,0.8 阈值;不得自报 strict,防 OBS-220 口径漂移)。76J/OBS-272(专名明规,通用规则):产品名/专名中的词永不改写——如 Luma Agents、ComfyUI、MiniMax H3 等,任何语言/词形(Agent、agent、Agents)都不得因「疑似 AI 味」被改写或删除;检测报告中的 FT-001 advisory 命中无需处理、不影响交付(76D 专名豁免语义);改写产品名即违反「不得改产品名」铁律。77A/OBS-309(半角引号,zh 阶段机械归一):final_article.md 的中文语境半角双引号由管线统一归一(成对转全角、跳过代码块/行内代码),单边落单不猜、留 WARNING 不硬改;正文不得自行手改引号凑数,发布预检不再当首个拦截点;76C WXGZH_ALLOW_WARNINGS 语义不变。77R/OBS-342(AI-tone 六族):pattern_audit.ai_tone 只做 review,禁按命中数自动改写;改写必须映射到六族——段首零回指补回指、拟人喻体改机制、起首语删提示、编号小标题只删编号、顿号/相邻同构最小打散、五式译文句式按触发标记改;Markdown 列表/代码/引用/对话豁免。77R/DO-NOT:禁为“人味”调句长/段长节奏或做 CV 类统计检查,禁删设问/比喻/句内同构排比,禁补单字虚词;翻案腔按动作判定,balance 下可改直陈句;handoff.prose_craft 与通用规则冲突时以 prose_craft 为准。" + _COMMON_RULES,
 }
@@ -369,6 +379,118 @@ def _reusable_agent_request(sd: Path, run_id: str, stage: str, expected_outputs,
     return True
 
 
+def _run_one_agent_validator(sd: Path, stage: str, ctx, skill: str, rel: str, argv: list) -> dict:
+    """执行一个官方校验器:返回 receipt 记录,并落盘该脚本 stdout 与 full_mode 报告。
+
+    77AK/OBS-388:从 _agent 内联循环抽出(单一实现),「整链首跑」与「单节重试只
+    重跑失败校验器」两处共用;记录写回由调用方决定,避免覆盖既有错误记录。
+    """
+    script = EM.resolve_agent_validator(skill, rel, ctx.network_mode, ctx.skills_home)
+    run = run_script(script, argv, timeout=180)
+    record = _vresult(run)
+    # 0-3(72B-1):官方校验器 stdout 落盘为 <脚本名>.stdout.json(Batch 2 量化验收通道)。
+    (sd / (Path(rel).name.replace(".py", ".stdout.json"))).write_text(
+        run.get("stdout") or "", encoding="utf-8")
+    if stage == "super_writer" and rel == "scripts/validate_article_length.py":
+        # 77M/OBS-332: self-collect full_mode_validator_report.json from official stdout.
+        # Agent no longer writes/maintains it; producer writes byte-level official stdout.
+        (sd / "full_mode_validator_report.json").write_text(
+            run.get("stdout") or "", encoding="utf-8")
+    return record
+
+
+def _run_agent_validators(sd: Path, stage: str, ctx, validators, officials: list) -> None:
+    """按序执行官方校验器,记录追加到 officials(不覆盖已有条目)。"""
+    for skill, rel, argv in validators:
+        officials.append(_run_one_agent_validator(sd, stage, ctx, skill, rel, argv))
+
+
+def _single_section_target(sd: Path, failed: list) -> dict | None:
+    """失败校验器声明的失败节数(读该校验器 stdout 落盘的 <脚本名>.stdout.json)。
+
+    只认官方失败报告自报的节数=1 的场景;报告不可读/节数非 1(整篇级失败)→
+    None=不适用单节粒度,保留整阶段重跑语义。
+    """
+    for v in failed:
+        name = Path(v.get("path") or "").name
+        if name not in SECTION_RETRY_VALIDATORS:
+            continue
+        report = sd / name.replace(".py", ".stdout.json")
+        try:
+            data = json.loads(report.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError):
+            return None
+        if isinstance(data, dict) and data.get("sections") == 1:
+            return v
+        return None
+    return None
+
+
+def _retry_officials_in_place(sd: Path, stage: str, ctx, validators, officials: list,
+                              failed: list, expected, validator_start: int = 0) -> dict | None:
+    """77AK/OBS-388:单节回滚重试——失败节重生成→重组装→只重跑该节官方校验。
+
+    粒度约束(本档口径):只有失败报告自报失败节=1(_single_section_target,由
+    调用方判定)且 driver 在册时才走本路径;定位失败/无 driver/超出上限 →
+    返回 None,保留既有整阶段重跑+FAIL_CLOSED 语义(回滚路径,不是放宽门禁)。
+
+    返回 None 或 {"attempts", "section", "validators_rerun", "max_attempts"}。
+    """
+    driver = getattr(ctx, "section_retry_driver", None)
+    article = sd / "article.md"
+    targets = [v for v in failed
+               if Path(v.get("path") or "").name in SECTION_RETRY_VALIDATORS]
+    if driver is None or not targets or not article.is_file():
+        return None
+    max_attempts = SECTION_RETRY_MAX_ATTEMPTS
+    attempts = 0
+    section_label: str | int | None = None
+    while targets and attempts < max_attempts:
+        attempts += 1
+        # driver 决定重写哪一节:返回本轮重生成后的节原文(或 None=放弃)。
+        waiter = SR.SectionRetry(article)
+        if not waiter.locate():
+            break
+        section_label = waiter.located_index
+        try:
+            new_text = driver(ctx, stage, sd, article, waiter)
+        except Exception:  # 重生成失败=回滚,保留既有失败语义
+            break
+        if not isinstance(new_text, str) or not new_text:
+            break
+        waiter.rewrite_section(new_text)   # 标题行由 driver 逐字保留
+        if not waiter.unchanged():
+            break                          # 其余节被动过=不是单节回滚,拒写
+        try:
+            waiter.write_back()
+        except (OSError, ValueError):
+            break
+        # token/ACK 口径(agent_handshake L104-111/L146):文章字节变了,token 必须
+        # 按盘上现状重算重写,否则校验链下一跳读到旧 token=假失败。
+        if (sd / AH.ACK_FILE).is_file():
+            try:
+                AH.write_ack(sd, stage, expected,
+                             agent_id=read_json(sd / AH.ACK_FILE).get("agent_id", "agent"))
+            except (OSError, ValueError, TypeError):
+                break
+        # 只重跑失败校验器(其余校验器及其 stdout 落盘产物保持原状=零副作用)。
+        still_failed = []
+        for index, (skill, rel, argv) in enumerate(validators):
+            if Path(rel).name not in SECTION_RETRY_VALIDATORS:
+                continue
+            record = _run_one_agent_validator(sd, stage, ctx, skill, rel, argv)
+            officials[validator_start + index] = record
+            if record.get("exit_code") != 0:
+                still_failed.append(record)
+        targets = still_failed
+    if not attempts:
+        return None
+    return {"attempts": attempts,
+            "section_index": section_label,
+            "validators_rerun": [Path(v.get("path") or "").name for v in targets],
+            "max_attempts": max_attempts}
+
+
 def _agent(ctx, stage, sd, expected, agent_expected, state):
     upstream = _upstream_hashes(ctx, stage)
     identity = _skill_identity(ctx, stage)
@@ -469,23 +591,30 @@ def _agent(ctx, stage, sd, expected, agent_expected, state):
                           "stderr_sha256": hashlib.sha256(str(exc).encode("utf-8")).hexdigest(),
                           "elapsed_seconds": 0.0, "error": str(exc)})
     validator_stdout_files: list[Path] = []
-    for skill, rel, argv in validators:
-        script = EM.resolve_agent_validator(skill, rel, ctx.network_mode, ctx.skills_home)
-        run = run_script(script, argv, timeout=180)
-        officials.append(_vresult(run))
-        # 0-3(72B-1):官方校验器 stdout 落盘为 <脚本名>.stdout.json(Batch 2 量化验收通道)。
-        stdout_file = sd / (Path(rel).name.replace(".py", ".stdout.json"))
-        stdout_file.write_text(run.get("stdout") or "", encoding="utf-8")
-        validator_stdout_files.append(stdout_file)
-        if stage == "super_writer" and rel == "scripts/validate_article_length.py":
-            # 77M/OBS-332: self-collect full_mode_validator_report.json from official stdout.
-            # Agent no longer writes/maintains it; producer writes byte-level official stdout.
-            (sd / "full_mode_validator_report.json").write_text(
-                run.get("stdout") or "", encoding="utf-8")
+    validator_start = len(officials)   # 错误记录(若有)居前,校验器记录起点
+    _run_agent_validators(sd, stage, ctx, validators, officials)
+    for _, rel, _ in validators:
+        validator_stdout_files.append(
+            sd / (Path(rel).name.replace(".py", ".stdout.json")))
+    failed = [v for v in officials if v["exit_code"] != 0]
+    # 77AK/OBS-388:单节回滚重试——失败恰为一节(官方报告自报 sections=1)且 ctx 在册
+    # 失败节重生成 driver 时,只重跑失败节的官方校验,不重跑整阶段(其余校验器与
+    # 其 stdout 落盘产物保持原状);重试后仍失败/不适用/超上限 → 下列既有失败语义。
+    retry_info = None
+    if failed and _single_section_target(sd, failed) is not None:
+        try:
+            retry_info = _retry_officials_in_place(
+                sd, stage, ctx, validators, officials, failed, agent_expected,
+                validator_start)
+        except (OSError, UnicodeError, ValueError, TypeError):
+            retry_info = None
     outputs = [sd / o for o in expected if (sd / o).is_file()] + validator_stdout_files
     meta["official_validators"] = officials
-    if any(v["exit_code"] != 0 for v in officials):
-        meta["official_validator_failed"] = [v for v in officials if v["exit_code"] != 0]
+    if retry_info is not None:
+        meta["section_retry"] = retry_info
+    failed = [v for v in officials if v["exit_code"] != 0]
+    if failed:
+        meta["official_validator_failed"] = failed
     return outputs, meta
 
 
