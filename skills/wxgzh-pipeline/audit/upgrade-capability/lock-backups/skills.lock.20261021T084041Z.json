@@ -1,0 +1,114 @@
+{
+  "lock_version": 2,
+  "hash_scope": "runtime_manifest (excludes .git/.github/tests/__pycache__/WXGZH_PIPELINE_INTEGRATION.md/.gitignore/.gitattributes/*.pyc)",
+  "skills": {
+    "super-writer": {
+      "skill_name": "super-writer",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
+      "branch": "main",
+      "full_commit_sha": "61987a758690ad853af3fca6ee4fe8c700be93d8",
+      "source_tree_sha": "fe01075f70c008910c5ec892d489a4f28284d5f4",
+      "skill_version": "0.4.21-rc3",
+      "skill_root_sha256": "5061f4949653ecebf1fb803db1ae2f81863ff09026d08e6e87db1a78330330f6",
+      "runtime_manifest_sha256": "6444c081c8c2180626d2578becfb97e23e0fb36972542654df7fa9efa35dd439",
+      "runtime_file_count": 57,
+      "entrypoint": "scripts/material_ingestion.py",
+      "entrypoint_sha256": "23236cccbbb65dc70c753cf4c0d0f34d5ec626356fc1eabe415e7c61dae01bc0",
+      "validator": "scripts/validate_article_length.py",
+      "validator_sha256": "ac60d811943aaa609f80455e3e94550a1280e13a7996cccce6b368903ddc9416",
+      "required_files": [
+        "scripts/material_ingestion.py",
+        "scripts/validate_article_length.py",
+        "scripts/validate_semantic_map.py"
+      ],
+      "render_entry_sha256": null,
+      "component_source_sha256": null,
+      "path": "skills/super-writer"
+    },
+    "zh-human-writing": {
+      "skill_name": "zh-human-writing",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
+      "branch": "main",
+      "full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+      "source_tree_sha": "43ec772300e217f21329d5e5a4ffe4e0c2be38bf",
+      "skill_version": "0.1.14",
+      "skill_root_sha256": "aeb3950289904f5ac498af1fa708f575fe21d6a8d13bd0692036d49aa164c8f0",
+      "runtime_manifest_sha256": "558428625a9cfc7745cd072777ba13777a98ffe73cb1981ffb9c5ed81fdb206f",
+      "runtime_file_count": 52,
+      "entrypoint": "scripts/fidelity_guard.py",
+      "entrypoint_sha256": "b9b666e1b331cee01c9ca688447a608016883bc38623e59147ca2a10978f6974",
+      "validator": "scripts/fidelity_guard.py",
+      "validator_sha256": "b9b666e1b331cee01c9ca688447a608016883bc38623e59147ca2a10978f6974",
+      "required_files": [
+        "config/default.yaml",
+        "references/lexicon-deai.yaml",
+        "scripts/change_report.py",
+        "scripts/fidelity_guard.py",
+        "scripts/pattern_audit.py"
+      ],
+      "render_entry_sha256": null,
+      "component_source_sha256": null,
+      "path": "skills/zh-human-writing"
+    },
+    "media-enrichment": {
+      "skill_name": "media-enrichment",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
+      "branch": "main",
+      "full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+      "source_tree_sha": "d79474c47b20650260cd941f92b51287f359a46e",
+      "skill_version": "0.1.0-dev37",
+      "skill_root_sha256": "24a2295b86963cf1e46d1172f7cdda6c9a36798dec6fe169cd878184d0964f64",
+      "runtime_manifest_sha256": "5533c0c87bffe322f7d90e4a02e23d2044ec1dcf70328e73b170289699b270d8",
+      "runtime_file_count": 59,
+      "entrypoint": "scripts/run_media_enrichment.py",
+      "entrypoint_sha256": "1d3ce372c4eb14d081134a6afdc25453d0327efbbecfb9039ba8b5871d0507bf",
+      "validator": "scripts/validate_media_manifest.py",
+      "validator_sha256": "4672e1c9d834b73c0d55f0ad46d15402497b3e5733d6f8676622ba535bfc6f18",
+      "required_files": [
+        "scripts/run_media_enrichment.py",
+        "scripts/validate_media_manifest.py",
+        "src/media_enrichment/uploader.py",
+        "src/media_enrichment/article_bindings.py"
+      ],
+      "render_entry_sha256": null,
+      "component_source_sha256": null,
+      "path": "skills/media-enrichment"
+    },
+    "gzh-design": {
+      "skill_name": "gzh-design",
+      "repository_url": "https://github.com/Amer-CN/wxgzh-skills",
+      "branch": "main",
+      "full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+      "source_tree_sha": "fe3867a275399a94d16bdb8bc15df11770307a6b",
+      "skill_version": "v2026.09.14-hammer.25",
+      "skill_root_sha256": "28db100ce3ddfee708d74c111639d0dcdea5167f581237074abf436c6418c480",
+      "runtime_manifest_sha256": "ced841439195453497e67a63186823f60eee7155b9de472e936c3d4d767e33b2",
+      "runtime_file_count": 76,
+      "entrypoint": "scripts/render_article.py",
+      "entrypoint_sha256": "fbb62cbd6a2b1620533c6d2a3320a2cb22a8fb2e566821b7eb83c2a14ec62f6d",
+      "validator": "scripts/validate_gzh_html.py",
+      "validator_sha256": "b3d74347777890c145d99a152cd95e4c23c795937f54b19915baebaa46a1aefa",
+      "required_files": [
+        "scripts/render_article.py",
+        "scripts/validate_gzh_html.py",
+        "scripts/publish_wechat_draft.py",
+        "scripts/generate_hammer_upgrade_samples.py",
+        "scripts/generate_advanced_html.py"
+      ],
+      "render_entry": "scripts/render_article.py",
+      "render_entry_sha256": "fbb62cbd6a2b1620533c6d2a3320a2cb22a8fb2e566821b7eb83c2a14ec62f6d",
+      "component_source": "scripts/generate_hammer_upgrade_samples.py",
+      "component_source_sha256": "83c0cea2d9a0065fcbfe79d916e7e6cc83c0e1c9024618f5d5f6628293ba4f07",
+      "path": "skills/gzh-design"
+    },
+    "aihot": {
+      "skill_name": "aihot",
+      "kind": "agent_invoked_skill",
+      "skill_version": null,
+      "skill_root_sha256": null,
+      "external_dependency": true,
+      "author": "卡兹克",
+      "note": "external agent-invoked dependency; existence REALLY checked by doctor (check_aihot); never copied/modified/pushed/packaged"
+    }
+  }
+}

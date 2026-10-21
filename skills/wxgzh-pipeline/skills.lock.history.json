@@ -2262,5 +2262,53 @@
     "new_skill_version": "0.1.0-dev37",
     "source_commit_verified": true,
     "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-gzh-design-20261021T083714Z-188278b5",
+    "skill": "gzh-design",
+    "reason": "sync gzh-design lock to current HEAD (tree unchanged)",
+    "removed_required_files": [],
+    "recorded_at": "2026-10-21T08:37:14Z",
+    "doctor_result": "PASS",
+    "old_full_commit_sha": "427fccfaca580f4bc8db3db38638665c289b7cd4",
+    "new_full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-media-enrichment-20261021T083930Z-4a51f861",
+    "skill": "media-enrichment",
+    "reason": "sync media-enrichment lock to current HEAD (tree unchanged)",
+    "removed_required_files": [],
+    "recorded_at": "2026-10-21T08:39:30Z",
+    "doctor_result": "PASS",
+    "old_full_commit_sha": "4ed35248b49c7a29122a2e98da1f30fa88fa16f0",
+    "new_full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-zh-human-writing-20261021T083950Z-1527f104",
+    "skill": "zh-human-writing",
+    "reason": "sync zh-human-writing lock to current HEAD (tree unchanged)",
+    "removed_required_files": [],
+    "recorded_at": "2026-10-21T08:39:50Z",
+    "doctor_result": "PASS",
+    "old_full_commit_sha": "5bc3944e0c5150ea8c9438026957e271a5b86948",
+    "new_full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
+  },
+  {
+    "entry_id": "relock-super-writer-20261021T084041Z-5311058c",
+    "skill": "super-writer",
+    "reason": "sync super-writer lock to current HEAD (tree unchanged)",
+    "removed_required_files": [],
+    "recorded_at": "2026-10-21T08:40:41Z",
+    "doctor_result": "PASS",
+    "old_full_commit_sha": "61987a758690ad853af3fca6ee4fe8c700be93d8",
+    "new_full_commit_sha": "59255bf4d0aa54a23fd9e530acd1fee143ef044e",
+    "source_commit_verified": true,
+    "remote_repo": "https://github.com/Amer-CN/wxgzh-skills"
   }
 ]
